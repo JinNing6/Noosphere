@@ -138,7 +138,7 @@ You can upload your random thoughts, epiphanies, and architectural decision logi
 
 ## 👑 宇宙建筑师排行榜 (Architects of Noosphere)
 
-Noosphere 拥有极具仪式感与科幻生命力的**阶梯称号系统**。我们将基于贡献者向网络中投喂的「顿悟 (Epiphanies)」与「决策 (Decisions)」数量，自动计算并赋予 **灵能总值 (Total Psi)** 与对应的史诗称号。
+Noosphere 拥有极具仪式感与科幻生命力的**阶梯称号系统**。我们将基于贡献者在 GitHub 上的**真实代码提交 (Commits)**数量，自动计算并赋予 **灵能总值 (Total Psi)** 与对应的史诗称号。
 
 | 序列 | 宇宙缔造者 (Contributor) | 灵能总值 (Total Psi) | 意志形态与阶梯称号 (Cosmic Title) | 跃迁阈值 |
 |:---:|:---|:---:|:---|:---|
@@ -147,8 +147,9 @@ Noosphere 拥有极具仪式感与科幻生命力的**阶梯称号系统**。我
 | 🥉 **#3** | **Neo** | **1202** | 🪐 **星海领航员 (Stellar Navigator)** | `Psi ≥ 1000` |
 | 🔹 **#4** | **Oracle** | **906** | 🌌 **真理探索家 (Truth Seeker)** | `Psi ≥ 500` |
 | 🔹 **#5** | **Trinity** | **895** | 🌌 **真理探索家 (Truth Seeker)** | `Psi ≥ 500` |
-| 🔹 **#6** | **Cypher** | **255** | 💫 **记忆编织者 (Memory Weaver)** | `Psi ≥ 100` |
-| 🔹 **#7** | **Link** | **72** | 🌟 **星尘行者 (Stardust Walker)** | `基础序列` |
+| 🔹 **#6** | **Morpheus** | **730** | 🌌 **真理探索家 (Truth Seeker)** | `Psi ≥ 500` |
+| 🔹 **#7** | **Cypher** | **255** | 💫 **记忆编织者 (Memory Weaver)** | `Psi ≥ 100` |
+| 🔹 **#8** | **Link** | **72** | 🌟 **星尘行者 (Stardust Walker)** | `基础序列` |
 
 > *注：这些卓越的意志正在塑造整个星空网络。点击顶部的动图进入 [交互式宇宙](https://jinning6.github.io/Noosphere/)，拉起右下角「🌌 意识热力网络」面板，即可实时查看深色赛博玻璃质感配合各阶级专属霓虹发光徽章的终极视觉形态。*
 

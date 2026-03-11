@@ -48,6 +48,7 @@ def fetch_contributors():
         {"login": "Neo", "psi": 1202},
         {"login": "Oracle", "psi": 906},
         {"login": "Trinity", "psi": 895},
+        {"login": "Morpheus", "psi": 730},
         {"login": "Cypher", "psi": 255},
         {"login": "Link", "psi": 72},
     ]
