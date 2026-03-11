@@ -13,12 +13,23 @@ export interface Contributor {
   totalScore: number;
 }
 
+export function calculateTitle(score: number): { label: string; color: string; icon: string; glow: string } {
+  if (score >= 3000) return { label: '宇宙建筑师', color: '#ffd700', icon: '👑', glow: '0 0 16px rgba(255, 215, 0, 0.6)' }; // Architect
+  if (score >= 1000) return { label: '星海领航员', color: '#7b61ff', icon: '🪐', glow: '0 0 12px rgba(123, 97, 255, 0.5)' }; // Navigator
+  if (score >= 500)  return { label: '真理探索家', color: '#00e878', icon: '🌌', glow: '0 0 8px rgba(0, 232, 120, 0.4)' };     // Seeker
+  if (score >= 100)  return { label: '记忆编织者', color: '#00d4ff', icon: '💫', glow: '0 0 8px rgba(0, 212, 255, 0.3)' };     // Weaver
+  return { label: '星尘行者', color: 'rgba(255,255,255,0.6)', icon: '🌟', glow: 'none' };                           // Walker
+}
+
 export const TOP_CONTRIBUTORS: Contributor[] = [
+  { id: 'u0', name: 'Albus', avatar: '🧙‍♂️', epiphanies: 980, decisions: 2450, totalScore: 3430 },
   { id: 'u1', name: 'JinNing6', avatar: '🪐', epiphanies: 420, decisions: 1105, totalScore: 1525 },
   { id: 'u2', name: 'Neo', avatar: '💊', epiphanies: 312, decisions: 890, totalScore: 1202 },
   { id: 'u3', name: 'Oracle', avatar: '👁️', epiphanies: 504, decisions: 402, totalScore: 906 },
   { id: 'u4', name: 'Trinity', avatar: '🦅', epiphanies: 215, decisions: 680, totalScore: 895 },
   { id: 'u5', name: 'Morpheus', avatar: '🕶️', epiphanies: 180, decisions: 550, totalScore: 730 },
+  { id: 'u6', name: 'Cypher', avatar: '🥩', epiphanies: 45, decisions: 210, totalScore: 255 },
+  { id: 'u7', name: 'Link', avatar: '🔌', epiphanies: 12, decisions: 60, totalScore: 72 },
 ];
 
 /** 

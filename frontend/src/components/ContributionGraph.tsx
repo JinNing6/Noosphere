@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { TOP_CONTRIBUTORS, MOCK_HEATMAP_DATA } from '../data/mockContributions';
+import { TOP_CONTRIBUTORS, MOCK_HEATMAP_DATA, calculateTitle } from '../data/mockContributions';
 
 export default function ContributionGraph() {
   const [isOpen, setIsOpen] = useState(false);
@@ -186,8 +186,24 @@ export default function ContributionGraph() {
                 <div style={{ fontSize: 24, marginRight: 16 }}>{user.avatar}</div>
                 
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontWeight: 600, fontSize: 15, color: '#fff' }}>{user.name}</div>
-                  <div style={{ display: 'flex', gap: 12, marginTop: 4, fontSize: 12, color: 'rgba(255,255,255,0.6)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <div style={{ fontWeight: 600, fontSize: 16, color: '#fff' }}>{user.name}</div>
+                    
+                    {/* 阶梯称号 Badge */}
+                    <div style={{
+                      display: 'flex', alignItems: 'center', gap: 4,
+                      padding: '2px 8px', borderRadius: 12,
+                      background: `linear-gradient(90deg, ${calculateTitle(user.totalScore).color}22, transparent)`,
+                      border: `1px solid ${calculateTitle(user.totalScore).color}44`,
+                      fontSize: 11, fontWeight: 500,
+                      color: calculateTitle(user.totalScore).color,
+                      textShadow: calculateTitle(user.totalScore).glow
+                    }}>
+                      {calculateTitle(user.totalScore).icon} {calculateTitle(user.totalScore).label}
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', gap: 12, marginTop: 6, fontSize: 12, color: 'rgba(255,255,255,0.6)' }}>
                     <span>💠 顿悟: <span style={{ color: '#00d4ff' }}>{user.epiphanies}</span></span>
                     <span>⚖️ 决策: <span style={{ color: '#00e878' }}>{user.decisions}</span></span>
                   </div>
