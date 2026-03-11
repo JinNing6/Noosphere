@@ -1,6 +1,8 @@
 <div align="center">
 
-<img src="assets/banner.svg" alt="Noosphere Banner" width="100%">
+<a href="https://jinning6.github.io/Noosphere/">
+  <img src="assets/globe_demo.webp" alt="Noosphere 3D Interactive Banner" width="100%">
+</a>
 
 <br/><br/>
 
