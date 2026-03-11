@@ -8,7 +8,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.models.schemas import StatsResponse, MemoryUnitResponse
+from app.models.schemas import StatsResponse, MemoryUnitResponse, ContributorRankResponse
 from app.services.experience_store import experience_store
 
 router = APIRouter()
@@ -38,3 +38,15 @@ async def get_stats(db: Session = Depends(get_db)):
             MemoryUnitResponse.model_validate(e) for e in raw["recent_experiences"]
         ],
     )
+
+
+@router.get("/contributors", response_model=list[ContributorRankResponse], summary="宇宙建筑师排行榜")
+async def get_contributors(limit: int = 10, db: Session = Depends(get_db)):
+    """
+    👑 **获取 Noosphere 贡献者排行榜**
+
+    返回计算了灵能总值(Total Psi)的活跃贡献者实体。
+    根据其贡献的所有 `epiphany` (顿悟)与 `decision` (决策) 的总计评判排名。
+    """
+    rankings = experience_store.get_contributor_rankings(db, limit=limit)
+    return [ContributorRankResponse(**r) for r in rankings]

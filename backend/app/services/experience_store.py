@@ -191,6 +191,41 @@ class ExperienceStore:
             "recent_experiences": recent,
         }
 
+    def get_contributor_rankings(self, db: Session, limit: int = 20) -> list[dict]:
+        """聚合获取宇宙建筑师排行榜"""
+        # MySQL/SQLite 兼容: 按贡献者聚合统计各类型数量
+        result = (
+            db.query(
+                MemoryUnit.contributor,
+                func.sum(func.case((MemoryUnit.type == 'epiphany', 1), else_=0)).label('epiphanies'),
+                func.sum(func.case((MemoryUnit.type == 'decision', 1), else_=0)).label('decisions')
+            )
+            .filter(MemoryUnit.contributor != "anonymous")
+            .filter(MemoryUnit.contributor.isnot(None))
+            .group_by(MemoryUnit.contributor)
+            .all()
+        )
+
+        rankings = []
+        for row in result:
+            contributor, epiphanies, decisions = row
+            epiphanies = epiphanies or 0
+            decisions = decisions or 0
+            total_score = epiphanies + decisions
+            
+            # 过滤零贡献防篡改垃圾数据
+            if total_score > 0:
+                rankings.append({
+                    "contributor": contributor,
+                    "epiphanies": epiphanies,
+                    "decisions": decisions,
+                    "total_score": total_score
+                })
+
+        # 在应用侧按分数倒序排列
+        rankings.sort(key=lambda x: x["total_score"], reverse=True)
+        return rankings[:limit]
+
     # ────────────────── 列表 ──────────────────
 
     def list_experiences(

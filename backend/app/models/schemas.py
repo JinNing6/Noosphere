@@ -108,6 +108,13 @@ class StatsResponse(BaseModel):
     recent_experiences: list[MemoryUnitResponse] = []
 
 
+class ContributorRankResponse(BaseModel):
+    """贡献者排行榜单体"""
+    contributor: str
+    epiphanies: int
+    decisions: int
+    total_score: int
+
 # ────────────────── 通用 ──────────────────
 
 
