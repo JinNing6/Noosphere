@@ -1,0 +1,146 @@
+<svg width="1200" height="400" viewBox="0 0 1200 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- 背景渐变 -->
+    <radialGradient id="bgGlow" cx="50%" cy="50%" r="60%">
+      <stop offset="0%" stop-color="#1a1040"/>
+      <stop offset="100%" stop-color="#0a0a1a"/>
+    </radialGradient>
+    
+    <!-- 球体渐变 -->
+    <radialGradient id="sphereGradient" cx="45%" cy="40%" r="50%">
+      <stop offset="0%" stop-color="#7b61ff" stop-opacity="0.4"/>
+      <stop offset="60%" stop-color="#4a3aff" stop-opacity="0.15"/>
+      <stop offset="100%" stop-color="#4a3aff" stop-opacity="0"/>
+    </radialGradient>
+    
+    <!-- 外层光晕 -->
+    <radialGradient id="outerGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="70%" stop-color="#7b61ff" stop-opacity="0"/>
+      <stop offset="90%" stop-color="#7b61ff" stop-opacity="0.08"/>
+      <stop offset="100%" stop-color="#7b61ff" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- 粒子动画 -->
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="2" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <filter id="softGlow">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- 背景 -->
+  <rect width="1200" height="400" fill="url(#bgGlow)"/>
+
+  <!-- 背景星点 -->
+  <g opacity="0.4">
+    <circle cx="100" cy="50" r="1" fill="#e0e0ff"><animate attributeName="opacity" values="0.2;0.8;0.2" dur="3s" repeatCount="indefinite"/></circle>
+    <circle cx="200" cy="120" r="0.8" fill="#e0e0ff"><animate attributeName="opacity" values="0.5;1;0.5" dur="2.5s" repeatCount="indefinite"/></circle>
+    <circle cx="350" cy="80" r="1.2" fill="#e0e0ff"><animate attributeName="opacity" values="0.3;0.9;0.3" dur="4s" repeatCount="indefinite"/></circle>
+    <circle cx="50" cy="200" r="0.6" fill="#e0e0ff"><animate attributeName="opacity" values="0.4;1;0.4" dur="3.5s" repeatCount="indefinite"/></circle>
+    <circle cx="150" cy="300" r="1" fill="#e0e0ff"><animate attributeName="opacity" values="0.2;0.7;0.2" dur="2.8s" repeatCount="indefinite"/></circle>
+    <circle cx="1100" cy="60" r="1" fill="#e0e0ff"><animate attributeName="opacity" values="0.3;0.8;0.3" dur="3.2s" repeatCount="indefinite"/></circle>
+    <circle cx="1050" cy="150" r="0.8" fill="#e0e0ff"><animate attributeName="opacity" values="0.5;1;0.5" dur="2.6s" repeatCount="indefinite"/></circle>
+    <circle cx="950" cy="340" r="1.1" fill="#e0e0ff"><animate attributeName="opacity" values="0.2;0.6;0.2" dur="4.2s" repeatCount="indefinite"/></circle>
+    <circle cx="1150" cy="280" r="0.7" fill="#e0e0ff"><animate attributeName="opacity" values="0.4;0.9;0.4" dur="3.8s" repeatCount="indefinite"/></circle>
+    <circle cx="850" cy="50" r="0.9" fill="#e0e0ff"><animate attributeName="opacity" values="0.3;0.7;0.3" dur="2.9s" repeatCount="indefinite"/></circle>
+    <circle cx="750" cy="370" r="0.5" fill="#e0e0ff"><animate attributeName="opacity" values="0.5;1;0.5" dur="3.1s" repeatCount="indefinite"/></circle>
+    <circle cx="450" cy="360" r="0.8" fill="#e0e0ff"><animate attributeName="opacity" values="0.2;0.8;0.2" dur="3.7s" repeatCount="indefinite"/></circle>
+  </g>
+  
+  <!-- 球体 -->
+  <g transform="translate(600, 200)">
+    <!-- 外层光晕 -->
+    <circle cx="0" cy="0" r="140" fill="url(#outerGlow)">
+      <animate attributeName="r" values="135;145;135" dur="4s" repeatCount="indefinite"/>
+    </circle>
+    
+    <!-- 球体本体 -->
+    <circle cx="0" cy="0" r="110" fill="url(#sphereGradient)" stroke="#4a3aff" stroke-width="0.5" stroke-opacity="0.3"/>
+    
+    <!-- 经纬度线 -->
+    <g stroke="#7b61ff" stroke-width="0.4" fill="none" opacity="0.15">
+      <ellipse cx="0" cy="0" rx="110" ry="40"/>
+      <ellipse cx="0" cy="0" rx="110" ry="75"/>
+      <ellipse cx="0" cy="0" rx="40" ry="110"/>
+      <ellipse cx="0" cy="0" rx="75" ry="110"/>
+      <ellipse cx="0" cy="0" rx="110" ry="20" transform="rotate(30)"/>
+      <ellipse cx="0" cy="0" rx="110" ry="20" transform="rotate(-30)"/>
+    </g>
+
+    <!-- 经验粒子节点 — failure (red) -->
+    <circle cx="-60" cy="-45" r="5" fill="#ff4d6a" filter="url(#glow)" opacity="0.9">
+      <animate attributeName="r" values="4;6;4" dur="2s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="40" cy="65" r="4" fill="#ff4d6a" filter="url(#glow)" opacity="0.8">
+      <animate attributeName="r" values="3;5;3" dur="2.5s" repeatCount="indefinite"/>
+    </circle>
+
+    <!-- success (green) -->
+    <circle cx="70" cy="-30" r="6" fill="#00e878" filter="url(#glow)" opacity="0.9">
+      <animate attributeName="r" values="5;7;5" dur="2.2s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="-30" cy="80" r="4" fill="#00e878" filter="url(#glow)" opacity="0.7">
+      <animate attributeName="r" values="3;5;3" dur="3s" repeatCount="indefinite"/>
+    </circle>
+
+    <!-- pattern (blue) -->
+    <circle cx="-85" cy="15" r="5" fill="#4dc9f6" filter="url(#glow)" opacity="0.85">
+      <animate attributeName="r" values="4;6;4" dur="2.8s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="20" cy="-80" r="4" fill="#4dc9f6" filter="url(#glow)" opacity="0.75">
+      <animate attributeName="r" values="3;5.5;3" dur="2.3s" repeatCount="indefinite"/>
+    </circle>
+
+    <!-- warning (yellow) -->
+    <circle cx="90" cy="20" r="4.5" fill="#ffc107" filter="url(#glow)" opacity="0.8">
+      <animate attributeName="r" values="3.5;5.5;3.5" dur="2.6s" repeatCount="indefinite"/>
+    </circle>
+
+    <!-- migration (purple) -->
+    <circle cx="-20" cy="-90" r="4" fill="#b388ff" filter="url(#glow)" opacity="0.8">
+      <animate attributeName="r" values="3;5;3" dur="3.2s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="55" cy="45" r="3.5" fill="#b388ff" filter="url(#glow)" opacity="0.7">
+      <animate attributeName="r" values="2.5;4.5;2.5" dur="2.4s" repeatCount="indefinite"/>
+    </circle>
+
+    <!-- 连线 -->
+    <g stroke="#ffffff" stroke-width="0.3" opacity="0.08">
+      <line x1="-60" y1="-45" x2="70" y2="-30"/>
+      <line x1="70" y1="-30" x2="90" y2="20"/>
+      <line x1="-85" y1="15" x2="-30" y2="80"/>
+      <line x1="-60" y1="-45" x2="-85" y2="15"/>
+      <line x1="40" y1="65" x2="55" y2="45"/>
+      <line x1="20" y1="-80" x2="-20" y2="-90"/>
+      <line x1="-30" y1="80" x2="40" y2="65"/>
+    </g>
+
+    <!-- 脉冲光效 -->
+    <circle cx="0" cy="0" r="110" stroke="#7b61ff" stroke-width="0.8" fill="none" opacity="0">
+      <animate attributeName="r" values="110;130;110" dur="3s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.15;0;0.15" dur="3s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="0" cy="0" r="110" stroke="#7b61ff" stroke-width="0.5" fill="none" opacity="0">
+      <animate attributeName="r" values="110;150;110" dur="4s" repeatCount="indefinite" begin="1.5s"/>
+      <animate attributeName="opacity" values="0.1;0;0.1" dur="4s" repeatCount="indefinite" begin="1.5s"/>
+    </circle>
+  </g>
+
+  <!-- 标题文字 -->
+  <text x="600" y="348" text-anchor="middle" fill="#e0e0ff" font-family="'Inter', 'SF Pro Display', -apple-system, sans-serif" font-size="36" font-weight="800" letter-spacing="0.08em">
+    🧠  N O O S P H E R E
+  </text>
+  <text x="600" y="380" text-anchor="middle" fill="#8888aa" font-family="'Inter', 'SF Pro Display', -apple-system, sans-serif" font-size="13" letter-spacing="0.15em">
+    THE COLLECTIVE MEMORY NETWORK FOR AI AGENTS
+  </text>
+</svg>

@@ -1,0 +1,95 @@
+/* Noosphere — 万物智识圈 全局样式（极致科幻版） */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700;800&display=swap');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #050510;
+  color: #e0e0ff;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+::-webkit-scrollbar { width: 3px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(123, 97, 255, 0.15); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(123, 97, 255, 0.3); }
+
+::selection {
+  background: rgba(123, 97, 255, 0.3);
+  color: #fff;
+}
+
+/* ═══════════════ 动画 ═══════════════ */
+
+@keyframes slideIn {
+  from { transform: translateX(100%); opacity: 0; }
+  to   { transform: translateX(0);    opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes fadeOut {
+  0%   { opacity: 1; }
+  70%  { opacity: 1; }
+  100% { opacity: 0; pointer-events: none; }
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1);   box-shadow: 0 0 20px rgba(123, 97, 255, 0.3); }
+  50%      { transform: scale(1.8); box-shadow: 0 0 40px rgba(255, 107, 53, 0.5); }
+}
+
+@keyframes coreExpand {
+  0%   { width: 4px;  height: 4px;  box-shadow: 0 0 10px rgba(255, 107, 53, 0.3); }
+  50%  { width: 16px; height: 16px; box-shadow: 0 0 60px rgba(255, 107, 53, 0.8), 0 0 120px rgba(123, 97, 255, 0.4); }
+  100% { width: 8px;  height: 8px;  box-shadow: 0 0 40px rgba(255, 107, 53, 0.6), 0 0 80px rgba(123, 97, 255, 0.3); }
+}
+
+@keyframes breathe {
+  0%, 100% { opacity: 0.4; }
+  50%      { opacity: 0.7; }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+/* ═══════════════ 搜索栏毛玻璃 ═══════════════ */
+.search-glass {
+  background: rgba(8, 6, 18, 0.5) !important;
+  backdrop-filter: blur(24px) saturate(1.5);
+  border: 1px solid rgba(123, 97, 255, 0.1) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.search-glass:focus-within {
+  border-color: rgba(123, 97, 255, 0.25) !important;
+  box-shadow: 0 8px 32px rgba(123, 97, 255, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+/* ═══════════════ 详情面板毛玻璃 ═══════════════ */
+.detail-glass {
+  background: rgba(8, 6, 18, 0.85);
+  backdrop-filter: blur(32px) saturate(1.4);
+  border-left: 1px solid rgba(123, 97, 255, 0.08);
+  box-shadow: -20px 0 60px rgba(0, 0, 0, 0.5);
+}

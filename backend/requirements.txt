@@ -1,0 +1,11 @@
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+pydantic==2.10.4
+pydantic-settings==2.7.1
+sqlalchemy==2.0.36
+alembic==1.14.1
+chromadb==0.6.3
+httpx==0.28.1
+python-dotenv==1.0.1
+mcp==1.3.0
+fastapi-mcp==0.1.2

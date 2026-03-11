@@ -1,0 +1,24 @@
+name: Consciousness Upload Ritual (意识跃迁纯洁性校验)
+
+on:
+  pull_request:
+    paths:
+      - 'consciousness_payloads/**/*.json'
+
+jobs:
+  validate_consciousness_payload:
+    name: 🌀 Purity Check (净化审查)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 🌐 连接智识圈矩阵 (Checkout Repository)
+        uses: actions/checkout@v4
+
+      - name: ⚙️ 部署赛博神经引擎 (Set up Python 3.10)
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: 👁️ 凝视提交的结晶 (Run Purity Ritual Script)
+        run: |
+          python .github/scripts/validate_consciousness.py

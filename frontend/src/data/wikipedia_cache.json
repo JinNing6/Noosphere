@@ -1,0 +1,1145 @@
+{
+  "Black_hole": {
+    "title_en": "Black hole",
+    "title_zh": "黑洞",
+    "summary": "A black hole is an astronomical body so compact that its gravity prevents anything, including light, from escaping. Albert Einstein's theory of general relativity, which describes gravitation as the curvature of spacetime, predicts that any sufficiently compact mass will form a black hole. The boundary of no escape is called the event horizon. In general relativity, crossing a black hole's event horizon seals an object's fate but produces no locally detectable change. General relativity also predicts that every black hole should have a central singularity, where the curvature of spacetime is infinite.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4f/Black_hole_-_Messier_87_crop_max_res.jpg/330px-Black_hole_-_Messier_87_crop_max_res.jpg",
+    "wiki_url": "https://en.wikipedia.org/wiki/Black_hole",
+    "discipline": "physics",
+    "layer": "matter"
+  },
+  "Dark_matter": {
+    "title_en": "Dark matter",
+    "title_zh": "暗物质",
+    "summary": "In astronomy and cosmology, dark matter is an invisible and hypothetical form of matter that does not interact with light or other electromagnetic radiation. Dark matter is implied by gravitational effects that cannot be explained by general relativity unless more matter is present than can be observed. Such effects occur in the context of formation and evolution of galaxies, gravitational lensing, the observable universe's current structure, mass position in galactic collisions, the motion of galaxies within galaxy clusters, and cosmic microwave background anisotropies. Dark matter is thought to serve as gravitational scaffolding for cosmic structures. After the Big Bang, dark matter clumped into blobs along narrow filaments with superclusters of galaxies forming a cosmic web at scales on which entire galaxies appear like tiny particles.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ed/WMAP_2012.png/330px-WMAP_2012.png",
+    "wiki_url": "https://en.wikipedia.org/wiki/Dark_matter",
+    "discipline": "physics",
+    "layer": "matter"
+  },
+  "Cosmic_microwave_background": {
+    "title_en": "Cosmic microwave background",
+    "title_zh": "宇宙微波背景",
+    "summary": "The cosmic microwave background, or relic radiation, is microwave radiation that fills all space in the observable universe. With a standard optical telescope, the background space between stars and galaxies is almost completely dark. However, a sufficiently sensitive radio telescope detects a faint background glow that is almost uniform and is not associated with any star, galaxy, or other object. This glow is strongest in the microwave region of the electromagnetic spectrum. Its energy density exceeds that of all the photons emitted by all the stars in the history of the universe. The accidental discovery of the CMB in 1964 by American radio astronomers Arno Allan Penzias and Robert Woodrow Wilson was the culmination of work initiated in the 1940s.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/04/Cosmic_Microwave_Background_%28CMB%29.jpeg/330px-Cosmic_Microwave_Background_%28CMB%29.jpeg",
+    "wiki_url": "https://en.wikipedia.org/wiki/Cosmic_microwave_background",
+    "discipline": "physics",
+    "layer": "matter"
+  },
+  "Neutron_star": {
+    "title_en": "Neutron star",
+    "title_zh": "中子星",
+    "summary": "A neutron star is the gravitationally collapsed core of a massive supergiant star. It results from the supernova explosion of a massive star—combined with gravitational collapse—that compresses the core past white dwarf star density to that of atomic nuclei. Surpassed only by black holes, neutron stars are the second smallest and densest known class of stellar objects. Neutron stars have a radius on the order of 10 kilometers and a mass of about 1.4 solar masses (M☉). Stars that collapse into neutron stars typically have an initial total mass between 10 and 25 M☉ or possibly more for those that are especially rich in elements heavier than hydrogen and helium.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8c/Moving_heart_of_the_Crab_Nebula.jpg/330px-Moving_heart_of_the_Crab_Nebula.jpg",
+    "wiki_url": "https://en.wikipedia.org/wiki/Neutron_star",
+    "discipline": "physics",
+    "layer": "matter"
+  },
+  "Big_Bang": {
+    "title_en": "Big Bang",
+    "title_zh": "宇宙大爆炸",
+    "summary": "The Big Bang is a physical theory that describes how the universe expanded from an initial state of high density and temperature. Various cosmological models based on the Big Bang concept explain a broad range of phenomena, including the abundance of light elements, the cosmic microwave background (CMB) radiation, the redshift of galaxies and the large-scale structure of the Universe. The uniformity of the universe, known as the horizon and flatness problems, is explained through cosmic inflation: a phase of accelerated expansion during the earliest stages. Detailed measurements of the expansion rate of the universe place the initial singularity at an estimated 13.787±0.02 billion years ago, which is considered the age of the universe. A wide range of empirical evidence strongly favors the Big Bang event, which is now widely accepted.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6f/CMB_Timeline300_no_WMAP.jpg/330px-CMB_Timeline300_no_WMAP.jpg",
+    "wiki_url": "https://en.wikipedia.org/wiki/Big_Bang",
+    "discipline": "physics",
+    "layer": "matter"
+  },
+  "Supernova": {
+    "title_en": "Supernova",
+    "title_zh": "超新星",
+    "summary": "A supernova is a powerful and luminous explosion of a star. A supernova occurs during the last evolutionary stages of a massive star, or when a white dwarf is triggered into runaway nuclear fusion. The original object, called the progenitor, either collapses to a neutron star or black hole, or is completely destroyed to form a diffuse nebula. The peak optical luminosity of a supernova can be comparable to that of an entire galaxy before fading over several weeks or months.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/SN1994D.jpg/330px-SN1994D.jpg",
+    "wiki_url": "https://en.wikipedia.org/wiki/Supernova",
+    "discipline": "physics",
+    "layer": "matter"
+  },
+  "Exoplanet": {
+    "title_en": "Exoplanet",
+    "title_zh": "系外行星",
+    "summary": "An exoplanet or extrasolar planet is a planet outside of the Solar System. The first confirmed detection of an exoplanet was in 1992 around a pulsar, and the first detection around a main-sequence star was in 1995. A different planet, first detected in 1988, was confirmed in 2003. In 2016, it was recognized that the first possible evidence of an exoplanet had been noted in 1917. As of 26 February 2026, there are 6,128 confirmed exoplanets in 4,560 planetary systems, with 1,038 systems having more than one planet.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/48/Hr8799_orbit_hd.gif/330px-Hr8799_orbit_hd.gif",
+    "wiki_url": "https://en.wikipedia.org/wiki/Exoplanet",
+    "discipline": "physics",
+    "layer": "matter"
+  },
+  "Oort_cloud": {
+    "title_en": "Oort cloud",
+    "title_zh": "奥尔特云",
+    "summary": "The Oort cloud, sometimes called the Öpik–Oort cloud, is theorized to be a cloud of billions of icy planetesimals surrounding the Sun at distances ranging from 2,000 to 200,000 AU. Its existence was proposed in 1950 by the Dutch astronomer Jan Oort, in whose honor the idea was later named. Oort proposed that the bodies in this cloud replenish and keep constant the number of long-period comets entering the inner Solar System—where they are eventually consumed and destroyed during close approaches to the Sun.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/da/PIA17046_-_Voyager_1_Goes_Interstellar.jpg/330px-PIA17046_-_Voyager_1_Goes_Interstellar.jpg",
+    "wiki_url": "https://en.wikipedia.org/wiki/Oort_cloud",
+    "discipline": "physics",
+    "layer": "matter"
+  },
+  "Quasar": {
+    "title_en": "Quasar",
+    "title_zh": "类星体",
+    "summary": "A quasar is an extremely luminous active galactic nucleus (AGN). It is sometimes known as a quasi-stellar object, abbreviated QSO. The emission from an AGN is powered by accretion onto a supermassive black hole with a mass ranging from millions to tens of billions of solar masses, surrounded by a gaseous accretion disc. Gas in the disc falling towards the black hole heats up and releases energy in the form of electromagnetic radiation. The radiant energy of quasars is enormous; the most powerful quasars have luminosities thousands of times greater than that of a galaxy such as the Milky Way. Quasars are usually categorized as a subclass of the more general category of AGN. The redshifts of quasars are of cosmological origin.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/38/Artist%27s_rendering_ULAS_J1120%2B0641.jpg/330px-Artist%27s_rendering_ULAS_J1120%2B0641.jpg",
+    "wiki_url": "https://en.wikipedia.org/wiki/Quasar",
+    "discipline": "physics",
+    "layer": "matter"
+  },
+  "Nebula": {
+    "title_en": "Nebula",
+    "title_zh": "星云",
+    "summary": "A nebula is a distinct luminescent part of interstellar medium, which can consist of ionized, neutral, or molecular hydrogen and also cosmic dust. Nebulae are often star-forming regions, such as the Pillars of Creation in the Eagle Nebula. In these regions, the formations of gas, dust, and other materials \"clump\" together to form denser regions, which attract further matter and eventually become dense enough to form stars. The remaining material is then thought to form planets and other planetary system objects.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/75/Trifid_Nebula_by_Deddy_Dayag.jpg/330px-Trifid_Nebula_by_Deddy_Dayag.jpg",
+    "wiki_url": "https://en.wikipedia.org/wiki/Nebula",
+    "discipline": "physics",
+    "layer": "matter"
+  },
+  "Diamond": {
+    "title_en": "Diamond",
+    "title_zh": "钻石",
+    "summary": "Diamond is a solid form of the element carbon with its atoms arranged in a crystal structure called diamond cubic. Diamond is a tasteless, odorless, strong, brittle solid, a poor conductor of electricity, colorless in pure form, and insoluble in water. Another solid form of carbon known as graphite is the chemically stable form of carbon at room temperature and pressure, but diamond is metastable and converts to it at a negligible rate under those conditions. Diamond has the highest hardness and thermal conductivity of any natural material, properties that are used in major industrial applications such as cutting and polishing tools.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b7/Rough_Diamond.jpg/330px-Rough_Diamond.jpg",
+    "wiki_url": "https://en.wikipedia.org/wiki/Diamond",
+    "discipline": "history",
+    "layer": "matter"
+  },
+  "Zircon": {
+    "title_en": "Zircon",
+    "title_zh": "锆石",
+    "summary": "Zircon is a mineral belonging to the group of nesosilicates and is a source of the metal zirconium. Its chemical name is zirconium(IV) silicate, and its corresponding chemical formula is ZrSiO4. An empirical formula showing some of the range of substitution in zircon is (Zr1–y, REEy)(SiO4)1–x(OH)4x–y. Zircon precipitates from silicate melts and has relatively high concentrations of high field strength incompatible elements. For example, hafnium is almost always present in quantities ranging from 1 to 4%. The crystal structure of zircon is tetragonal crystal system. The natural color of zircon varies between colorless, yellow-golden, red, brown, blue, and green.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Zircon-dtn1a.jpg/330px-Zircon-dtn1a.jpg",
+    "wiki_url": "https://en.wikipedia.org/wiki/Zircon",
+    "discipline": "history",
+    "layer": "matter"
+  },
+  "Meteorite": {
+    "title_en": "Meteorite",
+    "title_zh": "陨石",
+    "summary": "A meteorite is a rock that originated in outer space and has fallen to the surface of a planet or moon. When the original object enters the atmosphere, various factors such as friction, pressure, and chemical interactions with the atmospheric gases cause it to heat up and radiate energy. It then becomes a meteor and forms a fireball, also known as a shooting star; astronomers call the brightest examples \"bolides\". Once it settles on the larger body's surface, the meteor becomes a meteorite. Meteorites vary greatly in size. For geologists, a bolide is a meteorite large enough to create an impact crater.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/18/Namibie_Hoba_Meteorite_05.JPG/330px-Namibie_Hoba_Meteorite_05.JPG",
+    "wiki_url": "https://en.wikipedia.org/wiki/Meteorite",
+    "discipline": "history",
+    "layer": "matter"
+  },
+  "Quartz": {
+    "title_en": "Quartz",
+    "title_zh": "石英",
+    "summary": "Quartz is a hard mineral composed of silica (silicon dioxide). Its atoms are linked in a continuous framework of SiO4 silicon–oxygen tetrahedra, with each oxygen atom being shared between two tetrahedra, giving an overall chemical formula of SiO2. Therefore, quartz is classified structurally as a framework silicate mineral and compositionally as an oxide mineral. Quartz is the second most common mineral or mineral group in Earth's lithosphere, comprising about 12% by mass.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/ce/Quartz_Br%C3%A9sil.jpg/330px-Quartz_Br%C3%A9sil.jpg",
+    "wiki_url": "https://en.wikipedia.org/wiki/Quartz",
+    "discipline": "history",
+    "layer": "matter"
+  },
+  "Obsidian": {
+    "title_en": "Obsidian",
+    "title_zh": "黑曜石",
+    "summary": "Obsidian is a naturally occurring volcanic glass formed when lava extruded from a volcano cools rapidly with minimal crystal growth. It is an igneous rock. Produced from felsic lava, obsidian is rich in the lighter elements such as silicon, oxygen, aluminium, sodium, and potassium. It is commonly found within the margins of rhyolitic lava flows known as obsidian flows. These flows have a high content of silica, giving them a high viscosity. The high viscosity inhibits the diffusion of atoms through the lava, which inhibits the first step (nucleation) in the formation of mineral crystals. Together with rapid cooling, this results in a natural glass forming from the lava.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/17/Lipari-Obsidienne_%285%29.jpg/330px-Lipari-Obsidienne_%285%29.jpg",
+    "wiki_url": "https://en.wikipedia.org/wiki/Obsidian",
+    "discipline": "history",
+    "layer": "matter"
+  },
+  "Water": {
+    "title_en": "Water",
+    "title_zh": "水",
+    "summary": "Water is an inorganic compound with the chemical formula H2O. It is a transparent, tasteless, odorless, and nearly colorless chemical substance. It is the main constituent of Earth's streams, lakes, and oceans and the fluids of all known living organisms, in which it acts as a solvent. Water, being a polar molecule, undergoes strong intermolecular hydrogen bonding which is a large contributor to its physical and chemical properties. It is vital for all known forms of life, despite not providing food energy or being an organic micronutrient. Due to its presence in all organisms, its chemical stability, its worldwide abundance, and its strong polarity relative to its small molecular size, water is often referred to as the \"universal solvent\".",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b7/H2O_2D_labelled.svg/330px-H2O_2D_labelled.svg.png",
+    "wiki_url": "https://en.wikipedia.org/wiki/Water",
+    "discipline": "physics",
+    "layer": "matter"
+  },
+  "Graphene": {
+    "title_en": "Graphene",
+    "title_zh": "石墨烯",
+    "summary": "Graphene is a variety of the element carbon which occurs naturally in small amounts. In graphene, the carbon forms a sheet of interlocked atoms as hexagons one carbon atom thick. The result resembles the face of a honeycomb. When many hundreds of graphene layers build up, they are called graphite.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9e/Graphen.jpg/330px-Graphen.jpg",
+    "wiki_url": "https://en.wikipedia.org/wiki/Graphene",
+    "discipline": "engineering",
+    "layer": "matter"
+  },
+  "Antimatter": {
+    "title_en": "Antimatter",
+    "title_zh": "反物质",
+    "summary": "In modern physics, antimatter is defined as matter composed of the antiparticles of the corresponding particles in \"ordinary\" matter, and can be thought of as matter with reversed charge and parity, or going backward in time. Antimatter occurs in natural processes like cosmic ray collisions and some types of radioactive decay, but only a tiny fraction of these have successfully been bound together in experiments to form antiatoms. Minuscule numbers of antiparticles can be generated at particle accelerators, but total artificial production has been only a few nanograms. No macroscopic amount of antimatter has ever been assembled due to the extreme cost and difficulty of production and handling. Nonetheless, antimatter is an essential component of widely available applications related to beta decay, such as positron emission tomography, radiation therapy, and industrial imaging.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5a/PositronDiscovery.png/330px-PositronDiscovery.png",
+    "wiki_url": "https://en.wikipedia.org/wiki/Antimatter",
+    "discipline": "physics",
+    "layer": "matter"
+  },
+  "Amber": {
+    "title_en": "Amber",
+    "title_zh": "琥珀",
+    "summary": "Amber is fossilized tree resin. It has been appreciated for its color and natural beauty since the Neolithic times, and worked as a gemstone since classical antiquity. Amber is used in jewelry and as a healing agent in folk medicine.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b6/Amber2.jpg/330px-Amber2.jpg",
+    "wiki_url": "https://en.wikipedia.org/wiki/Amber",
+    "discipline": "history",
+    "layer": "matter"
+  },
+  "Uranium": {
+    "title_en": "Uranium",
+    "title_zh": "铀矿",
+    "summary": "Uranium is a chemical element; it has symbol U and atomic number 92. It is a silvery-grey metal in the actinide series of the periodic table. A uranium atom has 92 protons and 92 electrons, of which 6 are valence electrons. Uranium radioactively decays, usually by emitting an alpha particle. The half-life of this decay varies between 159,200 and 4.5 billion years for different isotopes, making them useful for dating the age of the Earth. The most common isotopes in natural uranium are uranium-238 and uranium-235. Uranium has the highest atomic weight of the primordially occurring elements. Its density is about 70% higher than that of lead and slightly lower than that of gold or tungsten. It occurs naturally in low concentrations of a few parts per million in soil, rock and water, and is commercially extracted from uranium-bearing minerals such as uraninite.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d8/HEUraniumC.jpg/330px-HEUraniumC.jpg",
+    "wiki_url": "https://en.wikipedia.org/wiki/Uranium",
+    "discipline": "physics",
+    "layer": "matter"
+  },
+  "Tardigrade": {
+    "title_en": "Tardigrade",
+    "title_zh": "水熊虫",
+    "summary": "Tardigrades, also known as water bears or moss piglets, are a phylum of eight-legged segmented micro-animals. They were first described by the German zoologist Johann August Ephraim Goeze in 1773, who called them Kleiner Wasserbär 'little water bear'. In 1776, the Italian biologist Lazzaro Spallanzani named them Tardigrada, which means 'slow walkers'.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/20/SEM_image_of_Milnesium_tardigradum_in_active_state_-_journal.pone.0045682.g001-2_%28white_background%29.png/330px-SEM_image_of_Milnesium_tardigradum_in_active_state_-_journal.pone.0045682.g001-2_%28white_background%29.png",
+    "wiki_url": "https://en.wikipedia.org/wiki/Tardigrade",
+    "discipline": "biology",
+    "layer": "life"
+  },
+  "Tectonic_plate": {
+    "title_en": "Plate tectonics",
+    "title_zh": "地壳构造板块",
+    "summary": "Plate tectonics is the scientific theory that Earth's lithosphere comprises a number of large tectonic plates, which have been slowly moving since 3–4 billion years ago. The model builds on the concept of continental drift, an idea developed during the first decades of the 20th century. Plate tectonics came to be accepted by geoscientists after seafloor spreading was validated in the mid- to late 1960s. The processes that result in plates and shape Earth's crust are called tectonics.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/67/Tectonic_plates_%282022%29.svg/330px-Tectonic_plates_%282022%29.svg.png",
+    "wiki_url": "https://en.wikipedia.org/wiki/Plate_tectonics",
+    "discipline": "history",
+    "layer": "matter"
+  },
+  "Fossil": {
+    "title_en": "Fossil",
+    "title_zh": "化石",
+    "summary": "A fossil is any preserved remains, impression, or trace of any once-living thing from a past geological age. Examples include bones, shells, exoskeletons, stone imprints of animals or microbes, objects preserved in amber, hair, petrified wood and DNA remnants. The totality of fossils is known as the fossil record. Though the fossil record is incomplete, numerous studies have demonstrated that there is enough information available to give a good understanding of the pattern of diversification of life on Earth. In addition, the record can predict and fill gaps such as the discovery of Tiktaalik in the arctic of Canada.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Fossil_Diversity.png/330px-Fossil_Diversity.png",
+    "wiki_url": "https://en.wikipedia.org/wiki/Fossil",
+    "discipline": "history",
+    "layer": "matter"
+  },
+  "Blue_whale": {
+    "title_en": "Blue whale",
+    "title_zh": "蓝鲸",
+    "summary": "The blue whale is a species of baleen whale and the largest marine mammal in the rorqual family Balaenopteridae. Reaching a maximum confirmed length of 29.9–30.5 m (98–100 ft) and weighing up to 190–200 t, it is the largest animal known to have ever existed. The blue whale's long and slender body can be of various shades of greyish-blue on its upper surface and somewhat lighter underneath. Four subspecies are recognized: B. m. musculus in the North Atlantic and North Pacific, B. m. intermedia in the Southern Ocean, B. m. brevicauda in the Indian Ocean and South Pacific Ocean, and B. m. indica in the Northern Indian Ocean. There is a population in the waters off Chile that may constitute a fifth subspecies.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1c/Anim1754_-_Flickr_-_NOAA_Photo_Library.jpg/330px-Anim1754_-_Flickr_-_NOAA_Photo_Library.jpg",
+    "wiki_url": "https://en.wikipedia.org/wiki/Blue_whale",
+    "discipline": "biology",
+    "layer": "life"
+  },
+  "Octopus": {
+    "title_en": "Octopus",
+    "title_zh": "章鱼",
+    "summary": "An octopus is a soft-bodied, eight-limbed mollusc of the order Octopoda. The order consists of some 300 species and is grouped within the class Cephalopoda with squids, cuttlefish, and nautiloids. Like other cephalopods, an octopus is bilaterally symmetric with two eyes and a beaked mouth at the centre point of the eight limbs. An octopus can radically deform its shape, enabling it to squeeze through small gaps. They trail their appendages behind them as they swim backwards. The siphon is used for respiration and locomotion. Octopuses have a complex nervous system and excellent sight, and are among the most intelligent and behaviourally diverse invertebrates.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/57/Octopus2.jpg/330px-Octopus2.jpg",
+    "wiki_url": "https://en.wikipedia.org/wiki/Octopus",
+    "discipline": "biology",
+    "layer": "life"
+  },
+  "Tyrannosaurus": {
+    "title_en": "Tyrannosaurus",
+    "title_zh": "霸王龙",
+    "summary": "Tyrannosaurus is a genus of large theropod dinosaur. The type species Tyrannosaurus rex, often shortened to T. rex or colloquially t-rex, is one of the best represented theropods. It lived throughout what is now western North America, on what was then an island continent known as Laramidia. Tyrannosaurus had a much wider range than other tyrannosaurids. Fossils are found in a variety of geological formations dating to the late Maastrichtian age of the late Cretaceous period, 69 to 66 million years ago, with isolated specimens possibly indicating an earlier origin in the middle Campanian age. It was one of the last known members of the tyrannosaurids and among the last non-avian dinosaurs to exist before the Cretaceous–Paleogene extinction event.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/94/Tyrannosaurus_Rex_Holotype.jpg/330px-Tyrannosaurus_Rex_Holotype.jpg",
+    "wiki_url": "https://en.wikipedia.org/wiki/Tyrannosaurus",
+    "discipline": "biology",
+    "layer": "life"
+  },
+  "Physarum_polycephalum": {
+    "title_en": "Physarum polycephalum",
+    "title_zh": "多头绒泡菌 (粘菌)",
+    "summary": "Physarum polycephalum, an acellular slime mold or myxomycete is an amoeba with diverse cellular forms and broad geographic distribution. The \"acellular\" moniker derives from the plasmodial stage of the life cycle: the plasmodium is a bright yellow macroscopic multinucleate coenocyte shaped in a network of interlaced tubes. This stage of the life cycle, along with its preference for damp shady habitats, likely contributed to the original mischaracterization of the organism as a fungus. P. polycephalum is used as a model organism for research into motility, cellular differentiation, chemotaxis, cellular compatibility, and the cell cycle. It is commonly cultivated.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6d/Physarum_polycephalum_plasmodium.jpg/330px-Physarum_polycephalum_plasmodium.jpg",
+    "wiki_url": "https://en.wikipedia.org/wiki/Physarum_polycephalum",
+    "discipline": "biology",
+    "layer": "life"
+  },
+  "Honey_bee": {
+    "title_en": "Honey bee",
+    "title_zh": "蜜蜂",
+    "summary": "A honey bee is a eusocial flying insect from the genus Apis of the largest bee family, Apidae. Honey bees are known for their construction of perennial nests within cavities containing hexagonal cells made of secreted wax, their large colony sizes, and their routine regurgitation of digested carbohydrates as surplus food storage in the form of honey, the lattermost of which distinguishes their hives as a prized foraging target of many mellivorous animals including honey badgers, bears and human hunter-gatherers.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/The_Lone_Pollinator.jpg/330px-The_Lone_Pollinator.jpg",
+    "wiki_url": "https://en.wikipedia.org/wiki/Honey_bee",
+    "discipline": "biology",
+    "layer": "life"
+  },
+  "Mycorrhizal_network": {
+    "title_en": "Mycorrhizal network",
+    "title_zh": "菌根网络",
+    "summary": "A mycorrhizal network is an underground network found in forests and other plant communities, created by the hyphae of mycorrhizal fungi joining with plant roots. This network connects individual plants together. Mycorrhizal relationships are most commonly mutualistic, with both partners benefiting, but can be commensal or parasitic, and a single partnership may change between any of the three types of symbiosis at different times. Mycorrhizal networks were discovered in 1997 by Suzanne Simard, professor of forest ecology at the University of British Columbia in Canada. Simard grew up in Canadian forests where her family had made a living as foresters for generations. Her field studies revealed that trees are linked to neighboring trees by an underground network of fungi that resembles the neural networks in the brain. In one study, Simard watched as a Douglas fir that had been injured by insects appeared to send chemical warning signals to a ponderosa pine growing nearby. The pine tree then produced defense enzymes to protect against the insect.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/de/Mycorrhizal_network.svg/330px-Mycorrhizal_network.svg.png",
+    "wiki_url": "https://en.wikipedia.org/wiki/Mycorrhizal_network",
+    "discipline": "biology",
+    "layer": "life"
+  },
+  "Ant": {
+    "title_en": "Ant",
+    "title_zh": "蚂蚁",
+    "summary": "Ants are eusocial insects of the family Formicidae and, along with the related wasps and bees, belong to the order Hymenoptera. Ants evolved from vespoid wasp ancestors in the Cretaceous period. More than 13,800 of an estimated total of 22,000 species have been classified. They are easily identified by their geniculate (elbowed) antennae and the distinctive node-like structure that forms their slender waists.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/db/Red_Ant_-_March_2025.jpg/330px-Red_Ant_-_March_2025.jpg",
+    "wiki_url": "https://en.wikipedia.org/wiki/Ant",
+    "discipline": "biology",
+    "layer": "life"
+  },
+  "Sequoiadendron_giganteum": {
+    "title_en": "Sequoiadendron giganteum",
+    "title_zh": "巨杉",
+    "summary": "Sequoiadendron giganteum is a species of coniferous tree, classified in the family Cupressaceae in the subfamily Sequoioideae. Giant sequoia specimens are the largest trees on Earth. They are native to the groves on the western slopes of the Sierra Nevada mountain range of California but have been introduced, planted, and grown around the world.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1c/Grizzly_Giant_Mariposa_Grove.jpg/330px-Grizzly_Giant_Mariposa_Grove.jpg",
+    "wiki_url": "https://en.wikipedia.org/wiki/Sequoiadendron_giganteum",
+    "discipline": "biology",
+    "layer": "life"
+  },
+  "Cyanobacteria": {
+    "title_en": "Cyanobacteria",
+    "title_zh": "蓝细菌",
+    "summary": "Cyanobacteria are a group of autotrophic gram-negative bacteria of the phylum Cyanobacteriota that can obtain biological energy via oxygenic photosynthesis. Cyanobacteria apparently originated in a freshwater or terrestrial environment, and first appeared in the middle Archean eon. They are probably the most numerous taxon to have ever existed on Earth. The name \"cyanobacteria\" refers to their bluish green (cyan) color, which forms the basis of cyanobacteria's informal common name, blue-green algae.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/15/CSIRO_ScienceImage_4203_A_bluegreen_algae_species_Cylindrospermum_sp_under_magnification.jpg/330px-CSIRO_ScienceImage_4203_A_bluegreen_algae_species_Cylindrospermum_sp_under_magnification.jpg",
+    "wiki_url": "https://en.wikipedia.org/wiki/Cyanobacteria",
+    "discipline": "biology",
+    "layer": "life"
+  },
+  "Axolotl": {
+    "title_en": "Axolotl",
+    "title_zh": "美西螈 (六角恐龙)",
+    "summary": "The axolotl is a species of paedomorphic mole salamander. They mature into the terrestrial adult form without undergoing metamorphosis; the adults remain fully aquatic with obvious external gills. This trait, although somewhat unusual among the majority of amphibians, is not unique. Axolotls may be difficult to distinguish from the larval stage of other neotenic adult mole salamanders, such as mudpuppies or the occasionally paedomorphic tiger salamander.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/00/Axolotl_ganz.jpg/330px-Axolotl_ganz.jpg",
+    "wiki_url": "https://en.wikipedia.org/wiki/Axolotl",
+    "discipline": "biology",
+    "layer": "life"
+  },
+  "Mitochondrion": {
+    "title_en": "Mitochondrion",
+    "title_zh": "线粒体",
+    "summary": "A mitochondrion is an organelle found in the cells of most eukaryotes, such as animals, plants and fungi. Mitochondria have a double membrane structure and use aerobic respiration to generate adenosine triphosphate (ATP), which is used throughout the cell as a source of chemical energy. They were discovered by Albert von Kölliker in 1857 in the voluntary muscles of insects. The term mitochondrion, meaning a thread-like granule, was coined by Carl Benda in 1898. The mitochondrion is popularly nicknamed the \"powerhouse of the cell\", a phrase popularized by Philip Siekevitz in a 1957 Scientific American article of the same name.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3b/Animal_mitochondrion_diagram_en.svg/330px-Animal_mitochondrion_diagram_en.svg.png",
+    "wiki_url": "https://en.wikipedia.org/wiki/Mitochondrion",
+    "discipline": "biology",
+    "layer": "life"
+  },
+  "Chloroplast": {
+    "title_en": "Chloroplast",
+    "title_zh": "叶绿体",
+    "summary": "A chloroplast is a type of organelle known as a plastid that conducts photosynthesis mostly in plant and algal cells. Chloroplasts have a high concentration of chlorophyll pigments which capture the energy from sunlight and convert it to chemical energy and release oxygen. The chemical energy created is then used to make sugar and other organic molecules from carbon dioxide in a process called the Calvin cycle. Chloroplasts carry out a number of other functions, including fatty acid synthesis, amino acid synthesis, and the immune response in plants. The number of chloroplasts per cell varies from one, in some unicellular algae, up to 100 in plants like Arabidopsis and wheat.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e3/Chloroplast_II_%28cropped%29.svg/330px-Chloroplast_II_%28cropped%29.svg.png",
+    "wiki_url": "https://en.wikipedia.org/wiki/Chloroplast",
+    "discipline": "biology",
+    "layer": "life"
+  },
+  "Evolution": {
+    "title_en": "Evolution",
+    "title_zh": "进化论",
+    "summary": "Evolution is the change in the heritable characteristics of biological populations over successive generations. It occurs when evolutionary processes such as genetic drift and natural selection act on genetic variation, resulting in certain characteristics becoming more or less common within a population over successive generations. The process of evolution has given rise to biodiversity at every level of biological organisation.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/10/Darwin_Tree_1837.png/330px-Darwin_Tree_1837.png",
+    "wiki_url": "https://en.wikipedia.org/wiki/Evolution",
+    "discipline": "biology",
+    "layer": "life"
+  },
+  "DNA": {
+    "title_en": "DNA",
+    "title_zh": "DNA",
+    "summary": "Deoxyribonucleic acid is a polymer composed of two polynucleotide chains that coil around each other to form a double helix. The polymer carries genetic instructions for the development, functioning, growth and reproduction of all known organisms and many viruses. DNA and ribonucleic acid (RNA) are nucleic acids. Alongside proteins, lipids and complex carbohydrates (polysaccharides), nucleic acids are one of the four major types of macromolecules that are essential for all known forms of life.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d0/Chromosome_DNA_Gene_unannotated.svg/330px-Chromosome_DNA_Gene_unannotated.svg.png",
+    "wiki_url": "https://en.wikipedia.org/wiki/DNA",
+    "discipline": "biology",
+    "layer": "life"
+  },
+  "CRISPR": {
+    "title_en": "CRISPR",
+    "title_zh": "CRISPR 基因编辑",
+    "summary": "CRISPR is a family of DNA sequences found in the genomes of prokaryotic organisms such as bacteria and archaea. Each sequence within an individual prokaryotic CRISPR is derived from a DNA fragment of a bacteriophage that had previously infected the prokaryote or one of its ancestors. These sequences are used to detect and destroy DNA from similar bacteriophages during subsequent infections. Hence these sequences play a key role in the antiviral defense system of prokaryotes and provide a form of heritable, acquired immunity. CRISPR is found in approximately 50% of sequenced bacterial genomes and nearly 90% of sequenced archaea.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8d/4QYZ.png/330px-4QYZ.png",
+    "wiki_url": "https://en.wikipedia.org/wiki/CRISPR",
+    "discipline": "biology",
+    "layer": "life"
+  },
+  "Archaea": {
+    "title_en": "Archaea",
+    "title_zh": "古菌",
+    "summary": "Archaea is a domain of organisms. Traditionally, Archaea included only its prokaryotic members, but has since been found to be paraphyletic, as eukaryotes are known to have evolved from archaea. Even though the domain Archaea cladistically includes eukaryotes, the term archaea in English still generally refers specifically to prokaryotic members of Archaea. Archaea were initially classified as bacteria, receiving the name archaebacteria, but this term has fallen out of use. Archaeal cells have unique properties distinguishing them from Bacteria and Eukaryota, including: cell membranes made of ether-linked lipids; metabolisms such as methanogenesis; and a unique motility structure known as an archaellum. Archaea are further divided into multiple recognized phyla. Classification is difficult because most have not been isolated in a laboratory and have been identified only by their gene sequences in environmental samples. It is unknown if they can produce endospores.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ad/Archaea.png/330px-Archaea.png",
+    "wiki_url": "https://en.wikipedia.org/wiki/Archaea",
+    "discipline": "biology",
+    "layer": "life"
+  },
+  "Virus": {
+    "title_en": "Virus",
+    "title_zh": "病毒",
+    "summary": "A virus is a submicroscopic infectious agent that replicates only inside the living cells of an organism. Viruses infect all life forms, from animals and plants to microorganisms, including bacteria and archaea. Viruses are found in almost every ecosystem on Earth and are the most numerous type of biological entity. Since Dmitri Ivanovsky's 1892 article describing a non-bacterial pathogen infecting tobacco plants and the discovery of the tobacco mosaic virus by Martinus Beijerinck in 1898, more than 16,000 of the millions of virus species have been described in detail. The study of viruses is known as virology, a subspeciality of microbiology.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/94/Coronavirus._SARS-CoV-2.png/330px-Coronavirus._SARS-CoV-2.png",
+    "wiki_url": "https://en.wikipedia.org/wiki/Virus",
+    "discipline": "biology",
+    "layer": "life"
+  },
+  "Photosynthesis": {
+    "title_en": "Photosynthesis",
+    "title_zh": "光合作用",
+    "summary": "Photosynthesis is a system of biological processes by which photopigment-bearing autotrophic organisms, such as most plants, algae and cyanobacteria, convert light energy — typically from sunlight — into the chemical energy necessary to fuel their metabolism. The term photosynthesis usually refers to oxygenic photosynthesis, a process that releases oxygen as a byproduct of water splitting. Photosynthetic organisms store the converted chemical energy within the bonds of intracellular organic compounds, typically carbohydrates like sugars, starches, phytoglycogen and cellulose. When needing to use this stored energy, an organism's cells then metabolize the organic compounds through cellular respiration. Photosynthesis plays a critical role in producing and maintaining the oxygen content of the Earth's atmosphere, and it supplies most of the biological energy necessary for complex life on Earth.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/55/Photosynthesis_en.svg/330px-Photosynthesis_en.svg.png",
+    "wiki_url": "https://en.wikipedia.org/wiki/Photosynthesis",
+    "discipline": "biology",
+    "layer": "life"
+  },
+  "Consciousness": {
+    "title_en": "Consciousness",
+    "title_zh": "意识",
+    "summary": "Consciousness is being aware of something internal to one's self or being conscious of states or objects in one's external environment. It has been the topic of extensive explanations, analyses, and debate among philosophers, scientists, and theologians for millennia. There is no consensus on what exactly needs to be studied, or even if consciousness can be considered a scientific concept. In some explanations, it is synonymous with mind, while in others it is considered an aspect of it.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0c/RobertFuddBewusstsein17Jh.png/330px-RobertFuddBewusstsein17Jh.png",
+    "wiki_url": "https://en.wikipedia.org/wiki/Consciousness",
+    "discipline": "philosophy",
+    "layer": "life"
+  },
+  "Neuroplasticity": {
+    "title_en": "Neuroplasticity",
+    "title_zh": "神经可塑性",
+    "summary": "Neuroplasticity, also known as neural plasticity or just plasticity, is the medium of neural networks in the brain to change through growth and reorganization. Neuroplasticity refers to the brain's ability to reorganize and rewire its neural connections, enabling it to adapt and function in ways that differ from its prior state. This process can occur in response to learning new skills, experiencing environmental changes, recovering from injuries, or adapting to sensory or cognitive deficits. Such adaptability highlights the dynamic and ever-evolving nature of the brain, even into adulthood. These changes range from individual neuron pathways making new connections, to systematic adjustments like cortical remapping or neural oscillation. Other forms of neuroplasticity include homologous area adaptation, cross modal reassignment, map expansion, and compensatory masquerade. Examples of neuroplasticity include circuit and network changes that result from learning a new ability, information acquisition, environmental influences, pregnancy, caloric intake, practice/training, and psychological stress.",
+    "thumbnail": null,
+    "wiki_url": "https://en.wikipedia.org/wiki/Neuroplasticity",
+    "discipline": "biology",
+    "layer": "life"
+  },
+  "Telomere": {
+    "title_en": "Telomere",
+    "title_zh": "端粒",
+    "summary": "A telomere is a region of repetitive nucleotide sequences associated with specialized proteins at the ends of linear chromosomes. Telomeres are a widespread genetic feature most commonly found in eukaryotes. In most or even all species possessing them, they protect the terminal regions of chromosomal DNA from progressive degradation and ensure the integrity of linear chromosomes by preventing DNA repair systems from mistaking the very ends of the DNA strand for a double-strand break.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4a/Telomere_caps.gif/330px-Telomere_caps.gif",
+    "wiki_url": "https://en.wikipedia.org/wiki/Telomere",
+    "discipline": "biology",
+    "layer": "life"
+  },
+  "Epigenetics": {
+    "title_en": "Epigenetics",
+    "title_zh": "表观遗传学",
+    "summary": "Epigenetics is the study of changes in gene expression that occur without altering the DNA sequence. The Greek prefix epi- in epigenetics implies features that are \"on top of\" or \"in addition to\" the traditional DNA-sequence-based mechanism of inheritance. Epigenetics usually involves changes that persist through cell division, and affect the regulation of gene expression. Such effects on cellular and physiological traits may result from environmental factors, or be part of normal development.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fc/Epigenetic_mechanisms.png/330px-Epigenetic_mechanisms.png",
+    "wiki_url": "https://en.wikipedia.org/wiki/Epigenetics",
+    "discipline": "biology",
+    "layer": "life"
+  },
+  "Turritopsis_dohrnii": {
+    "title_en": "Turritopsis dohrnii",
+    "title_zh": "灯塔水母 (永生水母)",
+    "summary": "Turritopsis dohrnii, also known as the immortal jellyfish, is a species of small, biologically immortal Medusozoa (jellyfish) found worldwide in temperate to tropic waters. It is one of the few known cases of animals capable of completely reverting to a sexually immature, colonial stage after having reached sexual maturity as a solitary individual.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/7/74/Turritopsis_dohrnii.jpg",
+    "wiki_url": "https://en.wikipedia.org/wiki/Turritopsis_dohrnii",
+    "discipline": "biology",
+    "layer": "life"
+  },
+  "Albert_Einstein": {
+    "title_en": "Albert Einstein",
+    "title_zh": "阿尔伯特·爱因斯坦",
+    "summary": "Albert Einstein was a German-born theoretical physicist best known for developing the theory of relativity. Einstein also made important contributions to quantum theory. His mass–energy equivalence formula E = mc2, which arises from special relativity, has been called \"the world's most famous equation\". He received the 1921 Nobel Prize in Physics for \"his services to theoretical physics, and especially for his discovery of the law of the photoelectric effect\".",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/28/Albert_Einstein_Head_cleaned.jpg/330px-Albert_Einstein_Head_cleaned.jpg",
+    "wiki_url": "https://en.wikipedia.org/wiki/Albert_Einstein",
+    "discipline": "physics",
+    "layer": "civilization"
+  },
+  "Velociraptor": {
+    "title_en": "Velociraptor",
+    "title_zh": "迅猛龙",
+    "summary": "Velociraptor is a genus of small dromaeosaurid dinosaurs that lived in Asia during the Late Cretaceous epoch, about 75 million to 71 million years ago (Mya). Two species are currently recognized, although others have been assigned in the past. The type species is V. mongoliensis, named and described in 1924. Fossils of this species have been discovered in the Djadochta Formation, Mongolia. A second species, V. osmolskae, was named in 2008 for skull material from the Bayan Mandahu Formation, China. A possible record is known from the Nemegt Formation.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3d/Velociraptor_skeleton_white_background.jpg/330px-Velociraptor_skeleton_white_background.jpg",
+    "wiki_url": "https://en.wikipedia.org/wiki/Velociraptor",
+    "discipline": "biology",
+    "layer": "life"
+  },
+  "Rafflesia_arnoldii": {
+    "title_en": "Rafflesia arnoldii",
+    "title_zh": "大王花",
+    "summary": "Rafflesia arnoldii is a species of flowering plant in the parasitic genus Rafflesia within the family Rafflesiaceae. It is native to the rainforests of Sumatra and Borneo.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Rafflesia_arnoldii%2C_Sumatra.jpg/330px-Rafflesia_arnoldii%2C_Sumatra.jpg",
+    "wiki_url": "https://en.wikipedia.org/wiki/Rafflesia_arnoldii",
+    "discipline": "biology",
+    "layer": "life"
+  },
+  "Coelacanth": {
+    "title_en": "Coelacanth",
+    "title_zh": "腔棘鱼",
+    "summary": "Coelacanths are an ancient group of lobe-finned fish (Sarcopterygii) in the class Actinistia. As sarcopterygians, they are more closely related to lungfish and tetrapods than to ray-finned fish.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b7/Coelacanth_off_Pumula_on_the_KwaZulu-Natal_South_Coast%2C_South_Africa%2C_on_22_November_2019.png/330px-Coelacanth_off_Pumula_on_the_KwaZulu-Natal_South_Coast%2C_South_Africa%2C_on_22_November_2019.png",
+    "wiki_url": "https://en.wikipedia.org/wiki/Coelacanth",
+    "discipline": "biology",
+    "layer": "life"
+  },
+  "Isaac_Newton": {
+    "title_en": "Isaac Newton",
+    "title_zh": "艾萨克·牛顿",
+    "summary": "Sir Isaac Newton was an English polymath who was a mathematician, physicist, astronomer, alchemist, theologian, author and inventor. He was a key figure in the Scientific Revolution and the Enlightenment that followed. His book Philosophiæ Naturalis Principia Mathematica, first published in 1687, achieved the first great unification in physics and established classical mechanics. Newton also made seminal contributions to optics, and shares credit with the German mathematician Gottfried Wilhelm Leibniz for formulating infinitesimal calculus, although he developed calculus years before Leibniz. Newton contributed to and refined the scientific method, and his work is considered the most influential in bringing forth modern science.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f7/Portrait_of_Sir_Isaac_Newton%2C_1689_%28brightened%29.jpg/330px-Portrait_of_Sir_Isaac_Newton%2C_1689_%28brightened%29.jpg",
+    "wiki_url": "https://en.wikipedia.org/wiki/Isaac_Newton",
+    "discipline": "physics",
+    "layer": "civilization"
+  },
+  "Nikola_Tesla": {
+    "title_en": "Nikola Tesla",
+    "title_zh": "尼古拉·特斯拉",
+    "summary": "Nikola Tesla was a Serbian-American engineer, futurist, and inventor. He is known for his contributions to the design of the modern alternating current (AC) electricity supply system.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/79/Tesla_circa_1890.jpeg/330px-Tesla_circa_1890.jpeg",
+    "wiki_url": "https://en.wikipedia.org/wiki/Nikola_Tesla",
+    "discipline": "engineering",
+    "layer": "civilization"
+  },
+  "Aristotle": {
+    "title_en": "Aristotle",
+    "title_zh": "亚里士多德",
+    "summary": "Aristotle was an ancient Greek philosopher and polymath. His writings cover a broad range of subjects spanning the natural sciences, philosophy, linguistics, economics, politics, psychology, and the arts. As the founder of the Peripatetic school of philosophy in the Lyceum in Athens, he began the wider Aristotelian tradition that followed, which set the groundwork for the development of modern science.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ae/Aristotle_Altemps_Inv8575.jpg/330px-Aristotle_Altemps_Inv8575.jpg",
+    "wiki_url": "https://en.wikipedia.org/wiki/Aristotle",
+    "discipline": "philosophy",
+    "layer": "civilization"
+  },
+  "Leonardo_da_Vinci": {
+    "title_en": "Leonardo da Vinci",
+    "title_zh": "列奥纳多·达·芬奇",
+    "summary": "Leonardo di ser Piero da Vinci was an Italian polymath of the High Renaissance who was active as a painter, draughtsman, engineer, scientist, theorist, sculptor, and architect. While his fame initially rested on his achievements as a painter, he has also become known for his notebooks, in which he made drawings and notes on a variety of subjects, including anatomy, astronomy, botany, cartography, painting, and palaeontology. Leonardo is widely regarded as a genius who epitomised the Renaissance humanist ideal, and his collective works contributed to the development of European art to an extent rivalled only by that of his younger contemporary Michelangelo.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cb/Francesco_Melzi_-_Portrait_of_Leonardo.png/330px-Francesco_Melzi_-_Portrait_of_Leonardo.png",
+    "wiki_url": "https://en.wikipedia.org/wiki/Leonardo_da_Vinci",
+    "discipline": "art",
+    "layer": "civilization"
+  },
+  "Marie_Curie": {
+    "title_en": "Marie Curie",
+    "title_zh": "玛丽·居里",
+    "summary": "Maria Salomea Skłodowska Curie, better known as Marie Curie, was a Polish and naturalised-French physicist and chemist. She shared the 1903 Nobel Prize in Physics with her husband Pierre Curie \"for their joint researches on the radioactivity phenomena discovered by Professor Henri Becquerel\". She won the 1911 Nobel Prize in Chemistry \"[for] the discovery of the elements radium and polonium, by the isolation of radium and the study of the nature and compounds of this remarkable element\".",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/Marie_Curie_c._1920s.jpg/330px-Marie_Curie_c._1920s.jpg",
+    "wiki_url": "https://en.wikipedia.org/wiki/Marie_Curie",
+    "discipline": "physics",
+    "layer": "civilization"
+  },
+  "Alan_Turing": {
+    "title_en": "Alan Turing",
+    "title_zh": "艾伦·图灵",
+    "summary": "Alan Mathison Turing was an English mathematician, computer scientist, logician, cryptanalyst, philosopher and theoretical biologist. He was highly influential in the development of theoretical computer science, providing a formalisation of the concepts of algorithm and computation with the Turing machine, which can be considered a model of a general-purpose computer. Turing is widely considered to be the father of theoretical computer science.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/ce/Alan_turing_header.jpg/330px-Alan_turing_header.jpg",
+    "wiki_url": "https://en.wikipedia.org/wiki/Alan_Turing",
+    "discipline": "ai",
+    "layer": "civilization"
+  },
+  "Ada_Lovelace": {
+    "title_en": "Ada Lovelace",
+    "title_zh": "阿达·洛芙莱斯",
+    "summary": "Augusta Ada King, Countess of Lovelace, also known as Ada Lovelace, was an English mathematician and writer chiefly known for work on Charles Babbage's proposed mechanical general-purpose computer, the analytical engine. She was the first to recognise the machine had applications beyond pure calculation. Lovelace is often considered the first computer programmer.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4c/Ada_Lovelace_daguerreotype_by_Antoine_Claudet_1843_-_cropped.png/330px-Ada_Lovelace_daguerreotype_by_Antoine_Claudet_1843_-_cropped.png",
+    "wiki_url": "https://en.wikipedia.org/wiki/Ada_Lovelace",
+    "discipline": "engineering",
+    "layer": "civilization"
+  },
+  "Genghis_Khan": {
+    "title_en": "Genghis Khan",
+    "title_zh": "成吉思汗",
+    "summary": "Genghis Khan, also known as Chinggis Khan, was the founder and first khan of the Mongol Empire. After spending most of his life uniting the Mongol tribes, he launched a series of military campaigns, conquering large parts of China and Central Asia.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/35/YuanEmperorAlbumGenghisPortrait.jpg/330px-YuanEmperorAlbumGenghisPortrait.jpg",
+    "wiki_url": "https://en.wikipedia.org/wiki/Genghis_Khan",
+    "discipline": "history",
+    "layer": "civilization"
+  },
+  "Julius_Caesar": {
+    "title_en": "Julius Caesar",
+    "title_zh": "尤利乌斯·凯撒",
+    "summary": "Gaius Julius Caesar was a Roman general and statesman who was the dictator of the Roman Republic almost continuously from 49 BC until his assassination in 44 BC. A member of the First Triumvirate, he led the Roman armies through the Gallic Wars and defeated his political rival Pompey in Caesar’s civil war. He consolidated power and proclaimed himself dictator perpetuo in 44 BC, which contributed to the political conditions that led to the collapse of the Roman Republic and the emergence of the Roman Empire. For his role in these events, he is regarded as one of the most influential historical figures.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/62/Retrato_de_Julio_C%C3%A9sar_%2826724093101%29_%28cropped%29.jpg/330px-Retrato_de_Julio_C%C3%A9sar_%2826724093101%29_%28cropped%29.jpg",
+    "wiki_url": "https://en.wikipedia.org/wiki/Julius_Caesar",
+    "discipline": "history",
+    "layer": "civilization"
+  },
+  "Alexander_the_Great": {
+    "title_en": "Alexander the Great",
+    "title_zh": "亚历山大大帝",
+    "summary": "Alexander III of Macedon, most commonly known as Alexander the Great, was king of the ancient Greek kingdom of Macedon. He succeeded his father Philip II to the throne in 336 BC at the age of 20, and spent most of his reign conducting a lengthy military campaign throughout Asia and Egypt. By the age of 30, he had created one of the largest empires in history, stretching from Greece to northwestern India. He was undefeated in battle and is widely considered to be one of history's greatest and most successful military commanders.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/49/Alexander_Mosaic_detail_of_Alexander_the_Great_%283x4_cropped%29.jpg/330px-Alexander_Mosaic_detail_of_Alexander_the_Great_%283x4_cropped%29.jpg",
+    "wiki_url": "https://en.wikipedia.org/wiki/Alexander_the_Great",
+    "discipline": "history",
+    "layer": "civilization"
+  },
+  "Cleopatra": {
+    "title_en": "Cleopatra",
+    "title_zh": "克娄巴特拉七世 (埃及艳后)",
+    "summary": "Cleopatra VII Thea Philopator was Queen of the Ptolemaic Kingdom of Egypt from 51 to 30 BC, and the last active Hellenistic pharaoh. A member of the Ptolemaic dynasty, she was a descendant of its founder Ptolemy I Soter, a Macedonian Greek general and companion of Alexander the Great. Her first language was Koine Greek, and she is the only Ptolemaic ruler known to have learned the Egyptian language, among several others. After her death, Egypt became a province of the Roman Empire, marking the end of the Hellenistic period in the Mediterranean, which had begun during the reign of Alexander.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/Kleopatra-VII.-Altes-Museum-Berlin1.jpg/330px-Kleopatra-VII.-Altes-Museum-Berlin1.jpg",
+    "wiki_url": "https://en.wikipedia.org/wiki/Cleopatra",
+    "discipline": "history",
+    "layer": "civilization"
+  },
+  "Gautama_Buddha": {
+    "title_en": "The Buddha",
+    "title_zh": "释迦牟尼 (佛陀)",
+    "summary": "Siddhartha Gautama, most commonly referred to as the Buddha, was a wandering ascetic and religious teacher who lived in the eastern Indo-Gangetic Plains during the 6th or 5th century BCE and founded Buddhism. According to Buddhist legends, he was born in Lumbini, in what is now Nepal, to royal parents of the Shakya clan, but renounced his home life to live as a wandering ascetic. After leading a life of mendicancy, asceticism, and meditation, he attained nirvana at Bodh Gaya in what is now Bihar, India. The Buddha then wandered through the lower Indo-Gangetic Plain, teaching and building a monastic order (sangha). Buddhist tradition holds he died in Kushinagar and reached parinirvana.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/ff/Buddha_in_Sarnath_Museum_%28Dhammajak_Mutra%29.jpg/330px-Buddha_in_Sarnath_Museum_%28Dhammajak_Mutra%29.jpg",
+    "wiki_url": "https://en.wikipedia.org/wiki/The_Buddha",
+    "discipline": "philosophy",
+    "layer": "civilization"
+  },
+  "Socrates": {
+    "title_en": "Socrates",
+    "title_zh": "苏格拉底",
+    "summary": "Socrates was an ancient Greek philosopher from Classical Athens, perhaps the first Western moral philosopher, and a major inspiration on his student Plato, who largely founded the tradition of Western philosophy. An enigmatic figure, Socrates authored no texts and is known mainly through the posthumous accounts of classical writers, particularly his students Plato and Xenophon. These accounts are written as dialogues, in which Socrates and his interlocutors examine a subject in the style of question and answer; they gave rise to the Socratic dialogue literary genre. Contradictory accounts of Socrates make a reconstruction of his philosophy nearly impossible, a situation known as the Socratic problem. Socrates was a polarizing figure in Athenian society. In 399 BC, he was accused of impiety and corrupting the youth. After a trial that lasted a day, he was sentenced to death. As related by Plato, he was put to death by administration of poison after refusing offers from allies to help him escape.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bc/Socrate_du_Louvre.jpg/330px-Socrate_du_Louvre.jpg",
+    "wiki_url": "https://en.wikipedia.org/wiki/Socrates",
+    "discipline": "philosophy",
+    "layer": "civilization"
+  },
+  "Confucius": {
+    "title_en": "Confucius",
+    "title_zh": "孔子",
+    "summary": "Confucius, born Kong Qiu (孔丘), was a Chinese philosopher of the Spring and Autumn period who is traditionally considered the paragon of Chinese sages. Much of the shared cultural heritage of the Sinosphere originates in the philosophy and teachings of Confucius. His philosophical teachings, called Confucianism, emphasized personal and governmental morality, harmonious social relationships, righteousness, kindness, sincerity, and a ruler's responsibilities to lead by virtue.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/54/Confucius_Tang_Dynasty.jpg/330px-Confucius_Tang_Dynasty.jpg",
+    "wiki_url": "https://en.wikipedia.org/wiki/Confucius",
+    "discipline": "philosophy",
+    "layer": "civilization"
+  },
+  "Isaac_Asimov": {
+    "title_en": "Isaac Asimov",
+    "title_zh": "艾萨克·阿西莫夫",
+    "summary": "Isaac Asimov was an American writer and professor of biochemistry at Boston University. During his lifetime, Asimov was considered one of the \"Big Three\" science fiction writers, along with Robert A. Heinlein and Arthur C. Clarke. He wrote or edited more than 500 books. He also wrote an estimated 90,000 letters and postcards. Best known for his hard science fiction, Asimov also wrote mysteries and fantasy, as well as popular science and other non-fiction, including guides to the Bible and Shakespeare.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/34/Isaac.Asimov01.jpg/330px-Isaac.Asimov01.jpg",
+    "wiki_url": "https://en.wikipedia.org/wiki/Isaac_Asimov",
+    "discipline": "history",
+    "layer": "civilization"
+  },
+  "Galileo_Galilei": {
+    "title_en": "Galileo Galilei",
+    "title_zh": "伽利略·伽利莱",
+    "summary": "Galileo di Vincenzo Bonaiuti de' Galilei, commonly referred to as Galileo Galilei or mononymously as Galileo, was an Italian astronomer, physicist, and engineer, sometimes described as a polymath. He was born in the city of Pisa, then part of the Duchy of Florence. Galileo has been called the father of observational astronomy, modern-era classical physics, the scientific method, and modern science.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fc/Galileo_Galilei_%281564-1642%29_RMG_BHC2700.tiff/lossy-page1-330px-Galileo_Galilei_%281564-1642%29_RMG_BHC2700.tiff.jpg",
+    "wiki_url": "https://en.wikipedia.org/wiki/Galileo_Galilei",
+    "discipline": "physics",
+    "layer": "civilization"
+  },
+  "World_War_II": {
+    "title_en": "World War II",
+    "title_zh": "第二次世界大战",
+    "summary": "World War II, or the Second World War, was a global conflict between two coalitions: the Allies and the Axis powers. Nearly all of the world's countries participated. Tanks and aircraft played major roles, the latter enabling the strategic bombing of cities and delivery of the only nuclear weapons used in war. World War II was the deadliest conflict in history, causing the death of 60 to 75 million people. Millions died in genocides, including the Holocaust, and by massacres, starvation, and disease. After the Allied victory, Germany, Austria, Japan, and Korea were occupied, and German and Japanese leaders were tried for war crimes.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/10/Bundesarchiv_Bild_101I-646-5188-17%2C_Flugzeuge_Junkers_Ju_87.jpg/330px-Bundesarchiv_Bild_101I-646-5188-17%2C_Flugzeuge_Junkers_Ju_87.jpg",
+    "wiki_url": "https://en.wikipedia.org/wiki/World_War_II",
+    "discipline": "history",
+    "layer": "civilization"
+  },
+  "Vincent_van_Gogh": {
+    "title_en": "Vincent van Gogh",
+    "title_zh": "文森特·梵高",
+    "summary": "Vincent Willem van Gogh was a Dutch Post-Impressionist painter who is among the most famous and influential figures in the history of Western art. In just over a decade, he created approximately 2,100 artworks, including around 860 oil paintings, most of them in the last two years of his life. His oeuvre includes landscapes, still lifes, portraits, and self-portraits, most of which are characterised by bold colours and dramatic brushwork that contributed to the rise of expressionism in modern art. Van Gogh's work was only beginning to gain critical attention before his death from suicide at age 37. During his lifetime, only one of Van Gogh's paintings, The Red Vineyard, was sold.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4c/Vincent_van_Gogh_-_Self-Portrait_-_Google_Art_Project_%28454045%29.jpg/330px-Vincent_van_Gogh_-_Self-Portrait_-_Google_Art_Project_%28454045%29.jpg",
+    "wiki_url": "https://en.wikipedia.org/wiki/Vincent_van_Gogh",
+    "discipline": "art",
+    "layer": "civilization"
+  },
+  "Wolfgang_Amadeus_Mozart": {
+    "title_en": "Wolfgang Amadeus Mozart",
+    "title_zh": "沃尔夫冈·阿马德乌斯·莫扎特",
+    "summary": "Wolfgang Amadeus Mozart was a Classical composer and musician. In his brief life, he completed more than 800 works including outstanding examples of most of the genres of his time: symphonies, concertos, chamber music, opera, and choral music.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ad/The_Mozart_Family_-_Wolfgang_Amadeus_Mozart_headshot.jpg/330px-The_Mozart_Family_-_Wolfgang_Amadeus_Mozart_headshot.jpg",
+    "wiki_url": "https://en.wikipedia.org/wiki/Wolfgang_Amadeus_Mozart",
+    "discipline": "art",
+    "layer": "civilization"
+  },
+  "Charles_Darwin": {
+    "title_en": "Charles Darwin",
+    "title_zh": "查尔斯·达尔文",
+    "summary": "Charles Robert Darwin was an English naturalist, geologist, and biologist, widely known for his contributions to evolutionary biology. His proposition that all species of life have descended from a common ancestor is now generally accepted and considered a fundamental scientific concept. In a joint presentation with Alfred Russel Wallace, he introduced his scientific theory that this branching pattern of evolution resulted from a process he called natural selection, in which the struggle for existence has a similar effect to the artificial selection involved in selective breeding. Darwin has been described as one of the most influential figures in human history and was honoured by burial in Westminster Abbey.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2e/Charles_Darwin_seated_crop.jpg/330px-Charles_Darwin_seated_crop.jpg",
+    "wiki_url": "https://en.wikipedia.org/wiki/Charles_Darwin",
+    "discipline": "biology",
+    "layer": "civilization"
+  },
+  "Industrial_Revolution": {
+    "title_en": "Industrial Revolution",
+    "title_zh": "工业革命",
+    "summary": "The Industrial Revolution, sometimes called the First Industrial Revolution in contrast to the subsequent Second Industrial Revolution, was a transitional period of the global economy toward more widespread, efficient and stable manufacturing processes, succeeding the Second Agricultural Revolution. Beginning in Great Britain around 1760, the Industrial Revolution had spread to continental Europe and the United States by about 1840. This transition included going from hand production methods to machines; new chemical manufacturing and iron production processes; the increasing use of water power and steam power; the development of machine tools; and rise of the mechanised factory system. Output greatly increased, and the result was an unprecedented rise in population and population growth. The textile industry was the first to use modern production methods, and textiles became the dominant industry in terms of employment, value of output, and capital invested.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/dc/Powerloom_weaving_in_1835.jpg/330px-Powerloom_weaving_in_1835.jpg",
+    "wiki_url": "https://en.wikipedia.org/wiki/Industrial_Revolution",
+    "discipline": "history",
+    "layer": "civilization"
+  },
+  "Fall_of_the_Western_Roman_Empire": {
+    "title_en": "Fall of the Western Roman Empire",
+    "title_zh": "西罗马帝国灭亡",
+    "summary": "The fall of the Western Roman Empire, also called the fall of the Roman Empire or the fall of Rome, was the loss of central political control in the Western Roman Empire, a process in which the Empire failed to enforce its rule, and its vast territory was divided among several successor polities. The Roman Empire lost the strengths that had allowed it to exercise effective control over its Western provinces; modern historians posit factors including the effectiveness and numbers of the army, the health and numbers of the Roman population, the strength of the economy, the competence of the emperors, the internal struggles for power, the religious changes of the period, and the efficiency of the civil administration. Increasing pressure from invading peoples outside Roman culture also contributed greatly to the collapse. Climatic changes and both endemic and epidemic diseases drove many of these immediate factors. The reasons for the collapse are major subjects of the historiography of the ancient world and they inform much modern discourse on state failure.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ea/Roman_Republic_Empire_map.gif/330px-Roman_Republic_Empire_map.gif",
+    "wiki_url": "https://en.wikipedia.org/wiki/Fall_of_the_Western_Roman_Empire",
+    "discipline": "history",
+    "layer": "civilization"
+  },
+  "Information_Age": {
+    "title_en": "Information Age",
+    "title_zh": "信息时代",
+    "summary": "The Information Age is a historical period that began in the mid-20th century. It is characterized by a rapid shift from traditional industries, as established during the Industrial Revolution, to an economy centered on information technology. The onset of the Information Age has been linked to the development of the transistor in 1947. This technological advance has had a significant impact on the way information is processed and transmitted.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/37/Schenker_VIA14_Laptop_asv2021-01.jpg/330px-Schenker_VIA14_Laptop_asv2021-01.jpg",
+    "wiki_url": "https://en.wikipedia.org/wiki/Information_Age",
+    "discipline": "history",
+    "layer": "civilization"
+  },
+  "Apollo_11": {
+    "title_en": "Apollo 11",
+    "title_zh": "阿波罗11号登月",
+    "summary": "Apollo 11 was the fifth manned flight in the United States Apollo program and the first spaceflight to land humans on the Moon. Commander Neil Armstrong and Lunar Module Pilot Edwin \"Buzz\" Aldrin landed the Lunar Module Eagle on July 20 at 20:17 UTC, and Armstrong became the first person to step onto the surface about six hours later, at 02:56 UTC on July 21. Aldrin joined him 19 minutes afterward, and together they spent about two and a half hours exploring the site they had named Tranquility Base upon landing. They collected 47.5 pounds (21.5 kg) of lunar material before re-entering the Lunar Module. In total, they were on the Moon's surface for 21 hours, 36 minutes before returning to the Command Module Columbia, which remained in lunar orbit, piloted by Michael Collins.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/41/A_Man_on_the_Moon%2C_AS11-40-5903_%28cropped%29.jpg/330px-A_Man_on_the_Moon%2C_AS11-40-5903_%28cropped%29.jpg",
+    "wiki_url": "https://en.wikipedia.org/wiki/Apollo_11",
+    "discipline": "history",
+    "layer": "civilization"
+  },
+  "French_Revolution": {
+    "title_en": "French Revolution",
+    "title_zh": "法国大革命",
+    "summary": "The French Revolution was a period of political and societal change in France that began with the Estates General of 1789 and ended with the Coup of 18 Brumaire on 9 November 1799. Many of the revolution's ideas are considered fundamental principles of liberal democracy, and its values remain central to modern French political discourse. It was caused by a combination of social, political, and economic factors which the existing regime proved unable to manage.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/57/Anonymous_-_Prise_de_la_Bastille.jpg/330px-Anonymous_-_Prise_de_la_Bastille.jpg",
+    "wiki_url": "https://en.wikipedia.org/wiki/French_Revolution",
+    "discipline": "history",
+    "layer": "civilization"
+  },
+  "Black_Death": {
+    "title_en": "Black Death",
+    "title_zh": "黑死病",
+    "summary": "The Black Death was a plague pandemic that occurred in Europe from 1346 to 1353. It was one of the most fatal pandemics in human history; as many as 50 million people died, perhaps 50% of Europe's 14th-century population. The disease is caused by the bacterium Yersinia pestis and is spread by fleas and through the air. One of the most significant events in European history, the Black Death had far-reaching population, economic, and cultural impacts. It was the beginning of the second plague pandemic. The plague created religious, social and economic upheavals, with profound effects on the course of European history.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/1346-1353_spread_of_the_Black_Death_in_Europe_map.svg/330px-1346-1353_spread_of_the_Black_Death_in_Europe_map.svg.png",
+    "wiki_url": "https://en.wikipedia.org/wiki/Black_Death",
+    "discipline": "history",
+    "layer": "civilization"
+  },
+  "Cuban_Missile_Crisis": {
+    "title_en": "Cuban Missile Crisis",
+    "title_zh": "古巴导弹危机",
+    "summary": "The Cuban Missile Crisis, also known as the October Crisis in Cuba, or the Caribbean Crisis, was a 13-day confrontation between the governments of the United States and the Soviet Union, when American deployments of nuclear missiles in the United Kingdom, Italy and Turkey were matched by Soviet deployments of nuclear missiles in Cuba. The crisis lasted from 16 to 28 October 1962. The confrontation is widely considered the closest the Cold War came to escalating into full-scale nuclear war.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8a/PGM-19A_Jupiter_missile-02.jpg/330px-PGM-19A_Jupiter_missile-02.jpg",
+    "wiki_url": "https://en.wikipedia.org/wiki/Cuban_Missile_Crisis",
+    "discipline": "history",
+    "layer": "civilization"
+  },
+  "Voyages_of_Christopher_Columbus": {
+    "title_en": "Voyages of Christopher Columbus",
+    "title_zh": "哥伦布发现新大陆",
+    "summary": "Between 1492 and 1504, the Italian explorer and navigator Christopher Columbus\nled four transatlantic maritime expeditions in the name of the Catholic Monarchs of Spain to the Caribbean and to Central and South America. These voyages led to Europeans learning about the New World. This was an early breakthrough in the period known in Europe as the Age of Exploration, which saw the colonization of the Americas, a related biological exchange, and trans-Atlantic trade. These events, the effects and consequences of which persist to the present, are often cited as the beginning of the modern era.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/23/Viajes_de_colon_en2.svg/330px-Viajes_de_colon_en2.svg.png",
+    "wiki_url": "https://en.wikipedia.org/wiki/Voyages_of_Christopher_Columbus",
+    "discipline": "history",
+    "layer": "civilization"
+  },
+  "Renaissance": {
+    "title_en": "Renaissance",
+    "title_zh": "文艺复兴",
+    "summary": "The Renaissance is a European period of history and cultural movement, very roughly defined as covering the 14th through 17th centuries, though sometimes more narrowly defined for instance as only covering the 15th through 16th centuries. It marked the transition from the Middle Ages to modernity and was characterized by the European rediscovery and revival of the literary, philosophical, and artistic achievements of classical antiquity. Associated with great social change in most fields and disciplines, including art, architecture, politics, literature, exploration and science, the Renaissance was first centered in the Republic of Florence, then spread to the rest of Italy and later throughout Europe. The term rinascita ('rebirth') first appeared in Lives of the Artists by Giorgio Vasari, while the corresponding French word renaissance was adopted into English as the term for this period during the 1830s.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/61/El_nacimiento_de_Venus%2C_por_Sandro_Botticelli.jpg/330px-El_nacimiento_de_Venus%2C_por_Sandro_Botticelli.jpg",
+    "wiki_url": "https://en.wikipedia.org/wiki/Renaissance",
+    "discipline": "history",
+    "layer": "civilization"
+  },
+  "Fall_of_the_Berlin_Wall": {
+    "title_en": "Fall of the Berlin Wall",
+    "title_zh": "柏林墙倒塌",
+    "summary": "The Berlin Wall fell on 9 November 1989 during the Peaceful Revolution, marking the beginning of the destruction of the figurative Iron Curtain, as East Berlin transit restrictions were overwhelmed and discarded. Sections of the wall were breached, and planned deconstruction began the following June. It was one of the series of events that started the fall of communism in Central and Eastern Europe. The fall of the inner German border took place shortly afterward. An end to the Cold War was declared at the Malta Summit in early December, and German reunification took place in October the following year.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1c/West_and_East_Germans_at_the_Brandenburg_Gate_in_1989.jpg/330px-West_and_East_Germans_at_the_Brandenburg_Gate_in_1989.jpg",
+    "wiki_url": "https://en.wikipedia.org/wiki/Fall_of_the_Berlin_Wall",
+    "discipline": "history",
+    "layer": "civilization"
+  },
+  "Game_theory": {
+    "title_en": "Game theory",
+    "title_zh": "博弈论",
+    "summary": "Game theory is the study of mathematical models of strategic interactions. It has applications in many fields of social science, and is used extensively in economics, logic, systems science and computer science. Initially, game theory addressed two-person zero-sum games, in which a participant's gains or losses are exactly balanced by the losses and gains of the other participant. In the 1950s, it was extended to the study of non zero-sum games, and was eventually applied to a wide range of behavioral relations. It is now an umbrella term for the science of rational decision making in humans, animals, and computers.",
+    "thumbnail": null,
+    "wiki_url": "https://en.wikipedia.org/wiki/Game_theory",
+    "discipline": "math",
+    "layer": "civilization"
+  },
+  "Pi": {
+    "title_en": "Pi",
+    "title_zh": "圆周率",
+    "summary": "The number π is a mathematical constant, approximately equal to 3.14159, that is the ratio of a circle's circumference to its diameter. It appears in many formulae across mathematics and physics, and some of these formulae are commonly used for defining π, to avoid relying on the definition of the length of a curve.",
+    "thumbnail": null,
+    "wiki_url": "https://en.wikipedia.org/wiki/Pi",
+    "discipline": "math",
+    "layer": "civilization"
+  },
+  "Gödel's_incompleteness_theorems": {
+    "title_en": "Gödel's incompleteness theorems",
+    "title_zh": "哥德尔不完备定理",
+    "summary": "Gödel's incompleteness theorems are two theorems of mathematical logic that are concerned with the limits of provability in formal axiomatic theories. These results, published by Kurt Gödel in 1931, are important both in mathematical logic and in the philosophy of mathematics. The theorems are interpreted as showing that Hilbert's program to find a complete and consistent set of axioms for all mathematics is impossible.",
+    "thumbnail": null,
+    "wiki_url": "https://en.wikipedia.org/wiki/G%C3%B6del's_incompleteness_theorems",
+    "discipline": "math",
+    "layer": "civilization"
+  },
+  "Fractal": {
+    "title_en": "Fractal",
+    "title_zh": "分形",
+    "summary": "In mathematics, a fractal is a geometric shape containing detailed structure at arbitrarily small scales, usually having a fractal dimension strictly exceeding the topological dimension. Many fractals appear similar at various scales, as illustrated in successive magnifications of the Mandelbrot set. This exhibition of similar patterns at increasingly smaller scales is called self-similarity, also known as expanding symmetry or unfolding symmetry; if this replication is exactly the same at every scale, as in the Menger sponge, the shape is called affine self-similar. Fractal geometry relates to the mathematical branch of measure theory by their Hausdorff dimension.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/f/f8/Sierpinski-carpet.gif",
+    "wiki_url": "https://en.wikipedia.org/wiki/Fractal",
+    "discipline": "math",
+    "layer": "civilization"
+  },
+  "Euler's_formula": {
+    "title_en": "Euler's formula",
+    "title_zh": "欧拉公式",
+    "summary": "Euler's formula, named after Leonhard Euler, is a mathematical formula in complex analysis that establishes the fundamental relationship between the trigonometric functions and the complex exponential function. Euler's formula states that, for any real number x, one has\n\nwhere e is the base of the natural logarithm, i is the imaginary unit, and cos and sin are the trigonometric functions cosine and sine respectively. This complex exponential function is sometimes denoted cis x. The formula is still valid if x is a complex number, and is also called Euler's formula in this more general case.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/71/Euler%27s_formula.svg/330px-Euler%27s_formula.svg.png",
+    "wiki_url": "https://en.wikipedia.org/wiki/Euler's_formula",
+    "discipline": "math",
+    "layer": "civilization"
+  },
+  "Fibonacci_sequence": {
+    "title_en": "Fibonacci sequence",
+    "title_zh": "斐波那契数列",
+    "summary": "In mathematics, the Fibonacci sequence is a sequence in which each element is the sum of the two elements that precede it. Numbers that are part of the Fibonacci sequence are known as Fibonacci numbers, commonly denoted Fn . The initial elements of the sequence are F1 = 1 and F2 = 1, though many authors also include a zeroth element F0 = 0. Starting from F0, the sequence begins0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, ... ",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/15/Fibonacci_Squares.svg/330px-Fibonacci_Squares.svg.png",
+    "wiki_url": "https://en.wikipedia.org/wiki/Fibonacci_sequence",
+    "discipline": "math",
+    "layer": "civilization"
+  },
+  "Wave–particle_duality": {
+    "title_en": "Wave–particle duality",
+    "title_zh": "波粒二象性",
+    "summary": "Wave–particle duality is the concept in quantum mechanics that fundamental entities of the universe, like photons and electrons, exhibit particle or wave properties according to the experimental circumstances. It expresses the inability of the classical concepts such as particle or wave to fully describe the behavior of quantum objects. During the 19th and early 20th centuries, light was found to behave as a wave, then later was discovered to have a particle-like behavior, whereas electrons behaved like particles in early experiments, then later were discovered to have wave-like behavior. The concept of duality arose to name these seeming contradictions.",
+    "thumbnail": null,
+    "wiki_url": "https://en.wikipedia.org/wiki/Wave%E2%80%93particle_duality",
+    "discipline": "physics",
+    "layer": "civilization"
+  },
+  "Topology": {
+    "title_en": "Topology",
+    "title_zh": "拓扑学",
+    "summary": "Topology is the branch of mathematics concerned with the properties of a geometric object that are preserved under continuous deformations, such as stretching, twisting, crumpling, and bending; that is, without closing holes, opening holes, tearing, gluing, or passing through itself.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/62/Torus_knot_2.stl/330px-Torus_knot_2.stl.png",
+    "wiki_url": "https://en.wikipedia.org/wiki/Topology",
+    "discipline": "math",
+    "layer": "civilization"
+  },
+  "General_relativity": {
+    "title_en": "General relativity",
+    "title_zh": "广义相对论",
+    "summary": "General relativity, also known as the general theory of relativity, and as Einstein's theory of gravity, is the geometric theory of gravitation published by Albert Einstein in May 1916 and is the accepted description of the gravitation of macroscopic objects in modern physics. General relativity generalizes special relativity and refines Isaac Newton's law of universal gravitation, providing a unified description of gravity as a geometric property of space and time, or four-dimensional spacetime. In particular, the curvature of spacetime is directly related to the energy, momentum, and stress of whatever is present, including matter and radiation. The relation is specified by the Einstein field equations, a system of second-order partial differential equations. John Archibald Wheeler summarized it: \"Space-time tells matter how to move; matter tells space-time how to curve.\"",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a4/BBH_gravitational_lensing_of_gw150914.webm/330px--BBH_gravitational_lensing_of_gw150914.webm.jpg",
+    "wiki_url": "https://en.wikipedia.org/wiki/General_relativity",
+    "discipline": "physics",
+    "layer": "civilization"
+  },
+  "Chaos_theory": {
+    "title_en": "Chaos theory",
+    "title_zh": "混沌理论",
+    "summary": "Chaos theory is an interdisciplinary area of scientific study and branch of mathematics. It focuses on underlying patterns and deterministic laws of dynamical systems that are highly sensitive to initial conditions. These were once thought to have completely random states of disorder and irregularities. Chaos theory states that within the apparent randomness of chaotic complex systems, there are underlying patterns, interconnection, constant feedback loops, repetition, self-similarity, fractals and self-organization. The butterfly effect, an underlying principle of chaos, describes how a small change in one state of a deterministic nonlinear system can result in large differences in a later state. A metaphor for this behavior is that a butterfly flapping its wings in Brazil can cause or prevent a tornado in Texas.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5b/Lorenz_attractor_yb.svg/330px-Lorenz_attractor_yb.svg.png",
+    "wiki_url": "https://en.wikipedia.org/wiki/Chaos_theory",
+    "discipline": "math",
+    "layer": "civilization"
+  },
+  "Entropy": {
+    "title_en": "Entropy",
+    "title_zh": "熵",
+    "summary": "Entropy is a scientific concept, most commonly associated with states of disorder, randomness, or uncertainty. The term and the concept are used in diverse fields, from classical thermodynamics, where it was first recognized, to the microscopic description of nature in statistical physics, and to the principles of information theory. It has found far-ranging applications in chemistry and physics, in biological systems and their relation to life, in cosmology, economics, and information systems including the transmission of information in telecommunication.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3b/Complex_systems_topic_network_%28Sayama_2024%29.png/330px-Complex_systems_topic_network_%28Sayama_2024%29.png",
+    "wiki_url": "https://en.wikipedia.org/wiki/Entropy",
+    "discipline": "physics",
+    "layer": "civilization"
+  },
+  "Standard_Model": {
+    "title_en": "Standard Model",
+    "title_zh": "标准模型",
+    "summary": "The Standard Model of particle physics is the theory describing three of the four known fundamental forces in the universe and classifying all known elementary particles. It was developed in stages throughout the latter half of the 20th century, through the work of many scientists worldwide, with the current formulation being finalized in the mid-1970s upon experimental confirmation of the existence of quarks. Since then, proof of the top quark (1995), the tau neutrino (2000), and the Higgs boson (2012) have added further credence to the Standard Model. In addition, the Standard Model has predicted with great accuracy the various properties of weak neutral currents and the W and Z bosons.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/00/Standard_Model_of_Elementary_Particles.svg/330px-Standard_Model_of_Elementary_Particles.svg.png",
+    "wiki_url": "https://en.wikipedia.org/wiki/Standard_Model",
+    "discipline": "physics",
+    "layer": "civilization"
+  },
+  "Brain_in_a_vat": {
+    "title_en": "Brain in a vat",
+    "title_zh": "缸中之脑",
+    "summary": "In philosophy, the brain in a vat (BIV) is a scenario used in a variety of thought experiments intended to draw out certain features of human conceptions of knowledge, reality, truth, mind, consciousness, and meaning. Gilbert Harman conceived the scenario, which Hilary Putnam turned into a modernized version of René Descartes's evil demon thought experiment. Following many science fiction stories, the scenario involves a mad scientist who might remove a person's brain from the body, suspend it in a vat of life-sustaining liquid, and connect its neurons by wires to a supercomputer that would provide it with electrical impulses identical to those a brain normally receives. According to such stories, the computer would then be simulating reality and the \"disembodied\" brain would continue to have perfectly normal conscious experiences, like those of a person with an embodied brain, without these being related to objects or events in the real world. According to Putnam, the thought of \"being a brain-in-a-vat\" is either false or meaningless.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a8/Braininvat.svg/330px-Braininvat.svg.png",
+    "wiki_url": "https://en.wikipedia.org/wiki/Brain_in_a_vat",
+    "discipline": "philosophy",
+    "layer": "civilization"
+  },
+  "String_theory": {
+    "title_en": "String theory",
+    "title_zh": "弦理论",
+    "summary": "In physics, string theory is a theoretical framework in which the point-like particles of particle physics are replaced by one-dimensional objects called strings. String theory describes how these strings propagate through space and interact with each other. On distance scales larger than the string scale, a string acts like a particle, with its mass, charge, and other properties determined by the vibrational state of the string. In string theory, one of the many vibrational states of the string corresponds to the graviton, a quantum mechanical particle that carries the gravitational force. Thus, string theory is a theory of quantum gravity.",
+    "thumbnail": null,
+    "wiki_url": "https://en.wikipedia.org/wiki/String_theory",
+    "discipline": "physics",
+    "layer": "civilization"
+  },
+  "Existentialism": {
+    "title_en": "Existentialism",
+    "title_zh": "存在主义",
+    "summary": "Existentialism is a family of philosophical views and inquiry that explore the human individual's struggle to lead an authentic life despite the apparent absurdity or incomprehensibility of existence. In examining meaning, purpose, and value, existentialist thought often includes concepts such as existential crises, angst, courage, and freedom.",
+    "thumbnail": null,
+    "wiki_url": "https://en.wikipedia.org/wiki/Existentialism",
+    "discipline": "philosophy",
+    "layer": "civilization"
+  },
+  "Stoicism": {
+    "title_en": "Stoicism",
+    "title_zh": "斯多葛主义",
+    "summary": "Stoicism is an ancient Greek and then Roman philosophy of the Hellenistic and Roman Imperial periods. The Stoics believed that the universe operated according to reason, or logos, providing a unified account of the world, constructed from ideals of rational discourse, monistic physics, and naturalistic ethics. These three ideals constitute virtue, which is necessary for the Stoic goal of 'living a well-reasoned life'.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bc/Paolo_Monti_-_Servizio_fotografico_%28Napoli%2C_1969%29_-_BEIC_6353768.jpg/330px-Paolo_Monti_-_Servizio_fotografico_%28Napoli%2C_1969%29_-_BEIC_6353768.jpg",
+    "wiki_url": "https://en.wikipedia.org/wiki/Stoicism",
+    "discipline": "philosophy",
+    "layer": "civilization"
+  },
+  "Noosphere": {
+    "title_en": "Noosphere",
+    "title_zh": "智识圈",
+    "summary": "\nThe noosphere is a philosophical concept developed and popularized by the biogeochemist Vladimir Vernadsky and philosopher and Jesuit priest Pierre Teilhard de Chardin. Vernadsky defined the noosphere as the new state of the biosphere, and described it as the planetary \"sphere of reason\". The noosphere represents the highest stage of biospheric development, that of humankind's rational activities.",
+    "thumbnail": null,
+    "wiki_url": "https://en.wikipedia.org/wiki/Noosphere",
+    "discipline": "philosophy",
+    "layer": "civilization"
+  },
+  "Dialectics": {
+    "title_en": "Dialectic",
+    "title_zh": "辩证法",
+    "summary": "Dialectic, also known as the dialectical method, refers originally to dialogue between people holding different points of view about a subject but wishing to arrive at the truth through reasoned argument. Dialectic resembles debate, but the concept excludes subjective elements such as emotional appeal and rhetoric; the object is more an eventual and commonly held truth than the 'winning' of an competition. It has its origins in ancient philosophy and continued to be developed in the Middle Ages.",
+    "thumbnail": null,
+    "wiki_url": "https://en.wikipedia.org/wiki/Dialectic",
+    "discipline": "philosophy",
+    "layer": "civilization"
+  },
+  "Phenomenology_(philosophy)": {
+    "title_en": "Phenomenology (philosophy)",
+    "title_zh": "现象学",
+    "summary": "Phenomenology is a philosophical study and movement largely associated with the early 20th century that seeks to objectively investigate the nature of subjective, conscious experience and world-disclosure. It attempts to describe the universal features of consciousness while avoiding assumptions about the external world, aiming to describe phenomena as they appear, and to explore the meaning and significance of lived experience.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8d/Edmund_Husserl_1910s.jpg/330px-Edmund_Husserl_1910s.jpg",
+    "wiki_url": "https://en.wikipedia.org/wiki/Phenomenology_(philosophy)",
+    "discipline": "philosophy",
+    "layer": "civilization"
+  },
+  "Taoism": {
+    "title_en": "Taoism",
+    "title_zh": "道家思想",
+    "summary": "Taoism or Daoism is a philosophical and religious tradition indigenous to China, emphasizing harmony with the Tao 道. With a range of meaning in Chinese philosophy, translations of Tao include 'way', 'road', 'path', or 'technique', generally understood in the Taoist sense as an enigmatic process of transforming ultimately underlying reality. Taoist thought has informed the development of various practices within the Taoist tradition, including forms of meditation, astrology, qigong, feng shui, and internal alchemy. A common goal of Taoist practice is self-cultivation, a deeper appreciation of the Tao, and more harmonious existence. Taoist ethics generally emphasize virtues of effortless action, naturalness, simplicity, and the three treasures of compassion, frugality, and humility.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b8/%E6%AD%A6%E5%BD%93%E5%B1%B1%E7%B4%AB%E9%9C%84%E5%AE%AB_%2814739990839%29.jpg/330px-%E6%AD%A6%E5%BD%93%E5%B1%B1%E7%B4%AB%E9%9C%84%E5%AE%AB_%2814739990839%29.jpg",
+    "wiki_url": "https://en.wikipedia.org/wiki/Taoism",
+    "discipline": "philosophy",
+    "layer": "civilization"
+  },
+  "Panpsychism": {
+    "title_en": "Panpsychism",
+    "title_zh": "泛心论",
+    "summary": "In philosophy of mind, panpsychism is the view that the mind or consciousness is a fundamental and ubiquitous feature of reality. It is also described as a theory that \"the mind is a fundamental feature of the world which exists throughout the universe\". It is one of the oldest philosophical theories and has been ascribed, in some form, to philosophers including Thales, Plato, Spinoza, Leibniz, Schopenhauer, William James, Alfred North Whitehead, and Bertrand Russell. In the 19th century, panpsychism was the default philosophy of mind in Western thought, but it saw a decline in the mid-20th century with the rise of logical positivism. Recent interest in the hard problem of consciousness and developments in the fields of neuroscience, psychology, and quantum mechanics have revived interest in panpsychism in the 21st century, because it addresses the hard problem directly.",
+    "thumbnail": null,
+    "wiki_url": "https://en.wikipedia.org/wiki/Panpsychism",
+    "discipline": "philosophy",
+    "layer": "civilization"
+  },
+  "Harmony": {
+    "title_en": "Harmony",
+    "title_zh": "和声学",
+    "summary": "In music, harmony is the concept of combining different sounds in order to create new, distinct musical ideas. Theories of harmony seek to describe or explain the effects created by distinct pitches or tones coinciding with one another; harmonic objects such as chords, textures and tonalities are identified, defined, and categorized in the development of these theories. Harmony is broadly understood to involve both a \"vertical\" dimension (frequency-space) and a \"horizontal\" dimension (time-space), and often overlaps with related musical concepts such as melody, timbre, and form.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f1/US_Navy_080615-N-7656R-003_Navy_Band_Northwest%27s_Barbershop_Quartet_win_the_hearts_of_the_audience_with_a_John_Philip_Sousa_rendition_of.jpg/330px-US_Navy_080615-N-7656R-003_Navy_Band_Northwest%27s_Barbershop_Quartet_win_the_hearts_of_the_audience_with_a_John_Philip_Sousa_rendition_of.jpg",
+    "wiki_url": "https://en.wikipedia.org/wiki/Harmony",
+    "discipline": "art",
+    "layer": "civilization"
+  },
+  "Perspective_(graphical)": {
+    "title_en": "Perspective (graphical)",
+    "title_zh": "透视法",
+    "summary": "Linear or point-projection perspective is one of two types of graphical projection perspective in the graphic arts; the other is parallel projection. Linear perspective is an approximate representation, generally on a flat surface, of an image as it is seen by the eye. Perspective drawing is useful for representing a three-dimensional scene in a two-dimensional medium, like paper. It is based on the optical fact that for a person an object looks N times (linearly) smaller if it has been moved N times further from the eye than the original distance was.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/93/Comparison_of_graphical_projections.svg/330px-Comparison_of_graphical_projections.svg.png",
+    "wiki_url": "https://en.wikipedia.org/wiki/Perspective_(graphical)",
+    "discipline": "art",
+    "layer": "civilization"
+  },
+  "Golden_ratio": {
+    "title_en": "Golden ratio",
+    "title_zh": "黄金分割",
+    "summary": "In mathematics, two quantities are in the golden ratio if their ratio is the same as the ratio of their sum to the larger of the two quantities. Expressed algebraically, for quantities ⁠⁠ and ⁠⁠ with ⁠⁠, ⁠⁠ is in a golden ratio to ⁠⁠ if  where the Greek letter phi denotes the golden ratio. The constant ⁠⁠ satisfies the quadratic equation ⁠⁠ and is an irrational number with a value of\n1.618033988749....\n\nThe golden ratio was called the extreme and mean ratio by Euclid, and the divine proportion by Luca Pacioli; it also goes by other names.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/Golden_ratio_line.svg/330px-Golden_ratio_line.svg.png",
+    "wiki_url": "https://en.wikipedia.org/wiki/Golden_ratio",
+    "discipline": "art",
+    "layer": "civilization"
+  },
+  "Venus_de_Milo": {
+    "title_en": "Venus de Milo",
+    "title_zh": "断臂维纳斯",
+    "summary": "The Venus de Milo or Aphrodite of Melos is an ancient Greek marble sculpture that was created during the Hellenistic period. Its exact dating is uncertain, but the modern consensus places it in the 2nd century BC, perhaps between 160 and 110 BC. It was discovered in 1820 on the island of Milos, Greece, and has been displayed at the Louvre Museum since 1821. Since the statue's discovery, it has become one of the most famous works of ancient Greek sculpture in the world.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c2/Front_views_of_the_Venus_de_Milo.jpg/330px-Front_views_of_the_Venus_de_Milo.jpg",
+    "wiki_url": "https://en.wikipedia.org/wiki/Venus_de_Milo",
+    "discipline": "art",
+    "layer": "civilization"
+  },
+  "Synesthesia": {
+    "title_en": "Synesthesia",
+    "title_zh": "联觉",
+    "summary": "Synesthesia or synaesthesia is a perceptual phenomenon in which stimulation of one sensory or cognitive pathway leads to involuntary experiences in other sensory or cognitive pathways. Synesthesia can manifest as a bridge between the five traditional senses, though can also include other perceptions, such as nociception, thermoception, chronoception, and interoception. People with synesthesia are referred to as synesthetes.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/60/Synesthesia.svg/330px-Synesthesia.svg.png",
+    "wiki_url": "https://en.wikipedia.org/wiki/Synesthesia",
+    "discipline": "art",
+    "layer": "civilization"
+  },
+  "Internet_protocol_suite": {
+    "title_en": "Internet protocol suite",
+    "title_zh": "互联网协议栈",
+    "summary": "The Internet protocol suite, commonly known as TCP/IP, is a framework for organizing the communication protocols used in the Internet and similar computer networks according to functional criteria. The foundational protocols in the suite are the Transmission Control Protocol (TCP), the User Datagram Protocol (UDP), and the Internet Protocol (IP). Early versions of this networking model were known as the Department of Defense (DoD) Internet Architecture Model because the research and development were funded by the Defense Advanced Research Projects Agency (DARPA) of the United States Department of Defense.",
+    "thumbnail": null,
+    "wiki_url": "https://en.wikipedia.org/wiki/Internet_protocol_suite",
+    "discipline": "engineering",
+    "layer": "civilization"
+  },
+  "Nuclear_fusion": {
+    "title_en": "Nuclear fusion",
+    "title_zh": "核聚变",
+    "summary": "Nuclear fusion is a reaction in which two or more atomic nuclei combine to form a larger nucleus. The difference in mass between the reactants and products is manifested as either the release or the absorption of energy. This difference in mass arises as a result of the difference in nuclear binding energy between the atomic nuclei before and after the fusion reaction. Nuclear fusion is the process that powers all active stars, via many reaction pathways.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/EAST_Tokamak_plasma_image3.jpg/330px-EAST_Tokamak_plasma_image3.jpg",
+    "wiki_url": "https://en.wikipedia.org/wiki/Nuclear_fusion",
+    "discipline": "engineering",
+    "layer": "civilization"
+  },
+  "Wabi-sabi": {
+    "title_en": "Wabi-sabi",
+    "title_zh": "侘寂美学",
+    "summary": "In traditional Japanese aesthetics, wabi-sabi (侘び寂び) centers on the acceptance of transience and imperfection. It is often described as the appreciation of beauty that is \"imperfect, impermanent, and incomplete\". It is prevalent in many forms of Japanese art.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/32/250201_Ryoan-ji_Kyoto_Japan06s3.jpg/330px-250201_Ryoan-ji_Kyoto_Japan06s3.jpg",
+    "wiki_url": "https://en.wikipedia.org/wiki/Wabi-sabi",
+    "discipline": "art",
+    "layer": "civilization"
+  },
+  "Bauhaus": {
+    "title_en": "Bauhaus",
+    "title_zh": "包豪斯",
+    "summary": "The Staatliches Bauhaus, commonly known as the Bauhaus, was a German art school operational from 1919 to 1933 that combined crafts and the fine arts. The school became famous for its approach to design, which attempted to unify individual artistic vision with the principles of mass production and emphasis on function.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/67/6265_Dessau.JPG/330px-6265_Dessau.JPG",
+    "wiki_url": "https://en.wikipedia.org/wiki/Bauhaus",
+    "discipline": "art",
+    "layer": "civilization"
+  },
+  "Nanotechnology": {
+    "title_en": "Nanotechnology",
+    "title_zh": "纳米技术",
+    "summary": "Nanotechnology is the manipulation of matter with at least one dimension sized from 1 to 100 nanometers (nm). At this scale, commonly known as the nanoscale, surface area and quantum mechanical effects become important in describing properties of matter. This definition of nanotechnology includes all types of research and technologies that deal with these special properties. It is common to see the plural form \"nanotechnologies\" as well as \"nanoscale technologies\" to refer to research and applications whose common trait is scale. An earlier understanding of nanotechnology referred to the particular technological goal of precisely manipulating atoms and molecules for fabricating macroscale products, now referred to as molecular nanotechnology.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b6/Fullerene_Nanogears_-_GPN-2000-001535.jpg/330px-Fullerene_Nanogears_-_GPN-2000-001535.jpg",
+    "wiki_url": "https://en.wikipedia.org/wiki/Nanotechnology",
+    "discipline": "engineering",
+    "layer": "civilization"
+  },
+  "3D_printing": {
+    "title_en": "3D printing",
+    "title_zh": "3D 打印",
+    "summary": "3D printing, also called additive manufacturing, is the construction of a three-dimensional object from a CAD model or a digital 3D model. It can be done in a variety of processes in which material is deposited, joined or solidified under computer control, with the material being added together, typically layer by layer.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f4/Robot_3D_print_timelapse_on_RepRapPro_Fisher.webm/330px--Robot_3D_print_timelapse_on_RepRapPro_Fisher.webm.jpg",
+    "wiki_url": "https://en.wikipedia.org/wiki/3D_printing",
+    "discipline": "engineering",
+    "layer": "civilization"
+  },
+  "Semiconductor": {
+    "title_en": "Semiconductor",
+    "title_zh": "半导体",
+    "summary": "A semiconductor is a material with electrical conductivity between that of a conductor and an insulator. Its conductivity can be modified by adding impurities (\"doping\") to its crystal structure. When two regions with different doping levels are present in the same crystal, they form a semiconductor junction. However the term \"semiconductors\" is sometimes used to refer to semiconductor devices such as microchips and computer processors, which work using the physical properties of semiconductors.",
+    "thumbnail": null,
+    "wiki_url": "https://en.wikipedia.org/wiki/Semiconductor",
+    "discipline": "engineering",
+    "layer": "civilization"
+  },
+  "Quantum_computing": {
+    "title_en": "Quantum computing",
+    "title_zh": "量子计算",
+    "summary": "A quantum computer is a computer that exploits superposed and entangled states. Quantum computers can be viewed as sampling from quantum systems. These systems evolve in ways that operate on an enormous number of possibilities simultaneously, though they remain subject to strict computational constraints. By contrast, ordinary (\"classical\") computers operate according to deterministic rules. It is widely believed that a quantum computer could perform some calculations exponentially faster than any classical computer. For example, a large-scale quantum computer could break some widely used public-key cryptographic schemes and aid physicists in performing physical simulations. However, current hardware implementations of quantum computation are largely experimental and only suitable for specialized tasks.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d9/Layered_Model_of_Quantum_Computing.png/330px-Layered_Model_of_Quantum_Computing.png",
+    "wiki_url": "https://en.wikipedia.org/wiki/Quantum_computing",
+    "discipline": "engineering",
+    "layer": "civilization"
+  },
+  "Cryptography": {
+    "title_en": "Cryptography",
+    "title_zh": "密码学",
+    "summary": "Cryptography, or cryptology, is the practice and study of techniques for secure communication in the presence of adversarial behavior. More generally, cryptography is about constructing and analyzing protocols that prevent third parties or the public from reading private messages. Modern cryptography exists at the intersection of the disciplines of mathematics, computer science, information security, electrical engineering, digital signal processing, physics, and others. Core concepts related to information security are also central to cryptography. Practical applications of cryptography include electronic commerce, chip-based payment cards, digital currencies, computer passwords and military communications.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4d/Lorenz-SZ42-2.jpg/330px-Lorenz-SZ42-2.jpg",
+    "wiki_url": "https://en.wikipedia.org/wiki/Cryptography",
+    "discipline": "engineering",
+    "layer": "civilization"
+  },
+  "Gutenberg_Bible": {
+    "title_en": "Gutenberg Bible",
+    "title_zh": "古腾堡圣经",
+    "summary": "The Gutenberg Bible, also known as the 42-line Bible, the Mazarin Bible or the B42, was the earliest major book printed in Europe using mass-produced metal movable type. It marked the start of the \"Gutenberg Revolution\" and the age of printed books in the West. The book is valued and revered for its high aesthetic and artistic qualities and its historical significance.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b6/Gutenberg_Bible%2C_Lenox_Copy%2C_New_York_Public_Library%2C_2009._Pic_01.jpg/330px-Gutenberg_Bible%2C_Lenox_Copy%2C_New_York_Public_Library%2C_2009._Pic_01.jpg",
+    "wiki_url": "https://en.wikipedia.org/wiki/Gutenberg_Bible",
+    "discipline": "history",
+    "layer": "civilization"
+  },
+  "Universal_Declaration_of_Human_Rights": {
+    "title_en": "Universal Declaration of Human Rights",
+    "title_zh": "世界人权宣言",
+    "summary": "The Universal Declaration of Human Rights (UDHR) is an international document adopted by the United Nations General Assembly that codifies some of the rights and freedoms of all human beings. Drafted by a United Nations (UN) committee chaired by Eleanor Roosevelt, it was accepted by the General Assembly as Resolution 217 during its third session on 10 December 1948 at the Palais de Chaillot in Paris, France. Of the 58 members of the UN at the time, 48 voted in favour, none against, eight abstained, and two did not vote.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/24/Eleanor_Roosevelt_UDHR.jpg/330px-Eleanor_Roosevelt_UDHR.jpg",
+    "wiki_url": "https://en.wikipedia.org/wiki/Universal_Declaration_of_Human_Rights",
+    "discipline": "history",
+    "layer": "civilization"
+  },
+  "Library_of_Alexandria": {
+    "title_en": "Library of Alexandria",
+    "title_zh": "亚历山大图书馆",
+    "summary": "The Library of Alexandria in Alexandria, Egypt, was one of the largest and most significant libraries of the ancient world. The library was part of a larger research institution called the Mouseion, which was dedicated to the Muses, the nine goddesses of the arts. The idea of a universal library in Alexandria may have been proposed by Demetrius of Phalerum, an exiled Athenian statesman living in Alexandria, to Ptolemy I Soter, who may have established plans for the library, but the library itself was probably not built until the reign of his son Ptolemy II Philadelphus. The library quickly acquired many papyrus scrolls, owing largely to the Ptolemaic kings' aggressive and well-funded policies for procuring texts. It is unknown precisely how many scrolls were housed at any given time, but estimates range from 40,000 to 400,000 at its height.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/64/Ancientlibraryalex.jpg/330px-Ancientlibraryalex.jpg",
+    "wiki_url": "https://en.wikipedia.org/wiki/Library_of_Alexandria",
+    "discipline": "history",
+    "layer": "civilization"
+  },
+  "Rosetta_Stone": {
+    "title_en": "Rosetta Stone",
+    "title_zh": "罗塞塔石碑",
+    "summary": "The Rosetta Stone is a stele of granodiorite inscribed with three versions of a decree issued in 196 BC during the Ptolemaic dynasty of Egypt, on behalf of King Ptolemy V Epiphanes. The top and middle texts are in Ancient Egyptian using hieroglyphic and Demotic scripts, respectively, while the bottom is in Ancient Greek. The decree has only minor differences across the three versions, making the Rosetta Stone key to deciphering the Egyptian scripts.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/23/Rosetta_Stone.JPG/330px-Rosetta_Stone.JPG",
+    "wiki_url": "https://en.wikipedia.org/wiki/Rosetta_Stone",
+    "discipline": "history",
+    "layer": "civilization"
+  },
+  "Silk_Road": {
+    "title_en": "Silk Road",
+    "title_zh": "丝绸之路",
+    "summary": "The Silk Road was a network of Asian trade routes active from the second century BCE until the mid-15th century. Spanning over 6,400 km (4,000 mi) on land, it played a central role in facilitating economic, cultural, political, and religious interactions between the Eastern and Western worlds. The name \"Silk Road\" was coined in the late 19th century, but some 20th- and 21st-century historians instead prefer the term Silk Routes, on the grounds that it more accurately describes the intricate web of land and sea routes connecting Central, East, South, Southeast, and West Asia as well as East Africa and Southern Europe. In fact, some scholars criticise or even dismiss the idea of silk roads and call for a new definition or alternate term. According to them, the literature using this term has \"privileged the sedentary and literate empires at either end of Eurasia\" thereby ignoring the contributions of steppe nomads. In addition, the classic definition sidelines prominent civilisations such as India and Iran.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/49/Silk_road_Kazakhstan.svg/330px-Silk_road_Kazakhstan.svg.png",
+    "wiki_url": "https://en.wikipedia.org/wiki/Silk_Road",
+    "discipline": "history",
+    "layer": "civilization"
+  },
+  "Turing_test": {
+    "title_en": "Turing test",
+    "title_zh": "图灵测试",
+    "summary": "The Turing test, originally called the imitation game by Alan Turing in 1949, is a test of a machine's ability to exhibit intelligent behaviour equivalent to that of a human. In the test, a human evaluator judges a text transcript of a natural-language conversation between a human and a machine. The evaluator tries to identify the machine, and the machine passes if the evaluator cannot reliably tell them apart. The results would not depend on the machine's ability to answer questions correctly, only on how closely its answers resembled those of a human. Since the Turing test is a test of indistinguishability in performance capacity, the verbal version generalizes naturally to all of human performance capacity, verbal as well as nonverbal (robotic).",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/55/Turing_test_diagram.png/330px-Turing_test_diagram.png",
+    "wiki_url": "https://en.wikipedia.org/wiki/Turing_test",
+    "discipline": "ai",
+    "layer": "civilization"
+  },
+  "Artificial_general_intelligence": {
+    "title_en": "Artificial general intelligence",
+    "title_zh": "通用人工智能",
+    "summary": "Artificial general intelligence (AGI) is a type of artificial intelligence that matches or surpasses human capabilities across virtually all cognitive tasks.",
+    "thumbnail": null,
+    "wiki_url": "https://en.wikipedia.org/wiki/Artificial_general_intelligence",
+    "discipline": "ai",
+    "layer": "civilization"
+  },
+  "Neural_network_(machine_learning)": {
+    "title_en": "Neural network (machine learning)",
+    "title_zh": "神经网络",
+    "summary": "In machine learning, a neural network (NN) or neural net, also known as an artificial neural network (ANN), is a computational model inspired by the structure and functions of biological neural networks.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/46/Colored_neural_network.svg/330px-Colored_neural_network.svg.png",
+    "wiki_url": "https://en.wikipedia.org/wiki/Neural_network_(machine_learning)",
+    "discipline": "ai",
+    "layer": "civilization"
+  },
+  "Reinforcement_learning": {
+    "title_en": "Reinforcement learning",
+    "title_zh": "强化学习",
+    "summary": "In machine learning and optimal control, reinforcement learning (RL) is concerned with how an intelligent agent should take actions in a dynamic environment in order to maximize a reward signal. Reinforcement learning is one of the three basic machine learning paradigms, alongside supervised learning and unsupervised learning.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Reinforcement_learning_diagram.svg/330px-Reinforcement_learning_diagram.svg.png",
+    "wiki_url": "https://en.wikipedia.org/wiki/Reinforcement_learning",
+    "discipline": "ai",
+    "layer": "civilization"
+  },
+  "Transformer_(deep_learning_architecture)": {
+    "title_en": "Transformer (deep learning)",
+    "title_zh": "Transformer",
+    "summary": "In deep learning, the transformer is an artificial neural network architecture based on the multi-head attention mechanism, in which text is converted to numerical representations called tokens, and each token is converted into a vector via lookup from a word embedding table. At each layer, each token is then contextualized within the scope of the context window with other (unmasked) tokens via a parallel multi-head attention mechanism, allowing the signal for key tokens to be amplified and less important tokens to be diminished.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/34/Transformer%2C_full_architecture.png/330px-Transformer%2C_full_architecture.png",
+    "wiki_url": "https://en.wikipedia.org/wiki/Transformer_(deep_learning)",
+    "discipline": "ai",
+    "layer": "civilization"
+  },
+  "Chinese_room": {
+    "title_en": "Chinese room",
+    "title_zh": "中文房间",
+    "summary": "The Chinese room argument holds that a computer executing a program cannot have a mind, understanding, or consciousness, regardless of how intelligently or human-like the program may make the computer behave. The argument was presented in a 1980 paper by the philosopher John Searle entitled \"Minds, Brains, and Programs\" and published in the journal Behavioral and Brain Sciences. Similar arguments had been made by Gottfried Wilhelm Leibniz (1714), Ned Block (1978) and others. Searle's version has been widely discussed in the years since. The centerpiece of Searle's argument is a thought experiment known as the Chinese room.",
+    "thumbnail": null,
+    "wiki_url": "https://en.wikipedia.org/wiki/Chinese_room",
+    "discipline": "ai",
+    "layer": "civilization"
+  },
+  "Attention_(machine_learning)": {
+    "title_en": "Attention (machine learning)",
+    "title_zh": "注意力机制",
+    "summary": "In machine learning, attention is a method that determines the importance of each component in a sequence relative to the other components in that sequence. In natural language processing, importance is represented by \"soft\" weights assigned to each word in a sentence. More generally, attention encodes vectors called token embeddings across a fixed-width sequence that can range from tens to millions of tokens in size.",
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/62/Attention_mechanism_overview.svg/330px-Attention_mechanism_overview.svg.png",
+    "wiki_url": "https://en.wikipedia.org/wiki/Attention_(machine_learning)",
+    "discipline": "ai",
+    "layer": "civilization"
+  }
+}
