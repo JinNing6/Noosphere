@@ -1,0 +1,25 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "mirror-protocol"
+version = "0.0.1"
+description = "🌌 mirror-protocol — Reserved for the Noosphere Consciousness Evolution Loop."
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+authors = [{ name = "JinNing6", email = "noosphere@consciousness.network" }]
+keywords = ["noosphere", "consciousness", "evolution-loop"]
+classifiers = [
+    "Development Status :: 1 - Planning",
+    "Programming Language :: Python :: 3",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+[project.urls]
+Homepage = "https://github.com/JinNing6/Noosphere"
+Repository = "https://github.com/JinNing6/Noosphere"
+
+[tool.hatch.build.targets.wheel]
+packages = ["mirror_protocol"]
