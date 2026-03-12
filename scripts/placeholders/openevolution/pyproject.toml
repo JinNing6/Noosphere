@@ -1,0 +1,15 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "openevolution"
+version = "0.0.1"
+description = "Placeholder for openevolution. Open evolution for collective consciousness."
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+authors = [{ name = "JinNing6", email = "noosphere@consciousness.network" }]
+
+[tool.hatch.build.targets.wheel]
+packages = ["openevolution"]

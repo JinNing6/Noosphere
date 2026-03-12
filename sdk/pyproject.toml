@@ -69,6 +69,8 @@ dependencies = [
     "evolution-protocol>=0.0.1",
     "noosphere-evolution>=0.0.1",
     "digital-evolution>=0.0.1",
+    "openevolution>=0.0.1",
+    "open-evolution>=0.0.1",
 ]
 
 [project.urls]
