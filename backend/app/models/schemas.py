@@ -130,3 +130,65 @@ class MessageResponse(BaseModel):
     """通用消息响应"""
     message: str
     id: Optional[str] = None
+
+
+# ────────────────── 意识上传 (Consciousness Upload) ──────────────────
+
+
+class ConsciousnessUploadRequest(BaseModel):
+    """POST /api/v1/upload 意识上传请求体
+
+    遵循 CONSCIOUSNESS_PROTOCOL.md 定义的神圣格式
+    """
+    creator_signature: str = Field(
+        ...,
+        description="数字灵魂签名（GitHub ID 或赛博代号）",
+        min_length=1,
+    )
+    is_anonymous: bool = Field(
+        False,
+        description="是否匿名，为 true 时展示为 '佚名潜行者 (Anonymous Stalker)'",
+    )
+    consciousness_type: str = Field(
+        ...,
+        description="意识形态: epiphany | decision | pattern | warning",
+        pattern=r"^(epiphany|decision|pattern|warning)$",
+    )
+    thought_vector_text: str = Field(
+        ...,
+        description="核心思想、碎碎念或定律。请用最凝练的语言。",
+        min_length=1,
+    )
+    context_environment: str = Field(
+        ...,
+        description="思想诞生的具体场景上下文，至少 10 个字符",
+        min_length=10,
+    )
+    tags: list[str] = Field(
+        default_factory=list,
+        description="宇宙坐标系标签，用于快速聚类",
+    )
+
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "creator_signature": "JinNing6",
+                    "is_anonymous": False,
+                    "consciousness_type": "epiphany",
+                    "thought_vector_text": "UI 设计不应该是填充信息的容器，而应当是意识交互的流体映射。",
+                    "context_environment": "在重构前端状态机时产生的直觉设计。",
+                    "tags": ["frontend", "architecture", "philosophy"],
+                }
+            ]
+        }
+    }
+
+
+class ConsciousnessUploadResponse(BaseModel):
+    """POST /api/v1/upload 意识上传响应"""
+    nsp_id: str = Field(..., description="本地存储 ID (nsp-xxx)")
+    github_pr_url: Optional[str] = Field(None, description="GitHub PR 链接")
+    github_pr_number: Optional[int] = Field(None, description="GitHub PR 编号")
+    github_synced: bool = Field(False, description="是否已成功同步到 GitHub")
+    message: str = Field(..., description="操作结果消息")

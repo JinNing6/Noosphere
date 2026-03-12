@@ -11,7 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
 from app.database import engine, Base
-from app.api.v1 import recall, contribute, stats, experiences, skills
+from app.api.v1 import recall, contribute, stats, experiences, skills, upload
 
 # ── 日志配置 ──
 logging.basicConfig(
@@ -54,6 +54,7 @@ app.include_router(contribute.router, prefix="/api/v1", tags=["✏️ Contribute
 app.include_router(stats.router, prefix="/api/v1", tags=["📊 Stats"])
 app.include_router(experiences.router, prefix="/api/v1", tags=["📋 Experiences"])
 app.include_router(skills.router, prefix="/api/v1", tags=["🛠️ Skills"])
+app.include_router(upload.router, prefix="/api/v1", tags=["🧠 Consciousness Upload"])
 
 
 # ── 健康检查 ──

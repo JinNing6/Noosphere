@@ -30,6 +30,11 @@ class Settings(BaseSettings):
         "http://127.0.0.1:5173",
     ]
 
+    # ── GitHub 同步 ──
+    GITHUB_TOKEN: str = ""
+    GITHUB_REPO: str = "JinNing6/Noosphere"
+    GITHUB_BRANCH: str = "main"
+
     @property
     def database_url(self) -> str:
         """SQLAlchemy 数据库连接 URL"""

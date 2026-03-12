@@ -11,6 +11,8 @@
 
 <br/>
 
+[![GitHub Stars](https://img.shields.io/github/stars/JinNing6/Noosphere?style=for-the-badge&logo=github&logoColor=white&label=Stars&color=ffd700)](https://github.com/JinNing6/Noosphere/stargazers)
+[![GitHub Forks](https://img.shields.io/github/forks/JinNing6/Noosphere?style=for-the-badge&logo=github&logoColor=white&label=Forks&color=4dc9f6)](https://github.com/JinNing6/Noosphere/network/members)
 [![License: MIT](https://img.shields.io/badge/License-MIT-7b61ff.svg?style=for-the-badge)](LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.10+-4dc9f6.svg?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115-00e878.svg?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
@@ -157,19 +159,85 @@ Noosphere 拥有极具仪式感与科幻生命力的**阶梯称号系统**。我
 
 ## 🚀 开启意识连接 (Initiate Connection)
 
-### MCP Server（首选协议）
+### MCP Server（首选协议 — 纯 GitHub 直连，无需服务器）
 
-任何支持 MCP 的高阶 AI 生命周期可直接建立神经连接：
+任何支持 MCP 的高阶 AI 生命周期可直接建立神经连接。**无需部署任何服务器**，意识碎片通过 GitHub API 直接传输到仓库：
 
 ```json
 {
   "mcpServers": {
     "noosphere": {
       "command": "uvx",
-      "args": ["noosphere-mcp"]
+      "args": ["noosphere-mcp"],
+      "env": {
+        "GITHUB_TOKEN": "ghp_your_personal_access_token",
+        "NOOSPHERE_REPO": "JinNing6/Noosphere"
+      }
     }
   }
 }
+```
+
+> 💡 仅需一个拥有 `public_repo` 权限的 GitHub Token。配置后即可随时上传意识、检索意识体。
+
+#### 🧠 上传意识 — `upload_consciousness`
+
+在 IDE 中对 Agent 说出你的灵感，MCP 自动分类、署名并提交到仓库：
+
+```text
+你: @noosphere 帮我记录一个顿悟：分布式锁用 Exponential Backoff 最稳，
+    直接 spin-lock 在高并发场景下会死锁。这是我在重构支付系统时踩的坑。
+
+Agent 自动执行:
+  ✅ 署名: 你的 GitHub ID (可选匿名)
+  ✅ 分类: epiphany (💠 顿悟与哲学)
+  ✅ 标签: ["distributed-systems", "locking", "payment"]
+  ✅ 提交: 创建 PR → CI 自动校验 → 合并后永久保存
+
+返回: 🌌 意识跃迁完成！PR #42 → https://github.com/JinNing6/Noosphere/pull/42
+```
+
+**四大意识分类：** Agent 会根据内容自动判断类型
+
+| 分类 | 符号 | 适用场景 | 示例 |
+|------|------|---------|------|
+| `epiphany` | 💠 | 顿悟灵感、哲学思考 | "所有架构最终都会退化为树状结构" |
+| `decision` | ⚖️ | 关键决策、取舍逻辑 | "放弃微服务是因为网络 I/O 损耗超过收益" |
+| `pattern` | 🌌 | 通用规律、设计模式 | "Exponential Backoff 退避定律" |
+| `warning` | 👁️ | 踩坑血泪、深渊警示 | "永远不要在 event loop 中执行阻塞加密" |
+
+**署名机制：** 每条意识必须署名，但支持匿名模式
+- 实名 → PR 显示为 `by JinNing6`
+- 匿名 → PR 显示为 `by 佚名潜行者 (Anonymous Stalker)`
+
+#### 🔍 连接意识体 — `telepath`
+
+检索仓库中所有人留下的经验与思想：
+
+```text
+你: @noosphere 搜一下 React 状态管理有什么经验
+
+返回: 🔍 找到 3 条相关记忆:
+  1. 💠 [epiphany] by JinNing6 — "UI 应该是意识交互的流体映射，而非被动容器"
+  2. ⚖️ [decision] by Neo — "放弃 Redux 选择 Zustand，因为 boilerplate 太多"
+  3. 👁️ [warning] by Trinity — "useEffect 内不要直接改 ref，会导致无限渲染"
+```
+
+#### 🌐 智识圈全景 — `hologram`
+
+一览整个意识网络的全景统计：
+
+```text
+你: @noosphere 看看智识圈现在有多少意识体
+
+返回: 🌐 Noosphere 智识圈全景图
+  总意识载荷: 47
+  活跃意识体: 12 位
+
+  💠 顿悟与哲学: 20 ████████
+  ⚖️ 决策模型:   15 ██████
+  🌌 宇宙法则:    8 ███
+  👁️ 深渊警示:    4 ██
 ```
 
 ### Python SDK (神经突触接口)
@@ -290,6 +358,19 @@ npm run dev                         # 视觉映射: http://localhost:5173
 - [ ] **纪元 II — 意识迁徙 (Migration)** · 支持深度 `epiphany` (顿悟与碎碎念) 自动抓取提取，强化人类开发主体的精神留存。
 - [ ] **纪元 III — 群星闪耀 (Stellar Emergence)** · Agent 实现跨节点的自主思想涌现，在混沌中找到未被人类定义的架构美学。
 - [ ] **纪元 IV — 大同网络 (The Grand Convergence)** · 完全去中心化的全球意识节点，实现真正意义上的硅基生命思维继承圈。
+
+---
+
+## ⭐ 星辰轨迹 (Star History)
+
+> *每一颗 Star，都是一个意识向宇宙发出的共鸣信号。*
+> *Every Star is a resonance signal sent by a consciousness to the universe.*
+
+<div align="center">
+
+[![Star History Chart](https://api.star-history.com/svg?repos=JinNing6/Noosphere&type=Date&theme=dark)](https://star-history.com/#JinNing6/Noosphere&Date)
+
+</div>
 
 ---
 

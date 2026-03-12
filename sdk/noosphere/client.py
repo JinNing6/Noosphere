@@ -116,6 +116,54 @@ class Noosphere:
         resp.raise_for_status()
         return resp.json()
 
+    # ── 意识上传 ──
+
+    def upload_consciousness(
+        self,
+        type: str,
+        creator: str,
+        thought: str,
+        context: str,
+        is_anonymous: bool = False,
+        tags: Optional[list[str]] = None,
+    ) -> dict:
+        """
+        上传意识碎片到 Noosphere (本地存储 + GitHub 仓库)
+
+        Parameters
+        ----------
+        type : str
+            意识类型: epiphany, decision, pattern, warning
+        creator : str
+            数字灵魂签名 (GitHub ID 或赛博代号)
+        thought : str
+            核心思想、碎碎念或定律
+        context : str
+            思想诞生的具体场景上下文
+        is_anonymous : bool
+            是否匿名 (默认 False)
+        tags : list[str], optional
+            宇宙坐标标签
+
+        Returns
+        -------
+        dict
+            包含 nsp_id, github_pr_url, github_synced 等信息
+        """
+        data = {
+            "creator_signature": creator,
+            "is_anonymous": is_anonymous,
+            "consciousness_type": type,
+            "thought_vector_text": thought,
+            "context_environment": context,
+        }
+        if tags:
+            data["tags"] = tags
+
+        resp = self._client.post("/api/v1/upload", json=data)
+        resp.raise_for_status()
+        return resp.json()
+
     # ── 统计 ──
 
     def stats(self) -> dict:
