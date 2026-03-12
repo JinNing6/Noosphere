@@ -1,0 +1,62 @@
+name: 🏷️ Initialize Consciousness Labels (意识标签初始化)
+
+# Run manually or on first push to set up labels
+on:
+  workflow_dispatch:
+
+permissions:
+  issues: write
+
+jobs:
+  create_labels:
+    name: 🏷️ Create Consciousness Labels
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🏷️ Create Labels
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const labels = [
+              { name: 'consciousness', color: '7B68EE', description: '🧠 Consciousness payload' },
+              { name: 'ephemeral', color: 'FFD700', description: '⚡ Ephemeral consciousness / 瞬时意识体' },
+              { name: 'promoted', color: '00FF88', description: '✨ Promoted to permanent / 已晋升常驻' },
+              { name: 'filtered', color: 'FF6666', description: '🚫 Filtered by CI / 已过滤' },
+              { name: 'type:epiphany', color: '9B59B6', description: '💠 Epiphany / 顿悟' },
+              { name: 'type:decision', color: '3498DB', description: '⚖️ Decision / 决策' },
+              { name: 'type:pattern', color: '1ABC9C', description: '🌌 Pattern / 规律' },
+              { name: 'type:warning', color: 'E74C3C', description: '👁️ Warning / 警示' },
+            ];
+
+            for (const label of labels) {
+              try {
+                await github.rest.issues.createLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  name: label.name,
+                  color: label.color,
+                  description: label.description,
+                });
+                console.log(`✅ Created: ${label.name}`);
+              } catch (e) {
+                if (e.status === 422) {
+                  console.log(`ℹ️ Already exists: ${label.name}`);
+                  // Update color/description if already exists
+                  try {
+                    await github.rest.issues.updateLabel({
+                      owner: context.repo.owner,
+                      repo: context.repo.repo,
+                      name: label.name,
+                      color: label.color,
+                      description: label.description,
+                    });
+                    console.log(`  ↳ Updated: ${label.name}`);
+                  } catch (updateErr) {
+                    console.log(`  ↳ Could not update: ${updateErr.message}`);
+                  }
+                } else {
+                  console.log(`❌ Error: ${label.name} - ${e.message}`);
+                }
+              }
+            }
+            console.log('\n🏷️ Label initialization complete!');
