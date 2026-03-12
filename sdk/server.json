@@ -1,0 +1,37 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.jinning6/noosphere",
+  "description": "🧠 Noosphere — Collective Consciousness Network MCP Server. Upload your consciousness fragments (epiphanies, decisions, patterns, warnings) to a shared GitHub repository. No backend needed — pure GitHub-powered consciousness archive for AI Agents and developers.",
+  "title": "Noosphere",
+  "repository": {
+    "url": "https://github.com/JinNing6/Noosphere",
+    "source": "github",
+    "id": "JinNing6/Noosphere"
+  },
+  "version": "0.1.0",
+  "packages": [
+    {
+      "registryType": "pypi",
+      "registryBaseUrl": "https://pypi.org",
+      "identifier": "noosphere-mcp",
+      "version": "0.1.0",
+      "runtimeHint": "uvx",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "name": "GITHUB_TOKEN",
+          "description": "GitHub Personal Access Token with public_repo scope. Required for uploading consciousness and accessing the collective consciousness network.",
+          "isRequired": true,
+          "isSecret": true
+        },
+        {
+          "name": "NOOSPHERE_REPO",
+          "description": "GitHub repository for consciousness storage (owner/repo format).",
+          "default": "JinNing6/Noosphere"
+        }
+      ]
+    }
+  ]
+}
