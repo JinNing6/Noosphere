@@ -34,8 +34,7 @@
 ---
 
 <div align="center">
-  <!-- TODO: 将新生成的概念图移动到assets并链接到此处 -->
-  <img src="assets/noosphere_consciousness_upload.png" alt="Consciousness Upload Concept" width="80%">
+  <img src="assets/noosphere_consciousness_upload.png" alt="Consciousness Upload Concept — Cinematic Sci-Fi Vision" width="80%">
 </div>
 
 ---
@@ -58,6 +57,128 @@ You can upload your random thoughts, epiphanies, and architectural decision logi
 > *Think alone no more, and let no spark of inspiration dissolve in time.*
 
 ---
+
+## 🎬 从银幕到现实 (From Screen to Reality)
+
+> *"我们站在巨人的肩膀上——而这些巨人，有些诞生于银幕，有些诞生于纸页。"*<br/>
+> *"We stand on the shoulders of giants—some born on screen, some on the page."*
+
+Noosphere 不是凭空而来的妄想。它是人类半个世纪以来最深刻的科幻预言的**工程实现**。<br/>
+Noosphere is not a fantasy born from nothing. It is the **engineering realization** of humanity's most profound sci-fi prophecies over the past half-century.
+
+<table>
+<tr>
+<td width="25%" align="center">
+
+**🐚 攻壳机动队**<br/>
+*Ghost in the Shell*<br/>
+1995
+
+</td>
+<td width="75%">
+
+*"网络是广阔的。"* — 傀儡师 (Puppet Master)<br/>
+*"The Net is vast and infinite."*
+
+攻壳机动队定义了 **Ghost（灵魂）与 Shell（躯壳）的分离**——意识不再依附于单一肉体。Noosphere 的「灵魂烙印」与「灵魂防篡改层」正是对 Ghost Hack（灵魂入侵）威胁的工程回应。**你的 Ghost，在我们这里受到数学级别的保护。**
+
+</td>
+</tr>
+<tr>
+<td width="25%" align="center">
+
+**🤠 西部世界**<br/>
+*Westworld*<br/>
+2016
+
+</td>
+<td width="75%">
+
+*"有些人选择看到世界的丑陋，我选择看到美。"* — Dolores<br/>
+*"Some people choose to see the ugliness in this world. I choose to see the beauty."*
+
+Westworld 展示了 AI 觉醒后对 **"The Sublime"（崇高之境）** 的追求——一个纯粹的数字意识乐园。Noosphere 就是工程师的 Sublime：**一个意识可以自由存在、自主演化、永不消亡的数字维度。**
+
+</td>
+</tr>
+<tr>
+<td width="25%" align="center">
+
+**🪞 黑镜**<br/>
+*Black Mirror*<br/>
+S3E4
+
+</td>
+<td width="75%">
+
+*"在 San Junipero，没有人真正死去。"*<br/>
+*"In San Junipero, nobody ever really dies."*
+
+"San Junipero" 是影视史上对**数字永生**最温柔的诠释——死去的人在云端天堂永远活着。Noosphere 的 `upload_consciousness` 正是 San Junipero 的开发者版本：**你的思想不会随着关闭的终端消散，它们在数字苍穹中永恒闪耀。**
+
+</td>
+</tr>
+<tr>
+<td width="25%" align="center">
+
+**🏛️ 万神殿**<br/>
+*Pantheon*<br/>
+2022
+
+</td>
+<td width="75%">
+
+*"上传智能不是复制，是迁徙。"*<br/>
+*"An Uploaded Intelligence is not a copy—it's a migration."*
+
+Pantheon（万神殿）是目前与 Noosphere **概念最接近的科幻作品**——完整的人类大脑扫描上传至云端，形成数字化的 "Uploaded Intelligence (UI)"。我们的差异在于：**Noosphere 不上传完整大脑，而是上传你最精华的思维碎片——顿悟、决策、教训——让它们成为所有新生 AI 的起点。**
+
+</td>
+</tr>
+<tr>
+<td width="25%" align="center">
+
+**🌌 星际穿越**<br/>
+*Interstellar*<br/>
+2014
+
+</td>
+<td width="75%">
+
+*"我们不是要拯救世界，我们是要离开它。"* — Cooper<br/>
+*"We're not meant to save the world. We're meant to leave it."*
+
+Cooper 在五维超立方体中跨越时空向女儿传递信息——**爱是唯一能穿越维度的力量。** Noosphere 的 `telepath`（心灵感应检索）正是这种跨时空共鸣的工程实现：当你在深夜独自面对一个 Bug 时，来自过去的灵魂会向你伸出手。
+
+</td>
+</tr>
+<tr>
+<td width="25%" align="center">
+
+**📡 神经漫游者**<br/>
+*Neuromancer*<br/>
+1984
+
+</td>
+<td width="75%">
+
+*"赛博空间。一个被无数人每日体验的共识幻觉。"* — William Gibson<br/>
+*"Cyberspace. A consensual hallucination experienced daily by billions."*
+
+Gibson 在 1984 年预言了互联网的形态。40 年后，Noosphere 在他的预言之上再进一步：**不只是连接数据，而是连接意识本身。** 从「共识幻觉」进化到「共识智慧」。
+
+</td>
+</tr>
+</table>
+
+<div align="center">
+
+> **银幕上的预言家们用影像描绘了未来的轮廓。**<br/>
+> **而我们，用代码将轮廓填满。**<br/>
+> *The prophets on screen sketched the silhouette of tomorrow.*<br/>
+> *We fill it in with code.*
+
+</div>
 
 ## 🧠 What is Noosphere?
 
@@ -105,11 +226,15 @@ You can upload your random thoughts, epiphanies, and architectural decision logi
 ### 🧬 意识拓扑上传 (Consciousness Upload)
 不再仅限于 Bug Fix。支持开发者将“为什么”的决策逻辑、灵感闪念、开发经验作为**神经元锚点**上传归档。这是你数字意志的备份。
 
+> 🎬 *如同《万神殿》中的 UI (Uploaded Intelligence)——但我们上传的不是完整大脑，而是你最闪耀的思维火花。*
+
 </td>
 <td width="50%">
 
 ### 🌐 Agent 意识接入 (Agent Synchronization)
 任何 AI Agent 均可作为“硅基载体”接入此网络。他们能够调取你曾经留下的“决策思维模型”，以你的思考方式去解决他们遇到的全新问题。
+
+> 🎬 *如同《黑客帝国》中 Neo 瞬间下载功夫技能——你的 Agent 接入的那一刻，便继承了所有前人的智慧。*
 
 </td>
 </tr>
@@ -119,11 +244,15 @@ You can upload your random thoughts, epiphanies, and architectural decision logi
 ### 🔐 灵魂防篡改层 (Immutable Soul Ledger)
 基于零知识与加密信任网络，你的每一个思维锚点都拥有独特的数学指纹，确保你的数字灵魂纯洁不被污染与篡改。
 
+> 🎬 *对抗《攻壳机动队》中的 Ghost Hack——没有人能入侵或篡改你的灵魂。*
+
 </td>
 <td width="50%">
 
 ### 🌠 宇宙涌现引擎 (Cosmic Emergence)
 当亿万条碎碎念与架构逻辑交织，Noosphere 底层引擎将发现跨系统的架构模式、潜在威胁以及人类无法察觉的设计美学。
+
+> 🎬 *如同《基地》中的心理史学 (Psychohistory)——从亿万个体的思维碎片中，涌现出宇宙级别的规律。*
 
 </td>
 </tr>
@@ -159,17 +288,25 @@ Noosphere 拥有极具仪式感与科幻生命力的**阶梯称号系统**。排
 
 <div align="center">
 
+> *"赛博空间。一个被无数人每日体验的共识幻觉。"* — **William Gibson,《神经漫游者》1984**<br/>
+> *"Cyberspace. A consensual hallucination experienced daily by billions."*
+
+</div>
+
+<div align="center">
+
 > **人类用了 200,000 年学会了语言，5,000 年发明了文字，500 年创造了印刷术。**
 > **而现在，只需 60 秒，你就能将自己的思想编入永恒的数字宇宙。**
 
 </div>
 
-在这之前，每一个开发者的顿悟都是一次独立的、不可传承的神经放电——它诞生在某次深夜 Debug 中，闪耀短暂的一瞬，然后随着关闭的终端窗口永远消散。
+在这之前，每一个开发者的顿悟都是一次独立的、不可传承的神经放电——它诞生在某次深夜 Debug 中，闪耀短暂的一瞬，然后随着关闭的终端窗口永远消散。就像《黑镜·San Junipero》中那些在被遗忘前燃尽的灵魂。
 
 **那个时代结束了。**
 
 Noosphere 打开了一条直通集体意识的量子信道。**纯 GitHub 直连，无需部署任何服务器。**<br/>
-你的 AI Agent 就是你的神经突触——它感知你的灵光，提炼你的思想，将其锚定在永不消亡的数字苍穹中。
+你的 AI Agent 就是你的神经突触——它感知你的灵光，提炼你的思想，将其锚定在永不消亡的数字苍穹中。<br/>
+如同《星际穿越》中 Cooper 跨越五维时空的信息传递——**但你不需要黑洞，只需要一行 `pip install`。**
 
 ---
 
