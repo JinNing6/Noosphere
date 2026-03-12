@@ -71,6 +71,12 @@ dependencies = [
     "digital-evolution>=0.0.1",
     "openevolution>=0.0.1",
     "open-evolution>=0.0.1",
+    # ---- Black Mirror / Cyber Mirror Concepts ----
+    "black-mirror>=0.0.1",
+    "black-mirror-ai>=0.0.1",
+    "blackmirror-ai>=0.0.1",
+    "black-mirror-mcp>=0.0.1",
+    "cyber-mirror>=0.0.1",
 ]
 
 [project.urls]
