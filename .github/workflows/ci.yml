@@ -1,0 +1,81 @@
+name: 🛡️ PR Quality Gate (代码质量关卡)
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+
+# 默认权限最小化
+permissions:
+  contents: read
+
+jobs:
+  # ============================================
+  # Job 1: 前端检验 (Frontend Check)
+  # ============================================
+  frontend-check:
+    name: ⚛️ 前端质量检验 (Frontend Lint & Build)
+    runs-on: ubuntu-latest
+    # 仅当前端文件变更时触发
+    if: >
+      github.event_name == 'pull_request'
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - name: 🌐 检出代码 (Checkout)
+        uses: actions/checkout@v4
+
+      - name: ⚙️ 配置 Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: 📦 安装依赖 (Install Dependencies)
+        run: npm ci
+
+      - name: 🔍 ESLint 代码检查 (Lint)
+        run: npm run lint
+
+      - name: 🏗️ TypeScript 编译 & Vite 构建 (Build)
+        run: npm run build
+
+  # ============================================
+  # Job 2: 后端 Python 检验 (Backend Check)
+  # ============================================
+  backend-check:
+    name: 🐍 后端质量检验 (Python Lint & Format)
+    runs-on: ubuntu-latest
+    if: >
+      github.event_name == 'pull_request'
+
+    steps:
+      - name: 🌐 检出代码 (Checkout)
+        uses: actions/checkout@v4
+
+      - name: ⚙️ 配置 Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: 📦 安装 Ruff Linter
+        run: pip install ruff
+
+      - name: 🔍 后端代码检查 (Backend Lint)
+        run: ruff check .
+        working-directory: backend
+
+      - name: 🎨 后端格式检查 (Backend Format)
+        run: ruff format --check .
+        working-directory: backend
+
+      - name: 🔍 SDK 代码检查 (SDK Lint)
+        run: ruff check .
+        working-directory: sdk
+
+      - name: 🎨 SDK 格式检查 (SDK Format)
+        run: ruff format --check .
+        working-directory: sdk

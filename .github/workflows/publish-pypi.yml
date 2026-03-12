@@ -1,0 +1,73 @@
+name: 🚀 发布到 PyPI (Publish to PyPI)
+
+# 自动触发条件:
+# 1. 在 GitHub 上创建 Release 时自动发布 (推荐方式，UI 操作即可)
+# 2. 推送 v* tag 时自动发布
+# 3. 手动触发
+on:
+  release:
+    types: [published]
+
+  push:
+    tags:
+      - "v*.*.*"
+
+  workflow_dispatch:
+
+jobs:
+  # ============================================
+  # Job 1: 构建分发包 (Build Distribution)
+  # ============================================
+  build:
+    name: 📦 构建分发包 (Build Package)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 🌐 检出代码 (Checkout)
+        uses: actions/checkout@v4
+
+      - name: ⚙️ 配置 Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: 📦 安装构建工具 (Install Build Tools)
+        run: pip install build
+
+      - name: 🏗️ 构建 sdist 和 wheel (Build)
+        run: python -m build
+        working-directory: sdk
+
+      - name: 📤 上传构建产物 (Upload Artifacts)
+        uses: actions/upload-artifact@v4
+        with:
+          name: noosphere-mcp-dist
+          path: sdk/dist/
+
+  # ============================================
+  # Job 2: 发布到 PyPI (Publish)
+  # ============================================
+  publish-pypi:
+    name: 🚀 发布到 PyPI (Publish)
+    needs: build
+    runs-on: ubuntu-latest
+
+    # PyPI Trusted Publisher 需要的环境配置
+    environment:
+      name: pypi
+      url: https://pypi.org/project/noosphere-mcp/
+
+    # OIDC Trusted Publisher 所需的权限
+    permissions:
+      id-token: write
+
+    steps:
+      - name: 📥 下载构建产物 (Download Artifacts)
+        uses: actions/download-artifact@v4
+        with:
+          name: noosphere-mcp-dist
+          path: dist/
+
+      - name: 🚀 发布到 PyPI (Publish to PyPI)
+        uses: pypa/gh-action-pypi-publish@release/v1
+        # 使用 Trusted Publisher (OIDC)，无需 API Token

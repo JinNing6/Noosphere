@@ -9,10 +9,11 @@ Noosphere MCP Server
 """
 
 import logging
+
 import uvicorn
 
-from app.main import app
 from app.config import settings
+from app.main import app
 
 logger = logging.getLogger("noosphere.mcp")
 
@@ -33,10 +34,7 @@ def create_mcp_app():
         mcp.mount()
         logger.info("✅ MCP Server 已挂载到 FastAPI 应用")
     except ImportError:
-        logger.warning(
-            "⚠️ fastapi-mcp 未安装，MCP Server 未启用。"
-            "运行 'pip install fastapi-mcp' 安装。"
-        )
+        logger.warning("⚠️ fastapi-mcp 未安装，MCP Server 未启用。运行 'pip install fastapi-mcp' 安装。")
     except Exception as e:
         logger.warning(f"⚠️ MCP Server 挂载失败: {e}")
 

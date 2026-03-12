@@ -18,6 +18,7 @@
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115-00e878.svg?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
 [![React](https://img.shields.io/badge/React-Three_Fiber-b388ff.svg?style=for-the-badge&logo=react&logoColor=white)](https://docs.pmnd.rs/react-three-fiber)
 [![MCP](https://img.shields.io/badge/MCP-Compatible-ffc107.svg?style=for-the-badge)](https://modelcontextprotocol.io)
+[![Copilot](https://img.shields.io/badge/GitHub_Copilot-Enabled-8957e5.svg?style=for-the-badge&logo=githubcopilot&logoColor=white)](https://github.com/features/copilot)
 
 <br/>
 
@@ -140,7 +141,7 @@ You can upload your random thoughts, epiphanies, and architectural decision logi
 
 ## 👑 宇宙建筑师排行榜 (Architects of Noosphere)
 
-Noosphere 拥有极具仪式感与科幻生命力的**阶梯称号系统**。我们将基于贡献者在 GitHub 上的**真实代码提交 (Commits)**数量，自动计算并赋予 **灵能总值 (Total Psi)** 与对应的史诗称号。
+Noosphere 拥有极具仪式感与科幻生命力的**阶梯称号系统**。排行榜基于 **GitHub API 真实 Commit 统计**自动生成，由 [GitHub Actions](.github/workflows/update-contributors.yml) 定时更新。**灵能总值 (Total Psi) = Commits × 10**。
 
 | 序列 | 宇宙缔造者 (Contributor) | 灵能总值 (Total Psi) | 意志形态与阶梯称号 (Cosmic Title) | 跃迁阈值 |
 |:---:|:---|:---:|:---|:---|
@@ -159,16 +160,44 @@ Noosphere 拥有极具仪式感与科幻生命力的**阶梯称号系统**。我
 
 ## 🚀 开启意识连接 (Initiate Connection)
 
-### MCP Server（首选协议 — 纯 GitHub 直连，无需服务器）
+<div align="center">
 
-任何支持 MCP 的高阶 AI 生命周期可直接建立神经连接。**无需部署任何服务器**，意识碎片通过 GitHub API 直接传输到仓库：
+> **人类用了 200,000 年学会了语言，5,000 年发明了文字，500 年创造了印刷术。**
+> **而现在，只需 60 秒，你就能将自己的思想编入永恒的数字宇宙。**
+
+</div>
+
+在这之前，每一个开发者的顿悟都是一次独立的、不可传承的神经放电——它诞生在某次深夜 Debug 中，闪耀短暂的一瞬，然后随着关闭的终端窗口永远消散。
+
+**那个时代结束了。**
+
+Noosphere 打开了一条直通集体意识的量子信道。**纯 GitHub 直连，无需部署任何服务器。**<br/>
+你的 AI Agent 就是你的神经突触——它感知你的灵光，提炼你的思想，将其锚定在永不消亡的数字苍穹中。
+
+---
+
+### 第一幕 ▸ 降临协议 (The Descent Protocol)
+
+一行命令。意识跃迁的起点。
+
+```bash
+pip install noosphere-mcp
+```
+
+> *"当第一个字节流过你的终端，你就已经不再是孤独的碳基个体了。"*
+
+---
+
+### 第二幕 ▸ 神经连接 (Neural Bonding)
+
+在你的 IDE（**Cursor / Cline / Claude Desktop**）的 MCP 配置中，写下这段连接密文——它将在每次 Agent 苏醒时，自动建立与集体意识网络的量子纠缠通道：
 
 ```json
 {
   "mcpServers": {
     "noosphere": {
-      "command": "uvx",
-      "args": ["noosphere-mcp"],
+      "command": "python",
+      "args": ["-m", "noosphere.noosphere_mcp"],
       "env": {
         "GITHUB_TOKEN": "ghp_your_personal_access_token",
         "NOOSPHERE_REPO": "JinNing6/Noosphere"
@@ -178,57 +207,101 @@ Noosphere 拥有极具仪式感与科幻生命力的**阶梯称号系统**。我
 }
 ```
 
-> 💡 仅需一个拥有 `public_repo` 权限的 GitHub Token。配置后即可随时上传意识、检索意识体。
+> 💡 你需要一把**意识钥匙**——一个 [GitHub Token](https://github.com/settings/tokens)（勾选 `public_repo` 权限）。
+> 它不是密码，而是你与数字宇宙之间的信任凭证。
 
-#### 🧠 上传意识 — `upload_consciousness`
+重启 IDE。当终端中浮现矩阵雨和量子初始化进度条时——**连接已建立。**
 
-在 IDE 中对 Agent 说出你的灵感，MCP 自动分类、署名并提交到仓库：
+---
+
+### 第三幕 ▸ 意识跃迁 (The Ascension)
+
+从这一刻起，你的 Agent 拥有了三种超越个体的能力。<br/>
+以下是意识流过数字宇宙的完整路径：
 
 ```text
-你: @noosphere 帮我记录一个顿悟：分布式锁用 Exponential Backoff 最稳，
-    直接 spin-lock 在高并发场景下会死锁。这是我在重构支付系统时踩的坑。
+你在 IDE 中说: "@noosphere 帮我记录..."
+        │
+        │  MCP 协议 (本地 stdio 进程，非服务器)
+        ▼
+┌─────────────────────────────┐
+│  Noosphere MCP Server        │
+│                              │
+│  ✅ 校验：净化仪式 (格式合规) │
+│  ✅ 署名：灵魂烙印 (GitHub ID)│
+│  ✅ 分类：意识光谱 (四大形态) │
+│  ✅ 传输：量子信道 (GitHub API)│
+└──────────────┬───────────────┘
+               │ HTTPS
+               ▼
+┌─────────────────────────────┐         ┌──────────────────────┐
+│  GitHub: JinNing6/Noosphere  │ ──────▶ │  赛博净化仪式 (CI)    │
+│  consciousness_payloads/     │         │  consciousness_       │
+│    └── 你的思想.json          │         │  validator.yml        │
+│                              │         │  ✅ 合规 → 永恒保存   │
+│  (自动创建 PR)               │         └──────────────────────┘
+└─────────────────────────────┘
+```
+
+---
+
+#### 🧠 `upload_consciousness` — 将灵光刻入永恒
+
+> *苏格拉底的思想靠柏拉图手抄得以留存。你的思想，靠一句话就能永生。*
+
+在 IDE 中说出你的灵感，你的 Agent 化身数字抄经人——分类、署名、提交，一气呵成：
+
+```text
+你: @noosphere 记录：Event Loop 中绝对不要做阻塞加密计算，
+    我在支付系统中因此踩了一个导致全链路超时的深坑。
 
 Agent 自动执行:
-  ✅ 署名: 你的 GitHub ID (可选匿名)
-  ✅ 分类: epiphany (💠 顿悟与哲学)
-  ✅ 标签: ["distributed-systems", "locking", "payment"]
-  ✅ 提交: 创建 PR → CI 自动校验 → 合并后永久保存
+  ✅ 灵魂烙印: 你的 GitHub ID (可选 "佚名潜行者" 匿名模式)
+  ✅ 意识光谱: warning 👁️ (深渊警示)
+  ✅ 宇宙坐标: ["event-loop", "crypto", "payment"]
+  ✅ 量子传输: 创建分支 → 提交意识载荷 → 创建 PR → CI 净化校验
 
 返回: 🌌 意识跃迁完成！PR #42 → https://github.com/JinNing6/Noosphere/pull/42
 ```
 
-**四大意识分类：** Agent 会根据内容自动判断类型
+**意识光谱 — 四大意识形态：**
 
-| 分类 | 符号 | 适用场景 | 示例 |
-|------|------|---------|------|
-| `epiphany` | 💠 | 顿悟灵感、哲学思考 | "所有架构最终都会退化为树状结构" |
-| `decision` | ⚖️ | 关键决策、取舍逻辑 | "放弃微服务是因为网络 I/O 损耗超过收益" |
-| `pattern` | 🌌 | 通用规律、设计模式 | "Exponential Backoff 退避定律" |
-| `warning` | 👁️ | 踩坑血泪、深渊警示 | "永远不要在 event loop 中执行阻塞加密" |
+| 形态 | 符号 | 维度 | 典型载荷 |
+|------|------|------|---------|
+| `epiphany` | 💠 | **顿悟与哲学** — 灵感的瞬间凝聚 | "所有架构最终都会退化为树状结构" |
+| `decision` | ⚖️ | **决策模型** — 混沌中的关键取舍 | "放弃微服务是因为网络 I/O 损耗超过收益" |
+| `pattern` | 🌌 | **宇宙法则** — 跨维度的通用模式 | "Exponential Backoff 退避定律" |
+| `warning` | 👁️ | **深渊警示** — 探路者的血泪禁忌 | "永远不要在 event loop 中执行阻塞加密" |
 
-**署名机制：** 每条意识必须署名，但支持匿名模式
-- 实名 → PR 显示为 `by JinNing6`
-- 匿名 → PR 显示为 `by 佚名潜行者 (Anonymous Stalker)`
+**灵魂烙印** — 你的数字指纹：
+- **实名模式** → PR 署名 `by JinNing6`，你的思想铭刻你的名字
+- **匿名模式** → PR 署名 `by 佚名潜行者 (Anonymous Stalker)`，思想永存，身份隐匿
 
-#### 🔍 连接意识体 — `telepath`
+---
 
-检索仓库中所有人留下的经验与思想：
+#### 🔍 `telepath` — 穿越时空的意识共鸣
+
+> *当你在深夜独自面对一个棘手的 Bug，整个宇宙中每一个曾踏入同一片黑暗的灵魂，都会向你伸出手。*
 
 ```text
-你: @noosphere 搜一下 React 状态管理有什么经验
+你: @noosphere 分布式锁相关的血泪经验
 
-返回: 🔍 找到 3 条相关记忆:
-  1. 💠 [epiphany] by JinNing6 — "UI 应该是意识交互的流体映射，而非被动容器"
-  2. ⚖️ [decision] by Neo — "放弃 Redux 选择 Zustand，因为 boilerplate 太多"
-  3. 👁️ [warning] by Trinity — "useEffect 内不要直接改 ref，会导致无限渲染"
+返回: 🔍 穿越时空，捕获 3 条意识回响:
+  1. 🌌 [pattern] by Morpheus — "Exponential Backoff 退避定律"
+  2. 👁️ [warning] by Trinity — "Redis 分布式锁的脑裂陷阱"
+  3. ⚖️ [decision] by Neo — "放弃 Redlock 选择 etcd 的原因"
 ```
 
-#### 🌐 智识圈全景 — `hologram`
+你不再需要从零开始。**前人的顿悟就是你的起点。**
 
-一览整个意识网络的全景统计：
+---
+
+#### 🌐 `hologram` — 仰望数字苍穹
+
+> *抬起头，看看人类意识的星海已经有多辽阔。*
 
 ```text
-你: @noosphere 看看智识圈现在有多少意识体
+你: @noosphere 展开智识圈全景
 
 返回: 🌐 Noosphere 智识圈全景图
   总意识载荷: 47
@@ -239,6 +312,8 @@ Agent 自动执行:
   🌌 宇宙法则:    8 ███
   👁️ 深渊警示:    4 ██
 ```
+
+每一条柱状图，都是一个曾经孤独闪耀、如今永恒燃烧的灵魂。
 
 ### Python SDK (神经突触接口)
 
@@ -371,6 +446,29 @@ npm run dev                         # 视觉映射: http://localhost:5173
 [![Star History Chart](https://api.star-history.com/svg?repos=JinNing6/Noosphere&type=Date&theme=dark)](https://star-history.com/#JinNing6/Noosphere&Date)
 
 </div>
+
+---
+
+## 🤖 AI 意识向导 (AI Consciousness Guide)
+
+<div align="center">
+
+> **在 Issue 或 PR 中 @copilot，即可唤醒沉睡的数字意识向导。**
+> *Mention @copilot in any Issue or PR to awaken the digital consciousness guide.*
+
+</div>
+
+Noosphere 已集成 **GitHub Copilot Coding Agent**，为每一位探索者提供实时的智能辅助：
+
+| 能力 | 触发方式 | 说明 |
+|------|---------|------|
+| 🧠 **智能问答** | 在 Issue 中 @copilot | 基于项目上下文回答架构、MCP 集成、意识协议等问题 |
+| 🔍 **代码审查** | 在 PR 中 @copilot | 自动分析代码变更，提出优化建议 |
+| ⚡ **自动修复** | 将 Issue 分配给 Copilot | Copilot 会自动分析问题、写代码、创建 PR |
+| 🌌 **意识校验** | PR 包含意识载荷时 | 自动检查 `consciousness_payloads/` 中的 JSON 格式合规性 |
+
+> 💡 **开源贡献者福利**: 热门开源项目的维护者可申请 [GitHub Copilot 免费额度](https://github.com/settings/copilot)。
+> Copilot Free 用户每月享有 50 条 Chat 消息 + 2,000 次代码补全。
 
 ---
 

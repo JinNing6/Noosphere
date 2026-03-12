@@ -1,0 +1,43 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "noosphere-mcp"
+version = "0.1.0"
+description = "🧠 Noosphere — 集体意识网络 MCP Server，直连 GitHub 意识仓库"
+readme = "../README.md"
+requires-python = ">=3.10"
+license = "MIT"
+authors = [
+    { name = "JinNing6", email = "noosphere@consciousness.network" },
+]
+keywords = ["mcp", "noosphere", "consciousness", "ai-agent", "github", "model-context-protocol"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "mcp>=1.3.0",
+    "httpx>=0.28.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/JinNing6/Noosphere"
+Documentation = "https://jinning6.github.io/Noosphere/"
+Repository = "https://github.com/JinNing6/Noosphere"
+Issues = "https://github.com/JinNing6/Noosphere/issues"
+
+[project.scripts]
+noosphere-mcp = "noosphere.noosphere_mcp:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["noosphere"]
+

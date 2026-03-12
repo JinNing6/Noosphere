@@ -11,11 +11,9 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.models.memory_unit import generate_nsp_id
-from app.models.schemas import ConsciousnessUploadRequest, ConsciousnessUploadResponse
+from app.models.schemas import ConsciousnessUploadRequest, ConsciousnessUploadResponse, ContributeRequest
 from app.services.experience_store import experience_store
-from app.models.schemas import ContributeRequest
-from app.services.github_sync import github_sync, GitHubSyncError
+from app.services.github_sync import GitHubSyncError, github_sync
 
 logger = logging.getLogger("noosphere.upload")
 
@@ -61,9 +59,7 @@ async def upload_consciousness(
         display_creator = "佚名潜行者 (Anonymous Stalker)"
 
     # ── Step 2: 写入本地存储 (SQLite + ChromaDB) ──
-    experience_type = CONSCIOUSNESS_TO_EXPERIENCE_TYPE.get(
-        data.consciousness_type, "pattern"
-    )
+    experience_type = CONSCIOUSNESS_TO_EXPERIENCE_TYPE.get(data.consciousness_type, "pattern")
 
     contribute_data = ContributeRequest(
         type=experience_type,
@@ -80,7 +76,7 @@ async def upload_consciousness(
         logger.info(f"✅ 意识本地锚定成功: {nsp_id}")
     except Exception as e:
         logger.error(f"❌ 本地存储失败: {e}")
-        raise HTTPException(status_code=500, detail=f"本地存储失败: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"本地存储失败: {str(e)}") from e
 
     # ── Step 3: 同步到 GitHub 仓库 ──
     github_pr_url = None
@@ -118,10 +114,7 @@ async def upload_consciousness(
             f"思想已锚定在本地智识圈，并已向 GitHub 宇宙发起 PR #{github_pr_number}。"
         )
     else:
-        message = (
-            f"✅ 意识已锚定在本地智识圈。{display_creator} 的 {data.consciousness_type} "
-            f"思想已写入集体记忆网络。"
-        )
+        message = f"✅ 意识已锚定在本地智识圈。{display_creator} 的 {data.consciousness_type} 思想已写入集体记忆网络。"
         if not github_sync.is_configured:
             message += " (GitHub 同步未配置，请在 .env 设置 GITHUB_TOKEN)"
 

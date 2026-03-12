@@ -1,8 +1,32 @@
-import React, { useState } from 'react';
-import { TOP_CONTRIBUTORS, MOCK_HEATMAP_DATA, calculateTitle } from '../data/mockContributions';
+import React, { useState, useEffect } from 'react';
+import type { Contributor } from '../data/mockContributions';
+import { MOCK_HEATMAP_DATA, calculateTitle, fetchGitHubContributors } from '../data/mockContributions';
 
 export default function ContributionGraph() {
   const [isOpen, setIsOpen] = useState(false);
+  const [contributors, setContributors] = useState<Contributor[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  // 面板打开时从 GitHub API 加载真实数据
+  useEffect(() => {
+    if (!isOpen) return;
+    if (contributors.length > 0) return; // 已有数据则不重复请求
+
+    let cancelled = false;
+    setLoading(true);
+
+    fetchGitHubContributors()
+      .then((data) => {
+        if (!cancelled) {
+          setContributors(data);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => { cancelled = true; };
+  }, [isOpen, contributors.length]);
 
   // 渲染热力图颜色
   const getHeatmapColor = (level: number) => {
@@ -149,77 +173,136 @@ export default function ContributionGraph() {
             宇宙建筑师排行
           </div>
           <div style={{ fontSize: 12, fontWeight: 300, color: 'rgba(255,255,255,0.5)', marginBottom: 20 }}>
-            Architects of Noosphere
+            Architects of Noosphere · Powered by GitHub
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {TOP_CONTRIBUTORS.map((user, idx) => (
-              <div 
-                key={user.id}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
+          {/* Loading 骨架屏 */}
+          {loading && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {[1, 2, 3].map(i => (
+                <div key={`skeleton-${i}`} style={{
+                  display: 'flex', alignItems: 'center', gap: 12,
                   background: 'rgba(255,255,255,0.03)',
                   border: '1px solid rgba(255,255,255,0.05)',
-                  borderRadius: 8,
-                  padding: '12px 16px',
-                  transition: 'background 0.2s'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = 'rgba(123, 97, 255, 0.1)';
-                  e.currentTarget.style.borderColor = 'rgba(123, 97, 255, 0.4)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'rgba(255,255,255,0.03)';
-                  e.currentTarget.style.borderColor = 'rgba(255,255,255,0.05)';
-                }}
-              >
-                <div style={{ 
-                  width: 30, 
-                  fontSize: 16, 
-                  fontWeight: 'bold', 
-                  color: idx === 0 ? '#ffd700' : idx === 1 ? '#e0e0e0' : idx === 2 ? '#cd7f32' : 'rgba(255,255,255,0.3)'
+                  borderRadius: 8, padding: '12px 16px',
                 }}>
-                  #{idx + 1}
+                  <div style={{
+                    width: 36, height: 36, borderRadius: '50%',
+                    background: 'linear-gradient(90deg, rgba(123,97,255,0.1) 25%, rgba(123,97,255,0.2) 50%, rgba(123,97,255,0.1) 75%)',
+                    backgroundSize: '200% 100%',
+                    animation: 'shimmer 1.5s infinite',
+                  }} />
+                  <div style={{ flex: 1 }}>
+                    <div style={{ width: 120, height: 14, borderRadius: 4, background: 'rgba(255,255,255,0.06)', marginBottom: 6 }} />
+                    <div style={{ width: 80, height: 10, borderRadius: 4, background: 'rgba(255,255,255,0.04)' }} />
+                  </div>
                 </div>
-                
-                <div style={{ fontSize: 24, marginRight: 16 }}>{user.avatar}</div>
-                
-                <div style={{ flex: 1 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <div style={{ fontWeight: 600, fontSize: 16, color: '#fff' }}>{user.name}</div>
-                    
-                    {/* 阶梯称号 Badge */}
-                    <div style={{
-                      display: 'flex', alignItems: 'center', gap: 4,
-                      padding: '2px 8px', borderRadius: 12,
-                      background: `linear-gradient(90deg, ${calculateTitle(user.totalScore).color}22, transparent)`,
-                      border: `1px solid ${calculateTitle(user.totalScore).color}44`,
-                      fontSize: 11, fontWeight: 500,
-                      color: calculateTitle(user.totalScore).color,
-                      textShadow: calculateTitle(user.totalScore).glow
-                    }}>
-                      {calculateTitle(user.totalScore).icon} {calculateTitle(user.totalScore).label}
+              ))}
+              <style>{`@keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }`}</style>
+            </div>
+          )}
+
+          {/* 无数据提示 */}
+          {!loading && contributors.length === 0 && (
+            <div style={{
+              textAlign: 'center', padding: '24px 0',
+              color: 'rgba(255,255,255,0.3)', fontSize: 14,
+            }}>
+              <div style={{ fontSize: 32, marginBottom: 8 }}>🌌</div>
+              <div>宇宙还处于奇点阶段</div>
+              <div style={{ fontSize: 12, marginTop: 4, opacity: 0.6 }}>
+                The universe is still at its singularity
+              </div>
+            </div>
+          )}
+
+          {/* 贡献者列表 */}
+          {!loading && contributors.length > 0 && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {contributors.map((user, idx) => (
+                <div 
+                  key={user.id}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    background: 'rgba(255,255,255,0.03)',
+                    border: '1px solid rgba(255,255,255,0.05)',
+                    borderRadius: 8,
+                    padding: '12px 16px',
+                    transition: 'background 0.2s',
+                    cursor: 'pointer',
+                  }}
+                  onClick={() => window.open(`https://github.com/${user.login}`, '_blank')}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = 'rgba(123, 97, 255, 0.1)';
+                    e.currentTarget.style.borderColor = 'rgba(123, 97, 255, 0.4)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'rgba(255,255,255,0.03)';
+                    e.currentTarget.style.borderColor = 'rgba(255,255,255,0.05)';
+                  }}
+                >
+                  <div style={{ 
+                    width: 30, 
+                    fontSize: 16, 
+                    fontWeight: 'bold', 
+                    color: idx === 0 ? '#ffd700' : idx === 1 ? '#e0e0e0' : idx === 2 ? '#cd7f32' : 'rgba(255,255,255,0.3)'
+                  }}>
+                    #{idx + 1}
+                  </div>
+                  
+                  {/* GitHub 真实头像 */}
+                  <img
+                    src={`${user.avatarUrl}&s=48`}
+                    alt={user.login}
+                    style={{
+                      width: 36, height: 36, borderRadius: '50%',
+                      marginRight: 12,
+                      border: `2px solid ${calculateTitle(user.totalScore).color}44`,
+                      boxShadow: calculateTitle(user.totalScore).glow,
+                    }}
+                    onError={(e) => {
+                      // 头像加载失败时显示首字母
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                    }}
+                  />
+                  
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <div style={{ fontWeight: 600, fontSize: 16, color: '#fff' }}>{user.login}</div>
+                      
+                      {/* 阶梯称号 Badge */}
+                      <div style={{
+                        display: 'flex', alignItems: 'center', gap: 4,
+                        padding: '2px 8px', borderRadius: 12,
+                        background: `linear-gradient(90deg, ${calculateTitle(user.totalScore).color}22, transparent)`,
+                        border: `1px solid ${calculateTitle(user.totalScore).color}44`,
+                        fontSize: 11, fontWeight: 500,
+                        color: calculateTitle(user.totalScore).color,
+                        textShadow: calculateTitle(user.totalScore).glow
+                      }}>
+                        {calculateTitle(user.totalScore).icon} {calculateTitle(user.totalScore).label}
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: 12, marginTop: 6, fontSize: 12, color: 'rgba(255,255,255,0.6)' }}>
+                      <span>📦 Commits: <span style={{ color: '#00d4ff' }}>{user.commits}</span></span>
                     </div>
                   </div>
 
-                  <div style={{ display: 'flex', gap: 12, marginTop: 6, fontSize: 12, color: 'rgba(255,255,255,0.6)' }}>
-                    <span>💠 顿悟: <span style={{ color: '#00d4ff' }}>{user.epiphanies}</span></span>
-                    <span>⚖️ 决策: <span style={{ color: '#00e878' }}>{user.decisions}</span></span>
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ fontSize: 18, fontWeight: 'bold', color: '#ff6b35' }}>
+                      {user.totalScore}
+                    </div>
+                    <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>
+                      灵能总值<br/>Total Psi
+                    </div>
                   </div>
                 </div>
-
-                <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontSize: 18, fontWeight: 'bold', color: '#ff6b35' }}>
-                    {user.totalScore}
-                  </div>
-                  <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>
-                    灵能总值<br/>Total Psi
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </>

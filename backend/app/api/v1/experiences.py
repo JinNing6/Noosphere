@@ -8,7 +8,7 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.models.schemas import PaginatedResponse, MemoryUnitResponse
+from app.models.schemas import MemoryUnitResponse, PaginatedResponse
 from app.services.experience_store import experience_store
 
 router = APIRouter()
@@ -53,5 +53,6 @@ async def get_experience(experience_id: str, db: Session = Depends(get_db)):
     unit = experience_store.get_by_id(db, experience_id)
     if not unit:
         from fastapi import HTTPException
+
         raise HTTPException(status_code=404, detail="经验不存在")
     return MemoryUnitResponse.model_validate(unit)

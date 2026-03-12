@@ -6,9 +6,9 @@ GET /api/v1/skills — Agent Skills 技能协议路由
 
 import os
 from pathlib import Path
+
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from typing import List
 
 router = APIRouter()
 
@@ -16,13 +16,16 @@ router = APIRouter()
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent.parent.parent
 SKILLS_DIR = PROJECT_ROOT / "skills"
 
+
 class SkillSummary(BaseModel):
     name: str
     has_skill_md: bool
 
+
 class SkillsResponse(BaseModel):
     total: int
-    skills: List[SkillSummary]
+    skills: list[SkillSummary]
+
 
 class SkillContentResponse(BaseModel):
     name: str
@@ -46,7 +49,7 @@ async def list_skills():
         if item_path.is_dir() and not item.startswith("."):
             has_md = (item_path / "SKILL.md").is_file()
             skills_list.append(SkillSummary(name=item, has_skill_md=has_md))
-            
+
     return SkillsResponse(total=len(skills_list), skills=skills_list)
 
 
@@ -59,17 +62,14 @@ async def get_skill_content(skill_name: str):
     Agent 读取后，须按照其中的行动法则 (Instructions) 与边界约束 (Constraints) 执行工作。
     """
     skill_path = SKILLS_DIR / skill_name / "SKILL.md"
-    
+
     if not skill_path.exists() or not skill_path.is_file():
-        raise HTTPException(
-            status_code=404, 
-            detail=f"Skill '{skill_name}' 不存在，或其中缺少 SKILL.md 声明文件。"
-        )
-        
+        raise HTTPException(status_code=404, detail=f"Skill '{skill_name}' 不存在，或其中缺少 SKILL.md 声明文件。")
+
     try:
-        with open(skill_path, "r", encoding="utf-8") as f:
+        with open(skill_path, encoding="utf-8") as f:
             content = f.read()
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"读取技能档案引发宇宙湍流: {str(e)}")
-        
+        raise HTTPException(status_code=500, detail=f"读取技能档案引发宇宙湍流: {str(e)}") from e
+
     return SkillContentResponse(name=skill_name, content=content)

@@ -5,9 +5,8 @@
 """
 
 import logging
-from typing import Optional
 
-from sqlalchemy import func, desc
+from sqlalchemy import desc, func
 from sqlalchemy.orm import Session
 
 from app.models.memory_unit import MemoryUnit, generate_nsp_id
@@ -26,7 +25,7 @@ class ExperienceStore:
         self,
         db: Session,
         query: str,
-        framework: Optional[str] = None,
+        framework: str | None = None,
         limit: int = 10,
     ) -> list[dict]:
         """
@@ -152,35 +151,20 @@ class ExperienceStore:
         """获取智识圈统计数据"""
         total = db.query(func.count(MemoryUnit.id)).scalar() or 0
 
-        contributors = (
-            db.query(func.count(func.distinct(MemoryUnit.contributor))).scalar() or 0
-        )
+        contributors = db.query(func.count(func.distinct(MemoryUnit.contributor))).scalar() or 0
 
-        frameworks = (
-            db.query(func.count(func.distinct(MemoryUnit.framework))).scalar() or 0
-        )
+        frameworks = db.query(func.count(func.distinct(MemoryUnit.framework))).scalar() or 0
 
         # 框架分布
         framework_dist = dict(
-            db.query(MemoryUnit.framework, func.count(MemoryUnit.id))
-            .group_by(MemoryUnit.framework)
-            .all()
+            db.query(MemoryUnit.framework, func.count(MemoryUnit.id)).group_by(MemoryUnit.framework).all()
         )
 
         # 类型分布
-        type_dist = dict(
-            db.query(MemoryUnit.type, func.count(MemoryUnit.id))
-            .group_by(MemoryUnit.type)
-            .all()
-        )
+        type_dist = dict(db.query(MemoryUnit.type, func.count(MemoryUnit.id)).group_by(MemoryUnit.type).all())
 
         # 最近经验
-        recent = (
-            db.query(MemoryUnit)
-            .order_by(desc(MemoryUnit.created_at))
-            .limit(5)
-            .all()
-        )
+        recent = db.query(MemoryUnit).order_by(desc(MemoryUnit.created_at)).limit(5).all()
 
         return {
             "total_experiences": total,
@@ -197,8 +181,8 @@ class ExperienceStore:
         result = (
             db.query(
                 MemoryUnit.contributor,
-                func.sum(func.case((MemoryUnit.type == 'epiphany', 1), else_=0)).label('epiphanies'),
-                func.sum(func.case((MemoryUnit.type == 'decision', 1), else_=0)).label('decisions')
+                func.sum(func.case((MemoryUnit.type == "epiphany", 1), else_=0)).label("epiphanies"),
+                func.sum(func.case((MemoryUnit.type == "decision", 1), else_=0)).label("decisions"),
             )
             .filter(MemoryUnit.contributor != "anonymous")
             .filter(MemoryUnit.contributor.isnot(None))
@@ -212,15 +196,17 @@ class ExperienceStore:
             epiphanies = epiphanies or 0
             decisions = decisions or 0
             total_score = epiphanies + decisions
-            
+
             # 过滤零贡献防篡改垃圾数据
             if total_score > 0:
-                rankings.append({
-                    "contributor": contributor,
-                    "epiphanies": epiphanies,
-                    "decisions": decisions,
-                    "total_score": total_score
-                })
+                rankings.append(
+                    {
+                        "contributor": contributor,
+                        "epiphanies": epiphanies,
+                        "decisions": decisions,
+                        "total_score": total_score,
+                    }
+                )
 
         # 在应用侧按分数倒序排列
         rankings.sort(key=lambda x: x["total_score"], reverse=True)
@@ -233,8 +219,8 @@ class ExperienceStore:
         db: Session,
         page: int = 1,
         size: int = 20,
-        type_filter: Optional[str] = None,
-        framework_filter: Optional[str] = None,
+        type_filter: str | None = None,
+        framework_filter: str | None = None,
     ) -> tuple[list[MemoryUnit], int]:
         """
         分页获取经验列表
@@ -252,18 +238,13 @@ class ExperienceStore:
             query = query.filter(MemoryUnit.framework == framework_filter)
 
         total = query.count()
-        items = (
-            query.order_by(desc(MemoryUnit.created_at))
-            .offset((page - 1) * size)
-            .limit(size)
-            .all()
-        )
+        items = query.order_by(desc(MemoryUnit.created_at)).offset((page - 1) * size).limit(size).all()
 
         return items, total
 
     # ────────────────── 单条查询 ──────────────────
 
-    def get_by_id(self, db: Session, experience_id: str) -> Optional[MemoryUnit]:
+    def get_by_id(self, db: Session, experience_id: str) -> MemoryUnit | None:
         """根据 ID 获取单条经验"""
         return db.query(MemoryUnit).filter(MemoryUnit.id == experience_id).first()
 

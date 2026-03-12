@@ -8,7 +8,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.models.schemas import StatsResponse, MemoryUnitResponse, ContributorRankResponse
+from app.models.schemas import ContributorRankResponse, MemoryUnitResponse, StatsResponse
 from app.services.experience_store import experience_store
 
 router = APIRouter()
@@ -34,9 +34,7 @@ async def get_stats(db: Session = Depends(get_db)):
         frameworks=raw["frameworks"],
         framework_distribution=raw["framework_distribution"],
         type_distribution=raw["type_distribution"],
-        recent_experiences=[
-            MemoryUnitResponse.model_validate(e) for e in raw["recent_experiences"]
-        ],
+        recent_experiences=[MemoryUnitResponse.model_validate(e) for e in raw["recent_experiences"]],
     )
 
 

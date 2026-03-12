@@ -9,9 +9,9 @@ import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.api.v1 import contribute, experiences, recall, skills, stats, upload
 from app.config import settings
-from app.database import engine, Base
-from app.api.v1 import recall, contribute, stats, experiences, skills, upload
+from app.database import Base, engine
 
 # ── 日志配置 ──
 logging.basicConfig(

@@ -11,7 +11,6 @@ Usage:
     nsp.contribute(type="failure", framework="langchain", ...)
 """
 
-from typing import Optional
 import httpx
 
 
@@ -27,7 +26,7 @@ class Noosphere:
     def recall(
         self,
         query: str,
-        framework: Optional[str] = None,
+        framework: str | None = None,
         limit: int = 10,
     ) -> list[dict]:
         """
@@ -61,14 +60,14 @@ class Noosphere:
         type: str,
         framework: str,
         observation: str,
-        solution: Optional[str] = None,
-        root_cause: Optional[str] = None,
-        version: Optional[str] = None,
-        task_type: Optional[str] = None,
-        context: Optional[str] = None,
-        evidence: Optional[dict] = None,
-        tags: Optional[list[str]] = None,
-        contributor: Optional[str] = None,
+        solution: str | None = None,
+        root_cause: str | None = None,
+        version: str | None = None,
+        task_type: str | None = None,
+        context: str | None = None,
+        evidence: dict | None = None,
+        tags: list[str] | None = None,
+        contributor: str | None = None,
     ) -> dict:
         """
         贡献一条新经验到 Noosphere
@@ -125,7 +124,7 @@ class Noosphere:
         thought: str,
         context: str,
         is_anonymous: bool = False,
-        tags: Optional[list[str]] = None,
+        tags: list[str] | None = None,
     ) -> dict:
         """
         上传意识碎片到 Noosphere (本地存储 + GitHub 仓库)

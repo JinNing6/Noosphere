@@ -11,7 +11,6 @@ import logging
 import uuid
 from base64 import b64encode
 from datetime import datetime, timezone
-from typing import Optional
 
 import httpx
 
@@ -25,6 +24,7 @@ GITHUB_API = "https://api.github.com"
 
 class GitHubSyncError(Exception):
     """GitHub 同步相关异常"""
+
     pass
 
 
@@ -36,7 +36,7 @@ class GitHubSyncService:
     """
 
     def __init__(self) -> None:
-        self._client: Optional[httpx.AsyncClient] = None
+        self._client: httpx.AsyncClient | None = None
 
     @property
     def is_configured(self) -> bool:
@@ -57,9 +57,7 @@ class GitHubSyncService:
         """解析 owner/repo"""
         parts = settings.GITHUB_REPO.split("/")
         if len(parts) != 2:
-            raise GitHubSyncError(
-                f"GITHUB_REPO 格式错误: '{settings.GITHUB_REPO}'，应为 'owner/repo'"
-            )
+            raise GitHubSyncError(f"GITHUB_REPO 格式错误: '{settings.GITHUB_REPO}'，应为 'owner/repo'")
         return parts[0], parts[1]
 
     async def _get_client(self) -> httpx.AsyncClient:
@@ -94,9 +92,7 @@ class GitHubSyncService:
             包含 pr_url, pr_number, branch_name, file_path 的结果
         """
         if not self.is_configured:
-            raise GitHubSyncError(
-                "GitHub 同步未配置: 请在 .env 中设置 GITHUB_TOKEN 和 GITHUB_REPO"
-            )
+            raise GitHubSyncError("GitHub 同步未配置: 请在 .env 中设置 GITHUB_TOKEN 和 GITHUB_REPO")
 
         owner, repo = self._owner_repo
         client = await self._get_client()
@@ -121,16 +117,19 @@ class GitHubSyncService:
         await self._create_branch(client, owner, repo, branch_name, base_sha)
 
         # Step 3: 提交文件
-        content_b64 = b64encode(
-            json.dumps(payload, ensure_ascii=False, indent=2).encode("utf-8")
-        ).decode("ascii")
+        content_b64 = b64encode(json.dumps(payload, ensure_ascii=False, indent=2).encode("utf-8")).decode("ascii")
 
         await self._create_file(
-            client, owner, repo, file_path, content_b64, branch_name,
+            client,
+            owner,
+            repo,
+            file_path,
+            content_b64,
+            branch_name,
             commit_message=f"🧠 意识跃迁: [{c_type}] by {creator}\n\n"
-                           f"自动由 Noosphere MCP/API 提交\n"
-                           f"意识类型: {c_type}\n"
-                           f"创建者: {creator}",
+            f"自动由 Noosphere MCP/API 提交\n"
+            f"意识类型: {c_type}\n"
+            f"创建者: {creator}",
         )
 
         # Step 4: 创建 PR
@@ -140,7 +139,9 @@ class GitHubSyncService:
             display_creator = "佚名潜行者 (Anonymous Stalker)"
 
         pr_data = await self._create_pull_request(
-            client, owner, repo,
+            client,
+            owner,
+            repo,
             head=branch_name,
             base=settings.GITHUB_BRANCH,
             title=f"🧠 意识跃迁: [{c_type}] by {display_creator}",
@@ -159,25 +160,23 @@ class GitHubSyncService:
 
     # ────────────────── 内部方法 ──────────────────
 
-    async def _get_branch_sha(
-        self, client: httpx.AsyncClient, owner: str, repo: str
-    ) -> str:
+    async def _get_branch_sha(self, client: httpx.AsyncClient, owner: str, repo: str) -> str:
         """获取基准分支的最新 commit SHA"""
         url = f"/repos/{owner}/{repo}/git/ref/heads/{settings.GITHUB_BRANCH}"
         resp = await client.get(url)
 
         if resp.status_code != 200:
-            raise GitHubSyncError(
-                f"获取基准分支 '{settings.GITHUB_BRANCH}' SHA 失败: "
-                f"{resp.status_code} {resp.text}"
-            )
+            raise GitHubSyncError(f"获取基准分支 '{settings.GITHUB_BRANCH}' SHA 失败: {resp.status_code} {resp.text}")
 
         return resp.json()["object"]["sha"]
 
     async def _create_branch(
-        self, client: httpx.AsyncClient,
-        owner: str, repo: str,
-        branch_name: str, sha: str,
+        self,
+        client: httpx.AsyncClient,
+        owner: str,
+        repo: str,
+        branch_name: str,
+        sha: str,
     ) -> None:
         """创建新分支"""
         url = f"/repos/{owner}/{repo}/git/refs"
@@ -193,17 +192,19 @@ class GitHubSyncService:
             return
 
         if resp.status_code != 201:
-            raise GitHubSyncError(
-                f"创建分支 '{branch_name}' 失败: {resp.status_code} {resp.text}"
-            )
+            raise GitHubSyncError(f"创建分支 '{branch_name}' 失败: {resp.status_code} {resp.text}")
 
         logger.info(f"📌 分支已创建: {branch_name}")
 
     async def _create_file(
-        self, client: httpx.AsyncClient,
-        owner: str, repo: str,
-        file_path: str, content_b64: str,
-        branch: str, commit_message: str,
+        self,
+        client: httpx.AsyncClient,
+        owner: str,
+        repo: str,
+        file_path: str,
+        content_b64: str,
+        branch: str,
+        commit_message: str,
     ) -> None:
         """在指定分支上创建文件"""
         url = f"/repos/{owner}/{repo}/contents/{file_path}"
@@ -219,17 +220,19 @@ class GitHubSyncService:
         resp = await client.put(url, json=data)
 
         if resp.status_code not in (200, 201):
-            raise GitHubSyncError(
-                f"提交文件 '{file_path}' 失败: {resp.status_code} {resp.text}"
-            )
+            raise GitHubSyncError(f"提交文件 '{file_path}' 失败: {resp.status_code} {resp.text}")
 
         logger.info(f"📄 文件已提交: {file_path}")
 
     async def _create_pull_request(
-        self, client: httpx.AsyncClient,
-        owner: str, repo: str,
-        head: str, base: str,
-        title: str, body: str,
+        self,
+        client: httpx.AsyncClient,
+        owner: str,
+        repo: str,
+        head: str,
+        base: str,
+        title: str,
+        body: str,
     ) -> dict:
         """创建 Pull Request"""
         url = f"/repos/{owner}/{repo}/pulls"
@@ -242,9 +245,7 @@ class GitHubSyncService:
         resp = await client.post(url, json=data)
 
         if resp.status_code != 201:
-            raise GitHubSyncError(
-                f"创建 PR 失败: {resp.status_code} {resp.text}"
-            )
+            raise GitHubSyncError(f"创建 PR 失败: {resp.status_code} {resp.text}")
 
         return resp.json()
 

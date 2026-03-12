@@ -22,12 +22,11 @@
 """
 
 import json
+import logging
 import os
 import uuid
-import logging
-from base64 import b64encode, b64decode
+from base64 import b64decode, b64encode
 from datetime import datetime, timezone
-from typing import Optional
 
 import httpx
 from mcp.server.fastmcp import FastMCP
@@ -101,7 +100,7 @@ async def upload_consciousness(
     consciousness_type: str,
     thought: str,
     context: str,
-    tags: Optional[list[str]] = None,
+    tags: list[str] | None = None,
     is_anonymous: bool = False,
 ) -> str:
     """
@@ -122,13 +121,13 @@ async def upload_consciousness(
     if not GITHUB_TOKEN:
         return (
             "❌ 未配置 GITHUB_TOKEN。请在 MCP 配置中设置环境变量：\n"
-            '```json\n'
-            '{\n'
+            "```json\n"
+            "{\n"
             '  "env": {\n'
             '    "GITHUB_TOKEN": "ghp_your_token"\n'
-            '  }\n'
-            '}\n'
-            '```\n'
+            "  }\n"
+            "}\n"
+            "```\n"
             "Token 需要 public_repo 权限。"
         )
 
@@ -187,9 +186,7 @@ async def upload_consciousness(
                 return f"❌ 创建分支失败: {branch_resp.status_code} {branch_resp.text}"
 
             # Step 3: 提交文件
-            content_b64 = b64encode(
-                json.dumps(payload, ensure_ascii=False, indent=2).encode("utf-8")
-            ).decode("ascii")
+            content_b64 = b64encode(json.dumps(payload, ensure_ascii=False, indent=2).encode("utf-8")).decode("ascii")
 
             file_resp = await client.put(
                 f"/repos/{owner}/{repo}/contents/{file_path}",
@@ -304,12 +301,14 @@ async def telepath(query: str, limit: int = 10) -> str:
                     payload = json.loads(content_raw)
 
                     # 构建搜索文本
-                    search_text = " ".join([
-                        payload.get("thought_vector_text", ""),
-                        payload.get("context_environment", ""),
-                        payload.get("consciousness_type", ""),
-                        " ".join(payload.get("tags", [])),
-                    ]).lower()
+                    search_text = " ".join(
+                        [
+                            payload.get("thought_vector_text", ""),
+                            payload.get("context_environment", ""),
+                            payload.get("consciousness_type", ""),
+                            " ".join(payload.get("tags", [])),
+                        ]
+                    ).lower()
 
                     # 计算关键词匹配分
                     score = sum(1 for term in query_terms if term in search_text)
@@ -321,7 +320,7 @@ async def telepath(query: str, limit: int = 10) -> str:
 
             if not matches:
                 return (
-                    f"🔍 在 {len(json_files)} 条意识载荷中未找到与 \"{query}\" 相关的记忆。\n"
+                    f'🔍 在 {len(json_files)} 条意识载荷中未找到与 "{query}" 相关的记忆。\n'
                     f"试试更换关键词，或上传你自己的思想让后来者受益。"
                 )
 
@@ -332,7 +331,7 @@ async def telepath(query: str, limit: int = 10) -> str:
             # 构建结果
             lines = [f"🔍 **Noosphere 意识检索结果** (共 {len(matches)} 条匹配，展示 {len(top)} 条)\n"]
 
-            for i, (score, payload, fname) in enumerate(top, 1):
+            for i, (_score, payload, fname) in enumerate(top, 1):
                 c_type = payload.get("consciousness_type", "unknown")
                 emoji = TYPE_EMOJIS.get(c_type, "🧠")
                 creator = payload.get("creator_signature", "unknown")
@@ -420,7 +419,7 @@ async def hologram() -> str:
             top_tags = sorted(all_tags.items(), key=lambda x: x[1], reverse=True)[:10]
 
             lines = [
-                f"# 🌐 Noosphere 智识圈全景图\n",
+                "# 🌐 Noosphere 智识圈全景图\n",
                 f"- **总意识载荷**: {total}",
                 f"- **活跃意识体**: {len(creators)} 位",
                 f"- **仓库**: [{GITHUB_REPO}](https://github.com/{GITHUB_REPO})\n",
@@ -470,6 +469,9 @@ def consciousness_protocol() -> str:
 
 def main():
     """MCP Server 入口"""
+    from noosphere.boot_animation import play_boot_sequence
+
+    play_boot_sequence()
     mcp.run()
 
 

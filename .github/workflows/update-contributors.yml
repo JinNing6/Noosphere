@@ -1,0 +1,55 @@
+name: 🌌 宇宙建筑师排行榜自动更新 (Contributor Rankings Update)
+
+on:
+  # 每周一 UTC 0:00 定时更新
+  schedule:
+    - cron: '0 0 * * 1'
+
+  # 手动触发
+  workflow_dispatch:
+
+  # push 到 main 时触发 (仅当 src 代码有变更)
+  push:
+    branches: [main]
+    paths-ignore:
+      - '*.md'
+      - 'docs/**'
+      - '.github/workflows/ci.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  update-contributors:
+    name: 📊 更新贡献者排行 (Update Rankings)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 🌐 检出代码 (Checkout)
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: ⚙️ 配置 Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: 🌌 运行排行榜更新脚本 (Run Update Script)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python scripts/update_readme_contributors.py
+
+      - name: 🔍 检测变更 (Check for Changes)
+        id: check
+        run: |
+          git diff --quiet README.md || echo "changed=true" >> $GITHUB_OUTPUT
+
+      - name: 📤 提交并推送 (Commit & Push)
+        if: steps.check.outputs.changed == 'true'
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add README.md
+          git commit -m "docs: 🌌 auto-update contributor rankings [skip ci]"
+          git push

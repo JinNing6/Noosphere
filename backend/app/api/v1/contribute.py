@@ -8,7 +8,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.models.schemas import ContributeRequest, MemoryUnitResponse, MessageResponse
+from app.models.schemas import ContributeRequest, MemoryUnitResponse
 from app.services.experience_store import experience_store
 
 router = APIRouter()

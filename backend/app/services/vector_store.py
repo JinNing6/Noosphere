@@ -6,7 +6,6 @@ Phase 1 使用 ChromaDB 内置的 all-MiniLM-L6-v2 嵌入模型（无需 GPU）�
 """
 
 import logging
-from typing import Optional
 
 import chromadb
 from chromadb.config import Settings as ChromaSettings
@@ -23,8 +22,8 @@ class VectorStore:
     """Noosphere 向量存储服务"""
 
     def __init__(self) -> None:
-        self._client: Optional[chromadb.ClientAPI] = None
-        self._collection: Optional[chromadb.Collection] = None
+        self._client: chromadb.ClientAPI | None = None
+        self._collection: chromadb.Collection | None = None
 
     @property
     def client(self) -> chromadb.ClientAPI:
@@ -43,10 +42,7 @@ class VectorStore:
                 name=COLLECTION_NAME,
                 metadata={"description": "Noosphere 集体经验记忆向量库"},
             )
-            logger.info(
-                f"ChromaDB 集合 '{COLLECTION_NAME}' 就绪, "
-                f"当前文档数: {self._collection.count()}"
-            )
+            logger.info(f"ChromaDB 集合 '{COLLECTION_NAME}' 就绪, 当前文档数: {self._collection.count()}")
         return self._collection
 
     def add_experience(
@@ -78,7 +74,7 @@ class VectorStore:
         self,
         query: str,
         n_results: int = 10,
-        where: Optional[dict] = None,
+        where: dict | None = None,
     ) -> list[dict]:
         """
         语义相似度检索

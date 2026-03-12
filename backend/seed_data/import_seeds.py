@@ -5,16 +5,15 @@
 包含设计文档中的示例经验以及常见 AI 框架的真实踩坑经验。
 """
 
-import sys
 import os
+import sys
 
 # 确保可以导入 app 模块
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from app.database import SessionLocal, engine, Base
+from app.database import Base, SessionLocal, engine
 from app.models.memory_unit import MemoryUnit, generate_nsp_id
 from app.services.vector_store import vector_store
-
 
 # ── 种子经验数据 ──
 SEED_EXPERIENCES = [
