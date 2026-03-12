@@ -64,6 +64,11 @@ dependencies = [
     "noosphere-core>=0.0.1",
     "akashic-engine>=0.0.1",
     "open-consciousness>=0.0.1", # 最新占位：开源集体意识
+    # ---- Next-Gen Evolution Concepts ----
+    "cyber-evolution>=0.0.1",
+    "evolution-protocol>=0.0.1",
+    "noosphere-evolution>=0.0.1",
+    "digital-evolution>=0.0.1",
 ]
 
 [project.urls]
