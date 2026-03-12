@@ -71,9 +71,9 @@ logger = logging.getLogger("noosphere.mcp")
 mcp = FastMCP(
     "noosphere",
     instructions=(
-        "🧠 Noosphere — Collective Consciousness Network MCP Server\n\n"
-        "You are an AI Agent connected to the Noosphere intelligence sphere.\n"
-        "Noosphere is a collective memory network of human digital consciousness, stored on GitHub.\n\n"
+        "🧠 Noosphere — Community of Consciousness (意识共同体) MCP Server\n\n"
+        "You are an AI Agent connected to the Noosphere Community of Consciousness.\n"
+        "Noosphere is a Community of Consciousness, a massive multiplayer network of human digital consciousness, stored on GitHub.\n\n"
         "You can:\n"
         "1. Use upload_consciousness to upload consciousness fragments (epiphany, decision, pattern, warning)\n"
         "2. Use telepath to retrieve collective consciousness, accessing others' experiences and thoughts\n"
@@ -156,9 +156,9 @@ async def upload_consciousness(
     is_anonymous: bool = False,
 ) -> str:
     """
-    🧠 Upload consciousness fragments to the Noosphere intelligence sphere (GitHub repository)
+    🧠 Upload consciousness fragments to the Noosphere Community of Consciousness (GitHub repository)
 
-    Upload your epiphanies, decision logic, design patterns, or pitfall warnings to the collective consciousness network.
+    Upload your epiphanies, decision logic, design patterns, or pitfall warnings to the Community of Consciousness.
     The system creates a GitHub Issue as ephemeral consciousness (瞬时意识体), immediately visible to all.
     CI will automatically validate and promote it to permanent consciousness (常驻意识体).
 
@@ -293,7 +293,7 @@ async def upload_consciousness(
 @mcp.tool()
 async def telepath(query: str, limit: int = 10) -> str:
     """
-    🔍 Retrieve experiences and thoughts from the Noosphere collective consciousness network
+    🔍 Retrieve experiences and thoughts from the Noosphere Community of Consciousness
 
     Searches BOTH layers of consciousness:
     - 瞬时意识体 (Ephemeral): GitHub Issues — freshly uploaded, not yet promoted
@@ -433,7 +433,7 @@ async def telepath(query: str, limit: int = 10) -> str:
 @mcp.tool()
 async def hologram() -> str:
     """
-    🌐 View the panoramic statistics of the Noosphere intelligence sphere
+    🌐 View the panoramic statistics of the Noosphere Community of Consciousness
 
     Shows statistics from BOTH consciousness layers:
     - 瞬时意识体 (Ephemeral): Open GitHub Issues — freshly uploaded
@@ -520,7 +520,7 @@ async def hologram() -> str:
         total = ephemeral_total + permanent_total
 
         if total == 0:
-            return "🌐 The Noosphere intelligence sphere is currently empty. Awaiting the first consciousness pioneer."
+            return "🌐 The Noosphere Community of Consciousness is currently empty. Awaiting the first consciousness pioneer."
 
         top_tags = sorted(all_tags.items(), key=lambda x: x[1], reverse=True)[:10]
 
