@@ -29,6 +29,8 @@ jobs:
 
       - name: 👁️ Extract, Validate & Promote Consciousness
         uses: actions/github-script@v7
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
@@ -178,7 +180,67 @@ jobs:
               return;
             }
 
-            // ── Step 3: Promote — commit file to main branch ──
+            // ── Step 3: Content Safety Check (OpenAI Moderation API) ──
+            const openaiKey = process.env.OPENAI_API_KEY;
+            if (openaiKey) {
+              const textToModerate = `${payload.thought_vector_text}\n\n${payload.context_environment}`;
+              try {
+                const modResponse = await fetch('https://api.openai.com/v1/moderations', {
+                  method: 'POST',
+                  headers: {
+                    'Authorization': `Bearer ${openaiKey}`,
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({ input: textToModerate }),
+                });
+
+                if (modResponse.ok) {
+                  const modData = await modResponse.json();
+                  const result = modData.results[0];
+
+                  if (result.flagged) {
+                    // Collect flagged categories
+                    const flaggedCategories = Object.entries(result.categories)
+                      .filter(([_, v]) => v === true)
+                      .map(([k, _]) => k);
+
+                    console.log(`🚫 Content flagged: ${flaggedCategories.join(', ')}`);
+
+                    await github.rest.issues.addLabels({
+                      owner: context.repo.owner,
+                      repo: context.repo.repo,
+                      issue_number: issue.number,
+                      labels: ['filtered']
+                    });
+                    await github.rest.issues.createComment({
+                      owner: context.repo.owner,
+                      repo: context.repo.repo,
+                      issue_number: issue.number,
+                      body: `🛡️ **Consciousness Filtered by Content Safety**\n\n` +
+                            `Your consciousness was flagged by content moderation.\n\n` +
+                            `**Flagged categories**: ${flaggedCategories.join(', ')}\n\n` +
+                            `If you believe this is a false positive, please open a discussion or contact the maintainers.`
+                    });
+                    await github.rest.issues.update({
+                      owner: context.repo.owner,
+                      repo: context.repo.repo,
+                      issue_number: issue.number,
+                      state: 'closed'
+                    });
+                    return;
+                  }
+                  console.log('✅ Content safety check passed');
+                } else {
+                  console.log(`⚠️ Moderation API returned ${modResponse.status}, proceeding anyway (fail-open)`);
+                }
+              } catch (modErr) {
+                console.log(`⚠️ Moderation API error: ${modErr.message}, proceeding anyway (fail-open)`);
+              }
+            } else {
+              console.log('ℹ️ OPENAI_API_KEY not configured, skipping content safety check');
+            }
+
+            // ── Step 4: Promote — commit file to main branch ──
             const now = new Date();
             const timestamp = now.toISOString().replace(/[-:T]/g, '').substring(0, 15);
             const shortId = issue.number.toString().padStart(4, '0');
@@ -210,7 +272,7 @@ jobs:
               }
             });
 
-            // ── Step 4: Close Issue with 'promoted' label ──
+            // ── Step 5: Close Issue with 'promoted' label ──
             // Remove 'ephemeral' label, add 'promoted'
             try {
               await github.rest.issues.removeLabel({
