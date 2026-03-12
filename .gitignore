@@ -29,6 +29,8 @@ Thumbs.db
 # PyPI squatting scripts & placeholder packages (internal use only)
 scripts/placeholders/
 scripts/squat_*.py
+scripts/retry_*.py
+scripts/upload_*.py
 scripts/pypi_squatter*.py
 scripts/wave3_squatter.py
 scripts/check_loop_names.py
