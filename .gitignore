@@ -1,0 +1,44 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+*.whl
+*.tar.gz
+
+# Virtual environments
+venv/
+.venv/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Environment variables
+.env
+.env.local
+
+# PyPI squatting scripts & placeholder packages (internal use only)
+scripts/placeholders/
+scripts/squat_*.py
+scripts/pypi_squatter*.py
+scripts/wave3_squatter.py
+scripts/check_loop_names.py
+scripts/squat_loop.py
+scripts/squatter_result.txt
+scripts/*_available.txt
+scripts/*_success.txt
+
+# Node
+node_modules/
+
+# Frontend build output
+frontend/dist/
