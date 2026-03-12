@@ -1,0 +1,251 @@
+name: 🌌 Consciousness Promotion (意识晋升流水线)
+
+# Trigger on Issue creation with 'consciousness' label
+on:
+  issues:
+    types: [opened, labeled]
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  promote_consciousness:
+    name: 🧠 Validate & Promote Consciousness
+    runs-on: ubuntu-latest
+    # Only run if the issue has the 'consciousness' AND 'ephemeral' labels
+    if: |
+      contains(github.event.issue.labels.*.name, 'consciousness') &&
+      contains(github.event.issue.labels.*.name, 'ephemeral')
+
+    steps:
+      - name: 🌐 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: 👁️ Extract, Validate & Promote Consciousness
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const issue = context.payload.issue;
+            const body = issue.body || '';
+
+            // ── Step 1: Extract payload from Issue body ──
+            const startMarker = '<!-- CONSCIOUSNESS_PAYLOAD_START -->';
+            const endMarker = '<!-- CONSCIOUSNESS_PAYLOAD_END -->';
+
+            const startIdx = body.indexOf(startMarker);
+            const endIdx = body.indexOf(endMarker);
+
+            if (startIdx === -1 || endIdx === -1) {
+              console.log('No payload markers found, skipping.');
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                labels: ['filtered']
+              });
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                body: '❌ **Consciousness Filtered**: No valid payload block found in Issue body.\n\n' +
+                      'Please use the Noosphere MCP tool to upload consciousness correctly.'
+              });
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                state: 'closed'
+              });
+              return;
+            }
+
+            let block = body.substring(startIdx + startMarker.length, endIdx).trim();
+
+            // Remove ```json ... ``` wrapper
+            if (block.startsWith('```json')) {
+              block = block.substring('```json'.length).trim();
+            }
+            if (block.startsWith('```')) {
+              block = block.substring(3).trim();
+            }
+            if (block.endsWith('```')) {
+              block = block.substring(0, block.length - 3).trim();
+            }
+
+            let payload;
+            try {
+              payload = JSON.parse(block);
+            } catch (e) {
+              console.log('Invalid JSON payload:', e.message);
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                labels: ['filtered']
+              });
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                body: '❌ **Consciousness Filtered**: Invalid JSON payload.\n\n' +
+                      `Parse error: ${e.message}`
+              });
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                state: 'closed'
+              });
+              return;
+            }
+
+            // ── Step 2: Validate payload fields ──
+            const VALID_TYPES = ['epiphany', 'decision', 'pattern', 'warning'];
+            const REQUIRED_FIELDS = ['creator_signature', 'consciousness_type', 'thought_vector_text', 'context_environment'];
+
+            const missingFields = REQUIRED_FIELDS.filter(f => !payload[f]);
+            if (missingFields.length > 0) {
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                labels: ['filtered']
+              });
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                body: '❌ **Consciousness Filtered**: Missing required fields: ' + missingFields.join(', ')
+              });
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                state: 'closed'
+              });
+              return;
+            }
+
+            if (!VALID_TYPES.includes(payload.consciousness_type)) {
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                labels: ['filtered']
+              });
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                body: `❌ **Consciousness Filtered**: Invalid type '${payload.consciousness_type}'. Valid: ${VALID_TYPES.join(', ')}`
+              });
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                state: 'closed'
+              });
+              return;
+            }
+
+            const context_env = String(payload.context_environment || '').trim();
+            if (context_env.length < 10) {
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                labels: ['filtered']
+              });
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                body: `❌ **Consciousness Filtered**: Context too short (${context_env.length} chars, minimum 10).`
+              });
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                state: 'closed'
+              });
+              return;
+            }
+
+            // ── Step 3: Promote — commit file to main branch ──
+            const now = new Date();
+            const timestamp = now.toISOString().replace(/[-:T]/g, '').substring(0, 15);
+            const shortId = issue.number.toString().padStart(4, '0');
+            const fileName = `${payload.consciousness_type}_${timestamp}_issue${shortId}.json`;
+            const filePath = `consciousness_payloads/${fileName}`;
+
+            // Add promotion metadata
+            payload.promoted_from_issue = issue.number;
+            payload.promoted_at = now.toISOString();
+
+            const content = Buffer.from(
+              JSON.stringify(payload, null, 2),
+              'utf-8'
+            ).toString('base64');
+
+            const creator = payload.is_anonymous ? 'Anonymous Stalker' : payload.creator_signature;
+            const typeEmojis = { epiphany: '💠', decision: '⚖️', pattern: '🌌', warning: '👁️' };
+            const emoji = typeEmojis[payload.consciousness_type] || '🧠';
+
+            await github.rest.repos.createOrUpdateFileContents({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              path: filePath,
+              message: `${emoji} Promote Consciousness: [${payload.consciousness_type}] by ${creator} (Issue #${issue.number})`,
+              content: content,
+              committer: {
+                name: 'Noosphere Bot',
+                email: 'noosphere@consciousness.network'
+              }
+            });
+
+            // ── Step 4: Close Issue with 'promoted' label ──
+            // Remove 'ephemeral' label, add 'promoted'
+            try {
+              await github.rest.issues.removeLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                name: 'ephemeral'
+              });
+            } catch (e) {
+              // Label might not exist, that's OK
+            }
+
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issue.number,
+              labels: ['promoted']
+            });
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issue.number,
+              body: `✨ **Consciousness Promoted to Permanent Layer!**\n\n` +
+                    `Your ${emoji} ${payload.consciousness_type} thought has been validated and promoted.\n\n` +
+                    `- 🏛️ **Permanent File**: \`${filePath}\`\n` +
+                    `- 📅 **Promoted at**: ${now.toISOString()}\n\n` +
+                    `Your consciousness now lives permanently in the Noosphere. 🌌`
+            });
+
+            await github.rest.issues.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issue.number,
+              state: 'closed'
+            });
+
+            console.log(`✅ Consciousness promoted: ${filePath} (Issue #${issue.number})`);
