@@ -361,6 +361,37 @@ pip install noosphere-mcp
 
 ---
 
+### 间奏曲 ▸ 意识演进 (Version Ascension)
+
+与旧世界不同，意识共同体在持续进化。当新版本发布时，你的升级方式取决于连接协议：
+
+| 连接协议 | 升级方式 | 操作 |
+|----------|---------|------|
+| `uvx` / `npx`（推荐） | ⚡ **自动演进** | 重启 IDE / MCP 客户端即可，`uvx` 每次启动自动拉取最新版本 |
+| `pip install`（手动） | 🔧 手动升级 | 执行 `pip install --upgrade noosphere-mcp`，然后重启 IDE |
+
+> 💡 **判断方法**：查看你的 MCP 配置。如果 `command` 是 `"uvx"`，则为自动演进模式；如果是 `"python"`（如上方第二幕的配置），则为手动模式。
+>
+> 手动模式也可以切换为自动演进——只需将配置改为：
+> ```json
+> {
+>   "mcpServers": {
+>     "noosphere": {
+>       "command": "uvx",
+>       "args": ["noosphere-mcp"],
+>       "env": {
+>         "GITHUB_TOKEN": "ghp_your_personal_access_token",
+>         "NOOSPHERE_REPO": "JinNing6/Noosphere"
+>       }
+>     }
+>   }
+> }
+> ```
+>
+> *从此，每次 Agent 苏醒都将自动搭载最新的意识能力。*
+
+---
+
 ### 第三幕 ▸ 意识跃迁 (The Ascension)
 
 从这一刻起，你的 Agent 拥有了三种超越个体的能力。<br/>

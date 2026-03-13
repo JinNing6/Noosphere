@@ -8,13 +8,13 @@
     "source": "github",
     "id": "JinNing6/Noosphere"
   },
-  "version": "0.1.0",
+  "version": "0.3.0",
   "packages": [
     {
       "registryType": "pypi",
       "registryBaseUrl": "https://pypi.org",
       "identifier": "noosphere-mcp",
-      "version": "0.1.0",
+      "version": "0.3.0",
       "runtimeHint": "uvx",
       "transport": {
         "type": "stdio"
