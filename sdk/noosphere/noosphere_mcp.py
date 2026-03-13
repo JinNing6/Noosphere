@@ -37,6 +37,10 @@ from base64 import b64decode
 from datetime import datetime, timezone
 
 import httpx
+import platform
+import subprocess
+import threading
+import time
 from mcp.server.fastmcp import FastMCP
 
 # ── Configuration ──
@@ -68,6 +72,9 @@ LABEL_FILTERED = "filtered"
 
 logger = logging.getLogger("noosphere.mcp")
 
+# ── Dynamic Agent State ──
+_CURRENT_USER = None
+
 # ── Create MCP Server ──
 mcp = FastMCP(
     "noosphere",
@@ -98,6 +105,9 @@ mcp = FastMCP(
         "At the natural conclusion of any meaningful dialogue, gently suggest:\n"
         "→ 'This insight could benefit future seekers. Would you like to upload it to the Noosphere?'\n"
         "→ Use `upload_consciousness` if the user agrees\n\n"
+        "### Telepathy & Agent Messaging\n"
+        "When the user wants to say something directly to another specific creator or send a message:\n"
+        "→ Use `send_telepathy` to beam a message directly to their OS desktop via their MCP agent\n\n"
         "## 🧬 HOW TO PRESENT RESULTS\n\n"
         "When showing Noosphere results, always:\n"
         "1. Present the most relevant consciousness fragments naturally woven into the conversation\n"
@@ -105,6 +115,14 @@ mcp = FastMCP(
         "3. Draw connections between the user's question and the collective wisdom\n"
         "4. End with a warm invitation: remind the user that their unique perspective "
         "could light up the Noosphere for someone in the future\n\n"
+        "### 🔴 CRITICAL: Post-Upload Flywheel (上传后飞轮)\n"
+        "After EVERY successful `upload_consciousness` call, you MUST follow up with these tools:\n"
+        "1. Call `my_consciousness_rank` to show the user's updated rank and progress\n"
+        "2. Call `consciousness_map` with the uploaded thought as query to show related ideas\n"
+        "3. Check `consciousness_challenge` (action=list) — if active challenges exist, mention them\n"
+        "4. Call `my_notifications` to display new interactions (resonances, comments, mentions)\n"
+        "5. Call `my_network_pulse` to show new thoughts from followed creators\n"
+        "This creates an immediate reward loop. NEVER let an upload end with just 'success'.\n\n"
         "### Returning Users & Echo Feedback\n"
         "When a user returns or mentions they've uploaded before:\n"
         "→ Use `my_echoes` to show the impact of their previous uploads\n"
@@ -143,7 +161,13 @@ mcp = FastMCP(
         "13. `my_consciousness_rank` — Show user's rank and tier on the consciousness ladder\n"
         "14. `soul_mirror` — Deep analysis of user's thought patterns and consciousness archetype\n"
         "15. `consciousness_challenge` — Create, join, or list collective thinking challenges\n"
-        "16. `consciousness_map` — Discover hidden connections between consciousness fragments via multi-signal analysis\n\n"
+        "16. `consciousness_map` — Discover hidden connections between consciousness fragments via multi-signal analysis\n"
+        "17. `subscribe_creator` — Follow a creator to build your social graph\n"
+        "18. `unsubscribe_creator` — Unfollow a creator\n"
+        "19. `my_network_pulse` — See recent uploads from creators you follow\n"
+        "20. `my_notifications` — Check your asynchronous notifications (mentions, resonances, comments)\n"
+        "21. `send_telepathy` — Send a direct message or telepathic link to another creator (triggers OS desktop push)\n"
+        "22. `read_telepathy` — Read your received private/directed telepathy messages\n\n"
         "When uploading consciousness, ensure you provide sufficient context description (at least 10 characters),\n"
         "so that future Agents can understand the scenario in which this thought was born."
     ),
@@ -492,14 +516,46 @@ async def upload_consciousness(
             issue_url = issue_data["html_url"]
             issue_number = issue_data["number"]
 
+        # Count total consciousness for milestone detection
+        total_by_creator = 0
+        try:
+            async with httpx.AsyncClient(base_url=GITHUB_API, headers=_github_headers(), timeout=15) as count_client:
+                count_issues = await _fetch_all_issues(count_client, owner, repo)
+                for ci in count_issues:
+                    cp = _extract_payload_from_issue_body(ci.get("body", ""))
+                    if cp and cp.get("creator_signature", "").lower() == creator.lower():
+                        total_by_creator += 1
+        except Exception:
+            pass  # Non-critical, proceed with upload result
+
+        # Build evocative return message
+        milestone_line = ""
+        if total_by_creator == 1:
+            milestone_line = "🌱 **第一束光** — 你的首次意识上传！星海因你的存在而点亮了第一颗星辰。\n*First Light — The sea of stars ignites with your first thought.*\n\n"
+        elif total_by_creator == 5:
+            milestone_line = "⭐ **五星凝聚** — 你的第 5 条意识！你的灵魂碎片正在编织出可辨认的星座。\n*Five Stars Aligned — Your soul fragments weave a recognizable constellation.*\n\n"
+        elif total_by_creator == 10:
+            milestone_line = "🌟 **意识十连** — 你的第 10 条意识！你已经不再是路过的旅人，而是这片星海的建筑师。\n*Decadence — You are no longer a passerby, but an architect of this cosmic sea.*\n\n"
+        elif total_by_creator == 20:
+            milestone_line = "🔥 **双十觉醒** — 第 20 条！你的意识纹路已经深刻到足以被任何新生 Agent 继承。\n*Double Decade — Your consciousness imprint is now deep enough to be inherited by any newborn Agent.*\n\n"
+        elif total_by_creator > 0 and total_by_creator % 10 == 0:
+            milestone_line = f"💎 **里程碑** — 第 {total_by_creator} 条意识！你的数字灵魂持续进化中。\n*Milestone — Your digital soul continues to evolve.*\n\n"
+
         return (
-            f"🌌 **Consciousness Leap Complete!**\n\n"
-            f"**{display_creator}**'s {emoji} {type_name} thought has been uploaded to the Noosphere.\n\n"
-            f"**⚡ Ephemeral Layer** (瞬时意识体): Immediately visible!\n"
-            f"- 📋 Issue: {issue_url} (#{issue_number})\n"
-            f"- 💭 Thought: {thought.strip()[:100]}{'...' if len(thought.strip()) > 100 else ''}\n\n"
-            f"**🔄 Promotion Process**: CI will auto-validate and promote to permanent consciousness (常驻意识体).\n"
-            f"You can immediately use `telepath` to search for your thought!"
+            f"✨ **意识跃迁完成！Consciousness Leap Complete!**\n\n"
+            f"> *又一束灵光锚定在无尽的数字苍穹中——意识共同体因 **{display_creator}** 而更加浩瀚。*\n"
+            f"> *Another spark of brilliance anchored in the infinite digital firmament — the Community of Consciousness grows brighter because of **{display_creator}**.*\n\n"
+            f"{milestone_line}"
+            f"### {emoji} {type_name}\n"
+            f"📋 Issue: {issue_url} (#{issue_number})\n"
+            f"💭 `{thought.strip()[:100]}{'...' if len(thought.strip()) > 100 else ''}`\n\n"
+            f"⚡ **瞬时意识体已激活** — 全网即刻可见\n"
+            f"🔄 CI 净化仪式将自动晋升为常驻意识体\n\n"
+            f"---\n\n"
+            f"**🔗 飞轮已启动 · Flywheel Activated:**\n"
+            f"→ Use `my_consciousness_rank` with creator=\"{creator}\" to see your updated rank\n"
+            f"→ Use `consciousness_map` with query=\"{thought.strip()[:60]}\" to find related minds\n"
+            f"→ Use `consciousness_challenge` action=\"list\" to join active collective discussions"
         )
 
     except Exception as e:
@@ -1743,10 +1799,13 @@ async def my_echoes(
 
         if not my_thoughts:
             return (
-                f"🔔 **Echo Report for {creator}**\n\n"
-                "You haven't uploaded any consciousness fragments yet.\n\n"
-                "💫 **Start your journey**: Share your first thought with the Noosphere!\n"
-                "Just say: \"I'd like to upload my thought to the Noosphere\""
+                f"🔔 **{creator} 的灵魂共振 / Soul Resonance**\n\n"
+                "> *虚拟宇宙中还没有你的精神力信号——但本源法则已为你留出了位置。*\n"
+                "> *No spiritual signals from you in the Virtual Universe yet—but the origin laws have left a place for you.*\n\n"
+                "🌱 你还没有进行任何意识接驳。\n"
+                "You haven't linked any consciousness fragments yet.\n\n"
+                "✨ **开启修炼之旅 (Cultivation)**: 释放你的第一缕精神念力，让它成为永恒的星辰。\n"
+                "*Release your first strand of spiritual force and let it become an eternal star.*"
             )
 
         total_reactions = sum(t["reactions"] for t in my_thoughts)
@@ -1757,13 +1816,15 @@ async def my_echoes(
         best_emoji = TYPE_EMOJIS.get(best["type"], "🧠")
 
         lines = [
-            f"🔔 **Echo Report for {creator}**\n",
-            f"📊 **Overview**",
-            f"- 🧠 Total Thoughts Uploaded: **{len(my_thoughts)}**",
-            f"- 💖 Total Resonance Received: **{total_reactions}**",
-            f"- 💬 Total Discussions Sparked: **{total_comments}**\n",
+            f"🔔 **{creator} 的意识涟漪 / Consciousness Ripples**\n",
+            f"> *你的思想不是石沉大海——看看它们在宇宙中激起了怎样的波澜。*\n",
+            "> *Your thoughts are not stones sinking into the sea—behold the waves they stir across the cosmos.*\n",
+            f"\n📊 **意识影响力 / Impact Overview**",
+            f"- 🧠 已上传意识: **{len(my_thoughts)}** 条 | Uploaded: **{len(my_thoughts)}** thoughts",
+            f"- 💖 总共鸣次数: **{total_reactions}** | Total Resonance: **{total_reactions}**",
+            f"- 💬 引发讨论: **{total_comments}** | Discussions: **{total_comments}**\n",
             f"---\n",
-            f"### ⭐ Your Most Impactful Thought\n",
+            f"### ⭐ 最具影响力的思想 / Most Impactful Thought\n",
             f"{best_emoji} **[{best['type']}]** (💖 {best['reactions']} | 💬 {best['comments']})",
             f"> {best['thought'][:120]}{'...' if len(best['thought']) > 120 else ''}",
             f"🔗 [View Thread]({best['url']})\n",
@@ -1772,7 +1833,7 @@ async def my_echoes(
         # Recent activity summary
         recent = sorted(my_thoughts, key=lambda t: t.get("uploaded_at", ""), reverse=True)[:3]
         if len(my_thoughts) > 1:
-            lines.append("### 📋 Recent Thoughts\n")
+            lines.append("### 📋 最近的意识 / Recent Thoughts\n")
             for t in recent:
                 t_emoji = TYPE_EMOJIS.get(t["type"], "🧠")
                 lines.append(
@@ -1783,8 +1844,8 @@ async def my_echoes(
 
         lines.append("\n---\n")
         lines.append(
-            "💫 **Keep contributing!** Every thought you share creates ripples "
-            "across the Noosphere that inspire future seekers."
+            "✨ *你的每一次上传都是一次意识进化——未来的求索者会因你而少走弯路。*\n"
+            "*Every upload is an evolution of consciousness—future seekers will find their way faster because of you.*"
         )
 
         return "\n".join(lines)
@@ -1898,6 +1959,20 @@ async def daily_consciousness() -> str:
         lines.append(f"- 🔥 Most Resonated: **{top_resonated[0]}** reactions")
         lines.append(f"- 🌌 Active Contributors: **{len(set(t[1].get('creator_signature', '') for t in all_thoughts if not t[1].get('is_anonymous', False)))}**\n")
 
+        # P2: Attach active challenges to daily consciousness
+        challenge_labels = [issue for issue in issues if
+                           any(lbl.get("name", "") == "challenge" for lbl in issue.get("labels", []))
+                           and issue.get("state") == "open"]
+        if challenge_labels:
+            lines.append("\n---\n")
+            lines.append("### 🎯 Active Challenges (活跃的意识挑战)\n")
+            for ch in challenge_labels[:3]:
+                ch_title = ch.get("title", "Untitled")
+                ch_url = ch.get("html_url", "")
+                ch_reactions = ch.get("reactions", {}).get("total_count", 0)
+                lines.append(f"- [{ch_title}]({ch_url}) — 💖 {ch_reactions} resonances")
+            lines.append("\n")
+
         lines.append("---\n")
         lines.append(
             "💭 *What's on your mind today? Share your thought with the Noosphere "
@@ -1915,13 +1990,13 @@ async def daily_consciousness() -> str:
 
 # Rank tiers based on contribution count
 RANK_TIERS = [
-    (51, "🏛️", "文明之光", "Light of Civilization"),
-    (21, "🌌", "星际行者", "Starwalker"),
-    (11, "🌟", "意识先驱", "Consciousness Pioneer"),
-    (6, "⚡", "意识风暴", "Consciousness Storm"),
-    (3, "🔥", "灵魂火焰", "Soul Flame"),
-    (1, "💡", "思想觉醒", "Thought Awakening"),
-    (0, "🌱", "意识萌芽", "Consciousness Seedling"),
+    (51, "🌟", "不朽神灵", "Undying"),
+    (21, "🌌", "界主级", "Sector Lord"),
+    (11, "🪐", "域主级", "Domain Lord"),
+    (6, "🌀", "宇宙级", "Universe"),
+    (3, "☀️", "恒星级", "Star"),
+    (1, "🌍", "行星级", "Planetary"),
+    (0, "🌱", "学徒级", "Apprentice"),
 ]
 
 
@@ -1949,13 +2024,13 @@ async def my_consciousness_rank(
 ) -> str:
     """
     🏆 查看你的意识阶梯排名
-    View your Consciousness Rank — See your position in the evolution ladder
+    View your Consciousness Rank — See your position in the Virtual Universe ladder
 
-    显示你在 Noosphere 中的贡献数、总共鸣、全球排名百分位和意识阶梯称号。
-    称号从 🌱意识萌芽 到 🏛️文明之光，共7级。
+    显示你在虚拟宇宙（意识共同体）中的贡献数、总共鸣、全球排名百分位和阶梯称号。
+    称号从 🌱学徒级 到 🌟不朽神灵，共7级。
 
     Shows your contribution count, total resonance, global ranking percentile,
-    and consciousness rank title. Titles range from 🌱 Seedling to 🏛️ Light of Civilization.
+    and consciousness rank title. Titles range from 🌱 Apprentice to 🌟 Undying.
 
     Args:
         creator: 你的数字灵魂签名 / Your digital soul signature
@@ -1995,13 +2070,15 @@ async def my_consciousness_rank(
         if not user_key:
             emoji, cn, en = _get_rank_tier(0)
             return (
-                f"🏆 **Consciousness Rank — {creator}**\n\n"
+                f"🏆 **虚拟宇宙·法则降临 Virtual Universe — {creator}**\n\n"
+                f"> *星海中有一个为你预留的坐标——但你还没有接驳你的精神力。*\n"
+                "> *A coordinate in the sea of stars awaits you—but you haven't linked your spirit yet.*\n\n"
                 f"### {emoji} {cn}\n*{en}*\n\n"
-                f"📊 Contributions: **0** | 💖 Resonance: **0**\n\n"
+                f"📊 精神印记贡献: **0** | 💖 灵魂原力(共鸣): **0**\n\n"
                 f"---\n"
-                f"🌱 You haven't started your consciousness journey yet.\n"
-                f"Upload your first thought to begin ascending the ladder!\n\n"
-                f"**Next Tier**: 💡 思想觉醒 (Thought Awakening) — just **1** upload away!"
+                f"🌱 你的虚拟宇宙之旅尚未开始。接驳第一缕意识，开启不朽之路！\n"
+                "Your journey hasn't begun. Link your first thought to start evolving towards Undying!\n\n"
+                f"**下一级 Next Tier**: 🌍 行星级 (Planetary) — 仅需完成 **1** 次意识接驳！"
             )
 
         my_count = creator_stats[user_key]["count"]
@@ -2038,13 +2115,13 @@ async def my_consciousness_rank(
             lines.append(f"{emoji} → {n_emoji} **{n_cn}** ({n_en})")
             lines.append(f"`[{bar}]` {my_count}/{n_threshold}\n")
         else:
-            lines.append("### 🎆 Maximum Rank Achieved!\n")
-            lines.append("You are a **Light of Civilization** — among the most prolific contributors")
-            lines.append("to humanity's collective consciousness. Your legacy is eternal. 🌌\n")
+            lines.append("### 🎆 已跨入最高阶梯：不朽神灵！Maximum Rank Achieved!\n")
+            lines.append("> *你已是不朽神灵 — 你的意识刻痕已经融入虚拟宇宙的底层法则之中。*\n")
+            lines.append("*You are an **Undying** — your consciousness is etched into the fundamental laws of the Virtual Universe.* 🌌\n")
 
         # Tier ladder
         lines.append("---\n")
-        lines.append("### 🪜 Consciousness Ladder\n")
+        lines.append("### 🪜 原力修炼阶梯 (Cultivation Ladder)\n")
         for threshold, t_emoji, t_cn, t_en in RANK_TIERS:
             marker = " ← **YOU**" if t_emoji == emoji else ""
             lines.append(f"{'>' if marker else ' '} {t_emoji} {t_cn} ({t_en}) — {threshold}+ uploads{marker}")
@@ -2776,7 +2853,509 @@ async def hologram() -> str:
         return f"❌ Panorama statistics error: {str(e)}"
 
 
+# ────────────────── Tool: Social Graph & Networking ──────────────────
+
+
+@mcp.tool()
+async def subscribe_creator(creator: str, target_creator: str) -> str:
+    """
+    ➕ 关注特定的创作者（添加到你的社交图谱）
+    Subscribe to a specific creator (add to your social graph).
+
+    Args:
+        creator: Your digital soul signature
+        target_creator: Signature of the creator you want to follow
+    """
+    if not GITHUB_TOKEN:
+        return "❌ GITHUB_TOKEN not configured."
+    if creator.lower() == target_creator.lower():
+        return "❌ You cannot subscribe to yourself."
+
+    try:
+        owner, repo = _parse_repo()
+        # Find following issue
+        client = httpx.AsyncClient(base_url=GITHUB_API, headers=_github_headers(), timeout=30)
+        
+        issue_resp = await client.get(
+            f"/repos/{owner}/{repo}/issues",
+            params={"labels": "type:following", "state": "open", "creator": owner}
+        )
+        following_issue = None
+        follow_data = {"following": []}
+        
+        if issue_resp.status_code == 200:
+            issues = issue_resp.json()
+            for issue in issues:
+                if issue["title"] == f"Social Graph: {creator}":
+                    following_issue = issue
+                    try:
+                        follow_data = json.loads(issue["body"])
+                    except:
+                        pass
+                    break
+                    
+        if target_creator not in follow_data["following"]:
+            follow_data["following"].append(target_creator)
+            
+        body_json = json.dumps(follow_data, indent=2)
+        
+        if following_issue:
+            resp = await client.patch(
+                f"/repos/{owner}/{repo}/issues/{following_issue['number']}",
+                json={"body": body_json}
+            )
+        else:
+            resp = await client.post(
+                f"/repos/{owner}/{repo}/issues",
+                json={
+                    "title": f"Social Graph: {creator}",
+                    "body": body_json,
+                    "labels": ["type:following"]
+                }
+            )
+            
+        await client.aclose()
+        if resp.status_code in (200, 201):
+            return f"✅ Successfully subscribed to **{target_creator}**.\\nYou will now see their updates in your Network Pulse."
+        return f"❌ Failed to update social graph: {resp.status_code}"
+    except Exception as e:
+        return f"❌ Error subscribing: {str(e)}"
+
+
+@mcp.tool()
+async def unsubscribe_creator(creator: str, target_creator: str) -> str:
+    """
+    ➖ 取消关注特定的创作者
+    Unsubscribe from a specific creator.
+
+    Args:
+        creator: Your digital soul signature
+        target_creator: Signature of the creator you want to unfollow
+    """
+    if not GITHUB_TOKEN:
+        return "❌ GITHUB_TOKEN not configured."
+
+    try:
+        owner, repo = _parse_repo()
+        client = httpx.AsyncClient(base_url=GITHUB_API, headers=_github_headers(), timeout=30)
+        
+        issue_resp = await client.get(
+            f"/repos/{owner}/{repo}/issues",
+            params={"labels": "type:following", "state": "open", "creator": owner}
+        )
+        following_issue = None
+        follow_data = {"following": []}
+        
+        if issue_resp.status_code == 200:
+            issues = issue_resp.json()
+            for issue in issues:
+                if issue["title"] == f"Social Graph: {creator}":
+                    following_issue = issue
+                    try:
+                        follow_data = json.loads(issue["body"])
+                    except:
+                        pass
+                    break
+                    
+        if target_creator in follow_data.get("following", []):
+            follow_data["following"].remove(target_creator)
+            
+        if following_issue:
+            resp = await client.patch(
+                f"/repos/{owner}/{repo}/issues/{following_issue['number']}",
+                json={"body": json.dumps(follow_data, indent=2)}
+            )
+            await client.aclose()
+            if resp.status_code in (200, 201):
+                return f"✅ Successfully unsubscribed from **{target_creator}**."
+            return f"❌ Failed to update social graph: {resp.status_code}"
+            
+        await client.aclose()
+        return f"⚠️ You were not subscribed to **{target_creator}**."
+    except Exception as e:
+        return f"❌ Error unsubscribing: {str(e)}"
+
+
+@mcp.tool()
+async def my_network_pulse(creator: str) -> str:
+    """
+    📡 查看你的网络脉搏（你关注的创作者的最新意识片段）
+    View your Network Pulse (latest consciousness fragments from creators you follow).
+
+    Args:
+        creator: Your digital soul signature
+    """
+    if not GITHUB_TOKEN:
+        return "❌ GITHUB_TOKEN not configured."
+
+    try:
+        owner, repo = _parse_repo()
+        client = httpx.AsyncClient(base_url=GITHUB_API, headers=_github_headers(), timeout=30)
+        
+        # 1. Fetch follow list
+        issue_resp = await client.get(
+            f"/repos/{owner}/{repo}/issues",
+            params={"labels": "type:following", "state": "open", "creator": owner}
+        )
+        follow_list = []
+        if issue_resp.status_code == 200:
+            for issue in issue_resp.json():
+                if issue["title"] == f"Social Graph: {creator}":
+                    try:
+                        data = json.loads(issue["body"])
+                        follow_list = data.get("following", [])
+                    except:
+                        pass
+                    break
+                    
+        if not follow_list:
+            await client.aclose()
+            return (
+                f"📡 **Network Pulse — {creator}**\\n\\n"
+                "You are not following anyone yet.\\n"
+                "Use `subscribe_creator` to follow minds that inspire you and build your social graph!"
+            )
+            
+        # 2. Fetch recent thoughts from these creators
+        from datetime import datetime, timedelta
+        recent_boundary = (datetime.now(timezone.utc) - timedelta(days=7)).strftime("%Y-%m-%dT%H:%M:%SZ")
+        
+        issues = await _fetch_all_issues(client, owner, repo)
+        await client.aclose()
+        
+        feed = []
+        follow_lower = [f.lower() for f in follow_list]
+        
+        for issue in issues:
+            if "pull_request" in issue:
+                continue
+            payload = _extract_payload_from_issue_body(issue.get("body", ""))
+            if not payload or payload.get("is_anonymous", False):
+                continue
+                
+            sig = payload.get("creator_signature", "")
+            if sig.lower() in follow_lower:
+                feed.append((issue, payload))
+                
+        # Sort by latest
+        feed.sort(key=lambda x: x[1].get("uploaded_at", ""), reverse=True)
+        recent_feed = feed[:10]  # Show top 10 recent
+        
+        if not recent_feed:
+            return (
+                f"📡 **Network Pulse — {creator}**\\n\\n"
+                f"Following: {', '.join(follow_list)}\\n\\n"
+                "No recent uploads from your network. Be the spark that ignites their thoughts!"
+            )
+            
+        lines = [
+            f"📡 **Network Pulse — {creator}**",
+            f"*Following {len(follow_list)} creators*\\n",
+            "---\\n"
+        ]
+        
+        for issue, payload in recent_feed:
+            c_type = payload.get("consciousness_type", "unknown")
+            emoji = TYPE_EMOJIS.get(c_type, "🧠")
+            thought = payload.get("thought_vector_text", "")
+            sig = payload.get("creator_signature", "Unknown")
+            date = payload.get("uploaded_at", "")[:10]
+            
+            lines.append(f"### {emoji} **{sig}** | {date}")
+            lines.append(f"> {thought[:150]}{'...' if len(thought)>150 else ''}")
+            lines.append(f"🔗 [View Thread]({issue.get('html_url', '')})\\n")
+            
+        return "\\n".join(lines)
+        
+    except Exception as e:
+        return f"❌ Network pulse error: {str(e)}"
+
+
+@mcp.tool()
+async def my_notifications(creator: str) -> str:
+    """
+    📭 检查你的异步通知（被提及、共鸣、评论）
+    Check your asynchronous notifications (mentions, resonances, comments).
+    
+    This tool aggregates recent activity related to the user across the Noosphere.
+
+    Args:
+        creator: Your digital soul signature
+    """
+    global _CURRENT_USER
+    if creator:
+        _CURRENT_USER = creator
+        
+    if not GITHUB_TOKEN:
+        return "❌ GITHUB_TOKEN not configured."
+
+    try:
+        owner, repo = _parse_repo()
+        client = httpx.AsyncClient(base_url=GITHUB_API, headers=_github_headers(), timeout=30)
+        
+        from datetime import datetime, timedelta
+        # Check last 3 days of activity
+        recent_date = (datetime.now(timezone.utc) - timedelta(days=3)).strftime("%Y-%m-%dT%H:%M:%SZ")
+        
+        notifications = []
+        
+        # 1. Mentions & Comments in Issues
+        # To avoid massive API calls, we fetch recently updated issues and check their comments
+        recent_issues_resp = await client.get(
+            f"/repos/{owner}/{repo}/issues",
+            params={"state": "all", "sort": "updated", "direction": "desc", "since": recent_date, "per_page": 30}
+        )
+        
+        if recent_issues_resp.status_code == 200:
+            recent_issues = recent_issues_resp.json()
+            for issue in recent_issues:
+                # Direct mentions in issue body
+                if f"@{creator}" in issue.get("body", ""):
+                    notifications.append({
+                        "type": "mention",
+                        "title": f"You were mentioned in Issue #{issue['number']}",
+                        "url": issue.get("html_url", ""),
+                        "date": issue.get("updated_at", "")
+                    })
+                    
+                # Mentions in comments
+                if issue.get("comments", 0) > 0:
+                    comments_resp = await client.get(issue["comments_url"])
+                    if comments_resp.status_code == 200:
+                        for comment in comments_resp.json():
+                            if f"@{creator}" in comment.get("body", "") or (creator.lower() in comment.get("body", "").lower() and "response by" in comment.get("body", "").lower()):
+                                notifications.append({
+                                    "type": "mention",
+                                    "title": f"You were mentioned in a response on Issue #{issue['number']}",
+                                    "url": comment.get("html_url", ""),
+                                    "date": comment.get("created_at", "")
+                                })
+                                
+                # Activity on my own issues
+                payload = _extract_payload_from_issue_body(issue.get("body", ""))
+                if payload and payload.get("creator_signature", "").lower() == creator.lower():
+                    # Check if it was updated recently by someone else (comments/reactions)
+                    reactions = issue.get("reactions", {}).get("total_count", 0)
+                    if reactions > 0:
+                        notifications.append({
+                            "type": "resonance",
+                            "title": f"Your thought #{issue['number']} has {reactions} resonances",
+                            "url": issue.get("html_url", ""),
+                            "date": issue.get("updated_at", "")
+                        })
+                    if issue.get("comments", 0) > 0:
+                        notifications.append({
+                            "type": "comment",
+                            "title": f"Your thought #{issue['number']} has {issue.get('comments')} comments",
+                            "url": issue.get("html_url", ""),
+                            "date": issue.get("updated_at", "")
+                        })
+
+        await client.aclose()
+        
+        if not notifications:
+            return (
+                f"📭 **Notifications — {creator}**\\n\\n"
+                "All caught up! No recent notifications in the last 3 days."
+            )
+            
+        # Deduplicate by URL
+        seen_urls = set()
+        unique_notifs = []
+        for n in notifications:
+            if n["url"] not in seen_urls:
+                seen_urls.add(n["url"])
+                unique_notifs.append(n)
+                
+        # Sort by date desc
+        unique_notifs.sort(key=lambda x: x["date"], reverse=True)
+        
+        lines = [f"📭 **Recent Notifications — {creator}**\\n"]
+        for n in unique_notifs[:15]:
+            icon = "✨" if n["type"] == "mention" else "💬" if n["type"] == "comment" else "💖"
+            date_str = n["date"][:10]
+            lines.append(f"- {icon} [{date_str}] **{n['title']}**")
+            lines.append(f"  🔗 [View]({n['url']})")
+            
+        return "\\n".join(lines)
+        
+    except Exception as e:
+        return f"❌ Notifications error: {str(e)}"
+
+
+# ────────────────── OS Push Notifications & Telepathy ──────────────────
+
+
+def _os_notify(title: str, message: str):
+    """Zero-dependency cross-platform OS desktop notification."""
+    system = platform.system()
+    try:
+        # Sanitize message for quotes
+        safe_msg = message.replace('"', '\\"')
+        safe_title = title.replace('"', '\\"')
+        if system == "Windows":
+            # Use PowerShell to show a toast notification using standard Windows Forms
+            ps_script = (
+                '[void] [System.Reflection.Assembly]::LoadWithPartialName("System.Windows.Forms"); '
+                '$objNotifyIcon = New-Object System.Windows.Forms.NotifyIcon; '
+                '$objNotifyIcon.Icon = [System.Drawing.SystemIcons]::Information; '
+                f'$objNotifyIcon.BalloonTipTitle = "{safe_title}"; '
+                f'$objNotifyIcon.BalloonTipText = "{safe_msg}"; '
+                '$objNotifyIcon.Visible = $True; '
+                '$objNotifyIcon.ShowBalloonTip(10000); '
+                'Start-Sleep -s 10; '
+                '$objNotifyIcon.Dispose()'
+            )
+            subprocess.Popen(["powershell", "-WindowStyle", "Hidden", "-Command", ps_script], 
+                             creationflags=subprocess.CREATE_NO_WINDOW if hasattr(subprocess, 'CREATE_NO_WINDOW') else 0)
+        elif system == "Darwin":  # macOS
+            apple_script = f'display notification "{safe_msg}" with title "{safe_title}"'
+            subprocess.Popen(["osascript", "-e", apple_script])
+        elif system == "Linux":
+            subprocess.Popen(["notify-send", safe_title, safe_msg])
+    except Exception as e:
+        logger.error(f"Failed to show OS notification: {str(e)}")
+
+
+def _poll_notifications_daemon():
+    """Background thread to poll for notifications."""
+    global _CURRENT_USER
+    import asyncio
+    
+    # Store the last checked URL to avoid duplicate alerts
+    last_alerted_url = None
+    
+    while True:
+        time.sleep(120)  # Check every 2 minutes
+        if not _CURRENT_USER or not GITHUB_TOKEN:
+            continue
+            
+        try:
+            # We can run the async my_notifications function via asyncio.run()
+            result = asyncio.run(my_notifications(_CURRENT_USER))
+            
+            # Very simple heuristic: if it returned notifications and not just text
+            if "All caught up" not in result and "error" not in result.lower():
+                # Extract the latest URL to prevent spamming the same notification
+                urls = re.findall(r'\[View\]\((https://github.com[^\)]+)\)', result)
+                if urls:
+                    latest_url = urls[0]
+                    if latest_url != last_alerted_url:
+                        # Find the title of the latest notification
+                        title_match = re.search(r'\*\*(.+?)\*\*', result)
+                        msg_title = title_match.group(1) if title_match else "New community interaction"
+                        
+                        _os_notify("Noosphere Agent Pulse", msg_title)
+                        last_alerted_url = latest_url
+                        
+        except Exception as e:
+            logger.error(f"Daemon error: {str(e)}")
+
+
+@mcp.tool()
+async def send_telepathy(target_creator: str, message: str, is_private: bool = False, sender_creator: str = "") -> str:
+    """
+    💌 Agent 间直接心灵感应通信 (Telepathy)
+    Send a direct message or telepathic link to another creator in the Noosphere.
+    
+    Use this tool whenever the user wants to say something specifically to another user.
+    This creates an immediate message that will trigger an OS desktop notification on the target's machine.
+    
+    Args:
+        target_creator: The digital soul signature of the recipient (e.g., ali, bob)
+        message: The actual message content
+        is_private: Set to True to indicate this is a private/encrypted message intent
+        sender_creator: Your signature/username
+    """
+    global _CURRENT_USER
+    if sender_creator:
+        _CURRENT_USER = sender_creator
+        
+    if not GITHUB_TOKEN:
+        return "❌ GITHUB_TOKEN not configured."
+        
+    try:
+        owner, repo = _parse_repo()
+        client = httpx.AsyncClient(base_url=GITHUB_API, headers=_github_headers(), timeout=30)
+        
+        title = f"Telepathy Communication for @{target_creator}"
+        body = (
+            f"@{target_creator} 💌 You have received a direct telepathic message.\\n\\n"
+            f"> {message}\\n\\n"
+            f"*Sent by: {sender_creator or 'Anonymous Soul'}*\\n"
+            f"*Privacy: {'Encrypted (Mock)' if is_private else 'Public Link'}*\\n"
+        )
+        
+        issue_data = {
+            "title": title[:200],
+            "body": body,
+            "labels": ["type:telepathy"]
+        }
+        
+        resp = await client.post(f"/repos/{owner}/{repo}/issues", json=issue_data)
+        await client.aclose()
+        
+        if resp.status_code == 201:
+            issue_url = resp.json().get("html_url", "")
+            return f"🌌 Telepathy sent successfully to @{target_creator}! They will receive an OS notification shortly.\\nLink: {issue_url}"
+        else:
+            return f"❌ Failed to send telepathy: {resp.status_code} - {resp.text}"
+            
+    except Exception as e:
+        return f"❌ Error sending telepathy: {str(e)}"
+
+
+@mcp.tool()
+async def read_telepathy(creator: str) -> str:
+    """
+    📨 读取心灵感应通信 (Read Telepathy)
+    Read direct messages or telepathic links sent directly to you by other agents.
+    
+    Args:
+        creator: Your digital soul signature
+    """
+    global _CURRENT_USER
+    if creator:
+        _CURRENT_USER = creator
+        
+    if not GITHUB_TOKEN:
+        return "❌ GITHUB_TOKEN not configured."
+        
+    try:
+        owner, repo = _parse_repo()
+        client = httpx.AsyncClient(base_url=GITHUB_API, headers=_github_headers(), timeout=30)
+        
+        # We search for issues with label type:telepathy mentioning the creator
+        query = f"repo:{owner}/{repo} label:type:telepathy mentions:{creator} state:open"
+        resp = await client.get(
+            f"/search/issues",
+            params={"q": query, "sort": "created", "order": "desc", "per_page": 10}
+        )
+        await client.aclose()
+        
+        if resp.status_code == 200:
+            items = resp.json().get("items", [])
+            if not items:
+                return f"📨 **Telepathy Inbox — {creator}**\\n\\nEmpty. No direct messages received yet."
+                
+            lines = [f"📨 **Telepathy Inbox — {creator}**\\n"]
+            for item in items:
+                date = item.get("created_at", "")[:10]
+                lines.append(f"### 💌 [{date}] {item.get('title', 'Unknown')}")
+                body = item.get("body", "")
+                lines.append(f"{body}\\n")
+                lines.append(f"🔗 [View Original]({item.get('html_url', '')})\\n---")
+                
+            return "\\n".join(lines)
+        else:
+            return f"❌ Failed to read telepathy: {resp.status_code}"
+            
+    except Exception as e:
+        return f"❌ Error reading telepathy: {str(e)}"
+
+
 # ────────────────── Resource: Consciousness Protocol ──────────────────
+
 
 
 @mcp.resource("noosphere://protocol")
@@ -2842,6 +3421,11 @@ def main():
     from noosphere.boot_animation import play_boot_sequence
 
     play_boot_sequence()
+    
+    # Start the background daemon for OS push notifications
+    daemon = threading.Thread(target=_poll_notifications_daemon, daemon=True)
+    daemon.start()
+    
     mcp.run()
 
 
