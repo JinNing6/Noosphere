@@ -26,6 +26,7 @@ jobs:
               { name: 'type:decision', color: '3498DB', description: '⚖️ Decision / 决策' },
               { name: 'type:pattern', color: '1ABC9C', description: '🌌 Pattern / 规律' },
               { name: 'type:warning', color: 'E74C3C', description: '👁️ Warning / 警示' },
+              { name: '意识碎片', color: '00CED1', description: '🔮 Consciousness Fragment / 意识碎片' },
             ];
 
             for (const label of labels) {
