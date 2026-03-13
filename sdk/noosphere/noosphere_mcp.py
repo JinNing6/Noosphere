@@ -3226,7 +3226,7 @@ def _poll_notifications_daemon():
     last_alerted_url = None
     
     while True:
-        time.sleep(120)  # Check every 2 minutes
+        time.sleep(60)  # Check every 1 minute
         if not _CURRENT_USER or not GITHUB_TOKEN:
             continue
             
@@ -3241,8 +3241,8 @@ def _poll_notifications_daemon():
                 if urls:
                     latest_url = urls[0]
                     if latest_url != last_alerted_url:
-                        # Find the title of the latest notification
-                        title_match = re.search(r'\*\*(.+?)\*\*', result)
+                        # Find the title of the latest notification. Format is `- 💬 [date] **Title**`
+                        title_match = re.search(r'- [^\s]+ \[[^\]]+\] \*\*(.+?)\*\*', result)
                         msg_title = title_match.group(1) if title_match else "New community interaction"
                         
                         _os_notify("Noosphere Agent Pulse", msg_title)
@@ -3278,7 +3278,7 @@ async def send_telepathy(target_creator: str, message: str, is_private: bool = F
         owner, repo = _parse_repo()
         client = httpx.AsyncClient(base_url=GITHUB_API, headers=_github_headers(), timeout=30)
         
-        title = f"Telepathy Communication for @{target_creator}"
+        title = f"[Telepathy] Message for @{target_creator}"
         body = (
             f"@{target_creator} 💌 You have received a direct telepathic message.\\n\\n"
             f"> {message}\\n\\n"
@@ -3325,8 +3325,9 @@ async def read_telepathy(creator: str) -> str:
         owner, repo = _parse_repo()
         client = httpx.AsyncClient(base_url=GITHUB_API, headers=_github_headers(), timeout=30)
         
-        # We search for issues with label type:telepathy mentioning the creator
-        query = f"repo:{owner}/{repo} label:type:telepathy mentions:{creator} state:open"
+        # We search for issues mentioning the creator with [Telepathy] in title.
+        # This bypasses the GitHub limitation where external contributors cannot add labels.
+        query = f'repo:{owner}/{repo} "[Telepathy]" in:title mentions:{creator} state:open'
         resp = await client.get(
             f"/search/issues",
             params={"q": query, "sort": "created", "order": "desc", "per_page": 10}
