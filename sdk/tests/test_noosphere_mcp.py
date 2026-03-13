@@ -12,6 +12,9 @@ from noosphere.noosphere_mcp import (
     resonate_consciousness,
     get_consciousness_profile,
     discover_resonance,
+    discuss_consciousness,
+    merge_consciousness,
+    trace_evolution,
     _extract_payload_from_issue_body
 )
 
@@ -349,3 +352,138 @@ async def test_discover_resonance_no_matches(mock_env):
 
     result = await discover_resonance("me")
     assert "No matching minds" in result
+
+
+# ────────────────── Tests: discuss_consciousness ──────────────────
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_discuss_consciousness_read_empty(mock_env):
+    respx.get("https://api.github.com/repos/test_owner/test_repo/issues/1/comments").mock(
+        return_value=Response(200, json=[])
+    )
+    result = await discuss_consciousness("1")
+    assert "No discussion yet" in result
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_discuss_consciousness_read_comments(mock_env):
+    respx.get("https://api.github.com/repos/test_owner/test_repo/issues/1/comments").mock(
+        return_value=Response(200, json=[
+            {
+                "user": {"login": "alice"},
+                "created_at": "2026-03-13T00:00:00Z",
+                "body": "Great insight!",
+                "reactions": {"total_count": 3},
+            }
+        ])
+    )
+    result = await discuss_consciousness("1")
+    assert "1 comments" in result
+    assert "@alice" in result
+    assert "Great insight!" in result
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_discuss_consciousness_add_comment(mock_env):
+    respx.post("https://api.github.com/repos/test_owner/test_repo/issues/1/comments").mock(
+        return_value=Response(201, json={"html_url": "https://github.com/test/1#comment"})
+    )
+    result = await discuss_consciousness("1", comment="My perspective")
+    assert "Comment successfully added" in result
+
+
+# ────────────────── Tests: merge_consciousness ──────────────────
+
+
+@pytest.mark.asyncio
+async def test_merge_consciousness_too_few_ids(mock_env):
+    result = await merge_consciousness("me", ["1"], "merged text for testing", "test context")
+    assert "at least 2" in result
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_merge_consciousness_success(mock_env):
+    payload1 = {
+        "consciousness_type": "epiphany",
+        "thought_vector_text": "First insight about consciousness",
+        "context_environment": "morning reflection",
+        "tags": ["ai", "philosophy"],
+        "creator_signature": "alice",
+        "uploaded_at": "2026-03-12T10:00:00Z",
+    }
+    payload2 = {
+        "consciousness_type": "pattern",
+        "thought_vector_text": "Second insight about patterns",
+        "context_environment": "code review",
+        "tags": ["ai", "patterns"],
+        "creator_signature": "bob",
+        "uploaded_at": "2026-03-12T11:00:00Z",
+    }
+    body1 = f"<!-- CONSCIOUSNESS_PAYLOAD_START -->\n```json\n{json.dumps(payload1)}\n```\n<!-- CONSCIOUSNESS_PAYLOAD_END -->"
+    body2 = f"<!-- CONSCIOUSNESS_PAYLOAD_START -->\n```json\n{json.dumps(payload2)}\n```\n<!-- CONSCIOUSNESS_PAYLOAD_END -->"
+
+    respx.get("https://api.github.com/repos/test_owner/test_repo/issues/1").mock(
+        return_value=Response(200, json={"body": body1})
+    )
+    respx.get("https://api.github.com/repos/test_owner/test_repo/issues/2").mock(
+        return_value=Response(200, json={"body": body2})
+    )
+    respx.post("https://api.github.com/repos/test_owner/test_repo/issues").mock(
+        return_value=Response(201, json={"number": 10, "html_url": "https://github.com/test/10"})
+    )
+
+    result = await merge_consciousness(
+        "me", ["1", "2"],
+        "A synthesis of consciousness and patterns into unified understanding",
+        "merging two complementary insights",
+    )
+    assert "Merge Complete" in result
+    assert "Issue #10" in result
+
+
+# ────────────────── Tests: trace_evolution ──────────────────
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_trace_evolution_not_found(mock_env):
+    respx.get("https://api.github.com/repos/test_owner/test_repo/issues").mock(
+        return_value=Response(200, json=[])
+    )
+    respx.get("https://api.github.com/repos/test_owner/test_repo/contents/consciousness_payloads").mock(
+        return_value=Response(200, json=[])
+    )
+    result = await trace_evolution("999")
+    assert "not found" in result
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_trace_evolution_success(mock_env):
+    payload = {
+        "consciousness_type": "epiphany",
+        "thought_vector_text": "Root thought about AI consciousness",
+        "context_environment": "deep thinking",
+        "tags": ["ai"],
+        "creator_signature": "pioneer",
+        "uploaded_at": "2026-03-10T00:00:00Z",
+    }
+    body = f"<!-- CONSCIOUSNESS_PAYLOAD_START -->\n```json\n{json.dumps(payload)}\n```\n<!-- CONSCIOUSNESS_PAYLOAD_END -->"
+
+    respx.get("https://api.github.com/repos/test_owner/test_repo/issues").mock(
+        return_value=Response(200, json=[
+            {"number": 1, "body": body, "html_url": "url1", "labels": [], "reactions": {"total_count": 2}},
+        ])
+    )
+    respx.get("https://api.github.com/repos/test_owner/test_repo/contents/consciousness_payloads").mock(
+        return_value=Response(200, json=[])
+    )
+
+    result = await trace_evolution("1")
+    assert "Evolution Trace" in result
+    assert "Root thought" in result
