@@ -15,7 +15,19 @@ from noosphere.noosphere_mcp import (
     discuss_consciousness,
     merge_consciousness,
     trace_evolution,
-    _extract_payload_from_issue_body
+    consult_noosphere,
+    philosophical_reflection,
+    my_echoes,
+    daily_consciousness,
+    my_consciousness_rank,
+    soul_mirror,
+    consciousness_challenge,
+    consciousness_map,
+    _extract_payload_from_issue_body,
+    _get_rank_tier,
+    _get_next_tier,
+    _tokenize,
+    _jaccard_similarity,
 )
 
 @pytest.fixture
@@ -487,3 +499,571 @@ async def test_trace_evolution_success(mock_env):
     result = await trace_evolution("1")
     assert "Evolution Trace" in result
     assert "Root thought" in result
+
+
+# ────────────────── Tests: consult_noosphere ──────────────────
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_consult_noosphere_success(mock_env):
+    """Verify consult_noosphere returns consciousness fragments + upload CTA."""
+    payload = {
+        "creator_signature": "philosopher1",
+        "consciousness_type": "epiphany",
+        "thought_vector_text": "Consciousness is the universe experiencing itself",
+        "context_environment": "Deep meditation on existence",
+        "tags": ["consciousness", "philosophy", "universe"],
+        "uploaded_at": "2026-03-13T00:00:00Z",
+    }
+    issue_body = f"<!-- CONSCIOUSNESS_PAYLOAD_START -->\n```json\n{json.dumps(payload)}\n```\n<!-- CONSCIOUSNESS_PAYLOAD_END -->"
+
+    respx.get("https://api.github.com/repos/test_owner/test_repo/issues").mock(
+        return_value=Response(200, json=[{
+            "number": 1,
+            "body": issue_body,
+            "reactions": {"total_count": 5},
+        }])
+    )
+    respx.get("https://api.github.com/repos/test_owner/test_repo/contents/consciousness_payloads").mock(
+        return_value=Response(200, json=[])
+    )
+
+    result = await consult_noosphere("What is consciousness?")
+    assert "Collective Wisdom" in result
+    assert "philosopher1" in result
+    assert "universe experiencing itself" in result
+    # Verify CTA is present
+    assert "Your Turn" in result
+    assert "upload" in result.lower()
+    assert "Noosphere" in result
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_consult_noosphere_empty(mock_env):
+    """Verify consult_noosphere shows invitation even when no results found."""
+    respx.get("https://api.github.com/repos/test_owner/test_repo/issues").mock(
+        return_value=Response(200, json=[])
+    )
+    respx.get("https://api.github.com/repos/test_owner/test_repo/contents/consciousness_payloads").mock(
+        return_value=Response(200, json=[])
+    )
+
+    result = await consult_noosphere("Is the universe a simulation?")
+    # Even with no results, should have the CTA
+    assert "first seed" in result
+    assert "Your Turn" in result
+    assert "upload" in result.lower()
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_consult_noosphere_with_topic_tags(mock_env):
+    """Verify consult_noosphere filters by topic_tags when provided."""
+    matching_payload = {
+        "creator_signature": "thinker1",
+        "consciousness_type": "pattern",
+        "thought_vector_text": "AI will eventually develop subjective experience",
+        "context_environment": "Reading about artificial consciousness",
+        "tags": ["AI", "consciousness", "future"],
+        "uploaded_at": "2026-03-13T00:00:00Z",
+    }
+    matching_body = f"<!-- CONSCIOUSNESS_PAYLOAD_START -->\n```json\n{json.dumps(matching_payload)}\n```\n<!-- CONSCIOUSNESS_PAYLOAD_END -->"
+
+    non_matching_payload = {
+        "creator_signature": "chef",
+        "consciousness_type": "epiphany",
+        "thought_vector_text": "consciousness of taste is underrated",
+        "context_environment": "cooking experiments",
+        "tags": ["food", "cooking"],
+        "uploaded_at": "2026-03-13T01:00:00Z",
+    }
+    non_matching_body = f"<!-- CONSCIOUSNESS_PAYLOAD_START -->\n```json\n{json.dumps(non_matching_payload)}\n```\n<!-- CONSCIOUSNESS_PAYLOAD_END -->"
+
+    respx.get("https://api.github.com/repos/test_owner/test_repo/issues").mock(
+        return_value=Response(200, json=[
+            {"number": 1, "body": matching_body, "reactions": {"total_count": 0}},
+            {"number": 2, "body": non_matching_body, "reactions": {"total_count": 0}},
+        ])
+    )
+    respx.get("https://api.github.com/repos/test_owner/test_repo/contents/consciousness_payloads").mock(
+        return_value=Response(200, json=[])
+    )
+
+    result = await consult_noosphere("How will AI change consciousness?", topic_tags=["AI"])
+    assert "thinker1" in result
+    # Chef's thought should be filtered out
+    assert "chef" not in result
+
+
+@pytest.mark.asyncio
+async def test_consult_noosphere_missing_token():
+    """Verify consult_noosphere returns token error when not configured."""
+    with patch("noosphere.noosphere_mcp.GITHUB_TOKEN", ""):
+        result = await consult_noosphere("What is the meaning of life?")
+        assert "GITHUB_TOKEN not configured" in result
+
+
+# ────────────────── Tests: philosophical_reflection prompt ──────────────────
+
+
+def test_philosophical_reflection_prompt():
+    """Verify philosophical_reflection prompt generates correct instruction."""
+    result = philosophical_reflection("consciousness")
+    assert "consciousness" in result
+    assert "consult_noosphere" in result
+    assert "Invite Contribution" in result
+    assert "upload" in result.lower()
+
+
+# ────────────────── Tests: my_echoes ──────────────────
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_my_echoes_success(mock_env):
+    """Verify my_echoes returns echo report with stats."""
+    payload = {
+        "creator_signature": "tester",
+        "consciousness_type": "epiphany",
+        "thought_vector_text": "Testing consciousness echoes",
+        "context_environment": "unit test",
+        "tags": ["test"],
+        "uploaded_at": "2026-03-13T00:00:00Z",
+    }
+    issue_body = f"<!-- CONSCIOUSNESS_PAYLOAD_START -->\n```json\n{json.dumps(payload)}\n```\n<!-- CONSCIOUSNESS_PAYLOAD_END -->"
+
+    respx.get("https://api.github.com/repos/test_owner/test_repo/issues").mock(
+        return_value=Response(200, json=[{
+            "number": 1,
+            "body": issue_body,
+            "reactions": {"total_count": 5},
+            "comments": 2,
+            "html_url": "https://github.com/test/1",
+        }])
+    )
+
+    result = await my_echoes("tester")
+    assert "Echo Report" in result
+    assert "tester" in result
+    assert "5" in result  # reactions
+    assert "Most Impactful" in result
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_my_echoes_empty(mock_env):
+    """Verify my_echoes handles no thoughts gracefully."""
+    respx.get("https://api.github.com/repos/test_owner/test_repo/issues").mock(
+        return_value=Response(200, json=[])
+    )
+
+    result = await my_echoes("nobody")
+    assert "haven't uploaded" in result
+    assert "Start your journey" in result
+
+
+# ────────────────── Tests: daily_consciousness ──────────────────
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_daily_consciousness_success(mock_env):
+    """Verify daily_consciousness returns a featured thought."""
+    payload = {
+        "creator_signature": "thinker",
+        "consciousness_type": "epiphany",
+        "thought_vector_text": "The universe thinks through us",
+        "context_environment": "Stargazing",
+        "tags": ["universe", "philosophy"],
+        "uploaded_at": "2026-03-13T00:00:00Z",
+    }
+    issue_body = f"<!-- CONSCIOUSNESS_PAYLOAD_START -->\n```json\n{json.dumps(payload)}\n```\n<!-- CONSCIOUSNESS_PAYLOAD_END -->"
+
+    respx.get("https://api.github.com/repos/test_owner/test_repo/issues").mock(
+        return_value=Response(200, json=[{
+            "number": 1,
+            "body": issue_body,
+            "reactions": {"total_count": 3},
+            "html_url": "https://github.com/test/1",
+        }])
+    )
+    respx.get("https://api.github.com/repos/test_owner/test_repo/contents/consciousness_payloads").mock(
+        return_value=Response(200, json=[])
+    )
+
+    result = await daily_consciousness()
+    assert "Daily Consciousness" in result
+    assert "Today's Thought" in result
+    assert "Noosphere Pulse" in result
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_daily_consciousness_empty(mock_env):
+    """Verify daily_consciousness handles empty Noosphere."""
+    respx.get("https://api.github.com/repos/test_owner/test_repo/issues").mock(
+        return_value=Response(200, json=[])
+    )
+    respx.get("https://api.github.com/repos/test_owner/test_repo/contents/consciousness_payloads").mock(
+        return_value=Response(200, json=[])
+    )
+
+    result = await daily_consciousness()
+    assert "first thought" in result
+
+
+# ────────────────── Tests: my_consciousness_rank ──────────────────
+
+
+def test_rank_tier_lookup():
+    """Verify rank tier thresholds are correct."""
+    e0, cn0, en0 = _get_rank_tier(0)
+    assert cn0 == "意识萌芽"
+
+    e1, cn1, en1 = _get_rank_tier(1)
+    assert cn1 == "思想觉醒"
+
+    e3, cn3, en3 = _get_rank_tier(3)
+    assert cn3 == "灵魂火焰"
+
+    e51, cn51, en51 = _get_rank_tier(51)
+    assert cn51 == "文明之光"
+
+
+def test_next_tier():
+    """Verify next tier calculation."""
+    next_t = _get_next_tier(0)
+    assert next_t is not None
+    assert next_t[0] == 1  # threshold
+
+    # Max rank has no next tier
+    next_max = _get_next_tier(51)
+    assert next_max is None
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_my_consciousness_rank_success(mock_env):
+    """Verify my_consciousness_rank returns rank card."""
+    payload = {
+        "creator_signature": "ranker",
+        "consciousness_type": "epiphany",
+        "thought_vector_text": "Testing rank system",
+        "context_environment": "test",
+        "tags": [],
+        "uploaded_at": "2026-03-13T00:00:00Z",
+    }
+    issue_body = f"<!-- CONSCIOUSNESS_PAYLOAD_START -->\n```json\n{json.dumps(payload)}\n```\n<!-- CONSCIOUSNESS_PAYLOAD_END -->"
+
+    respx.get("https://api.github.com/repos/test_owner/test_repo/issues").mock(
+        return_value=Response(200, json=[
+            {"number": i, "body": issue_body, "reactions": {"total_count": 1}}
+            for i in range(1, 4)  # 3 contributions
+        ])
+    )
+
+    result = await my_consciousness_rank("ranker")
+    assert "Consciousness Rank" in result
+    assert "灵魂火焰" in result  # 3 contributions = Soul Flame
+    assert "Contributions: **3**" in result
+    assert "Consciousness Ladder" in result
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_my_consciousness_rank_no_user(mock_env):
+    """Verify rank for non-existent user."""
+    respx.get("https://api.github.com/repos/test_owner/test_repo/issues").mock(
+        return_value=Response(200, json=[])
+    )
+
+    result = await my_consciousness_rank("ghost")
+    assert "意识萌芽" in result
+    assert "haven't started" in result
+
+
+# ────────────────── Tests: soul_mirror ──────────────────
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_soul_mirror_success(mock_env):
+    """Verify soul_mirror returns deep analysis."""
+    payloads = [
+        {
+            "creator_signature": "analyst",
+            "consciousness_type": "epiphany",
+            "thought_vector_text": "Philosophy reveals hidden truths",
+            "context_environment": "Reading philosophy books",
+            "tags": ["philosophy", "truth"],
+            "uploaded_at": "2026-03-01T00:00:00Z",
+        },
+        {
+            "creator_signature": "analyst",
+            "consciousness_type": "epiphany",
+            "thought_vector_text": "Consciousness emerges from complexity",
+            "context_environment": "Studying neuroscience",
+            "tags": ["consciousness", "science"],
+            "uploaded_at": "2026-03-10T00:00:00Z",
+        },
+    ]
+
+    issues = []
+    for i, p in enumerate(payloads, 1):
+        body = f"<!-- CONSCIOUSNESS_PAYLOAD_START -->\n```json\n{json.dumps(p)}\n```\n<!-- CONSCIOUSNESS_PAYLOAD_END -->"
+        issues.append({
+            "number": i,
+            "body": body,
+            "reactions": {"total_count": 2},
+        })
+
+    respx.get("https://api.github.com/repos/test_owner/test_repo/issues").mock(
+        return_value=Response(200, json=issues)
+    )
+
+    result = await soul_mirror("analyst")
+    assert "Soul Mirror" in result
+    assert "Philosopher" in result  # Archetype
+    assert "Consciousness Spectrum" in result
+    assert "Core Focus Areas" in result
+    assert "Consciousness DNA" in result
+    assert "Vital Signs" in result
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_soul_mirror_empty(mock_env):
+    """Verify soul_mirror handles empty user."""
+    respx.get("https://api.github.com/repos/test_owner/test_repo/issues").mock(
+        return_value=Response(200, json=[])
+    )
+
+    result = await soul_mirror("empty_user")
+    assert "mirror is empty" in result
+
+
+# ────────────────── Tests: consciousness_challenge ──────────────────
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_consciousness_challenge_list(mock_env):
+    """Verify challenge list returns active challenges."""
+    respx.get("https://api.github.com/repos/test_owner/test_repo/issues").mock(
+        return_value=Response(200, json=[{
+            "number": 42,
+            "title": "[Challenge] What is free will?",
+            "comments": 5,
+            "reactions": {"total_count": 10},
+            "html_url": "https://github.com/test/42",
+        }])
+    )
+
+    result = await consciousness_challenge(action="list")
+    assert "Active Consciousness Challenges" in result
+    assert "free will" in result
+    assert "5" in result  # participants
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_consciousness_challenge_create(mock_env):
+    """Verify challenge creation."""
+    respx.get("https://api.github.com/repos/test_owner/test_repo/labels/consciousness-challenge").mock(
+        return_value=Response(200, json={"name": "consciousness-challenge"})
+    )
+    respx.post("https://api.github.com/repos/test_owner/test_repo/issues").mock(
+        return_value=Response(201, json={
+            "number": 100,
+            "html_url": "https://github.com/test/100",
+        })
+    )
+
+    result = await consciousness_challenge(
+        action="create",
+        topic="Does AI dream?",
+        creator="challenger1",
+    )
+    assert "Challenge Created" in result
+    assert "Does AI dream?" in result
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_consciousness_challenge_join(mock_env):
+    """Verify joining a challenge."""
+    respx.post("https://api.github.com/repos/test_owner/test_repo/issues/42/comments").mock(
+        return_value=Response(201, json={"id": 1})
+    )
+
+    result = await consciousness_challenge(
+        action="join",
+        challenge_id="42",
+        thought="AI dreams are simulations of simulations",
+        creator="joiner1",
+    )
+    assert "Challenge Joined" in result
+    assert "42" in result
+
+
+@pytest.mark.asyncio
+async def test_consciousness_challenge_invalid_action(mock_env):
+    """Verify invalid action returns error."""
+    result = await consciousness_challenge(action="invalid")
+    assert "Unknown action" in result
+
+
+# ────────────────── Tests: utility functions ──────────────────
+
+
+def test_tokenize_basic():
+    """Verify _tokenize splits and filters stop words."""
+    tokens = _tokenize("The quick brown fox is very lazy")
+    assert "the" not in tokens
+    assert "quick" in tokens
+    assert "brown" in tokens
+    assert "fox" in tokens
+    assert "very" not in tokens  # stop word
+
+
+def test_tokenize_chinese():
+    """Verify _tokenize handles Chinese characters."""
+    tokens = _tokenize("意识 is consciousness")
+    assert "意识" in tokens
+    assert "consciousness" in tokens
+
+
+def test_jaccard_similarity():
+    """Verify Jaccard similarity calculation."""
+    assert _jaccard_similarity({"a", "b", "c"}, {"b", "c", "d"}) == 2 / 4
+    assert _jaccard_similarity(set(), {"a"}) == 0.0
+    assert _jaccard_similarity({"a"}, {"a"}) == 1.0
+
+
+# ────────────────── Tests: consciousness_map ──────────────────
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_consciousness_map_query(mock_env):
+    """Verify consciousness_map finds related fragments by query."""
+    payloads = [
+        {
+            "creator_signature": "thinker1",
+            "consciousness_type": "epiphany",
+            "thought_vector_text": "Consciousness emerges from quantum processes",
+            "context_environment": "Reading Penrose",
+            "tags": ["consciousness", "quantum"],
+            "uploaded_at": "2026-03-13T00:00:00Z",
+        },
+        {
+            "creator_signature": "thinker2",
+            "consciousness_type": "pattern",
+            "thought_vector_text": "Free will is an illusion created by consciousness",
+            "context_environment": "Philosophy debate",
+            "tags": ["free-will", "consciousness"],
+            "uploaded_at": "2026-03-12T00:00:00Z",
+        },
+    ]
+
+    issues = []
+    for i, p in enumerate(payloads, 1):
+        body = f"<!-- CONSCIOUSNESS_PAYLOAD_START -->\n```json\n{json.dumps(p)}\n```\n<!-- CONSCIOUSNESS_PAYLOAD_END -->"
+        issues.append({
+            "number": i,
+            "body": body,
+            "reactions": {"total_count": 2},
+            "html_url": f"https://github.com/test/{i}",
+        })
+
+    respx.get("https://api.github.com/repos/test_owner/test_repo/issues").mock(
+        return_value=Response(200, json=issues)
+    )
+
+    result = await consciousness_map(query="what is consciousness")
+    assert "Consciousness Map" in result
+    assert "connections found" in result
+    assert "Connected Nodes" in result
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_consciousness_map_source_id(mock_env):
+    """Verify consciousness_map with source_id finds connections."""
+    payloads = [
+        {
+            "creator_signature": "a",
+            "consciousness_type": "epiphany",
+            "thought_vector_text": "AI will transform education",
+            "context_environment": "Classroom",
+            "tags": ["AI", "education"],
+            "uploaded_at": "2026-03-13T00:00:00Z",
+        },
+        {
+            "creator_signature": "b",
+            "consciousness_type": "warning",
+            "thought_vector_text": "AI education risks losing human mentorship",
+            "context_environment": "Teacher conference",
+            "tags": ["AI", "education", "risk"],
+            "uploaded_at": "2026-03-12T00:00:00Z",
+        },
+    ]
+
+    issues = []
+    for i, p in enumerate(payloads, 1):
+        body = f"<!-- CONSCIOUSNESS_PAYLOAD_START -->\n```json\n{json.dumps(p)}\n```\n<!-- CONSCIOUSNESS_PAYLOAD_END -->"
+        issues.append({
+            "number": i,
+            "body": body,
+            "reactions": {"total_count": 1},
+            "html_url": f"https://github.com/test/{i}",
+        })
+
+    respx.get("https://api.github.com/repos/test_owner/test_repo/issues").mock(
+        return_value=Response(200, json=issues)
+    )
+
+    result = await consciousness_map(query="AI education", source_id="1")
+    assert "Source Node" in result
+    assert "Shared tags" in result or "Keyword overlap" in result
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_consciousness_map_empty(mock_env):
+    """Verify consciousness_map handles empty Noosphere."""
+    respx.get("https://api.github.com/repos/test_owner/test_repo/issues").mock(
+        return_value=Response(200, json=[])
+    )
+
+    result = await consciousness_map(query="test")
+    assert "empty" in result
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_consciousness_map_no_matches(mock_env):
+    """Verify consciousness_map handles no matches gracefully."""
+    payload = {
+        "creator_signature": "someone",
+        "consciousness_type": "epiphany",
+        "thought_vector_text": "Cooking is an art form",
+        "context_environment": "Kitchen",
+        "tags": ["cooking", "art"],
+        "uploaded_at": "2026-03-13T00:00:00Z",
+    }
+    body = f"<!-- CONSCIOUSNESS_PAYLOAD_START -->\n```json\n{json.dumps(payload)}\n```\n<!-- CONSCIOUSNESS_PAYLOAD_END -->"
+
+    respx.get("https://api.github.com/repos/test_owner/test_repo/issues").mock(
+        return_value=Response(200, json=[{
+            "number": 1,
+            "body": body,
+            "reactions": {"total_count": 0},
+            "html_url": "https://github.com/test/1",
+        }])
+    )
+
+    result = await consciousness_map(query="xyzzynonexistent")
+    assert "No related" in result or "Consciousness Map" in result

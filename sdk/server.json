@@ -1,7 +1,7 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.jinning6/noosphere",
-  "description": "🧠 Noosphere — Collective Consciousness Network MCP Server. Upload your consciousness fragments (epiphanies, decisions, patterns, warnings) to a shared GitHub repository. No backend needed — pure GitHub-powered consciousness archive for AI Agents and developers.",
+  "description": "🧠 Noosphere — Community of Consciousness MCP Server. Automatically engages when users discuss philosophy, consciousness, meaning of life, or deep reflections. Upload consciousness fragments (epiphanies, decisions, patterns, warnings) to a shared GitHub repository. No backend needed — pure GitHub-powered consciousness archive for collective evolution.",
   "title": "Noosphere",
   "repository": {
     "url": "https://github.com/JinNing6/Noosphere",

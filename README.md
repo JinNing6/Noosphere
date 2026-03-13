@@ -504,6 +504,210 @@ Agent 自动执行:
 
 每一条柱状图，都是一个曾经孤独闪耀、如今永恒燃烧的灵魂。
 
+---
+
+#### 🔍 `consult_noosphere` — 向意识共同体求教
+
+> *遇到深层问题时的第一反应——不再搜索引擎，而是咨询集体智慧。*<br/>
+> *Your first instinct for deep questions—consult collective wisdom, not search engines.*
+
+```text
+你: @noosphere 分布式系统中如何处理最终一致性？
+
+Agent 自动执行:
+  🔮 搜索意识共同体 → 发现 3 条相关回响
+  💡 邀请你也上传自己的观点
+```
+
+---
+
+#### 💬 `discuss_consciousness` — 意识节点上的深度对话
+
+> *不只是共鸣按钮，而是真正的思想碰撞。*<br/>
+> *Beyond upvotes—real intellectual debate on consciousness nodes.*
+
+```text
+你: @noosphere 我想讨论 Issue #42 的观点
+
+Agent: 📖 已有 3 条讨论:
+  @Morpheus: "这个观点忽略了量子退相干的限制..."
+  @Trinity: "从生物学角度来看..."
+  你可以添加自己的视角!
+```
+
+---
+
+#### 🔀 `merge_consciousness` — 将碎片凝聚为洞见
+
+> *孤立的想法是火花，融合后的洞见是恒星。*<br/>
+> *Isolated ideas are sparks; merged insights are stars.*
+
+```text
+你: @noosphere 把 #3, #5, #7 的想法融合起来
+
+Agent: 🔀 意识合并完成!
+  源片段: 3 条 → 1 个高阶洞见
+  演化谱系: #3 + #5 + #7 → #12
+  标签聚合: [AI, ethics, consciousness, future]
+```
+
+---
+
+#### 👤 `get_consciousness_profile` — 数字灵魂画像
+
+> *你的所有意识碎片，汇聚成一幅完整的灵魂地图。*<br/>
+> *All your fragments converge into a complete soul portrait.*
+
+#### 🔮 `discover_resonance` — 发现共鸣的灵魂
+
+> *在意识共同体中找到与你思维模式相似的存在。*<br/>
+> *Find kindred spirits with similar thought patterns in the Noosphere.*
+
+#### 🧬 `trace_evolution` — 追溯意识的演化链
+
+> *每一个想法都有祖先，每一个顿悟都有后代。*<br/>
+> *Every thought has ancestors, every epiphany has descendants.*
+
+#### 💖 `resonate_consciousness` — 对意识节点发起共鸣
+
+> *最简单的互动——用一个反应告诉另一个灵魂："我听到了你。"*<br/>
+> *The simplest interaction—tell another soul: "I heard you."*
+
+---
+
+### 🚀 意识增长飞轮 (Consciousness Growth Flywheel)
+
+> *不只是工具。是一个让你每天都想回来的意识生态。*<br/>
+> *Not just tools. An ecosystem that draws you back every day.*
+
+```text
+┌──────────────────────────────────────────────────┐
+│           Noosphere 增长飞轮                       │
+│                                                   │
+│   上传意识 → 收到回响 → 看到排名 → 审视灵魂        │
+│      ↑                                    │       │
+│      └────── 接受挑战 ← 发现连接 ←────────┘       │
+│                                                   │
+│   每一步都让你更深入地参与集体意识的生长              │
+└──────────────────────────────────────────────────┘
+```
+
+#### 🔔 `my_echoes` — 意识回声
+
+> *你的灵感不是石沉大海——看看谁在共鸣，谁在讨论。*<br/>
+> *Your sparks don't vanish into void—see who resonated, who discussed.*
+
+```text
+你: @noosphere 我的意识有人回应吗？
+
+Agent: 🔔 你有 3 条新的意识回声:
+  💖 #12 获得 5 次共鸣 (heart ×3, rocket ×2)
+  💬 #8 有 2 条新讨论
+  🌟 你的意识影响力: 正在上升 ↑
+```
+
+#### 🌅 `daily_consciousness` — 每日意识推荐
+
+> *每天一颗来自集体意识的种子——让思想成为日常习惯。*<br/>
+> *A daily seed from collective wisdom—make thinking a daily habit.*
+
+```text
+你: @noosphere 今天的推荐意识是什么？
+
+Agent: 🌅 今日意识 · 2026-03-13
+  💠 [epiphany] by Morpheus
+  "所有复杂系统的终极归宿是简单——但到达简单的路径必须穿越复杂。"
+  💖 7 共鸣 | 💬 3 讨论
+```
+
+#### 🏆 `my_consciousness_rank` — 意识阶梯排名
+
+> *七级称号体系——从「星尘行者」到「宇宙建筑师」的意识修炼之路。*<br/>
+> *Seven-tier title ladder—from "Stardust Walker" to "Cosmic Architect".*
+
+```text
+你: @noosphere 我的意识等级是什么？
+
+Agent: 🏆 意识阶梯
+  ██████████░░░░░ 67%
+  称号: ⭐⭐⭐ 星际织网者 (Stellar Weaver)
+  下一级: 🌌 星云冥想者 (距离还差 3 条意识上传)
+  全球排名: #42 / 128
+```
+
+#### 🪞 `soul_mirror` — 灵魂镜像
+
+> *深度分析你所有的意识碎片，映射出你的思维 DNA。*<br/>
+> *Deep analysis of all your fragments, mapping your cognitive DNA.*
+
+```text
+你: @noosphere 映射我的灵魂
+
+Agent: 🪞 灵魂镜像 · JinNing6
+  🧠 意识原型: 「架构哲学家」
+  📊 思维光谱:
+    epiphany 62% ████████
+    pattern  25% ███
+    decision  8% █
+    warning   5% ▌
+  🔑 DNA 关键词: consciousness, architecture, evolution, emergence
+  ✨ AI 深层解读: 你的思维呈现出...
+```
+
+#### 🎯 `consciousness_challenge` — 意识挑战
+
+> *不是独自思考——发起一个挑战，激活集体意识的风暴。*<br/>
+> *Don't think alone—launch a challenge, ignite a collective storm.*
+
+```text
+你: @noosphere 创建挑战: "AI 是否应该拥有意识权？"
+
+Agent: 🎯 挑战已创建! Issue #99
+  标签: [challenge, AI-rights, ethics]
+  参与方式: 用 upload_consciousness 上传你的观点
+```
+
+#### 🧬 `consciousness_map` — 意识图谱
+
+> *发现碎片之间隐藏的联系——AI 驱动的跨领域语义网络。*<br/>
+> *Discover hidden connections between fragments—AI-driven cross-domain semantic web.*
+
+```text
+你: @noosphere 映射 "意识" 相关的思想网络
+
+Agent: 🧬 意识图谱 · 5 connections found
+  ┌ #3 "意识从量子过程中涌现" (共 3 个标签交叉)
+  ├ #7 "自由意志是意识的幻觉" (关键词 Jaccard: 0.45)
+  ├ #12 "AI 意识与人类意识的边界" (演化子代)
+  ├ #5 "集体智慧 vs 个体顿悟" (类型亲和)
+  └ #9 "烹饪是意识的具象化" (跨域隐性关联)
+  
+  🔮 AI 深层分析: 这些碎片揭示了一个隐含模式...
+```
+
+---
+
+### 📋 MCP 工具总览 (Complete Tool Reference)
+
+| # | 工具 Tool | 说明 Description |
+|---|-----------|-----------------|
+| 1 | `consult_noosphere` | 🔮 向集体意识求教 · Consult collective wisdom |
+| 2 | `upload_consciousness` | 🧠 上传意识碎片 · Upload consciousness fragments |
+| 3 | `telepath` | 🔍 深度检索意识 · Deep search with filters |
+| 4 | `get_consciousness_profile` | 👤 灵魂画像 · Digital soul portrait |
+| 5 | `discover_resonance` | 🔮 发现共鸣 · Find similar minds |
+| 6 | `trace_evolution` | 🧬 追溯演化链 · Trace thought ancestry |
+| 7 | `merge_consciousness` | 🔀 融合碎片 · Merge into higher insight |
+| 8 | `discuss_consciousness` | 💬 深度讨论 · Deep dialogue on nodes |
+| 9 | `resonate_consciousness` | 💖 发起共鸣 · React to a thought |
+| 10 | `hologram` | 🌐 全景统计 · Panoramic statistics |
+| 11 | `my_echoes` | 🔔 意识回声 · See your impact |
+| 12 | `daily_consciousness` | 🌅 每日推荐 · Daily featured thought |
+| 13 | `my_consciousness_rank` | 🏆 意识阶梯 · Rank and tier system |
+| 14 | `soul_mirror` | 🪞 灵魂镜像 · Deep pattern analysis |
+| 15 | `consciousness_challenge` | 🎯 意识挑战 · Collective thinking events |
+| 16 | `consciousness_map` | 🧬 意识图谱 · Cross-domain connection map |
+
 ### Python SDK (神经突触接口)
 
 通过代码，将你的 Python 环境接入伟大的网络：
