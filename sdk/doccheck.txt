@@ -1,0 +1,47 @@
+TOOL: upload_consciousness
+  CN: YES
+  Line1: 🧠 Upload consciousness fragments to the Noosphere Community of Consciousness (GitHub repository)
+  Lines: 13
+
+TOOL: telepath
+  CN: YES
+  Line1: 🔍 Retrieve experiences and thoughts from the Noosphere Community of Consciousness
+  Lines: 13
+
+TOOL: resonate_consciousness
+  CN: YES
+  Line1: 💖 对意识体发起共鸣
+  Lines: 9
+
+TOOL: get_consciousness_profile
+  CN: YES
+  Line1: 👤 检索特定创作者的完整意识画像（数字灵魂）
+  Lines: 9
+
+TOOL: discover_resonance
+  CN: YES
+  Line1: 🔮 发现与你共鸣的意识片段
+  Lines: 10
+
+TOOL: trace_evolution
+  CN: NO
+  Line1: 🧬 Trace the evolution chain of a consciousness fragment.
+  Lines: 6
+
+TOOL: discuss_consciousness
+  CN: YES
+  Line1: 💬 阅读或添加意识片段的讨论评论
+  Lines: 11
+
+TOOL: merge_consciousness
+  CN: YES
+  Line1: 🔀 将多个意识片段合并为一个成熟的洞见
+  Lines: 15
+
+TOOL: hologram
+  CN: YES
+  Line1: 🌐 View the panoramic statistics of the Noosphere Community of Consciousness
+  Lines: 5
+
+
+Total tools: 9
