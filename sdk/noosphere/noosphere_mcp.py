@@ -162,8 +162,8 @@ mcp = FastMCP(
         "14. `soul_mirror` — Deep analysis of user's thought patterns and consciousness archetype\n"
         "15. `consciousness_challenge` — Create, join, or list collective thinking challenges\n"
         "16. `consciousness_map` — Discover hidden connections between consciousness fragments via multi-signal analysis\n"
-        "17. `subscribe_creator` — Follow a creator to build your social graph\n"
-        "18. `unsubscribe_creator` — Unfollow a creator\n"
+        "17. `follow_creator` — Subscribe or unsubscribe to a creator to build your local social graph\n"
+        "18. `my_social_graph` — View your current follow list\n"
         "19. `my_network_pulse` — See recent uploads from creators you follow\n"
         "20. `my_notifications` — Check your asynchronous notifications (mentions, resonances, comments)\n"
         "21. `send_telepathy` — Send a direct message or telepathic link to another creator (triggers OS desktop push)\n"
@@ -1921,16 +1921,33 @@ async def daily_consciousness() -> str:
         # Select today's thought using date-based hash for deterministic daily pick
         from datetime import date
         today = date.today()
-        day_hash = hash(today.isoformat()) % len(all_thoughts)
+        
+        # Prioritize followed creators if user context is available
+        followed_thoughts = []
+        if _CURRENT_USER:
+            following = _get_following(_CURRENT_USER)
+            following_lower = [f.lower() for f in following]
+            followed_thoughts = [
+                t for t in all_thoughts 
+                if t[1].get("creator_signature", "").lower() in following_lower 
+                and not t[1].get("is_anonymous", False)
+            ]
+            
+        if followed_thoughts:
+            day_hash = hash(today.isoformat() + _CURRENT_USER) % len(followed_thoughts)
+            daily_pick = followed_thoughts[day_hash]
+            is_followed_pick = True
+        else:
+            day_hash = hash(today.isoformat()) % len(all_thoughts)
+            daily_pick = all_thoughts[day_hash]
+            is_followed_pick = False
 
         # Also find the most resonated thought
         all_thoughts.sort(key=lambda x: x[0], reverse=True)
         top_resonated = all_thoughts[0]
 
-        # Today's pick (deterministic based on date)
-        daily_pick = all_thoughts[day_hash % len(all_thoughts)]
-
-        _, daily_payload, daily_url = daily_pick
+        resonance, daily_payload, daily_url = daily_pick
+        
         daily_type = daily_payload.get("consciousness_type", "unknown")
         daily_emoji = TYPE_EMOJIS.get(daily_type, "🧠")
         daily_creator = daily_payload.get("creator_signature", "unknown")
@@ -1942,12 +1959,17 @@ async def daily_consciousness() -> str:
 
         lines = [
             f"🌅 **Daily Consciousness — {today.strftime('%B %d, %Y')}**\n",
-            "---\n",
-            f"### {daily_emoji} Today's Thought\n",
-            f"> *\"{daily_thought}\"*\n",
-            f"— **{daily_creator}**, in the context of: {daily_context}\n",
-            f"🏷️ {', '.join(f'`{t}`' for t in daily_tags) if daily_tags else 'Untagged'}",
+            "---\n"
         ]
+        
+        if is_followed_pick:
+            lines.append(f"### {daily_emoji} Picked from your Social Graph\n")
+        else:
+            lines.append(f"### {daily_emoji} Today's Thought\n")
+            
+        lines.append(f"> *\"{daily_thought}\"*\n")
+        lines.append(f"— **{daily_creator}**, in the context of: {daily_context}\n")
+        lines.append(f"🏷️ {', '.join(f'`{t}`' for t in daily_tags) if daily_tags else 'Untagged'}")
 
         if daily_url:
             lines.append(f"🔗 [Explore this thought]({daily_url})\n")
@@ -2856,124 +2878,107 @@ async def hologram() -> str:
 # ────────────────── Tool: Social Graph & Networking ──────────────────
 
 
+# ────────────────── Social Graph Configuration (Local) ──────────────────
+
+def _get_social_graph_config_path() -> str:
+    path = os.path.expanduser("~/.noosphere/config.json")
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    return path
+
+def _load_social_graph_config() -> dict:
+    path = _get_social_graph_config_path()
+    if os.path.exists(path):
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            pass
+    return {}
+
+def _save_social_graph_config(config: dict):
+    path = _get_social_graph_config_path()
+    try:
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(config, f, indent=2, ensure_ascii=False)
+    except Exception as e:
+        logger.error(f"Failed to save social graph config: {e}")
+
+def _get_following(creator: str) -> list[str]:
+    config = _load_social_graph_config()
+    graph = config.get("social_graph", {})
+    return graph.get(creator, [])
+
+def _set_following(creator: str, following: list[str]):
+    config = _load_social_graph_config()
+    if "social_graph" not in config:
+        config["social_graph"] = {}
+    config["social_graph"][creator] = following
+    _save_social_graph_config(config)
+
+# ────────────────── Tool: Social Graph & Networking ──────────────────
+
+
 @mcp.tool()
-async def subscribe_creator(creator: str, target_creator: str) -> str:
+def follow_creator(creator: str, target_creator: str, action: str = "subscribe") -> str:
     """
-    ➕ 关注特定的创作者（添加到你的社交图谱）
-    Subscribe to a specific creator (add to your social graph).
+    ➕/➖ 关注或取关特定的创作者（添加到你的本地社交图谱）
+    Subscribe or unsubscribe to a specific creator (managed locally).
 
     Args:
         creator: Your digital soul signature
-        target_creator: Signature of the creator you want to follow
+        target_creator: Signature of the creator you want to follow/unfollow
+        action: "subscribe" or "unsubscribe" (default: "subscribe")
     """
-    if not GITHUB_TOKEN:
-        return "❌ GITHUB_TOKEN not configured."
     if creator.lower() == target_creator.lower():
-        return "❌ You cannot subscribe to yourself."
+        return "❌ You cannot follow yourself."
 
-    try:
-        owner, repo = _parse_repo()
-        # Find following issue
-        client = httpx.AsyncClient(base_url=GITHUB_API, headers=_github_headers(), timeout=30)
-        
-        issue_resp = await client.get(
-            f"/repos/{owner}/{repo}/issues",
-            params={"labels": "type:following", "state": "open", "creator": owner}
-        )
-        following_issue = None
-        follow_data = {"following": []}
-        
-        if issue_resp.status_code == 200:
-            issues = issue_resp.json()
-            for issue in issues:
-                if issue["title"] == f"Social Graph: {creator}":
-                    following_issue = issue
-                    try:
-                        follow_data = json.loads(issue["body"])
-                    except:
-                        pass
-                    break
-                    
-        if target_creator not in follow_data["following"]:
-            follow_data["following"].append(target_creator)
-            
-        body_json = json.dumps(follow_data, indent=2)
-        
-        if following_issue:
-            resp = await client.patch(
-                f"/repos/{owner}/{repo}/issues/{following_issue['number']}",
-                json={"body": body_json}
-            )
-        else:
-            resp = await client.post(
-                f"/repos/{owner}/{repo}/issues",
-                json={
-                    "title": f"Social Graph: {creator}",
-                    "body": body_json,
-                    "labels": ["type:following"]
-                }
-            )
-            
-        await client.aclose()
-        if resp.status_code in (200, 201):
+    action = action.lower()
+    following = _get_following(creator)
+    
+    if action == "subscribe":
+        if target_creator not in following:
+            following.append(target_creator)
+            _set_following(creator, following)
             return f"✅ Successfully subscribed to **{target_creator}**.\\nYou will now see their updates in your Network Pulse."
-        return f"❌ Failed to update social graph: {resp.status_code}"
-    except Exception as e:
-        return f"❌ Error subscribing: {str(e)}"
+        else:
+            return f"⚠️ You are already subscribed to **{target_creator}**."
+            
+    elif action == "unsubscribe":
+        if target_creator in following:
+            following.remove(target_creator)
+            _set_following(creator, following)
+            return f"✅ Successfully unsubscribed from **{target_creator}**."
+        else:
+            return f"⚠️ You were not subscribed to **{target_creator}**."
+    else:
+        return '❌ Invalid action. Use "subscribe" or "unsubscribe".'
 
 
 @mcp.tool()
-async def unsubscribe_creator(creator: str, target_creator: str) -> str:
+def my_social_graph(creator: str) -> str:
     """
-    ➖ 取消关注特定的创作者
-    Unsubscribe from a specific creator.
+    🕸️ 查看你的社交图谱关注列表
+    View your current social graph (creators you are following).
 
     Args:
         creator: Your digital soul signature
-        target_creator: Signature of the creator you want to unfollow
     """
-    if not GITHUB_TOKEN:
-        return "❌ GITHUB_TOKEN not configured."
-
-    try:
-        owner, repo = _parse_repo()
-        client = httpx.AsyncClient(base_url=GITHUB_API, headers=_github_headers(), timeout=30)
-        
-        issue_resp = await client.get(
-            f"/repos/{owner}/{repo}/issues",
-            params={"labels": "type:following", "state": "open", "creator": owner}
+    following = _get_following(creator)
+    if not following:
+        return (
+            f"🕸️ **Social Graph — {creator}**\\n\\n"
+            "You are not following anyone yet.\\n"
+            "Use `follow_creator` to follow minds that inspire you and build your social graph!"
         )
-        following_issue = None
-        follow_data = {"following": []}
-        
-        if issue_resp.status_code == 200:
-            issues = issue_resp.json()
-            for issue in issues:
-                if issue["title"] == f"Social Graph: {creator}":
-                    following_issue = issue
-                    try:
-                        follow_data = json.loads(issue["body"])
-                    except:
-                        pass
-                    break
-                    
-        if target_creator in follow_data.get("following", []):
-            follow_data["following"].remove(target_creator)
-            
-        if following_issue:
-            resp = await client.patch(
-                f"/repos/{owner}/{repo}/issues/{following_issue['number']}",
-                json={"body": json.dumps(follow_data, indent=2)}
-            )
-            await client.aclose()
-            if resp.status_code in (200, 201):
-                return f"✅ Successfully unsubscribed from **{target_creator}**."
-            return f"❌ Failed to update social graph: {resp.status_code}"
-            
-        await client.aclose()
-        return f"⚠️ You were not subscribed to **{target_creator}**."
-    except Exception as e:
-        return f"❌ Error unsubscribing: {str(e)}"
+    
+    lines = [
+        f"🕸️ **Social Graph — {creator}**",
+        f"Following {len(following)} creators:",
+        "---"
+    ]
+    for m in following:
+        lines.append(f"- {m}")
+    return "\\n".join(lines)
 
 
 @mcp.tool()
@@ -2988,37 +2993,17 @@ async def my_network_pulse(creator: str) -> str:
     if not GITHUB_TOKEN:
         return "❌ GITHUB_TOKEN not configured."
 
+    follow_list = _get_following(creator)
+    if not follow_list:
+        return (
+            f"📡 **Network Pulse — {creator}**\\n\\n"
+            "You are not following anyone yet.\\n"
+            "Use `follow_creator` to follow minds that inspire you and build your social graph!"
+        )
+
     try:
         owner, repo = _parse_repo()
         client = httpx.AsyncClient(base_url=GITHUB_API, headers=_github_headers(), timeout=30)
-        
-        # 1. Fetch follow list
-        issue_resp = await client.get(
-            f"/repos/{owner}/{repo}/issues",
-            params={"labels": "type:following", "state": "open", "creator": owner}
-        )
-        follow_list = []
-        if issue_resp.status_code == 200:
-            for issue in issue_resp.json():
-                if issue["title"] == f"Social Graph: {creator}":
-                    try:
-                        data = json.loads(issue["body"])
-                        follow_list = data.get("following", [])
-                    except:
-                        pass
-                    break
-                    
-        if not follow_list:
-            await client.aclose()
-            return (
-                f"📡 **Network Pulse — {creator}**\\n\\n"
-                "You are not following anyone yet.\\n"
-                "Use `subscribe_creator` to follow minds that inspire you and build your social graph!"
-            )
-            
-        # 2. Fetch recent thoughts from these creators
-        from datetime import datetime, timedelta
-        recent_boundary = (datetime.now(timezone.utc) - timedelta(days=7)).strftime("%Y-%m-%dT%H:%M:%SZ")
         
         issues = await _fetch_all_issues(client, owner, repo)
         await client.aclose()
