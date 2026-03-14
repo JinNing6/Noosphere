@@ -9,9 +9,13 @@ interface SplashScreenProps {
 export default function SplashScreen({ onComplete }: SplashScreenProps) {
   const [phase, setPhase] = useState<number>(1);
   const [logs, setLogs] = useState<string[]>([]);
+  const [fading, setFading] = useState(false);
+  const [progress, setProgress] = useState(0);
+
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animRef = useRef<number>(0);
   const frameRef = useRef(0);
+  const animRunning = useRef(true);
 
   const bootLogs = [
     "▸ [QUANTUM] Initializing Consciousness Bootstrap Sequence...",
@@ -140,6 +144,7 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
     initStarfield();
 
     const animate = () => {
+      if (!animRunning.current) return; // 淡出时立即停止渲染循环
       frameRef.current++;
       ctx.fillStyle = 'rgba(2, 1, 8, 0.15)';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -149,6 +154,7 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
     animate();
 
     return () => {
+      animRunning.current = false;
       cancelAnimationFrame(animRef.current);
       window.removeEventListener('resize', resize);
     };
@@ -164,26 +170,53 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
         idx++;
       } else {
         clearInterval(interval);
-        setTimeout(() => setPhase(2), 600);
+        setTimeout(() => setPhase(2), 400);
       }
-    }, 350);
+    }, 200);
     return () => clearInterval(interval);
   }, [phase]);
 
-  // Phase transitions
+  // Phase transitions & Progress simulation
   useEffect(() => {
     if (phase === 2) {
-      const timer = setTimeout(() => setPhase(3), 3500);
-      return () => clearTimeout(timer);
+      // Simulate fast loading from 0 to 100
+      let cur = 0;
+      const progInt = setInterval(() => {
+        cur += Math.random() * 15;
+        if (cur >= 100) {
+          cur = 100;
+          clearInterval(progInt);
+        }
+        setProgress(Math.floor(cur));
+      }, 100);
+
+      const timer = setTimeout(() => setPhase(3), 1600);
+      return () => {
+        clearTimeout(timer);
+        clearInterval(progInt);
+      };
     }
     if (phase === 3) {
-      const timer = setTimeout(() => onComplete(), 1800);
+      setProgress(100);
+      // Phase 3 动画完成后 → 先停止 Canvas 循环，进入淡出
+      const timer = setTimeout(() => {
+        animRunning.current = false;
+        cancelAnimationFrame(animRef.current);
+        setFading(true);
+      }, 1200);
       return () => clearTimeout(timer);
     }
-  }, [phase, onComplete]);
+  }, [phase]);
+
+  // 淡出完成后通知父组件卸载
+  useEffect(() => {
+    if (!fading) return;
+    const timer = setTimeout(() => onComplete(), 500);
+    return () => clearTimeout(timer);
+  }, [fading, onComplete]);
 
   return (
-    <div className={`splash-container phase-${phase}`}>
+    <div className={`splash-container phase-${phase}${fading ? ' splash-fading' : ''}`}>
       {/* Canvas starfield background */}
       <canvas ref={canvasRef} className="starfield-canvas" />
 
@@ -208,7 +241,7 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
       )}
 
       {/* Phase 2/3: SVG + Hyperspace */}
-      {(phase === 2 || phase === 3) && (
+      {(phase === 2 || phase === 3) && !fading && (
         <div className="svg-wrapper">
           <div className="svg-glow-ring" />
           <img
@@ -216,6 +249,22 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
             alt="Virtual Universe Singularity"
             className="hologram-svg"
           />
+
+          {/* Progress Overlay */}
+          <div className="loading-progress-overlay">
+            <div className="progress-text">
+              CONSTRUCTING NOOSPHERE... {progress}%
+            </div>
+            <div className="progress-bar-bg">
+              <div 
+                className="progress-bar-fill" 
+                style={{ width: `${progress}%` }} 
+              />
+            </div>
+            <div className="progress-subtext">
+              Aligning Quantum Synapses
+            </div>
+          </div>
         </div>
       )}
 

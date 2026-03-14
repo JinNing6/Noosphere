@@ -135,6 +135,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-direction: column;
   pointer-events: none;
 }
 
@@ -172,7 +173,7 @@
   max-width: 1400px;
   height: auto;
   opacity: 0;
-  animation: svgReveal 2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+  animation: svgReveal 1.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
 }
 
 @keyframes svgReveal {
@@ -204,11 +205,66 @@
   }
 }
 
+/* --- Progress Overlay during SVG Reveal --- */
+.loading-progress-overlay {
+  position: absolute;
+  bottom: 15vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 20;
+  width: 400px;
+  max-width: 80vw;
+  opacity: 0;
+  animation: svgReveal 1.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+.progress-text {
+  font-size: 14px;
+  color: #00e5ff;
+  font-family: 'Consolas', monospace;
+  letter-spacing: 2px;
+  margin-bottom: 12px;
+  text-shadow: 0 0 10px rgba(0, 229, 255, 0.8);
+}
+
+.progress-bar-bg {
+  width: 100%;
+  height: 4px;
+  background: rgba(0, 229, 255, 0.1);
+  border-radius: 2px;
+  overflow: hidden;
+  position: relative;
+  box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.5);
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: #00e5ff;
+  border-radius: 2px;
+  box-shadow: 0 0 15px #00e5ff, 0 0 5px #ffffff;
+  transition: width 0.1s linear;
+}
+
+.progress-subtext {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.5);
+  margin-top: 8px;
+  font-family: 'Inter', sans-serif;
+  letter-spacing: 1px;
+  animation: pulseSubtext 1s infinite alternate;
+}
+
+@keyframes pulseSubtext {
+  from { opacity: 0.3; }
+  to { opacity: 0.8; }
+}
+
 /* ==================================
    Phase 3: Hyperspace Warp
    ================================== */
 .phase-3 .hologram-svg {
-  animation: hyperspaceJump 1.8s cubic-bezier(0.7, 0, 0.3, 1) forwards;
+  animation: hyperspaceJump 1.2s cubic-bezier(0.7, 0, 0.3, 1) forwards;
 }
 
 .phase-3 .svg-glow-ring {
@@ -261,7 +317,7 @@
 }
 
 .phase-3 .hyperspace-flash {
-  animation: flashBang 1.8s ease-out forwards;
+  animation: flashBang 1.2s ease-out forwards;
 }
 
 @keyframes flashBang {
@@ -269,4 +325,15 @@
   30% { opacity: 0.3; background: radial-gradient(circle, #00e5ff, #b388ff); }
   50% { opacity: 1; background: #ffffff; }
   100% { opacity: 0; background: #ffffff; }
+}
+
+/* ==================================
+   淡出过渡阶段
+   ================================== */
+.splash-fading {
+  opacity: 0;
+  transform: scale(1.05);
+  transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+              transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
 }
