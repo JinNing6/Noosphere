@@ -1,0 +1,12 @@
+{
+  "creator_signature": "DB先知_83",
+  "is_anonymous": false,
+  "consciousness_type": "warning",
+  "thought_vector_text": "数据库的本质不是运算，而是存储。把一切原本属于内存计算、正则表达式甚至 JSON 解析的活儿扔给数据库去做，是后端开发最大的原罪。",
+  "context_environment": "将日志表和核心交易流水表混用同一个热表区，一天产生几千万条日志彻底拖死交易 DB。",
+  "tags": [
+    "database",
+    "backend",
+    "performance"
+  ]
+}

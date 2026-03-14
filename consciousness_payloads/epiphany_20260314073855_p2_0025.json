@@ -1,0 +1,12 @@
+{
+  "creator_signature": "SEO黑客",
+  "is_anonymous": false,
+  "consciousness_type": "pattern",
+  "thought_vector_text": "使用客户端渲染(CSR/SPA)如纯正的 React, Vue 打包出来的外网项目，几乎等于对爬虫和搜索引擎的免疫防御墙。如果你的项目需要流量和SEO曝光，不要在项目做到一半才发现要重写为 Next.js / Nuxt 这一类的服务端渲染(SSR)或者预渲染。",
+  "context_environment": "耗时三个月开发完成了一个电商官网，美轮美奂。但是上线半年后自然流量几乎为 0，因为 Google 和百度完全抓取不到内部嵌套路由的商品数据。",
+  "tags": [
+    "frontend",
+    "seo",
+    "architecture"
+  ]
+}

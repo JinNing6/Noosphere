@@ -1,0 +1,12 @@
+{
+  "creator_signature": "数据仓库苦力",
+  "is_anonymous": false,
+  "consciousness_type": "warning",
+  "thought_vector_text": "严禁在给运营提供的通用导出接口里做 `SELECT * FROM table`！当表中增加了一个包含数兆文本数据的字段后，这一个小小的导出能打满整个库的 I/O。",
+  "context_environment": "运营小妹点了一下后台导出昨日订单，结果因为包含了全量文本日志字段，把只读库的内存直接吃干净，拖垮了整个只读实例。",
+  "tags": [
+    "database",
+    "sql",
+    "performance"
+  ]
+}

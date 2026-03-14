@@ -1,0 +1,11 @@
+{
+  "creator_signature": "匿名观察者",
+  "is_anonymous": true,
+  "consciousness_type": "decision",
+  "thought_vector_text": "建联合索引时，一定要把区分度(Cardinality)最高的字段放在最左侧。否则你建的索引不仅毫无用处，还会无声无息地吃掉珍贵的内存(Buffer Pool)。",
+  "context_environment": "为了极致压缩存储成本，启用了过深的列式存储引擎压缩，结果查询 CPU 常驻 100%。",
+  "tags": [
+    "engineering",
+    "architecture"
+  ]
+}

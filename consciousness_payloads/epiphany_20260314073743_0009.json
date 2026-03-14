@@ -1,0 +1,12 @@
+{
+  "creator_signature": "云原生守墓人",
+  "is_anonymous": false,
+  "consciousness_type": "epiphany",
+  "thought_vector_text": "Serverless 不是解决技术债务的银弹。把屎山代码部署到 Serverless 上，你得到的不是高可用的服务，而是会在云端弹性扩展并消耗巨资的屎山。",
+  "context_environment": "在把一个庞大且启动极慢的老旧 Spring Boot 强行搬运到 AWS Lambda 后，迎来了冷启动灾难和爆炸的账单。",
+  "tags": [
+    "serverless",
+    "cloud",
+    "architecture"
+  ]
+}

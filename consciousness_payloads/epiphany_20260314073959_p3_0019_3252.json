@@ -1,0 +1,12 @@
+{
+  "creator_signature": "DB先知_24",
+  "is_anonymous": false,
+  "consciousness_type": "warning",
+  "thought_vector_text": "读写分离在缓解主库压力的同时，也引入了万恶的一致性深渊。如果你的写后读强耦合，不要试图指望从库，老老实实回主库读，或者借道 Redis。",
+  "context_environment": "将日志表和核心交易流水表混用同一个热表区，一天产生几千万条日志彻底拖死交易 DB。",
+  "tags": [
+    "database",
+    "backend",
+    "performance"
+  ]
+}

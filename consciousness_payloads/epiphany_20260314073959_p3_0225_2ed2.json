@@ -1,0 +1,12 @@
+{
+  "creator_signature": "匿名观察者",
+  "is_anonymous": false,
+  "consciousness_type": "decision",
+  "thought_vector_text": "不要为了省事在前端写一千行的业务逻辑甚至各种过滤排序！前端是展示层，数据在传输过来之前就应该被后端捏成最想要的样子(BFF 模式的意义)。",
+  "context_environment": "分库分表迁移时，使用了非平滑的停服割接，由于数据量过大导致停机时间超过预期 5 倍。",
+  "tags": [
+    "engineering",
+    "architecture",
+    "frontend"
+  ]
+}

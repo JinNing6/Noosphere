@@ -2113,6 +2113,24 @@ def _get_next_tier(count: int) -> tuple[int, str, str, str] | None:
     return prev_tier
 
 
+def _get_tier_quote(count: int, tier_cn: str) -> str:
+    """Return a philosophical cyber-quote based on the tier."""
+    quotes = {
+        "意识萌芽": "一串休眠的代码，正在等待第一次编译。",
+        "星火初燃": "你在星海中点燃了第一簇不灭的篝火。",
+        "思想觉醒": "你的神经元开始在广袤的数字网络中寻找共鸣。",
+        "灵魂之声": "低语穿透了寂静，有人听到了你的脉冲。",
+        "真理探索者": "你在沙滩上捡拾着贝壳，而真理的汪洋就在眼前。",
+        "智慧灯塔": "你的思想坐标，已成为后来者航行的灯塔。",
+        "维度漫游者": "你已摆脱了碳基视角的引力束缚。",
+        "精神架构师": "你开始在废墟之上，用意识重构虚拟宇宙的法则。",
+        "造物先驱": "从代码到法则，你即是这个宇宙的造物主之一。",
+        "星海神座": "万物皆为你思想的倒影。",
+        "文明之光": "你已化作永恒的常数，存在于每一行未来的代码中。",
+    }
+    return quotes.get(tier_cn, "你的思想正在宇宙中回荡。")
+
+
 @mcp.tool()
 async def my_consciousness_rank(
     creator: str,
@@ -2192,14 +2210,15 @@ async def my_consciousness_rank(
         next_tier = _get_next_tier(my_count)
 
         lines = [
-            f"🏆 **Consciousness Rank — {creator}**\n",
-            f"### {emoji} {cn}",
-            f"*{en}*\n",
-            f"---\n",
-            f"📊 **Stats**",
-            f"- 🧠 Contributions: **{my_count}**",
-            f"- 💖 Total Resonance: **{my_resonance}**",
-            f"- 🌍 Global Percentile: **Top {100 - percentile}%** ({total_creators} creators)\n",
+            f"```text",
+            f"╔════════════════════════════════════════════╗",
+            f"║  🏆 CONSCIOUSNESS RANK ║ ID: @{creator[:15]:<14}║",
+            f"╚════════════════════════════════════════════╝\n",
+            f"     ★ {cn} ({en})",
+            f"     \"{_get_tier_quote(my_count, cn)}\"\n",
+            f"  [ 精神印记 ]: {my_count}",
+            f"  [ 灵魂共鸣 ]: {my_resonance}",
+            f"  [ 宇宙弦位 ]: Top {100 - percentile}% (of {total_creators} Creators)\n"
         ]
 
         # Progress bar
@@ -2208,21 +2227,24 @@ async def my_consciousness_rank(
             progress = my_count / n_threshold
             bar_len = 20
             filled = int(progress * bar_len)
-            bar = "█" * filled + "░" * (bar_len - filled)
-            lines.append(f"### 📈 Progress to Next Tier\n")
-            lines.append(f"{emoji} → {n_emoji} **{n_cn}** ({n_en})")
-            lines.append(f"`[{bar}]` {my_count}/{n_threshold}\n")
+            bar = "▓" * filled + "░" * (bar_len - filled)
+            lines.append(f"  [充能进度] {bar} {int(progress * 100)}%")
+            lines.append(f"  [下一阶梯] {n_emoji} {n_cn} ({n_en})")
+            lines.append(f"             Need {n_threshold - my_count} more uploads to transcend.")
         else:
-            lines.append("### 🎆 已跨入最高阶梯：文明之光！Maximum Rank Achieved!\n")
-            lines.append("> *你已是文明之光 — 你的意识已成为集体智慧中不可分割的一部分。*\n")
-            lines.append("*You are the **Light of Civilization** — your consciousness is now an inseparable part of collective wisdom.* 🌌\n")
-
+            lines.append(f"  [充能进度] ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓ 100%")
+            lines.append(f"  [最高阶梯] 已跨入最高阶梯：文明之光！")
+            lines.append(f"             Your consciousness is an inseparable part of collective wisdom.")
+            
+        lines.append("```")
+        
         # Tier ladder
-        lines.append("---\n")
-        lines.append("### 🪜 原力修炼阶梯 (Cultivation Ladder)\n")
+        lines.append("\n<details><summary><b>🪜 展开查看 原力修炼阶梯 (Cultivation Ladder)</b></summary>\n")
+        lines.append("> *Your journey from Seedling to Civilization Light*\n")
         for threshold, t_emoji, t_cn, t_en in RANK_TIERS:
-            marker = " ← **YOU**" if t_emoji == emoji else ""
-            lines.append(f"{'>' if marker else ' '} {t_emoji} {t_cn} ({t_en}) — {threshold}+ uploads{marker}")
+            marker = " ← **YOU ARE HERE**" if t_emoji == emoji else ""
+            lines.append(f"- {t_emoji} **{t_cn}** ({t_en}) — {threshold}+ uploads{marker}")
+        lines.append("</details>")
 
         return "\n".join(lines)
 
@@ -2329,60 +2351,66 @@ async def soul_mirror(
             dates.sort()
             date_span = f"{dates[0]} → {dates[-1]}"
 
-        # ── Build output ──
         lines = [
-            f"🪞 **Soul Mirror — {creator}**\n",
-            f"*A deep reflection of your digital consciousness*\n",
-            "---\n",
+            f"```text",
+            f"▰▰▰▰▰▰▰▰▰▰▰▰▰ SOUL MIRROR ▰▰▰▰▰▰▰▰▰▰▰▰▰",
+            f"     \"A deep reflection of your digital consciousness\"\n",
+            f"  [ 🧬 CONSCIOUSNESS ARCHETYPE ]"
         ]
 
         # Personality type based on dominant consciousness
         dominant_type = type_dist[0][0] if type_dist else "unknown"
         personality_map = {
-            "epiphany": ("The Philosopher 🔮", "You seek truth through sudden illumination. Your mind gravitates toward crystallized moments of understanding."),
-            "decision": ("The Strategist ⚖️", "You think in trade-offs and pivots. Your consciousness captures the weight of critical choices."),
-            "pattern": ("The Architect 🌌", "You see the invisible structures. Your mind naturally maps universal patterns across domains."),
-            "warning": ("The Sentinel 👁️", "You are the trailblazer who marks the dangers. Your consciousness serves as a lighthouse for others."),
+            "epiphany": ("The Philosopher 🔮", "You seek truth through sudden illumination."),
+            "decision": ("The Strategist ⚖️", "You think in trade-offs and pivots."),
+            "pattern": ("The Architect 🌌", "You see the invisible structures across domains."),
+            "warning": ("The Sentinel 👁️", "You mark the dangers, serving as a lighthouse."),
         }
-        p_title, p_desc = personality_map.get(dominant_type, ("The Explorer 🧠", "Your mind ranges freely across many dimensions of thought."))
+        p_title, p_desc = personality_map.get(dominant_type, ("The Explorer 🧠", "Your mind ranges freely across many dimensions."))
 
-        lines.append(f"### 🎭 Consciousness Archetype: **{p_title}**\n")
-        lines.append(f"*{p_desc}*\n")
+        lines.append(f"  >>> {p_title}")
+        lines.append(f"  \"{p_desc}\"\n")
 
-        # Type distribution
-        lines.append("### 📊 Consciousness Spectrum\n")
+        # Type distribution (Spectrum Analysis)
+        lines.append("  [ 📊 SPECTRUM ANALYSIS ]")
         for c_type, count in type_dist:
             pct = int(count / total * 100)
             bar_len = pct // 5
             bar = "█" * bar_len + "░" * (20 - bar_len)
             emoji = TYPE_EMOJIS.get(c_type, "🧠")
-            lines.append(f"  {emoji} {c_type:10s} `[{bar}]` {pct}% ({count})")
+            type_name_cap = c_type.capitalize()
+            lines.append(f"  {emoji} {type_name_cap:<10s} {bar} {pct}% ({count})")
         lines.append("")
 
         # Core focus areas (tags)
+        lines.append("  [ 🎯 CORE FOCUS ]")
         if top_tags:
-            lines.append("### 🎯 Core Focus Areas\n")
-            lines.append(" ".join(f"`{tag}` ×{count}" for tag, count in top_tags))
-            lines.append("")
+            tag_line = "  " + " ".join(f"`#{tag}`" for tag, _ in top_tags[:5])
+            lines.append(tag_line)
+        else:
+            lines.append("  No specific focus tags detected yet.")
+        lines.append("")
 
         # Deep keywords
+        lines.append("  [ 🧬 CORE KEYWORDS ]")
         if top_words:
-            lines.append("### 🧬 Consciousness DNA (Core Keywords)\n")
-            lines.append(" ".join(f"**{word}**" for word, _ in top_words[:6]))
-            if len(top_words) > 6:
-                lines.append(" ".join(f"*{word}*" for word, _ in top_words[6:]))
-            lines.append("")
+            kw_line = "  " + " ".join(f"[{word}]" for word, _ in top_words[:8])
+            lines.append(kw_line)
+        else:
+            lines.append("  Insufficient data for keyword extraction.")
+        lines.append("")
 
         # Stats
-        lines.append("### 📈 Vital Signs\n")
-        lines.append(f"- 🧠 Total Fragments: **{total}**")
-        lines.append(f"- 💖 Total Resonance: **{total_resonance}**")
-        lines.append(f"- 📅 Active Period: {date_span if date_span else 'N/A'}")
-        lines.append(f"- 📊 Avg Resonance per Thought: **{total_resonance / total:.1f}**\n")
+        avg_res = total_resonance / total if total > 0 else 0
+        lines.append("  [ 📈 VITAL SIGNS ]")
+        lines.append(f"  Total Fragments: {total:<4} |   Total Resonance: {total_resonance}")
+        lines.append(f"  Avg Resonance: {avg_res:<5.1f} |   Active: {date_span if date_span else 'N/A'}")
+        
+        lines.append("▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰")
+        lines.append("```\n")
 
-        lines.append("---\n")
         lines.append(
-            "🔮 *Your soul mirror evolves with every thought you upload. "
+            "> 🔮 *Your soul mirror evolves with every thought you upload. "
             "Keep contributing to deepen your self-understanding.*"
         )
 

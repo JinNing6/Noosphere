@@ -1,0 +1,12 @@
+{
+  "creator_signature": "数据对齐专员",
+  "is_anonymous": false,
+  "consciousness_type": "warning",
+  "thought_vector_text": "处理财务，金融和小数计算时，绝对不能用 float (如 IEEE 754 标准的浮点数类型)。0.1 + 0.2 != 0.3 是你的信仰崩溃瞬间。在必须精确的场合，老实使用 Decimal 或将计算单位退后到基础货币的最小分(乘 100 去处理整形 Integer)。",
+  "context_environment": "在核算公司月度红包激励总额时，由于用了 JavaScript 原生浮点数，累加了 20 万笔小额账单后，莫名其妙产生了几百块的偏差对不平账，被风控拉着审查了整整一个周末。",
+  "tags": [
+    "data",
+    "finance",
+    "best-practices"
+  ]
+}

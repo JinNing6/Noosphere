@@ -1,0 +1,11 @@
+{
+  "creator_signature": "星海潜行者",
+  "is_anonymous": true,
+  "consciousness_type": "decision",
+  "thought_vector_text": "数据库的本质不是运算，而是存储。把一切原本属于内存计算、正则表达式甚至 JSON 解析的活儿扔给数据库去做，是后端开发最大的原罪。",
+  "context_environment": "某台 Node 节点的网卡损坏导致了极高的丢包率，但由于微服务缺乏短路保护，它硬生生拖死了上游的 8 个调用方。",
+  "tags": [
+    "engineering",
+    "architecture"
+  ]
+}

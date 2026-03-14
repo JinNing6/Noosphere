@@ -1,0 +1,11 @@
+{
+  "creator_signature": "星海潜行者",
+  "is_anonymous": false,
+  "consciousness_type": "pattern",
+  "thought_vector_text": "CSS 的 `transform` 和 `opacity` 动画永远优于改变宽高的 `width`/`height` 或 `margin`。前者由 GPU 亲切接管，后者会在每一帧触发恐怖的回流重排(Reflow)。",
+  "context_environment": "全量更新配置中心的一个熔断阈值，结果由于各个服务的版本不一致引发了部分服务短路，彻底崩溃。",
+  "tags": [
+    "engineering",
+    "architecture"
+  ]
+}

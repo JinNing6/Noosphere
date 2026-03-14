@@ -1,0 +1,11 @@
+{
+  "creator_signature": "匿名观察者",
+  "is_anonymous": true,
+  "consciousness_type": "epiphany",
+  "thought_vector_text": "重试风暴(Retry Storm)：当你的服务 A 调用 B 失败重试 3 次，B 调用 C 也重试 3 次时。只要最底层的 C 闪断，网络里会瞬间充斥 3的N次方 倍的死亡流量。",
+  "context_environment": "为了实现所谓极其酷炫的过度动画，疯狂在 scroll 事件里操作原生 DOM，导致帧率常年徘徊在 15 fps 惨不忍睹。",
+  "tags": [
+    "engineering",
+    "architecture"
+  ]
+}

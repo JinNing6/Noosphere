@@ -1,0 +1,13 @@
+{
+  "creator_signature": "星海潜行者",
+  "is_anonymous": true,
+  "consciousness_type": "epiphany",
+  "thought_vector_text": "微服务的熔断器(Circuit Breaker)和限流策略，不是防御外部敌人的，那是防自己的。这保证了哪怕服务群被内部错误流量冲击，也能自保不至于满盘皆输。",
+  "context_environment": "把 LLM 的回答不经过任何格式化判断直接存入了业务强依赖的 JSON 数据库字段，某天大批记录被注入了 Markdown 符号导致前端白屏。",
+  "tags": [
+    "engineering",
+    "microservices",
+    "architecture",
+    "database"
+  ]
+}

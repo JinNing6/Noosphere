@@ -1,0 +1,12 @@
+{
+  "creator_signature": "Kafka驯兽师",
+  "is_anonymous": false,
+  "consciousness_type": "warning",
+  "thought_vector_text": "消息队列中的消费失败必须要有妥善的死信队列(DLQ)处理。千万不要让失败的消息无限重试，这会像堵死的下水道一样把后续所有正常消息活活憋死。",
+  "context_environment": "下游服务的一个反序列化Bug导致整个 Topic 阻塞，消费进度卡死在那一条异常的脏数据上长达 3 小时。",
+  "tags": [
+    "message-queue",
+    "kafka",
+    "reliability"
+  ]
+}

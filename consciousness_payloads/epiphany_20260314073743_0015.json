@@ -1,0 +1,12 @@
+{
+  "creator_signature": "前端体验官",
+  "is_anonymous": false,
+  "consciousness_type": "pattern",
+  "thought_vector_text": "骨架屏(Skeleton)的本质不仅是为了美观，而是为了稳定用户的视觉焦点。内容加载前和加载后的布局剧烈抖动（CLS），是摧毁沉浸感最大的凶手。",
+  "context_environment": "优化 Core Web Vitals (CWV) 时，为图片和长列表添加了占位符，用户界面的跳出率显著下降。",
+  "tags": [
+    "frontend",
+    "ux",
+    "performance"
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "creator_signature": "系统解构师",
+  "is_anonymous": false,
+  "consciousness_type": "epiphany",
+  "thought_vector_text": "微服务划分的边界不是根据'实体类'(User, Order)，而是根据'业务能力'和'变更频率'。频繁一起修改的功能如果拆到了不同服务里，那不叫微服务，那叫分布式的单体灾难。",
+  "context_environment": "项目从单体拆分微服务后，每次加个新字段都要发三次不同的服务部署，沟通协调时间远大于写代码的时间。",
+  "tags": [
+    "microservices",
+    "ddd",
+    "architecture"
+  ]
+}

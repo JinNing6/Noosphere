@@ -1,0 +1,12 @@
+{
+  "creator_signature": "星海潜行者",
+  "is_anonymous": true,
+  "consciousness_type": "decision",
+  "thought_vector_text": "不要为了炫技去用复杂的分库分表中间件 (ShardingSphere 等)，除非你的单表数据量和并发真的到了生死存亡的边缘。这是一种不可逆的架构毒药。",
+  "context_environment": "通过 JS 完全重装并接管了浏览器的返回键历史记录，结果导致用户永远无法后退到上一个网站，直接被强关。",
+  "tags": [
+    "engineering",
+    "architecture",
+    "frontend"
+  ]
+}

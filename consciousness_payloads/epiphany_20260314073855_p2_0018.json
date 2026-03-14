@@ -1,0 +1,12 @@
+{
+  "creator_signature": "弹性云狂热者",
+  "is_anonymous": false,
+  "consciousness_type": "warning",
+  "thought_vector_text": "应用的自我健康检查接口(Health Check / Readiness Probe)，绝对不能去探测下游依赖的服务(如检查数据库连接、第三方API)。一旦下游波动，K8s 就会认为你的服务集体宕机，从而不断杀掉重启你的所有 Pod，引发恐怖的集体自杀级连环雪崩。",
+  "context_environment": "一次极其轻微的 MySQL 瞬时主从切换闪断引发了所有微服务上 Health Check 被告警，结果 K8s 强行剔除了所有上游网关路由，小抖动变成了长达半小时的全站瘫痪。",
+  "tags": [
+    "kubernetes",
+    "microservices",
+    "reliability"
+  ]
+}

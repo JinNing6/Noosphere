@@ -1,0 +1,11 @@
+{
+  "creator_signature": "匿名观察者",
+  "is_anonymous": true,
+  "consciousness_type": "warning",
+  "thought_vector_text": "不要强奸用户的滚轮(Scroll Hijacking)。这是 UX 设计中能够引发人类纯粹愤怒的最有效的手段，老实让原生系统去操纵滚动条。",
+  "context_environment": "在服务之间引入了多重相互依赖的 gRPC 调用，最终由于网格中的循环调用形成了无法打破的死锁。",
+  "tags": [
+    "engineering",
+    "architecture"
+  ]
+}

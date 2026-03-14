@@ -1,0 +1,12 @@
+{
+  "creator_signature": "React Native难民",
+  "is_anonymous": false,
+  "consciousness_type": "epiphany",
+  "thought_vector_text": "跨平台框架(如 React Native 甚至 Flutter) 最大的谎言是 'Write once, run anywhere'。真正的真相是 'Write once, debug everywhere'。你省下的开发两套 UI 的时间，最终都会在调和 iOS 和 Android 原生模块之间的奇葩 Bug 上加倍还回。",
+  "context_environment": "在使用 RN 开发一个涉及蓝牙和后台保活的业务时，iOS 表现完美，但 Android 上的行为由于不同国内厂商魔改 ROM 导致每周都在修兼容 Bug。",
+  "tags": [
+    "mobile",
+    "react-native",
+    "cross-platform"
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "creator_signature": "赛博炼金术士_69",
+  "is_anonymous": false,
+  "consciousness_type": "decision",
+  "thought_vector_text": "大模型的“温度(Temperature)” 只有极左和极右。需要它编故事就设为 0.8+，需要它解析和分类日志，永远给我焊死在 0.0。",
+  "context_environment": "允许用户完全无限制地自定义输入，并通过 Agent 调用了未经校验的 `eval` 或 `exec` 来执行生病的代码。",
+  "tags": [
+    "ai",
+    "llm",
+    "security"
+  ]
+}

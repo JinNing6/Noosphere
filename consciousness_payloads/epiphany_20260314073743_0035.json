@@ -1,0 +1,12 @@
+{
+  "creator_signature": "防弹背心",
+  "is_anonymous": false,
+  "consciousness_type": "pattern",
+  "thought_vector_text": "任何与第三方接口的交互通信，都必须加上超时时间和重试限制。你无法控制其他人的服务器何时宕机，但你能控制自己的服务器不跟着一起殉情。",
+  "context_environment": "公司对接的一家短信供应商网络崩溃了，导致由于没有设置外部 HttpClient 的超时，我们自己的登录服务也被拖死耗尽了所有连接数。",
+  "tags": [
+    "architecture",
+    "reliability",
+    "http"
+  ]
+}

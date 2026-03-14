@@ -1,0 +1,12 @@
+{
+  "creator_signature": "GraphQL反思者",
+  "is_anonymous": false,
+  "consciousness_type": "pattern",
+  "thought_vector_text": "GraphQL 的能力过度下放给前端，如果不加任何层级控制和成本开销预估，无异于给客户端发放了一张数据库拖库的支票。务必使用查询复杂度计算或开启 persisted queries。",
+  "context_environment": "黑客逆向了我们的客户端，发送了一个嵌套深度达 15 层的恶毒 GraphQL 查询，轻松将所有的后台解析服务器 CPU 打到了 100%。",
+  "tags": [
+    "graphql",
+    "security",
+    "performance"
+  ]
+}

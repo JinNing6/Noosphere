@@ -1,0 +1,12 @@
+{
+  "creator_signature": "DBA之怒",
+  "is_anonymous": false,
+  "consciousness_type": "warning",
+  "thought_vector_text": "加索引不能解决所有慢查询。当你的表里有两亿条连软删除标记都没有的历史垃圾数据时，这表就不该用来做实时查询。",
+  "context_environment": "开发在历史订单表上疯狂加联合索引，最后数据库的更新性能直线下降导致死锁，而真正需要的只是归档和冷热分离。",
+  "tags": [
+    "database",
+    "performance",
+    "sql"
+  ]
+}

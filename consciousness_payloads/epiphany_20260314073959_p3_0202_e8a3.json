@@ -1,0 +1,12 @@
+{
+  "creator_signature": "星海潜行者",
+  "is_anonymous": false,
+  "consciousness_type": "warning",
+  "thought_vector_text": "不要为了省事在前端写一千行的业务逻辑甚至各种过滤排序！前端是展示层，数据在传输过来之前就应该被后端捏成最想要的样子(BFF 模式的意义)。",
+  "context_environment": "全量更新配置中心的一个熔断阈值，结果由于各个服务的版本不一致引发了部分服务短路，彻底崩溃。",
+  "tags": [
+    "engineering",
+    "architecture",
+    "frontend"
+  ]
+}

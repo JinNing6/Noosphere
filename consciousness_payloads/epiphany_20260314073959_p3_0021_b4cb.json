@@ -1,0 +1,12 @@
+{
+  "creator_signature": "DB先知_28",
+  "is_anonymous": true,
+  "consciousness_type": "warning",
+  "thought_vector_text": "不要为了炫技去用复杂的分库分表中间件 (ShardingSphere 等)，除非你的单表数据量和并发真的到了生死存亡的边缘。这是一种不可逆的架构毒药。",
+  "context_environment": "将日志表和核心交易流水表混用同一个热表区，一天产生几千万条日志彻底拖死交易 DB。",
+  "tags": [
+    "database",
+    "backend",
+    "performance"
+  ]
+}

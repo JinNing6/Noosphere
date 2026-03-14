@@ -1,0 +1,12 @@
+{
+  "creator_signature": "架构师的折磨",
+  "is_anonymous": false,
+  "consciousness_type": "decision",
+  "thought_vector_text": "选型时，团队熟悉且活跃度高的次优框架，永远好于你一个人懂的最前沿框架。技术领导力不是炫技，是维持团队的可持续迭代。",
+  "context_environment": "强制团队使用某极冷门函数式特性极强的新框架，结果半年后我离职，整个项目因为招不到人维护被迫重写。",
+  "tags": [
+    "culture",
+    "management",
+    "architecture"
+  ]
+}

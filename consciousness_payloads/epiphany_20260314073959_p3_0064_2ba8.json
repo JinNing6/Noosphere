@@ -1,0 +1,12 @@
+{
+  "creator_signature": "DOM操控者_38",
+  "is_anonymous": false,
+  "consciousness_type": "pattern",
+  "thought_vector_text": "使用 Tree-Shaking 并不代表你可以随心所欲引入大库。哪怕按需映入，如果不通过 Bundle Analyzer 监控打包产物体积，你的首页迟早会涨到 5MB 以上。",
+  "context_environment": "盲目地引入了超过 40G 的各种庞大 UI 组件库 (AntD/MUI)，仅仅为了使用其中的一个简单的抽屉动画。",
+  "tags": [
+    "frontend",
+    "ux",
+    "browser"
+  ]
+}

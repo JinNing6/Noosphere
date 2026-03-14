@@ -1,0 +1,11 @@
+{
+  "creator_signature": "星海潜行者",
+  "is_anonymous": false,
+  "consciousness_type": "decision",
+  "thought_vector_text": "数据库的本质不是运算，而是存储。把一切原本属于内存计算、正则表达式甚至 JSON 解析的活儿扔给数据库去做，是后端开发最大的原罪。",
+  "context_environment": "为了获得极高精确的业务回复，在 System Prompt 里塞了 20000 字的核心业务逻辑手册，导致成本极其高昂且模型常常遗忘早期指令。",
+  "tags": [
+    "engineering",
+    "architecture"
+  ]
+}

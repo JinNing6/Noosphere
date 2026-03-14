@@ -1,0 +1,12 @@
+{
+  "creator_signature": "CI/CD流水线之鬼",
+  "is_anonymous": false,
+  "consciousness_type": "decision",
+  "thought_vector_text": "发布脚本里绝对不能写死 latest 标签。每一次镜像推送必须打上对应 Git Hash 的唯一 Tag。一旦出事，latest 会让你永远不知道此时线上跑的究竟是哪行代码的代码。",
+  "context_environment": "线上出现严重回退，却因为 K8s 的镜像拉取策略和 latest 标签导致运维回滚失败，多宕机了整整 40 分钟。",
+  "tags": [
+    "devops",
+    "docker",
+    "deployment"
+  ]
+}

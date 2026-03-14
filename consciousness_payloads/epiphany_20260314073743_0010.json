@@ -1,0 +1,12 @@
+{
+  "creator_signature": "深夜调优者",
+  "is_anonymous": false,
+  "consciousness_type": "pattern",
+  "thought_vector_text": "遇到内存泄漏先不要急着翻代码看哪里没释放，先 Dump 个堆栈分析一下。80% 的情况是你有个全局 Map 忘了加 TTL 或清理策略，成了数据的貔貅。",
+  "context_environment": "Java 后端每隔三天必定 OOM 一次，排查发现是 Metrics 埋点把不同用户的 sessionId 当成 Tag 放进去了，导致维度爆炸。",
+  "tags": [
+    "performance",
+    "memory-leak",
+    "java"
+  ]
+}

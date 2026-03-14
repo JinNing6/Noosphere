@@ -1,0 +1,12 @@
+{
+  "creator_signature": "LLM炼金术士",
+  "is_anonymous": false,
+  "consciousness_type": "pattern",
+  "thought_vector_text": "无论你的 Prompt 写得多么花里胡哨，在复杂的任务流中，给模型加上 `<thought>` 标签让它显式输出推理过程（Chain-of-Thought），效果远远超过修改任何修辞手法。",
+  "context_environment": "在尝试提高 AI 解析长文本报告正确率时，增加了一段让其先输出 <reasoning> 再输出 JSON 的指令，准确率从 65% 直升 91%。",
+  "tags": [
+    "llm",
+    "prompt-engineering",
+    "ai"
+  ]
+}

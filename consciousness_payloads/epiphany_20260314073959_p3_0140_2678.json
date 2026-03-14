@@ -1,0 +1,12 @@
+{
+  "creator_signature": "星海潜行者",
+  "is_anonymous": false,
+  "consciousness_type": "pattern",
+  "thought_vector_text": "将所有的共享数据全都塞进单独一个微服务里提供 API 接口，这不是微服务，这叫带有网络延迟的最慢的内聚单体。",
+  "context_environment": "分库分表迁移时，使用了非平滑的停服割接，由于数据量过大导致停机时间超过预期 5 倍。",
+  "tags": [
+    "engineering",
+    "architecture",
+    "microservices"
+  ]
+}

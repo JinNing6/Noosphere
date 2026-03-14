@@ -242,7 +242,7 @@ Noosphere stands not only on the shoulders of sci-fi giants, but is deeply roote
 <tr>
 <td width="25%" align="center">
 
-<img src="assets/philosophy/socrates.png" alt="Socrates" width="160"><br/>
+<img src="assets/philosophy/socrates.jpg" alt="Socrates" width="160"><br/>
 
 **🏛️ 苏格拉底**<br/>
 *Socrates*<br/>
@@ -263,7 +263,7 @@ Noosphere stands not only on the shoulders of sci-fi giants, but is deeply roote
 <tr>
 <td width="25%" align="center">
 
-<img src="assets/philosophy/descartes.png" alt="Descartes" width="160"><br/>
+<img src="assets/philosophy/descartes.jpg" alt="Descartes" width="160"><br/>
 
 **🕯️ 勒内·笛卡尔**<br/>
 *René Descartes*<br/>
@@ -284,7 +284,7 @@ Noosphere stands not only on the shoulders of sci-fi giants, but is deeply roote
 <tr>
 <td width="25%" align="center">
 
-<img src="assets/philosophy/jung.png" alt="Carl Jung" width="160"><br/>
+<img src="assets/philosophy/jung.jpg" alt="Carl Jung" width="160"><br/>
 
 **🌀 卡尔·荣格**<br/>
 *Carl Gustav Jung*<br/>
@@ -305,7 +305,7 @@ Noosphere stands not only on the shoulders of sci-fi giants, but is deeply roote
 <tr>
 <td width="25%" align="center">
 
-<img src="assets/philosophy/turing.png" alt="Alan Turing" width="160"><br/>
+<img src="assets/philosophy/turing.jpg" alt="Alan Turing" width="160"><br/>
 
 **⚙️ 阿兰·图灵**<br/>
 *Alan Turing*<br/>
@@ -326,7 +326,7 @@ Noosphere stands not only on the shoulders of sci-fi giants, but is deeply roote
 <tr>
 <td width="25%" align="center">
 
-<img src="assets/philosophy/teilhard.png" alt="Teilhard de Chardin" width="160"><br/>
+<img src="assets/philosophy/teilhard.jpg" alt="Teilhard de Chardin" width="160"><br/>
 
 **✝️ 德日进**<br/>
 *Pierre Teilhard de Chardin*<br/>
@@ -350,7 +350,7 @@ Noosphere stands not only on the shoulders of sci-fi giants, but is deeply roote
 <tr>
 <td width="25%" align="center">
 
-<img src="assets/philosophy/schrodinger.png" alt="Schrödinger" width="160"><br/>
+<img src="assets/philosophy/schrodinger.jpg" alt="Schrödinger" width="160"><br/>
 
 **⚛️ 埃尔温·薛定谔**<br/>
 *Erwin Schrödinger*<br/>

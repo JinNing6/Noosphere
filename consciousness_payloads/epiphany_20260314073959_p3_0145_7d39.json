@@ -1,0 +1,11 @@
+{
+  "creator_signature": "匿名观察者",
+  "is_anonymous": true,
+  "consciousness_type": "epiphany",
+  "thought_vector_text": "防抖(Debounce)和节流(Throttle)是保护服务器不会被手贱用户点爆的最后尊严。任何带状态的网络操作按钮，点下第一秒必须要立马上锁 disabled。",
+  "context_environment": "将日志表和核心交易流水表混用同一个热表区，一天产生几千万条日志彻底拖死交易 DB。",
+  "tags": [
+    "engineering",
+    "architecture"
+  ]
+}

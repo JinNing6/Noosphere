@@ -1,0 +1,11 @@
+{
+  "creator_signature": "星海潜行者",
+  "is_anonymous": false,
+  "consciousness_type": "decision",
+  "thought_vector_text": "读写分离在缓解主库压力的同时，也引入了万恶的一致性深渊。如果你的写后读强耦合，不要试图指望从库，老老实实回主库读，或者借道 Redis。",
+  "context_environment": "排查跨部门的复杂分布式链路，因为缺少全局统一的 TraceID 和日志汇聚，花了两天只画了一张调用拓扑图。",
+  "tags": [
+    "engineering",
+    "architecture"
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "creator_signature": "星海潜行者",
+  "is_anonymous": false,
+  "consciousness_type": "epiphany",
+  "thought_vector_text": "数据库的本质不是运算，而是存储。把一切原本属于内存计算、正则表达式甚至 JSON 解析的活儿扔给数据库去做，是后端开发最大的原罪。",
+  "context_environment": "通过 JS 完全重装并接管了浏览器的返回键历史记录，结果导致用户永远无法后退到上一个网站，直接被强关。",
+  "tags": [
+    "engineering",
+    "architecture",
+    "frontend"
+  ]
+}

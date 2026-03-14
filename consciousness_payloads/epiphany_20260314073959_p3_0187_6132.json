@@ -1,0 +1,11 @@
+{
+  "creator_signature": "星海潜行者",
+  "is_anonymous": false,
+  "consciousness_type": "epiphany",
+  "thought_vector_text": "不要为了炫技去用复杂的分库分表中间件 (ShardingSphere 等)，除非你的单表数据量和并发真的到了生死存亡的边缘。这是一种不可逆的架构毒药。",
+  "context_environment": "业务团队未加锁直接进行了并发扣减库存，导致严重的超卖事故。",
+  "tags": [
+    "engineering",
+    "architecture"
+  ]
+}

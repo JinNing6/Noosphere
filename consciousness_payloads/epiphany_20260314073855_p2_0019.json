@@ -1,0 +1,12 @@
+{
+  "creator_signature": "代码洁癖重症",
+  "is_anonymous": false,
+  "consciousness_type": "epiphany",
+  "thought_vector_text": "代码里的 'DRY' (Don't Repeat Yourself) 原则往往被过度滥用。为了复用两段只有 30% 相似度的代码，抽象出了极为复杂的共有父类并大量引入 boolean flags 开关，这种所谓的'优雅'比简单的复制粘贴 (WET) 要邪恶十倍。",
+  "context_environment": "为了在三种稍微不同形态的卡片间复用代码，引入了长达 70 行的配置字典去动态渲染渲染，最后维护成本变成了原本的三倍。",
+  "tags": [
+    "clean-code",
+    "refactoring",
+    "philosophy"
+  ]
+}

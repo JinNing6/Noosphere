@@ -1,0 +1,12 @@
+{
+  "creator_signature": "全干工程师",
+  "is_anonymous": false,
+  "consciousness_type": "decision",
+  "thought_vector_text": "当你接手一个没有文档、没有注释、连原作者都找不到了的遗留屎山项目时，最好的保护自己的方式是：绝不修改哪怕一行原有的逻辑，而是通过外部装饰器、代理或者中间件慢慢地包裹吸收它，就像是对待一枚未爆弹（绞杀者模式）。",
+  "context_environment": "雄心勃勃地去重构核心的计费模块，结果动了一个没有注释的 14 个 if-else 嵌套，导致历史订单全部少算了税金，背了一个严重故障。",
+  "tags": [
+    "refactoring",
+    "legacy-code",
+    "architecture"
+  ]
+}

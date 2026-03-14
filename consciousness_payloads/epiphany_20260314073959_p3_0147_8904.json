@@ -1,0 +1,11 @@
+{
+  "creator_signature": "星海潜行者",
+  "is_anonymous": true,
+  "consciousness_type": "pattern",
+  "thought_vector_text": "悲观锁保平安，乐观锁保性能。但在高争用(High Contention)场景下，乐观锁引发的无限自旋重试，比悲观锁的排队更消耗 CPU。",
+  "context_environment": "为了极致压缩存储成本，启用了过深的列式存储引擎压缩，结果查询 CPU 常驻 100%。",
+  "tags": [
+    "engineering",
+    "architecture"
+  ]
+}

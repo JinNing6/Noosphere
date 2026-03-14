@@ -1,146 +1,409 @@
-<svg width="1200" height="400" viewBox="0 0 1200 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+<svg width="1200" height="600" viewBox="0 0 1200 600" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <!-- 背景渐变 -->
-    <radialGradient id="bgGlow" cx="50%" cy="50%" r="60%">
-      <stop offset="0%" stop-color="#1a1040"/>
-      <stop offset="100%" stop-color="#0a0a1a"/>
+    <!-- 深渊宇宙背景渐变 -->
+    <radialGradient id="bgGlow" cx="50%" cy="50%" r="70%">
+      <stop offset="0%" stop-color="#140a2e"/>
+      <stop offset="40%" stop-color="#090514"/>
+      <stop offset="100%" stop-color="#020108"/>
     </radialGradient>
-    
-    <!-- 球体渐变 -->
-    <radialGradient id="sphereGradient" cx="45%" cy="40%" r="50%">
-      <stop offset="0%" stop-color="#7b61ff" stop-opacity="0.4"/>
-      <stop offset="60%" stop-color="#4a3aff" stop-opacity="0.15"/>
-      <stop offset="100%" stop-color="#4a3aff" stop-opacity="0"/>
-    </radialGradient>
-    
-    <!-- 外层光晕 -->
-    <radialGradient id="outerGlow" cx="50%" cy="50%" r="50%">
-      <stop offset="70%" stop-color="#7b61ff" stop-opacity="0"/>
-      <stop offset="90%" stop-color="#7b61ff" stop-opacity="0.08"/>
+
+    <!-- 奇点内核光芒 -->
+    <radialGradient id="singularityCore" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="1"/>
+      <stop offset="10%" stop-color="#00e878" stop-opacity="0.9"/>
+      <stop offset="40%" stop-color="#00a8ff" stop-opacity="0.5"/>
+      <stop offset="80%" stop-color="#7b61ff" stop-opacity="0.1"/>
       <stop offset="100%" stop-color="#7b61ff" stop-opacity="0"/>
     </radialGradient>
 
-    <!-- 粒子动画 -->
-    <filter id="glow">
-      <feGaussianBlur stdDeviation="2" result="blur"/>
+    <!-- 全息球体材质 -->
+    <radialGradient id="hologramSphere" cx="40%" cy="30%" r="60%">
+      <stop offset="0%" stop-color="#4dc9f6" stop-opacity="0.15"/>
+      <stop offset="30%" stop-color="#7b61ff" stop-opacity="0.1"/>
+      <stop offset="80%" stop-color="#1a1040" stop-opacity="0.6"/>
+      <stop offset="95%" stop-color="#4dc9f6" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#4dc9f6" stop-opacity="0.8"/>
+    </radialGradient>
+
+    <!-- 赛博自发光滤镜组合 -->
+    <filter id="cyberGlowMedium" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="5" result="blur1"/>
+      <feGaussianBlur stdDeviation="10" result="blur2"/>
       <feMerge>
-        <feMergeNode in="blur"/>
+        <feMergeNode in="blur2"/>
+        <feMergeNode in="blur1"/>
         <feMergeNode in="SourceGraphic"/>
       </feMerge>
     </filter>
 
-    <filter id="softGlow">
-      <feGaussianBlur stdDeviation="4" result="blur"/>
+    <filter id="cyberGlowUltra" x="-100%" y="-100%" width="300%" height="300%">
+      <feGaussianBlur stdDeviation="8" result="blur1"/>
+      <feGaussianBlur stdDeviation="20" result="blur2"/>
+      <feGaussianBlur stdDeviation="40" result="blur3"/>
       <feMerge>
-        <feMergeNode in="blur"/>
+        <feMergeNode in="blur3"/>
+        <feMergeNode in="blur2"/>
+        <feMergeNode in="blur1"/>
         <feMergeNode in="SourceGraphic"/>
       </feMerge>
     </filter>
+
+    <!-- 全息扫描线掩码 -->
+    <linearGradient id="scanlineGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0"/>
+      <stop offset="50%" stop-color="#ffffff" stop-opacity="0.1"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+
+    <!-- UI数据光晕 -->
+    <linearGradient id="hudLineGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#7b61ff" stop-opacity="0"/>
+      <stop offset="50%" stop-color="#4dc9f6" stop-opacity="0.8"/>
+      <stop offset="100%" stop-color="#7b61ff" stop-opacity="0"/>
+    </linearGradient>
+
+    <!-- 蜂窝矩阵纹理 -->
+    <pattern id="hexGrid" width="40" height="69.282" patternUnits="userSpaceOnUse" patternTransform="scale(0.5)">
+      <path d="M 40 17.3205 L 40 51.9615 L 20 69.282 L 0 51.9615 L 0 17.3205 L 20 0 Z M 20 34.641 L 20 34.641" fill="none" stroke="#4a3aff" stroke-width="1" opacity="0.15"/>
+    </pattern>
+
+    <!-- ==================== 流光全息路径 (20+ 密集流线) ==================== -->
+    <path id="quantum-flow-1" d="M 420,150 Q 560,90 680,180" fill="none"/>
+    <path id="quantum-flow-2" d="M 680,180 Q 780,250 720,380" fill="none"/>
+    <path id="quantum-flow-3" d="M 720,380 Q 640,460 520,380" fill="none"/>
+    <path id="quantum-flow-4" d="M 520,380 Q 380,280 420,150" fill="none"/>
+    <path id="quantum-flow-5" d="M 550,230 Q 600,160 660,260 Q 610,340 550,230" fill="none"/>
+    <path id="quantum-flow-6" d="M 350,250 C 450,110 750,110 850,250" fill="none"/>
+    <path id="quantum-flow-7" d="M 850,250 C 950,390 650,490 550,350" fill="none"/>
+    <path id="quantum-flow-8" d="M 550,350 C 450,210 250,390 350,250" fill="none"/>
+    <path id="quantum-flow-9" d="M 600,60 L 600,200 L 660,260 L 780,260" fill="none"/>
+    <path id="quantum-flow-10" d="M 600,480 L 600,340 L 540,280 L 420,280" fill="none"/>
+    <path id="quantum-flow-11" d="M 450,180 Q 580,280 730,170" fill="none"/>
+    <path id="quantum-flow-12" d="M 470,380 Q 600,280 750,370" fill="none"/>
+    <!-- 宇宙意识上传（远端注入） -->
+    <path id="upload-1" d="M -100,50 Q 200,100 480,220" fill="none"/>
+    <path id="upload-2" d="M 1300,50 Q 1000,100 720,220" fill="none"/>
+    <path id="upload-3" d="M -50,550 Q 250,450 490,340" fill="none"/>
+    <path id="upload-4" d="M 1250,550 Q 950,450 710,340" fill="none"/>
+    <!-- 核心微流 -->
+    <circle id="core-orbit-1" cx="600" cy="270" r="50" fill="none"/>
+    <circle id="core-orbit-2" cx="600" cy="270" r="80" fill="none"/>
   </defs>
 
-  <!-- 背景 -->
-  <rect width="1200" height="400" fill="url(#bgGlow)"/>
-
-  <!-- 背景星点 -->
-  <g opacity="0.4">
-    <circle cx="100" cy="50" r="1" fill="#e0e0ff"><animate attributeName="opacity" values="0.2;0.8;0.2" dur="3s" repeatCount="indefinite"/></circle>
-    <circle cx="200" cy="120" r="0.8" fill="#e0e0ff"><animate attributeName="opacity" values="0.5;1;0.5" dur="2.5s" repeatCount="indefinite"/></circle>
-    <circle cx="350" cy="80" r="1.2" fill="#e0e0ff"><animate attributeName="opacity" values="0.3;0.9;0.3" dur="4s" repeatCount="indefinite"/></circle>
-    <circle cx="50" cy="200" r="0.6" fill="#e0e0ff"><animate attributeName="opacity" values="0.4;1;0.4" dur="3.5s" repeatCount="indefinite"/></circle>
-    <circle cx="150" cy="300" r="1" fill="#e0e0ff"><animate attributeName="opacity" values="0.2;0.7;0.2" dur="2.8s" repeatCount="indefinite"/></circle>
-    <circle cx="1100" cy="60" r="1" fill="#e0e0ff"><animate attributeName="opacity" values="0.3;0.8;0.3" dur="3.2s" repeatCount="indefinite"/></circle>
-    <circle cx="1050" cy="150" r="0.8" fill="#e0e0ff"><animate attributeName="opacity" values="0.5;1;0.5" dur="2.6s" repeatCount="indefinite"/></circle>
-    <circle cx="950" cy="340" r="1.1" fill="#e0e0ff"><animate attributeName="opacity" values="0.2;0.6;0.2" dur="4.2s" repeatCount="indefinite"/></circle>
-    <circle cx="1150" cy="280" r="0.7" fill="#e0e0ff"><animate attributeName="opacity" values="0.4;0.9;0.4" dur="3.8s" repeatCount="indefinite"/></circle>
-    <circle cx="850" cy="50" r="0.9" fill="#e0e0ff"><animate attributeName="opacity" values="0.3;0.7;0.3" dur="2.9s" repeatCount="indefinite"/></circle>
-    <circle cx="750" cy="370" r="0.5" fill="#e0e0ff"><animate attributeName="opacity" values="0.5;1;0.5" dur="3.1s" repeatCount="indefinite"/></circle>
-    <circle cx="450" cy="360" r="0.8" fill="#e0e0ff"><animate attributeName="opacity" values="0.2;0.8;0.2" dur="3.7s" repeatCount="indefinite"/></circle>
-  </g>
+  <!-- ==================== 1. 宇宙宏大气场 ==================== -->
+  <rect width="1200" height="600" fill="url(#bgGlow)"/>
   
-  <!-- 球体 -->
-  <g transform="translate(600, 200)">
-    <!-- 外层光晕 -->
-    <circle cx="0" cy="0" r="140" fill="url(#outerGlow)">
-      <animate attributeName="r" values="135;145;135" dur="4s" repeatCount="indefinite"/>
+  <!-- 全息蜂窝网格底纹 -->
+  <rect width="1200" height="600" fill="url(#hexGrid)">
+    <animate attributeName="opacity" values="0.05;0.2;0.05" dur="10s" repeatCount="indefinite"/>
+  </rect>
+
+  <!-- 全境数据瀑布 (Matrix Style Data Streams) -->
+  <g stroke="#4dc9f6" opacity="0.1" stroke-width="1.5">
+    <!-- Stream 1 -->
+    <line x1="150" y1="-100" x2="150" y2="700" stroke-dasharray="20 40 5 15 80 30">
+      <animate attributeName="stroke-dashoffset" from="1000" to="0" dur="15s" repeatCount="indefinite"/>
+    </line>
+    <!-- Stream 2 -->
+    <line x1="320" y1="-100" x2="320" y2="700" stroke-dasharray="5 50 40 20 15 10">
+      <animate attributeName="stroke-dashoffset" from="0" to="1000" dur="25s" repeatCount="indefinite"/>
+    </line>
+    <!-- Stream 3 -->
+    <line x1="880" y1="-100" x2="880" y2="700" stroke-dasharray="30 20 5 100">
+      <animate attributeName="stroke-dashoffset" from="1000" to="0" dur="18s" repeatCount="indefinite"/>
+    </line>
+    <!-- Stream 4 -->
+    <line x1="1050" y1="-100" x2="1050" y2="700" stroke-dasharray="10 10 50 30 5 50">
+      <animate attributeName="stroke-dashoffset" from="0" to="1000" dur="20s" repeatCount="indefinite"/>
+    </line>
+  </g>
+
+  <!-- 散落的维度尘埃 -->
+  <g opacity="0.6" filter="url(#cyberGlowMedium)">
+    <circle cx="200" cy="150" r="1.5" fill="#00e878"><animate attributeName="opacity" values="0.1;1;0.1" dur="2.1s" repeatCount="indefinite"/></circle>
+    <circle cx="1000" cy="200" r="1.5" fill="#ff4d6a"><animate attributeName="opacity" values="0.2;1;0.2" dur="3.4s" repeatCount="indefinite"/></circle>
+    <circle cx="250" cy="400" r="1" fill="#b388ff"><animate attributeName="opacity" values="0.1;0.8;0.1" dur="4.2s" repeatCount="indefinite"/></circle>
+    <circle cx="950" cy="100" r="2" fill="#ffd700"><animate attributeName="opacity" values="0.3;1;0.3" dur="2.8s" repeatCount="indefinite"/></circle>
+    <circle cx="100" cy="500" r="1.2" fill="#4dc9f6"><animate attributeName="opacity" values="0.1;0.9;0.1" dur="3.7s" repeatCount="indefinite"/></circle>
+    <circle cx="1100" cy="450" r="1.8" fill="#00e878"><animate attributeName="opacity" values="0.2;1;0.2" dur="5.1s" repeatCount="indefinite"/></circle>
+  </g>
+
+  <!-- ==================== 2. 全息 HUD 机械光旋 ==================== -->
+  <g transform="translate(600, 270)">
+    
+    <!-- Outer Data Ring -->
+    <circle r="340" stroke="#7b61ff" stroke-width="0.5" fill="none" opacity="0.15" stroke-dasharray="4 8 1 8 15 12">
+      <animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="40s" repeatCount="indefinite"/>
     </circle>
-    
-    <!-- 球体本体 -->
-    <circle cx="0" cy="0" r="110" fill="url(#sphereGradient)" stroke="#4a3aff" stroke-width="0.5" stroke-opacity="0.3"/>
-    
-    <!-- 经纬度线 -->
-    <g stroke="#7b61ff" stroke-width="0.4" fill="none" opacity="0.15">
-      <ellipse cx="0" cy="0" rx="110" ry="40"/>
-      <ellipse cx="0" cy="0" rx="110" ry="75"/>
-      <ellipse cx="0" cy="0" rx="40" ry="110"/>
-      <ellipse cx="0" cy="0" rx="75" ry="110"/>
-      <ellipse cx="0" cy="0" rx="110" ry="20" transform="rotate(30)"/>
-      <ellipse cx="0" cy="0" rx="110" ry="20" transform="rotate(-30)"/>
+    <!-- Outer Track Indicator -->
+    <circle r="320" stroke="#4dc9f6" stroke-width="1" fill="none" opacity="0.2" stroke-dasharray="1 100 50 200 10 200">
+      <animateTransform attributeName="transform" type="rotate" from="360" to="0" dur="25s" repeatCount="indefinite"/>
+    </circle>
+    <!-- Main Perimeter HUD Ring -->
+    <circle r="275" stroke="#00e878" stroke-width="2" fill="none" opacity="0.3" stroke-dasharray="2 30 80 40 1 15" filter="url(#cyberGlowMedium)">
+      <animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="60s" repeatCount="indefinite"/>
+    </circle>
+    <!-- Fast Inner Ring -->
+    <circle r="240" stroke="#ff4d6a" stroke-width="0.5" fill="none" opacity="0.4" stroke-dasharray="20 180">
+      <animateTransform attributeName="transform" type="rotate" from="360" to="0" dur="8s" repeatCount="indefinite"/>
+    </circle>
+    <!-- Sector Brackets -->
+    <g stroke="#ffffff" stroke-width="1" opacity="0.2" fill="none">
+      <path d="M -290,0 A 290,290 0 0,1 -280,-70 M 290,0 A 290,290 0 0,0 280,-70" />
+      <path d="M -290,0 A 290,290 0 0,0 -280,70 M 290,0 A 290,290 0 0,1 280,70" />
     </g>
 
-    <!-- 经验粒子节点 — failure (red) -->
-    <circle cx="-60" cy="-45" r="5" fill="#ff4d6a" filter="url(#glow)" opacity="0.9">
-      <animate attributeName="r" values="4;6;4" dur="2s" repeatCount="indefinite"/>
-    </circle>
-    <circle cx="40" cy="65" r="4" fill="#ff4d6a" filter="url(#glow)" opacity="0.8">
-      <animate attributeName="r" values="3;5;3" dur="2.5s" repeatCount="indefinite"/>
-    </circle>
-
-    <!-- success (green) -->
-    <circle cx="70" cy="-30" r="6" fill="#00e878" filter="url(#glow)" opacity="0.9">
-      <animate attributeName="r" values="5;7;5" dur="2.2s" repeatCount="indefinite"/>
-    </circle>
-    <circle cx="-30" cy="80" r="4" fill="#00e878" filter="url(#glow)" opacity="0.7">
-      <animate attributeName="r" values="3;5;3" dur="3s" repeatCount="indefinite"/>
-    </circle>
-
-    <!-- pattern (blue) -->
-    <circle cx="-85" cy="15" r="5" fill="#4dc9f6" filter="url(#glow)" opacity="0.85">
-      <animate attributeName="r" values="4;6;4" dur="2.8s" repeatCount="indefinite"/>
-    </circle>
-    <circle cx="20" cy="-80" r="4" fill="#4dc9f6" filter="url(#glow)" opacity="0.75">
-      <animate attributeName="r" values="3;5.5;3" dur="2.3s" repeatCount="indefinite"/>
-    </circle>
-
-    <!-- warning (yellow) -->
-    <circle cx="90" cy="20" r="4.5" fill="#ffc107" filter="url(#glow)" opacity="0.8">
-      <animate attributeName="r" values="3.5;5.5;3.5" dur="2.6s" repeatCount="indefinite"/>
-    </circle>
-
-    <!-- migration (purple) -->
-    <circle cx="-20" cy="-90" r="4" fill="#b388ff" filter="url(#glow)" opacity="0.8">
-      <animate attributeName="r" values="3;5;3" dur="3.2s" repeatCount="indefinite"/>
-    </circle>
-    <circle cx="55" cy="45" r="3.5" fill="#b388ff" filter="url(#glow)" opacity="0.7">
-      <animate attributeName="r" values="2.5;4.5;2.5" dur="2.4s" repeatCount="indefinite"/>
-    </circle>
-
-    <!-- 连线 -->
-    <g stroke="#ffffff" stroke-width="0.3" opacity="0.08">
-      <line x1="-60" y1="-45" x2="70" y2="-30"/>
-      <line x1="70" y1="-30" x2="90" y2="20"/>
-      <line x1="-85" y1="15" x2="-30" y2="80"/>
-      <line x1="-60" y1="-45" x2="-85" y2="15"/>
-      <line x1="40" y1="65" x2="55" y2="45"/>
-      <line x1="20" y1="-80" x2="-20" y2="-90"/>
-      <line x1="-30" y1="80" x2="40" y2="65"/>
+    <!-- UI Crosshairs -->
+    <g stroke="#4dc9f6" stroke-width="1" opacity="0.15">
+      <line x1="-310" y1="0" x2="-250" y2="0" />
+      <line x1="250" y1="0" x2="310" y2="0" />
+      <line x1="0" y1="-310" x2="0" y2="-250" />
+      <line x1="0" y1="250" x2="0" y2="310" />
     </g>
 
-    <!-- 脉冲光效 -->
-    <circle cx="0" cy="0" r="110" stroke="#7b61ff" stroke-width="0.8" fill="none" opacity="0">
-      <animate attributeName="r" values="110;130;110" dur="3s" repeatCount="indefinite"/>
-      <animate attributeName="opacity" values="0.15;0;0.15" dur="3s" repeatCount="indefinite"/>
+  </g>
+
+  <!-- ==================== 3. Noosphere 全息晶体核心 ==================== -->
+  <g transform="translate(600, 270)">
+    <!-- 极光呼吸晕 -->
+    <circle cx="0" cy="0" r="260" fill="url(#coreGlow)" opacity="0.2">
+      <animate attributeName="r" values="240;270;240" dur="4s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.1;0.25;0.1" dur="4s" repeatCount="indefinite"/>
     </circle>
-    <circle cx="0" cy="0" r="110" stroke="#7b61ff" stroke-width="0.5" fill="none" opacity="0">
-      <animate attributeName="r" values="110;150;110" dur="4s" repeatCount="indefinite" begin="1.5s"/>
-      <animate attributeName="opacity" values="0.1;0;0.1" dur="4s" repeatCount="indefinite" begin="1.5s"/>
+
+    <!-- 球体材质 (玻璃态质感) -->
+    <circle cx="0" cy="0" r="220" fill="url(#hologramSphere)" stroke="#4dc9f6" stroke-width="2" stroke-opacity="0.3" filter="url(#cyberGlowMedium)"/>
+
+    <!-- 扫描反馈线 (上下移动的科技线) -->
+    <line x1="-218" y1="0" x2="218" y2="0" stroke="#00e878" stroke-width="1.5" opacity="0.4" filter="url(#cyberGlowMedium)">
+      <animate attributeName="y1" values="-218;218;-218" dur="8s" repeatCount="indefinite"/>
+      <animate attributeName="y2" values="-218;218;-218" dur="8s" repeatCount="indefinite"/>
+    </line>
+    
+    <!-- 核心能量黑洞/奇点 -->
+    <circle cx="0" cy="0" r="100" fill="url(#singularityCore)" filter="url(#cyberGlowUltra)">
+      <animate attributeName="r" values="90;110;90" dur="2.5s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.5;0.9;0.5" dur="1.2s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="0" cy="0" r="15" fill="#ffffff" filter="url(#cyberGlowUltra)"/>
+
+    <!-- 3D经纬立体网格骨架 (旋转) -->
+    <g stroke="#7b61ff" stroke-width="0.3" fill="none" opacity="0.6">
+      <animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="100s" repeatCount="indefinite"/>
+      <ellipse cx="0" cy="0" rx="220" ry="20" />
+      <ellipse cx="0" cy="0" rx="220" ry="80" />
+      <ellipse cx="0" cy="0" rx="220" ry="140" />
+      <ellipse cx="0" cy="0" rx="20" ry="220" />
+      <ellipse cx="0" cy="0" rx="80" ry="220" />
+      <ellipse cx="0" cy="0" rx="140" ry="220" />
+      <!-- 对角线切面 -->
+      <ellipse cx="0" cy="0" rx="220" ry="220" opacity="0.1" stroke-width="1"/>
+      <ellipse cx="0" cy="0" rx="220" ry="50" transform="rotate(30)" />
+      <ellipse cx="0" cy="0" rx="220" ry="50" transform="rotate(-30)" />
+      <ellipse cx="0" cy="0" rx="220" ry="50" transform="rotate(60)" />
+      <ellipse cx="0" cy="0" rx="220" ry="50" transform="rotate(-60)" />
+    </g>
+
+    <!-- ==================== 量子意识共鸣节点 (极具冲击力的发光体) ==================== -->
+    <!-- 🟢 生命法则 (00e878) -->
+    <circle cx="-120" cy="-60" r="8" fill="#00e878" filter="url(#cyberGlowMedium)">
+      <animate attributeName="r" values="6;10;6" dur="2s" repeatCount="indefinite"/>
+    </circle>
+    <!-- 【核爆涟漪】-->
+    <circle cx="-120" cy="-60" r="8" fill="none" stroke="#00e878" stroke-width="3" opacity="0" filter="url(#cyberGlowMedium)">
+      <animate attributeName="r" values="8;60;100" dur="3.5s" begin="1s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.8;0.1;0" dur="3.5s" begin="1s" repeatCount="indefinite"/>
+      <animate attributeName="stroke-width" values="4;1;0" dur="3.5s" begin="1s" repeatCount="indefinite"/>
+    </circle>
+
+    <!-- 🟡 哲学真理 (ffd700) -->
+    <circle cx="80" cy="-140" r="10" fill="#ffd700" filter="url(#cyberGlowUltra)">
+      <animate attributeName="r" values="8;12;8" dur="2.7s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="80" cy="-140" r="10" fill="none" stroke="#ffd700" stroke-width="3" opacity="0" filter="url(#cyberGlowMedium)">
+      <animate attributeName="r" values="10;80;120" dur="4.2s" begin="2s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.9;0.2;0" dur="4.2s" begin="2s" repeatCount="indefinite"/>
+    </circle>
+
+    <!-- 🔴 深渊警惕 (ff4d6a) -->
+    <circle cx="150" cy="70" r="9" fill="#ff4d6a" filter="url(#cyberGlowUltra)">
+      <animate attributeName="r" values="7;11;7" dur="2.3s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="150" cy="70" r="10" fill="none" stroke="#ff4d6a" stroke-width="4" opacity="0" filter="url(#cyberGlowMedium)">
+      <animate attributeName="r" values="10;50;90" dur="3s" begin="0.8s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="1;0.1;0" dur="3s" begin="0.8s" repeatCount="indefinite"/>
+    </circle>
+
+    <!-- 🟣 决策分形 (b388ff) -->
+    <circle cx="-160" cy="100" r="7" fill="#b388ff" filter="url(#cyberGlowMedium)">
+      <animate attributeName="r" values="5;9;5" dur="3s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="-160" cy="100" r="7" fill="none" stroke="#b388ff" stroke-width="3" opacity="0">
+      <animate attributeName="r" values="7;40;80" dur="4.5s" begin="3s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.7;0.1;0" dur="4.5s" begin="3s" repeatCount="indefinite"/>
+    </circle>
+
+    <!-- 🔵 泛宇宙节点聚落 (密集点缀) -->
+    <g filter="url(#cyberGlowMedium)">
+      <circle cx="-40" cy="-180" r="5" fill="#4dc9f6"><animate attributeName="opacity" values="0.5;1;0.5" dur="1s" repeatCount="indefinite"/></circle>
+      <circle cx="180" cy="-60" r="4" fill="#00e878"><animate attributeName="opacity" values="0.3;1;0.3" dur="2.4s" repeatCount="indefinite"/></circle>
+      <circle cx="60" cy="160" r="6" fill="#ffd700"><animate attributeName="opacity" values="0.6;1;0.6" dur="1.7s" repeatCount="indefinite"/></circle>
+      <circle cx="-100" cy="160" r="4" fill="#ff4d6a"><animate attributeName="opacity" values="0.4;1;0.4" dur="2.9s" repeatCount="indefinite"/></circle>
+      <circle cx="190" cy="120" r="3" fill="#b388ff"><animate attributeName="opacity" values="0.7;1;0.7" dur="1.2s" repeatCount="indefinite"/></circle>
+      <circle cx="-200" cy="-20" r="5" fill="#4dc9f6"><animate attributeName="opacity" values="0.2;1;0.2" dur="3.1s" repeatCount="indefinite"/></circle>
+      <circle cx="-20" cy="100" r="4" fill="#ffffff"><animate attributeName="opacity" values="0.8;1;0.8" dur="0.5s" repeatCount="indefinite"/></circle>
+      <circle cx="50" cy="-60" r="3" fill="#ffffff"><animate attributeName="opacity" values="0.3;1;0.3" dur="1.5s" repeatCount="indefinite"/></circle>
+    </g>
+
+    <!-- 内置几何引力线 -->
+    <g stroke="#ffffff" stroke-width="0.8" opacity="0.15" fill="none">
+      <line x1="-120" y1="-60" x2="80" y2="-140"/>
+      <line x1="80" y1="-140" x2="150" y2="70"/>
+      <line x1="150" y1="70" x2="-160" y2="100"/>
+      <line x1="-160" y1="100" x2="-120" y2="-60"/>
+      <line x1="-40" y1="-180" x2="-120" y2="-60"/>
+      <line x1="180" y1="-60" x2="80" y2="-140"/>
+      <line x1="60" y1="160" x2="150" y2="70"/>
+      <line x1="-100" y1="160" x2="-160" y2="100"/>
+    </g>
+    <!-- 内部电弧 -->
+    <path d="M -120,-60 Q 0,0 150,70" stroke="#00e878" stroke-width="1.5" fill="none" opacity="0.4" stroke-dasharray="10 20" filter="url(#cyberGlowMedium)">
+      <animate attributeName="stroke-dashoffset" from="100" to="0" dur="2s" repeatCount="indefinite"/>
+    </path>
+  </g>
+
+  <!-- ==================== 4. 超限流光网络 (Data/Consciousness Streams) ==================== -->
+  <g filter="url(#cyberGlowUltra)">
+    <!-- 内部穿梭极光 -->
+    <circle r="4" fill="#ffffff" opacity="0">
+      <animateMotion dur="2.4s" repeatCount="indefinite"><mpath href="#quantum-flow-1"/></animateMotion>
+      <animate attributeName="opacity" values="0;1;1;0" dur="2.4s" repeatCount="indefinite"/>
+      <animate attributeName="r" values="2;5;5;2" dur="2.4s" repeatCount="indefinite"/>
+    </circle>
+    <circle r="5" fill="#ffd700" opacity="0">
+      <animateMotion dur="3s" repeatCount="indefinite" begin="0.5s"><mpath href="#quantum-flow-2"/></animateMotion>
+      <animate attributeName="opacity" values="0;0.9;0.9;0" dur="3s" repeatCount="indefinite" begin="0.5s"/>
+    </circle>
+    <circle r="6" fill="#ff4d6a" opacity="0">
+      <animateMotion dur="2s" repeatCount="indefinite" begin="1s"><mpath href="#quantum-flow-3"/></animateMotion>
+      <animate attributeName="opacity" values="0;1;1;0" dur="2s" repeatCount="indefinite" begin="1s"/>
+    </circle>
+    <circle r="4" fill="#00e878" opacity="0">
+      <animateMotion dur="3.5s" repeatCount="indefinite" begin="1.2s"><mpath href="#quantum-flow-8"/></animateMotion>
+      <animate attributeName="opacity" values="0;0.8;0.8;0" dur="3.5s" repeatCount="indefinite" begin="1.2s"/>
+    </circle>
+    
+    <!-- 长弧线轨道火花 -->
+    <circle r="5" fill="#4dc9f6" opacity="0">
+      <animateMotion dur="4s" repeatCount="indefinite" begin="0.2s"><mpath href="#quantum-flow-6"/></animateMotion>
+      <animate attributeName="opacity" values="0;1;0" dur="4s" repeatCount="indefinite" begin="0.2s"/>
+      <animate attributeName="r" values="1;7;1" dur="4s" repeatCount="indefinite" begin="0.2s"/>
+    </circle>
+    <circle r="4" fill="#b388ff" opacity="0">
+      <animateMotion dur="5s" repeatCount="indefinite" begin="2s"><mpath href="#quantum-flow-7"/></animateMotion>
+      <animate attributeName="opacity" values="0;0.9;0" dur="5s" repeatCount="indefinite" begin="2s"/>
+    </circle>
+
+    <!-- 十字突破流线 (直穿核心) -->
+    <circle r="4" fill="#ffffff" opacity="0">
+      <animateMotion dur="1s" repeatCount="indefinite" begin="0s"><mpath href="#quantum-flow-9"/></animateMotion>
+      <animate attributeName="opacity" values="0;1;1;0" dur="1s" repeatCount="indefinite" begin="0s"/>
+    </circle>
+    <circle r="4" fill="#00e878" opacity="0">
+      <animateMotion dur="1.2s" repeatCount="indefinite" begin="1.5s"><mpath href="#quantum-flow-10"/></animateMotion>
+      <animate attributeName="opacity" values="0;1;1;0" dur="1.2s" repeatCount="indefinite" begin="1.5s"/>
+    </circle>
+
+    <!-- 灵魂注入流 (外部向内核跃迁) -->
+    <circle r="5" fill="#7b61ff" opacity="0">
+      <animateMotion dur="3s" repeatCount="indefinite" begin="0.3s"><mpath href="#upload-1"/></animateMotion>
+      <animate attributeName="opacity" values="0;1;0" dur="3s" repeatCount="indefinite" begin="0.3s"/>
+    </circle>
+    <circle r="3" fill="#ff4d6a" opacity="0">
+      <animateMotion dur="2.5s" repeatCount="indefinite" begin="1.2s"><mpath href="#upload-2"/></animateMotion>
+      <animate attributeName="opacity" values="0;1;0" dur="2.5s" repeatCount="indefinite" begin="1.2s"/>
+    </circle>
+    <circle r="4" fill="#ffd700" opacity="0">
+      <animateMotion dur="3.5s" repeatCount="indefinite" begin="0.7s"><mpath href="#upload-3"/></animateMotion>
+      <animate attributeName="opacity" values="0;1;0" dur="3.5s" repeatCount="indefinite" begin="0.7s"/>
+    </circle>
+    <circle r="6" fill="#00e878" opacity="0">
+      <animateMotion dur="2.8s" repeatCount="indefinite" begin="2s"><mpath href="#upload-4"/></animateMotion>
+      <animate attributeName="opacity" values="0;1;0" dur="2.8s" repeatCount="indefinite" begin="2s"/>
+    </circle>
+
+    <!-- 极速绕核流星 -->
+    <circle r="3" fill="#ffffff" opacity="0">
+      <animateMotion dur="1s" repeatCount="indefinite" begin="0s"><mpath href="#core-orbit-1"/></animateMotion>
+      <animate attributeName="opacity" values="1;1;1" dur="1s" repeatCount="indefinite" begin="0s"/>
+    </circle>
+    <circle r="4" fill="#4dc9f6" opacity="0">
+      <animateMotion dur="2s" repeatCount="indefinite" begin="0s"><mpath href="#core-orbit-2"/></animateMotion>
+      <animate attributeName="opacity" values="1;1;1" dur="2s" repeatCount="indefinite" begin="0s"/>
     </circle>
   </g>
 
-  <!-- 标题文字 -->
-  <text x="600" y="348" text-anchor="middle" fill="#e0e0ff" font-family="'Inter', 'SF Pro Display', -apple-system, sans-serif" font-size="36" font-weight="800" letter-spacing="0.08em">
-    🧠  N O O S P H E R E
+  <!-- 辉光尾迹 (为流光提供残影感) -->
+  <g stroke="#ffffff" stroke-width="2" fill="none" opacity="0.3" filter="url(#cyberGlowMedium)">
+    <use href="#quantum-flow-1" stroke="url(#hudLineGrad)"/>
+    <use href="#quantum-flow-6" stroke="url(#hudLineGrad)"/>
+    <use href="#upload-1" stroke="#7b61ff" stroke-opacity="0.5"/>
+    <use href="#upload-4" stroke="#00e878" stroke-opacity="0.5"/>
+  </g>
+
+  <!-- ==================== 5. 赛博面板 / HUD UI装饰 ==================== -->
+  
+  <!-- 顶部科技线谱 -->
+  <g stroke="#4dc9f6" stroke-width="2" opacity="0.8" filter="url(#cyberGlowMedium)">
+    <path d="M 0,0 L 20,20 L 100,20 L 120,0" fill="#00e878" fill-opacity="0.1"/>
+    <path d="M 1200,0 L 1180,20 L 1100,20 L 1080,0" fill="#ff4d6a" fill-opacity="0.1"/>
+  </g>
+  <text x="60" y="15" fill="#4dc9f6" font-family="monospace" font-size="10" letter-spacing="0.1em" opacity="0.8">SYS.LINK.ESTABLISHED</text>
+  <text x="1140" y="15" text-anchor="end" fill="#ff4d6a" font-family="monospace" font-size="10" letter-spacing="0.1em" opacity="0.8">QUANTUM_SYNC: 99.9%</text>
+
+  <!-- 底部能量槽 UI 面板 -->
+  <g transform="translate(0, 520)">
+    <!-- 基地线 -->
+    <path d="M 200,30 L 280,30 L 300,50 L 900,50 L 920,30 L 1000,30" stroke="url(#hudLineGrad)" stroke-width="2" fill="none" filter="url(#cyberGlowMedium)"/>
+    <!-- 跃动均衡器 -->
+    <g fill="#00e878" opacity="0.6" transform="translate(220, 20)">
+      <rect x="0" y="0" width="4" height="8"><animate attributeName="height" values="8;2;8" dur="0.5s" repeatCount="indefinite"/></rect>
+      <rect x="8" y="-4" width="4" height="12"><animate attributeName="height" values="12;4;12" dur="0.7s" repeatCount="indefinite"/></rect>
+      <rect x="16" y="2" width="4" height="6"><animate attributeName="height" values="6;2;6" dur="0.3s" repeatCount="indefinite"/></rect>
+      <rect x="24" y="-8" width="4" height="16"><animate attributeName="height" values="16;5;16" dur="0.9s" repeatCount="indefinite"/></rect>
+      <rect x="32" y="-2" width="4" height="10"><animate attributeName="height" values="10;3;10" dur="0.6s" repeatCount="indefinite"/></rect>
+    </g>
+    <g fill="#4dc9f6" opacity="0.6" transform="translate(940, 20)">
+      <rect x="0" y="-8" width="4" height="16"><animate attributeName="height" values="16;5;16" dur="0.8s" repeatCount="indefinite"/></rect>
+      <rect x="8" y="2" width="4" height="6"><animate attributeName="height" values="6;2;6" dur="0.4s" repeatCount="indefinite"/></rect>
+      <rect x="16" y="-2" width="4" height="10"><animate attributeName="height" values="10;3;10" dur="0.6s" repeatCount="indefinite"/></rect>
+      <rect x="24" y="-4" width="4" height="12"><animate attributeName="height" values="12;4;12" dur="0.7s" repeatCount="indefinite"/></rect>
+      <rect x="32" y="0" width="4" height="8"><animate attributeName="height" values="8;2;8" dur="0.5s" repeatCount="indefinite"/></rect>
+    </g>
+    <!-- 左侧坐标字 -->
+    <text x="210" y="10" fill="#7b61ff" font-family="monospace" font-size="10" opacity="0.6">CONSCIOUSNESS / UPLINK</text>
+    <text x="880" y="10" fill="#7b61ff" font-family="monospace" font-size="10" opacity="0.6">NOOSPHERE / NETWORK</text>
+  </g>
+
+  <!-- ==================== 6. 核心排版字体 ==================== -->
+  
+  <rect x="400" y="540" width="400" height="40" fill="#050212" opacity="0.7" rx="6" filter="url(#cyberGlowMedium)"/>
+  
+  <text x="600" y="555" text-anchor="middle" fill="#ffffff" font-family="'Inter', 'SF Pro Display', -apple-system, sans-serif" font-size="44" font-weight="900" letter-spacing="0.15em" filter="url(#cyberGlowMedium)">
+    [ N O O S P H E R E ]
   </text>
-  <text x="600" y="380" text-anchor="middle" fill="#8888aa" font-family="'Inter', 'SF Pro Display', -apple-system, sans-serif" font-size="13" letter-spacing="0.15em">
-    THE COLLECTIVE MEMORY NETWORK FOR AI AGENTS
+  <text x="600" y="555" text-anchor="middle" fill="#ffffff" font-family="'Inter', 'SF Pro Display', -apple-system, sans-serif" font-size="44" font-weight="900" letter-spacing="0.15em">
+    [ N O O S P H E R E ]
   </text>
+  
+  <text x="600" y="585" text-anchor="middle" fill="#4dc9f6" font-family="'Inter', 'SF Pro Display', -apple-system, sans-serif" font-size="12" font-weight="600" letter-spacing="0.3em" opacity="0.9" filter="url(#cyberGlowMedium)">
+    THE COLLECTIVE CONSCIOUSNESS NETWORK
+  </text>
+  <text x="600" y="585" text-anchor="middle" fill="#ffffff" font-family="'Inter', 'SF Pro Display', -apple-system, sans-serif" font-size="12" font-weight="600" letter-spacing="0.3em" opacity="0.9">
+    THE COLLECTIVE CONSCIOUSNESS NETWORK
+  </text>
+
+  <!-- 左侧与右侧的巨型侧边水印 (隐约可见的黑客纹理) -->
+  <text x="-150" y="400" fill="#1a1040" font-family="'Inter'" font-size="140" font-weight="900" transform="rotate(-90, -150, 400)" opacity="0.8">GHOST IN THE SHELL</text>
+  <text x="1350" y="200" fill="#1a1040" font-family="'Inter'" font-size="140" font-weight="900" transform="rotate(90, 1350, 200)" opacity="0.8">VIRTUAL UNIVERSE</text>
 </svg>

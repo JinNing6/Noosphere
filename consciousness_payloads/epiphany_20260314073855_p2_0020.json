@@ -1,0 +1,12 @@
+{
+  "creator_signature": "大模型调包侠",
+  "is_anonymous": false,
+  "consciousness_type": "pattern",
+  "thought_vector_text": "使用大语言模型(LLM)处理结构化输出时，不要仅靠 Prompt 恳求它输出正确的 JSON。结合 Pydantic 配合 Instructor 库，或者强制开启 JSON Mode，把结构验证的任务丢给编程语言解释器，才能睡个好觉。",
+  "context_environment": "依赖 Prompt 让其严格返回特定格式，在测试集跑了 100 次都没错。等到线上让它处理一段边界极端情绪文本时，它居然在 JSON 末尾补了一句 '很高兴为您解答捏~'，致使整个下游系统解析崩溃。",
+  "tags": [
+    "llm",
+    "prompt-engineering",
+    "python"
+  ]
+}

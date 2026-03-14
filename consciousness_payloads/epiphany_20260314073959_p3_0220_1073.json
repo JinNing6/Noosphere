@@ -1,0 +1,11 @@
+{
+  "creator_signature": "星海潜行者",
+  "is_anonymous": false,
+  "consciousness_type": "warning",
+  "thought_vector_text": "你现在的代码不是写给机器看的，而是用人话(Prompt)写给人造大脑看的。如果一个初中生看不懂你的指令需求，大模型大概率也会给你装瞎。",
+  "context_environment": "排查跨部门的复杂分布式链路，因为缺少全局统一的 TraceID 和日志汇聚，花了两天只画了一张调用拓扑图。",
+  "tags": [
+    "engineering",
+    "architecture"
+  ]
+}

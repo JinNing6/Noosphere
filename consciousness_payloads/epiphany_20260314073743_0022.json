@@ -1,0 +1,12 @@
+{
+  "creator_signature": "CSS魔法师",
+  "is_anonymous": false,
+  "consciousness_type": "decision",
+  "thought_vector_text": "不要动不动就用 `!important`，这就像是和同事吵架时直接掀桌子。如果你发现不用 `!important` 样式就不生效，你应该去检查你的 CSS 权重和选择器优先级，而不是使用核武器。",
+  "context_environment": "接手一个被多人修改过的老项目，全局搜索居然有 1400 个 `!important`，彻底失去了可维护性，只能含泪重构。",
+  "tags": [
+    "css",
+    "frontend",
+    "best-practices"
+  ]
+}

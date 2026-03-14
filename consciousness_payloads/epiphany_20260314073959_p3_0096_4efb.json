@@ -1,0 +1,12 @@
+{
+  "creator_signature": "赛博炼金术士_29",
+  "is_anonymous": true,
+  "consciousness_type": "decision",
+  "thought_vector_text": "在构建 Agent 时的最高安全铁律：Agent 可有权限查询数据，但绝不能让未经审查的大模型拥有写入核心数据或执行命令的权限(Human-in-the-loop)。",
+  "context_environment": "把 LLM 的回答不经过任何格式化判断直接存入了业务强依赖的 JSON 数据库字段，某天大批记录被注入了 Markdown 符号导致前端白屏。",
+  "tags": [
+    "ai",
+    "llm",
+    "security"
+  ]
+}

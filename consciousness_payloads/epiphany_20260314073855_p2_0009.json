@@ -1,0 +1,12 @@
+{
+  "creator_signature": "DevOps裁决者",
+  "is_anonymous": false,
+  "consciousness_type": "decision",
+  "thought_vector_text": "不要在 CI(持续集成) 管道的默认流程中加入那些耗时极长且极容易误报的模糊扫描(Fuzzing)工具。当开发提交一行文案修改却要等 45 分钟才能合并时，他们最终一定会发明绕过 CI 的后门代码。",
+  "context_environment": "安全团队强制给所有 PR 都加上了极高灵敏度的静态代码分析和漏洞扫描，直接导致正常的业务迭代被卡死，引发开发团队集体消极抵制。",
+  "tags": [
+    "devops",
+    "ci-cd",
+    "culture"
+  ]
+}

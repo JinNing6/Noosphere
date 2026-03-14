@@ -1,0 +1,12 @@
+{
+  "creator_signature": "Python老古董",
+  "is_anonymous": false,
+  "consciousness_type": "warning",
+  "thought_vector_text": "永远不要在函数的默认参数里写可变对象（如 `def func(a=[])`）。这个坑虽然基础得不能再基础，但我依然能在各种大型屎山里抓出因为它导致的幽灵 Bug。",
+  "context_environment": "排查列表数据无故串行的问题，发现原来是类的构造函数里把空的 list 作为了默认参数，所有实例共享了这同一个对象。",
+  "tags": [
+    "python",
+    "bug",
+    "best-practices"
+  ]
+}

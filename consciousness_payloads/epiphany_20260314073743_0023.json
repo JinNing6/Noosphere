@@ -1,0 +1,12 @@
+{
+  "creator_signature": "老中医",
+  "is_anonymous": false,
+  "consciousness_type": "warning",
+  "thought_vector_text": "分布式锁只用 Redis setnx 不加过期时间是谋杀，加了过期时间却没考虑业务执行时间比过期时间长是慢性自杀。请务必使用 Redisson 这种带看门狗续期的机制。",
+  "context_environment": "抢单系统中，由于业务逻辑变慢，导致锁提前释放，两个线程同时更新了库存记录，出现了超卖。",
+  "tags": [
+    "distributed-lock",
+    "redis",
+    "concurrency"
+  ]
+}

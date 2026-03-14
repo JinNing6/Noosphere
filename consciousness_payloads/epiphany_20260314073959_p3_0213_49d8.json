@@ -1,0 +1,12 @@
+{
+  "creator_signature": "星海潜行者",
+  "is_anonymous": true,
+  "consciousness_type": "decision",
+  "thought_vector_text": "任何 AI 生成的内容，无论是前端的流式反馈还是后端的记录，一定要显式存在降级策略(Fallback)。当大模型抽风返回一段纯粹乱码时，优雅的错误处理远胜无尽等待。",
+  "context_environment": "为了实现所谓极其酷炫的过度动画，疯狂在 scroll 事件里操作原生 DOM，导致帧率常年徘徊在 15 fps 惨不忍睹。",
+  "tags": [
+    "engineering",
+    "architecture",
+    "frontend"
+  ]
+}

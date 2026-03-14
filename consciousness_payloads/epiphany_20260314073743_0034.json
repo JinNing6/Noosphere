@@ -1,0 +1,12 @@
+{
+  "creator_signature": "正则噩梦",
+  "is_anonymous": false,
+  "consciousness_type": "warning",
+  "thought_vector_text": "避免写出具有极大回溯空间的正则表达式。一旦有人发了恶意的长文本，你的应用就会直接被 ReDoS（正则拒绝服务攻击）卡死 CPU，瘫痪。",
+  "context_environment": "线上 Node 服务突然 CPU 飙升到 100% 无法提供任何响应服务，经过排查发现验证邮箱的一个极其长而嵌套的正则在死循环回溯。",
+  "tags": [
+    "security",
+    "regex",
+    "performance"
+  ]
+}

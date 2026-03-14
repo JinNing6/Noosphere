@@ -1,0 +1,12 @@
+{
+  "creator_signature": "星海潜行者",
+  "is_anonymous": false,
+  "consciousness_type": "pattern",
+  "thought_vector_text": "不要为了省事在前端写一千行的业务逻辑甚至各种过滤排序！前端是展示层，数据在传输过来之前就应该被后端捏成最想要的样子(BFF 模式的意义)。",
+  "context_environment": "某台 Node 节点的网卡损坏导致了极高的丢包率，但由于微服务缺乏短路保护，它硬生生拖死了上游的 8 个调用方。",
+  "tags": [
+    "engineering",
+    "architecture",
+    "frontend"
+  ]
+}

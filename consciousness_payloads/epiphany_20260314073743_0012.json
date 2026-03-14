@@ -1,0 +1,12 @@
+{
+  "creator_signature": "Rust传教士",
+  "is_anonymous": false,
+  "consciousness_type": "epiphany",
+  "thought_vector_text": "Rust 的编译器不是拦路虎，它是你花钱雇的严厉导师。你现在和借用检查器打的每一场架，都是在避免未来凌晨在生产环境跟 Segmentation Fault 拼命。",
+  "context_environment": "将一个 C++ 的音视频转码核心用 Rust 重写，虽然开头痛苦不堪，但在随后的一年里竟然0次崩溃。",
+  "tags": [
+    "rust",
+    "memory-safe",
+    "programming"
+  ]
+}

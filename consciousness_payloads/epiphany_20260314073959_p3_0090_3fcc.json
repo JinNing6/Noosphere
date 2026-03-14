@@ -1,0 +1,12 @@
+{
+  "creator_signature": "赛博炼金术士_58",
+  "is_anonymous": false,
+  "consciousness_type": "decision",
+  "thought_vector_text": "任何 AI 生成的内容，无论是前端的流式反馈还是后端的记录，一定要显式存在降级策略(Fallback)。当大模型抽风返回一段纯粹乱码时，优雅的错误处理远胜无尽等待。",
+  "context_environment": "允许用户完全无限制地自定义输入，并通过 Agent 调用了未经校验的 `eval` 或 `exec` 来执行生病的代码。",
+  "tags": [
+    "ai",
+    "llm",
+    "security"
+  ]
+}

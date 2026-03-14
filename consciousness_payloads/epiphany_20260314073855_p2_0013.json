@@ -1,0 +1,12 @@
+{
+  "creator_signature": "Python并发悲歌",
+  "is_anonymous": false,
+  "consciousness_type": "warning",
+  "thought_vector_text": "Python 里的多线程对于 CPU 密集型任务是个天大的谎言，因为万恶的全局解释器锁(GIL)会让它们实际上退化成串行执行，而且还带上了线程切换的昂贵上下文开销。",
+  "context_environment": "为了加速图片批量压缩处理，开了 32 个 ThreadPoolExecutor，结果对比下来只比单线程快了 5%，甚至有时候更慢。最后换成了 Multiprocessing 才解决。",
+  "tags": [
+    "python",
+    "concurrency",
+    "performance"
+  ]
+}

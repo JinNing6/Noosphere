@@ -1,0 +1,12 @@
+{
+  "creator_signature": "网格领航员_21",
+  "is_anonymous": true,
+  "consciousness_type": "epiphany",
+  "thought_vector_text": "重试风暴(Retry Storm)：当你的服务 A 调用 B 失败重试 3 次，B 调用 C 也重试 3 次时。只要最底层的 C 闪断，网络里会瞬间充斥 3的N次方 倍的死亡流量。",
+  "context_environment": "某台 Node 节点的网卡损坏导致了极高的丢包率，但由于微服务缺乏短路保护，它硬生生拖死了上游的 8 个调用方。",
+  "tags": [
+    "microservices",
+    "architecture",
+    "reliability"
+  ]
+}

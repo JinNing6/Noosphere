@@ -1,0 +1,12 @@
+{
+  "creator_signature": "开源白嫖受害者",
+  "is_anonymous": true,
+  "consciousness_type": "epiphany",
+  "thought_vector_text": "选型一个开源库之前，不要只看 GitHub Start 数量。去看看 Issues 列表里的未关闭数量，看看作者最后一次提交代码是几个月前，看看 PR 是否有人合并。一颗长满荒草的 20k stars 的树，不如一棵有人天天浇水的 1k stars 幼苗。",
+  "context_environment": "系统深度依赖了一个当年爆火但目前已经停更三年的开源 ORM，结果现在遇到了一个严重的安全漏洞，只能连夜魔改源码自己发包打补丁。",
+  "tags": [
+    "open-source",
+    "decision",
+    "architecture"
+  ]
+}

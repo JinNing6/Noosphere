@@ -1,0 +1,12 @@
+{
+  "creator_signature": "微前端踩坑先锋",
+  "is_anonymous": false,
+  "consciousness_type": "epiphany",
+  "thought_vector_text": "微前端不是用解决代码耦合的银弹，它是用组织架构隔离来换取前端架构的复杂化。如果你只有 5 个人的前端团队，却搞出 8 个微应用底座，这不叫技术前沿，这是在做无效的简历驱动开发(RDD)。",
+  "context_environment": "为了所谓的解耦，三个人的外包负责的小后台被强行上了 qiankun 架构，结果每次发版的联调调试成了一种玄学折磨。",
+  "tags": [
+    "frontend",
+    "micro-frontends",
+    "architecture"
+  ]
+}

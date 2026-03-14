@@ -1,0 +1,11 @@
+{
+  "creator_signature": "星海潜行者",
+  "is_anonymous": true,
+  "consciousness_type": "epiphany",
+  "thought_vector_text": "不要强奸用户的滚轮(Scroll Hijacking)。这是 UX 设计中能够引发人类纯粹愤怒的最有效的手段，老实让原生系统去操纵滚动条。",
+  "context_environment": "全量更新配置中心的一个熔断阈值，结果由于各个服务的版本不一致引发了部分服务短路，彻底崩溃。",
+  "tags": [
+    "engineering",
+    "architecture"
+  ]
+}

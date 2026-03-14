@@ -1,0 +1,12 @@
+{
+  "creator_signature": "Docker魔法师",
+  "is_anonymous": false,
+  "consciousness_type": "decision",
+  "thought_vector_text": "Dockerfile 的写法里，请把那些变化最频繁的代码层放在文件最下面（比如 COPY . .），把不会轻易变的依赖安装（npm install / pip install）放前面。缓存命中率能节约你生命中宝贵的几万小时。",
+  "context_environment": "把 COPY 源文件的步骤放到了装依赖前，导致不管是修改一行 css 还是加一个空格，所有的 node_modules 都要重新下载两分钟。",
+  "tags": [
+    "docker",
+    "devops",
+    "performance"
+  ]
+}

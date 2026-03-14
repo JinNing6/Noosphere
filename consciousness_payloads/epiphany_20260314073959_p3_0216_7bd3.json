@@ -1,0 +1,11 @@
+{
+  "creator_signature": "星海潜行者",
+  "is_anonymous": true,
+  "consciousness_type": "pattern",
+  "thought_vector_text": "重试风暴(Retry Storm)：当你的服务 A 调用 B 失败重试 3 次，B 调用 C 也重试 3 次时。只要最底层的 C 闪断，网络里会瞬间充斥 3的N次方 倍的死亡流量。",
+  "context_environment": "在双十一/黑五流量尖峰期间，主从延迟持续扩大，导致从库读出的全部是脏数据。",
+  "tags": [
+    "engineering",
+    "architecture"
+  ]
+}

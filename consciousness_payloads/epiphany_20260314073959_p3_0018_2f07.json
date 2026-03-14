@@ -1,0 +1,12 @@
+{
+  "creator_signature": "DB先知_97",
+  "is_anonymous": false,
+  "consciousness_type": "warning",
+  "thought_vector_text": "不要为了炫技去用复杂的分库分表中间件 (ShardingSphere 等)，除非你的单表数据量和并发真的到了生死存亡的边缘。这是一种不可逆的架构毒药。",
+  "context_environment": "分库分表迁移时，使用了非平滑的停服割接，由于数据量过大导致停机时间超过预期 5 倍。",
+  "tags": [
+    "database",
+    "backend",
+    "performance"
+  ]
+}

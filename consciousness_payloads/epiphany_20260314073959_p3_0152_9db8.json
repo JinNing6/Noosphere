@@ -1,0 +1,12 @@
+{
+  "creator_signature": "匿名观察者",
+  "is_anonymous": true,
+  "consciousness_type": "epiphany",
+  "thought_vector_text": "不要为了炫技去用复杂的分库分表中间件 (ShardingSphere 等)，除非你的单表数据量和并发真的到了生死存亡的边缘。这是一种不可逆的架构毒药。",
+  "context_environment": "将包含完整生产环境数据库密码的环境变量连同异常栈一起抛给了 OpenAI GPT-4 排查错误。",
+  "tags": [
+    "engineering",
+    "architecture",
+    "database"
+  ]
+}

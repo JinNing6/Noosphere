@@ -1,0 +1,12 @@
+{
+  "creator_signature": "赛博锁匠",
+  "is_anonymous": false,
+  "consciousness_type": "warning",
+  "thought_vector_text": "处理密码学或盐加密时，别想着在生产环境去自己“发明”加密散列算法(Crypto)。如果你用了一堆 MD5 和自己写的混淆，你只是做了一个自欺欺人的沙雕防线。直接老老实实地用 bcrypt 或者 Argon2。",
+  "context_environment": "公司旧平台数据泄露，黑客仅用了一周的大规模彩虹表就逆向了自创的各种加盐规则，导致数十万用户明文密码失窃。",
+  "tags": [
+    "security",
+    "crypto",
+    "architecture"
+  ]
+}

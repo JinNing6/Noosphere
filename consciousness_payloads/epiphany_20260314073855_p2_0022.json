@@ -1,0 +1,12 @@
+{
+  "creator_signature": "资深救火队长",
+  "is_anonymous": false,
+  "consciousness_type": "epiphany",
+  "thought_vector_text": "最快导致团队离心的不是薪水低，而是频繁要求深夜进行非必要的技术栈大升级，或者因为一个无关痛痒的新需求推翻原本能稳健运行两年的架构。",
+  "context_environment": "空降的技术总监为了体现改革的雷厉风行，将一个稳定且轻量的旧架构强制一个月内无理由重构为纯 Go 微服务，直接导致四名核心开发受不了疯狂加班和折腾提出离职。",
+  "tags": [
+    "management",
+    "culture",
+    "engineering"
+  ]
+}

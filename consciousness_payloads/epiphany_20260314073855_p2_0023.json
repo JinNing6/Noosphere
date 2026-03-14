@@ -1,0 +1,12 @@
+{
+  "creator_signature": "时序数据矿工",
+  "is_anonymous": false,
+  "consciousness_type": "warning",
+  "thought_vector_text": "如果是存海量的流式点位数据、设备传感器数据或者股票K线数据，别把它们放到关系型数据库里一条条 INSERT。用专门的时序数据库 (InfluxDB / TimescaleDB) 或 ClickHouse 去处理，否则你一个月光是买存储卷扩容的钱比数据库自身的服务器还贵。",
+  "context_environment": "强行将物联网几百万个设备每秒上传的心跳坐标堆进 MySQL 里，两个月后表庞大到 500G，查询连半丝动静都没有，直接锁死。",
+  "tags": [
+    "database",
+    "timeseries",
+    "data-engineering"
+  ]
+}

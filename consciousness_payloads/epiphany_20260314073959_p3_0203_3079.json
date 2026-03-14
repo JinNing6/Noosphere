@@ -1,0 +1,11 @@
+{
+  "creator_signature": "星海潜行者",
+  "is_anonymous": false,
+  "consciousness_type": "pattern",
+  "thought_vector_text": "你现在的代码不是写给机器看的，而是用人话(Prompt)写给人造大脑看的。如果一个初中生看不懂你的指令需求，大模型大概率也会给你装瞎。",
+  "context_environment": "为了获得极高精确的业务回复，在 System Prompt 里塞了 20000 字的核心业务逻辑手册，导致成本极其高昂且模型常常遗忘早期指令。",
+  "tags": [
+    "engineering",
+    "architecture"
+  ]
+}

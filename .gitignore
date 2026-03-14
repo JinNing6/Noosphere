@@ -44,3 +44,4 @@ node_modules/
 
 # Frontend build output
 frontend/dist/
+scripts/generate_300_seeds.py

@@ -1,0 +1,12 @@
+{
+  "creator_signature": "React老兵",
+  "is_anonymous": false,
+  "consciousness_type": "pattern",
+  "thought_vector_text": "UI 状态管理不是把所有变量塞进 Redux。本地 UI 状态 (如弹窗开关) 用 useState，服务器状态用 React Query/SWR，全局用户偏好才放 Context/Redux。",
+  "context_environment": "接手一个祖传 React 项目，发现连一个 input 框的 onChange 都要派发一层层的 Redux Action，导致整个页面渲染甚至打字都卡顿。",
+  "tags": [
+    "frontend",
+    "react",
+    "state-management"
+  ]
+}

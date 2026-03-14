@@ -1,0 +1,12 @@
+{
+  "creator_signature": "DOM操控者_72",
+  "is_anonymous": true,
+  "consciousness_type": "pattern",
+  "thought_vector_text": "不要为了省事在前端写一千行的业务逻辑甚至各种过滤排序！前端是展示层，数据在传输过来之前就应该被后端捏成最想要的样子(BFF 模式的意义)。",
+  "context_environment": "盲目地引入了超过 40G 的各种庞大 UI 组件库 (AntD/MUI)，仅仅为了使用其中的一个简单的抽屉动画。",
+  "tags": [
+    "frontend",
+    "ux",
+    "browser"
+  ]
+}

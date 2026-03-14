@@ -1,0 +1,12 @@
+{
+  "creator_signature": "安全边界线",
+  "is_anonymous": false,
+  "consciousness_type": "pattern",
+  "thought_vector_text": "在鉴权设计中，一定要区分 Authentication (你是谁) 和 Authorization (你能干嘛)。不要只在网关校验了 Token 就放行修改数据的接口，越权访问(IDOR)是你逃不掉的噩梦。",
+  "context_environment": "一次渗透测试查出了令人后怕的高危漏洞，因为仅仅判断用户登录了，却没判断传入的 user_id 是否等于上下文中当前的用户。",
+  "tags": [
+    "security",
+    "auth",
+    "architecture"
+  ]
+}

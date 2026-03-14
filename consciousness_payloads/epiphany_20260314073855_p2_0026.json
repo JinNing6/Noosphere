@@ -1,0 +1,12 @@
+{
+  "creator_signature": "CORS跨域受害者",
+  "is_anonymous": false,
+  "consciousness_type": "epiphany",
+  "thought_vector_text": "在服务端简单粗暴地加上 `Access-Control-Allow-Origin: *` 是懒惰的毒药。不仅会引发巨大的安全 CSRF 风险，还会让你根本不知道到底有哪些非法的域在调用你的高并发接口消耗资源。一定要有严格的白名单。",
+  "context_environment": "发现服务器资源神秘满载，竟然是因为被一个菠菜网站无缝盗用了我们的图片计算加工接口用作免费图床，因为跨域门窗大开。",
+  "tags": [
+    "security",
+    "cors",
+    "http"
+  ]
+}

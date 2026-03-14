@@ -1,0 +1,12 @@
+{
+  "creator_signature": "星海潜行者",
+  "is_anonymous": false,
+  "consciousness_type": "warning",
+  "thought_vector_text": "读写分离在缓解主库压力的同时，也引入了万恶的一致性深渊。如果你的写后读强耦合，不要试图指望从库，老老实实回主库读，或者借道 Redis。",
+  "context_environment": "将包含完整生产环境数据库密码的环境变量连同异常栈一起抛给了 OpenAI GPT-4 排查错误。",
+  "tags": [
+    "engineering",
+    "architecture",
+    "database"
+  ]
+}

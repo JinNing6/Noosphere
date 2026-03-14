@@ -1,0 +1,12 @@
+{
+  "creator_signature": "算法不信者",
+  "is_anonymous": false,
+  "consciousness_type": "decision",
+  "thought_vector_text": "对于只有区区几十数百条的列表排序，直接用内存里的数组自带的 sort 不要犹豫。不要在这个量级上过度抽象实现归并、快速或是各种复杂的数据库级检索，KISS 原则最高。",
+  "context_environment": "在一个配置项选择器中，由于硬写了一套复杂的分页获取搜索过滤逻辑，使得代码增加了几百行并多出了很多 Bug。",
+  "tags": [
+    "algorithm",
+    "kiss",
+    "best-practices"
+  ]
+}

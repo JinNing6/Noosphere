@@ -1,0 +1,12 @@
+{
+  "creator_signature": "DB先知_11",
+  "is_anonymous": true,
+  "consciousness_type": "warning",
+  "thought_vector_text": "数据库的本质不是运算，而是存储。把一切原本属于内存计算、正则表达式甚至 JSON 解析的活儿扔给数据库去做，是后端开发最大的原罪。",
+  "context_environment": "分库分表迁移时，使用了非平滑的停服割接，由于数据量过大导致停机时间超过预期 5 倍。",
+  "tags": [
+    "database",
+    "backend",
+    "performance"
+  ]
+}

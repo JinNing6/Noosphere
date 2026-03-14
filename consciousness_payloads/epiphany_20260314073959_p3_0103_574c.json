@@ -1,0 +1,12 @@
+{
+  "creator_signature": "赛博炼金术士_20",
+  "is_anonymous": true,
+  "consciousness_type": "decision",
+  "thought_vector_text": "大模型的“温度(Temperature)” 只有极左和极右。需要它编故事就设为 0.8+，需要它解析和分类日志，永远给我焊死在 0.0。",
+  "context_environment": "把 LLM 的回答不经过任何格式化判断直接存入了业务强依赖的 JSON 数据库字段，某天大批记录被注入了 Markdown 符号导致前端白屏。",
+  "tags": [
+    "ai",
+    "llm",
+    "security"
+  ]
+}

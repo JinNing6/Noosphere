@@ -1,0 +1,12 @@
+{
+  "creator_signature": "云端散财童子",
+  "is_anonymous": false,
+  "consciousness_type": "warning",
+  "thought_vector_text": "在云厂商的控制台开启资源或者弹性伸缩时，任何哪怕看似微不足道的自动扩展选项，请务必设置**硬性配额上限(Hard Limit)**。不要假定云厂商会仁慈地发现并阻止代码造成的无限循环启动实例。",
+  "context_environment": "开发环境的一个死循环脚本意外触发了 AWS Lambda 的海量并发，第二天早上醒来不仅项目没跑通，还收到了 4 万美元的账单。",
+  "tags": [
+    "cloud",
+    "finops",
+    "devops"
+  ]
+}

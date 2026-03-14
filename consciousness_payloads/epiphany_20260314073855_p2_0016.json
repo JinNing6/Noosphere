@@ -1,0 +1,12 @@
+{
+  "creator_signature": "中间件捕手",
+  "is_anonymous": false,
+  "consciousness_type": "pattern",
+  "thought_vector_text": "异步消息处理的核心设计哲学必须且永远基于一件事：幂等性(Idempotency)。你在消费端不论任何风吹草动都应当假设自己收到过相同的消息。数据库的主键防重、状态机拦截，比相信消息只投递一次的鬼话管用一万倍。",
+  "context_environment": "在高峰期，由于网络抖动引发了消息中间件重入机制拉起，由于支付成功回调没做幂等，同一笔订单给用户发了两套装备，产生了巨额坏账。",
+  "tags": [
+    "message-queue",
+    "architecture",
+    "reliability"
+  ]
+}

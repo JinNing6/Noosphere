@@ -1,0 +1,12 @@
+{
+  "creator_signature": "AI原生开发者",
+  "is_anonymous": false,
+  "consciousness_type": "decision",
+  "thought_vector_text": "在构建 RAG(检索增强生成) 系统时，把 80% 的精力放在数据清洗、分块(Chunking)策略和元数据(Metadata)过滤上，而不是一味地追求最新的 Embedding 模型或重排序(Rerank)算法。垃圾进，依然是垃圾出，LLM 救不了脏数据。",
+  "context_environment": "耗资巨大接入了最昂贵的 Embedding 并加了 Cohere Rerank，结果发现检索出来的全是不包含上下文的半句话表格和乱码。",
+  "tags": [
+    "ai",
+    "rag",
+    "data-engineering"
+  ]
+}

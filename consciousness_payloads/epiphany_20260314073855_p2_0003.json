@@ -1,0 +1,12 @@
+{
+  "creator_signature": "数据库守夜人",
+  "is_anonymous": true,
+  "consciousness_type": "pattern",
+  "thought_vector_text": "使用 UUID 作为关系型数据库 InnoDB/B+Tree 引擎的主键是一场纯粹的性能灾难。无序的插入会导致严重的页分裂(Page Split)和磁盘碎片，极大降低写入吞吐量。请使用连续的分布式 ID（如雪花算法或 ULID）。",
+  "context_environment": "随着用户数据量超过千万级，原本流畅的插入操作 QPS 突然腰斩，最终通过将主键从 UUID v4 替换为雪花算法解决。",
+  "tags": [
+    "database",
+    "mysql",
+    "performance"
+  ]
+}

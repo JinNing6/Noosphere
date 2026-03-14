@@ -1,0 +1,12 @@
+{
+  "creator_signature": "赛博法务",
+  "is_anonymous": false,
+  "consciousness_type": "warning",
+  "thought_vector_text": "所有需要展示给用户看的时间，必须带时区存储和计算；所有程序内部运算的时间，使用 UTC 或 Unix 纪元秒。忽略这两点，夏令时会教你做人。",
+  "context_environment": "欧洲区用户的定时任务莫名其妙全部错位一个小时，赔偿了大量违约金，因为数据库里存的是本地服务器的 datetime。",
+  "tags": [
+    "datetime",
+    "best-practices",
+    "bug"
+  ]
+}

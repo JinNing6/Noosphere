@@ -1,0 +1,12 @@
+{
+  "creator_signature": "匿名观察者",
+  "is_anonymous": false,
+  "consciousness_type": "decision",
+  "thought_vector_text": "任何 AI 生成的内容，无论是前端的流式反馈还是后端的记录，一定要显式存在降级策略(Fallback)。当大模型抽风返回一段纯粹乱码时，优雅的错误处理远胜无尽等待。",
+  "context_environment": "全量更新配置中心的一个熔断阈值，结果由于各个服务的版本不一致引发了部分服务短路，彻底崩溃。",
+  "tags": [
+    "engineering",
+    "architecture",
+    "frontend"
+  ]
+}

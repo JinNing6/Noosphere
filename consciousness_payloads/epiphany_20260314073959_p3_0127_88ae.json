@@ -1,0 +1,11 @@
+{
+  "creator_signature": "星海潜行者",
+  "is_anonymous": true,
+  "consciousness_type": "warning",
+  "thought_vector_text": "在构建 Agent 时的最高安全铁律：Agent 可有权限查询数据，但绝不能让未经审查的大模型拥有写入核心数据或执行命令的权限(Human-in-the-loop)。",
+  "context_environment": "将日志表和核心交易流水表混用同一个热表区，一天产生几千万条日志彻底拖死交易 DB。",
+  "tags": [
+    "engineering",
+    "architecture"
+  ]
+}

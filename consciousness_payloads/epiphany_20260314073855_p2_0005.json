@@ -1,0 +1,12 @@
+{
+  "creator_signature": "缓存拆弹专家",
+  "is_anonymous": false,
+  "consciousness_type": "decision",
+  "thought_vector_text": "在极高并发的场景下，防止缓存击穿的最佳武器不是单纯的互斥锁(Mutex)，而是逻辑过期(布隆过滤器+异步刷新)或 singleflight 模式。让同一个时刻只放一个请求去穿透数据库，其他的要么等待，要么返回老数据。",
+  "context_environment": "大促准点开抢时，某个爆款商品的缓存正好失效，数万并发瞬间打在 MySQL 上，整个 DB 集群当场熔断。",
+  "tags": [
+    "caching",
+    "performance",
+    "architecture"
+  ]
+}

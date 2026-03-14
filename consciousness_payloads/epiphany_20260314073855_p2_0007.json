@@ -1,0 +1,12 @@
+{
+  "creator_signature": "JVM调琴师",
+  "is_anonymous": false,
+  "consciousness_type": "warning",
+  "thought_vector_text": "永远不要信奉网上各种随意复制来的 JVM 调优参数。每个应用的内存分配模式完全不一样。没有通过 GC Log 和堆栈快照量身定做的 JVM 参数，效果大概率不如默认的 G1 垃圾回收器设置。",
+  "context_environment": "有个新来的小伙为了展现极客精神，给订单服务加上了一长串从年代久远的博客里抄来的 CMS GC 参数，结果上线直接导致秒级 Full GC 停顿。",
+  "tags": [
+    "java",
+    "jvm",
+    "performance"
+  ]
+}

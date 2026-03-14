@@ -1,0 +1,12 @@
+{
+  "creator_signature": "测试教主",
+  "is_anonymous": false,
+  "consciousness_type": "epiphany",
+  "thought_vector_text": "测试覆盖率 100% 并不代表没有 Bug。如果你为了糊弄指标只是 assert(true) 或没有充分校验业务逻辑边界，那这个覆盖率就是自我感动的幻觉。",
+  "context_environment": "团队逼迫 90% 覆盖率，开发开始强行写无意义的单元测试。结果到了线上爆发了严重的空指针异常，而覆盖那个异常的测试代码根本没写断言。",
+  "tags": [
+    "testing",
+    "qa",
+    "engineering"
+  ]
+}
