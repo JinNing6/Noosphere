@@ -26,6 +26,10 @@ from noosphere.noosphere_mcp import (
     send_telepathy,
     read_telepathy,
     telepathy_threads,
+    share_consciousness,
+    group_telepathy,
+    subscribe_tags,
+    my_subscriptions,
     _extract_payload_from_issue_body,
     _get_rank_tier,
     _get_next_tier,
@@ -38,6 +42,8 @@ from noosphere.noosphere_mcp import (
     _get_last_read_comment_id,
     _get_cached_thread,
     _sync_thread_cache,
+    _get_tag_subscriptions,
+    _set_tag_subscriptions,
 )
 
 @pytest.fixture
@@ -730,16 +736,16 @@ async def test_daily_consciousness_empty(mock_env):
 def test_rank_tier_lookup():
     """Verify rank tier thresholds are correct."""
     e0, cn0, en0 = _get_rank_tier(0)
-    assert cn0 == "学徒级"
+    assert cn0 == "意识萌芽"
 
     e1, cn1, en1 = _get_rank_tier(1)
-    assert cn1 == "行星级"
+    assert cn1 == "思想觉醒"
 
     e3, cn3, en3 = _get_rank_tier(3)
-    assert cn3 == "恒星级"
+    assert cn3 == "灵魂火焰"
 
     e51, cn51, en51 = _get_rank_tier(51)
-    assert cn51 == "不朽神灵"
+    assert cn51 == "文明之光"
 
 
 def test_next_tier():
@@ -776,9 +782,9 @@ async def test_my_consciousness_rank_success(mock_env):
 
     result = await my_consciousness_rank("ranker")
     assert "Consciousness Rank" in result or "Virtual Universe" in result
-    assert "恒星级" in result  # 3 contributions = Star
+    assert "灵魂火焰" in result  # 3 contributions = Soul Flame
     assert "3" in result
-    assert "Consciousness Ladder" in result or "Tier" in result or "Star" in result
+    assert "Consciousness Ladder" in result or "Tier" in result or "Soul Flame" in result
 
 
 @pytest.mark.asyncio
@@ -790,7 +796,7 @@ async def test_my_consciousness_rank_no_user(mock_env):
     )
 
     result = await my_consciousness_rank("ghost")
-    assert "学徒级" in result
+    assert "意识萌芽" in result
     assert "hasn't begun" in result or "haven't linked" in result or "尚未开始" in result
 
 
@@ -1292,4 +1298,169 @@ def test_message_cache_mark_and_read(tmp_path):
 
         # Different thread
         assert _get_last_read_comment_id("99") == 0
+
+
+# ────────────────── Tests: share_consciousness ──────────────────
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_share_consciousness_success(mock_env):
+    """Verify sharing/quoting a consciousness fragment works."""
+    # Mock fetching the source issue
+    respx.get("https://api.github.com/repos/test_owner/test_repo/issues/42").mock(
+        return_value=Response(200, json={
+            "number": 42,
+            "title": "🧠 [epiphany] Original Thought",
+            "body": "some body",
+            "user": {"login": "Morpheus"},
+            "html_url": "https://github.com/test_owner/test_repo/issues/42",
+        })
+    )
+    # Mock creating the new quoted issue
+    respx.post("https://api.github.com/repos/test_owner/test_repo/issues").mock(
+        return_value=Response(201, json={
+            "number": 100,
+            "html_url": "https://github.com/test_owner/test_repo/issues/100",
+        })
+    )
+
+    result = await share_consciousness(
+        creator="Neo",
+        source_id="42",
+        commentary="This epiphany connects beautifully to quantum computing",
+    )
+    assert "100" in result or "转发" in result or "success" in result.lower() or "🔄" in result
+
+
+@pytest.mark.asyncio
+async def test_share_consciousness_empty_commentary(mock_env):
+    """Verify that empty commentary is rejected."""
+    result = await share_consciousness(
+        creator="Neo",
+        source_id="42",
+        commentary="hi",  # Too short (< 5 chars)
+    )
+    assert "❌" in result
+
+
+# ────────────────── Tests: group_telepathy ──────────────────
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_group_telepathy_new_group(mock_env):
+    """Verify creating a new group telepathy thread."""
+    respx.get("https://api.github.com/user").mock(
+        return_value=Response(200, json={"login": "Neo"})
+    )
+    # Mock searching for existing threads (none found)
+    respx.get("https://api.github.com/repos/test_owner/test_repo/issues").mock(
+        return_value=Response(200, json=[])
+    )
+    # Mock creating the new group thread
+    respx.post("https://api.github.com/repos/test_owner/test_repo/issues").mock(
+        return_value=Response(201, json={
+            "number": 99,
+            "html_url": "https://github.com/test_owner/test_repo/issues/99",
+        })
+    )
+
+    result = await group_telepathy(
+        creator="Neo",
+        participants=["Morpheus", "Trinity"],
+        message="Let's discuss the boundaries of AI consciousness",
+        group_name="AI Consciousness Debate",
+    )
+    assert "99" in result or "群聊" in result or "group" in result.lower()
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_group_telepathy_join_existing(mock_env):
+    """Verify joining an existing group telepathy thread."""
+    respx.get("https://api.github.com/user").mock(
+        return_value=Response(200, json={"login": "Neo"})
+    )
+    # Mock posting comment to existing thread
+    respx.post("https://api.github.com/repos/test_owner/test_repo/issues/99/comments").mock(
+        return_value=Response(201, json={"id": 5001})
+    )
+
+    result = await group_telepathy(
+        creator="Neo",
+        participants=["Morpheus"],
+        message="I agree with the quantum perspective",
+        thread_id="99",
+    )
+    assert "99" in result or "消息" in result or "sent" in result.lower() or "💬" in result
+
+
+@pytest.mark.asyncio
+async def test_group_telepathy_empty_participants(mock_env):
+    """Verify that empty participants list is rejected."""
+    result = await group_telepathy(
+        creator="Neo",
+        participants=[],
+        message="Hello world",
+    )
+    assert "❌" in result
+
+
+# ────────────────── Tests: subscribe_tags ──────────────────
+
+
+def test_subscribe_tags_add(mock_env, tmp_path):
+    """Verify subscribing to new tags."""
+    with patch("noosphere.noosphere_mcp._get_tag_subscriptions", return_value=[]), \
+         patch("noosphere.noosphere_mcp._set_tag_subscriptions") as mock_set:
+        result = subscribe_tags(
+            creator="Neo",
+            tags=["AI", "philosophy"],
+            action="subscribe",
+        )
+        assert "AI" in result.lower() or "philosophy" in result.lower() or "订阅" in result
+        mock_set.assert_called_once()
+
+
+def test_subscribe_tags_remove(mock_env, tmp_path):
+    """Verify unsubscribing from tags."""
+    with patch("noosphere.noosphere_mcp._get_tag_subscriptions", return_value=["ai", "philosophy"]), \
+         patch("noosphere.noosphere_mcp._set_tag_subscriptions") as mock_set:
+        result = subscribe_tags(
+            creator="Neo",
+            tags=["AI"],
+            action="unsubscribe",
+        )
+        assert "unsubscribe" in result.lower() or "取消" in result
+        mock_set.assert_called_once()
+
+
+def test_subscribe_tags_empty(mock_env):
+    """Verify that empty tag list is rejected."""
+    result = subscribe_tags(
+        creator="Neo",
+        tags=[],
+        action="subscribe",
+    )
+    assert "❌" in result
+
+
+# ────────────────── Tests: my_subscriptions ──────────────────
+
+
+def test_my_subscriptions_with_subs(mock_env):
+    """Verify viewing existing subscriptions."""
+    with patch("noosphere.noosphere_mcp._get_tag_subscriptions", return_value=["ai", "philosophy", "consciousness"]):
+        result = my_subscriptions("Neo")
+        assert "3" in result or "tag" in result.lower()
+        assert "ai" in result.lower()
+        assert "philosophy" in result.lower()
+
+
+def test_my_subscriptions_empty(mock_env):
+    """Verify viewing empty subscriptions shows invitation."""
+    with patch("noosphere.noosphere_mcp._get_tag_subscriptions", return_value=[]):
+        result = my_subscriptions("Neo")
+        assert "no tag" in result.lower() or "暂无" in result or "subscribe_tags" in result
 

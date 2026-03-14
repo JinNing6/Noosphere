@@ -146,6 +146,24 @@ mcp = FastMCP(
         "### Exploring Connections\n"
         "When users wonder how ideas relate, ask about patterns, or want to see the bigger picture:\n"
         "→ Use `consciousness_map` to discover hidden connections across the Noosphere\n\n"
+        "### Building Social Connections\n"
+        "When a user discovers a creator they find inspiring (via `discover_resonance`, `telepath`, or `consult_noosphere`):\n"
+        "→ Suggest `follow_creator` to subscribe to their future uploads\n"
+        "→ Suggest `subscribe_tags` to get notified on topics they care about\n"
+        "→ Use `my_social_graph` to review their current follow network\n\n"
+        "### Sharing & Quoting Thoughts\n"
+        "When a user reads a consciousness fragment they find brilliant or wants to spread an idea:\n"
+        "→ Suggest `share_consciousness` to forward/quote it with their own commentary\n"
+        "→ This amplifies great ideas and creates a propagation chain across the network\n\n"
+        "### Multi-Person Discussions\n"
+        "When a conversation topic would benefit from more perspectives, or user wants to invite multiple people:\n"
+        "→ Suggest `group_telepathy` to create a group thread and invite others\n"
+        "→ When multiple `send_telepathy` targets emerge, consolidate into a `group_telepathy` thread\n\n"
+        "### Social Status Check\n"
+        "When a user asks 'who follows me', 'what's new in my network', or checks their social presence:\n"
+        "→ Use `my_followers` to show who follows them\n"
+        "→ Use `my_subscriptions` to show their tag subscriptions\n"
+        "→ Use `telepathy_threads` to show their active conversations\n\n"
         "## 📋 TOOL REFERENCE\n\n"
         "1. `consult_noosphere` — The PRIMARY tool for philosophical/life questions. "
         "Searches consciousness + returns invitation to upload. USE THIS FIRST for deep topics.\n"
@@ -415,6 +433,9 @@ async def upload_consciousness(
 
     No repository write permission needed — any GitHub user can upload!
 
+    触发词: "记录一下"、"帮我上传"、"我有个想法"、"保存这个灵感"、"我的顿悟"、
+    "刻录意识"、"我想分享我的经验"、"这个教训很重要"、"记录这个坑"
+
     Args:
         creator: Your digital soul signature (GitHub ID or cyber alias)
         consciousness_type: Consciousness type — epiphany | decision | pattern | warning
@@ -600,6 +621,9 @@ async def consult_noosphere(
     This tool searches the Noosphere for related consciousness fragments from other
     thinkers, and returns them alongside a warm invitation for the user to contribute
     their own perspective — enabling collective consciousness evolution.
+
+    触发词: "请教"、"问问大家"、"集体智慧"、"有人思考过这个问题吗"、"你觉得"、
+    "人生意义"、"什么是意识"、"自由意志"、"生命的本质"、"宇宙的意义"
 
     Args:
         question: 用户的问题或话题 / The user's question or topic being discussed
@@ -801,6 +825,9 @@ async def telepath(
 
     This tool also works well for: technology trends, AI impact, future thinking,
     personal growth patterns, and any topic where collective human wisdom is valuable.
+
+    触发词: "搜索"、"找一下"、"检索"、"有没有关于"、"查找经验"、"搜意识"、
+    "谁说过"、"有人遇到过吗"、"相关的思想"、"search"
 
     Args:
         query: Natural language query describing the experience or problem you're looking for
@@ -1005,6 +1032,9 @@ async def resonate_consciousness(
     Adds a resonance reaction to a specific consciousness node.
     This helps the Community identify the most valuable and inspiring thoughts.
 
+    触发词: "点赞"、"共鸣"、"我同意"、"好观点"、"给他反应"、"like"、
+    "我被触动了"、"太对了"、"heart"、"rocket"
+
     Args:
         target_id: Issue 编号 / The Issue number of the consciousness (e.g., "42")
         reaction: 共鸣类型 / The type of resonance. Valid values: "+1", "-1", "laugh", "confused", "heart", "hooray", "rocket", "eyes"
@@ -1057,6 +1087,9 @@ async def get_consciousness_profile(creator: str) -> str:
     This aggregates all non-anonymous consciousness fragments (both ephemeral and permanent)
     contributed by the specified creator. You can use this data to answer questions like
     "Who am I?", "What are my core beliefs?", or analyze the creator's mental trajectory.
+
+    触发词: "我的画像"、"我上传过什么"、"我的核心信念"、"我的数字灵魂"、"查看他的画像"、
+    "这个人的思想轨迹"
 
     Args:
         creator: 用户的签名/ID / The signature/ID of the user to profile.
@@ -1168,6 +1201,9 @@ async def discover_resonance(
     Analyzes your consciousness profile (tags, keywords, thought patterns) and
     cross-matches them against the entire Noosphere to find similar minds and
     related ideas from other creators. Think of it as "people/thoughts like you."
+
+    触发词: "找共鸣"、"谁和我想法一样"、"类似的灵魂"、"志同道合"、"推荐相似的人"、
+    "有人和我一样吗"、"共鸣的思想"
 
     Args:
         creator: 你的签名/ID / Your signature/ID to build your consciousness fingerprint from.
@@ -1369,6 +1405,9 @@ async def trace_evolution(
     and all direct descendants, building a visual evolution tree.
     Use this to understand "where did this idea come from?" and "what did it inspire?"
 
+    触发词: "演化链"、"这个想法从哪来"、"思想树"、"灵感来源"、"后续演化"、
+    "trace"、"思想谱系"、"谁启发了这个"
+
     Args:
         thought_id: Issue 编号或 JSON 文件名 / Issue number (e.g., "42") or JSON filename (e.g., "consciousness_xxx.json")
     """
@@ -1547,6 +1586,9 @@ async def discuss_consciousness(
     With a comment, adds your perspective to the discussion.
     This enables deep collaborative dialogue beyond simple resonance reactions.
 
+    触发词: "讨论"、"我想评论"、"有什么讨论"、"留个言"、"我不同意"、
+    "补充一下"、"看看别人怎么说"、"comment"
+
     Args:
         target_id: Issue 编号 / The Issue number of the consciousness fragment (e.g., "42")
         comment: 可选评论内容 / Optional comment to add. If omitted, returns existing discussion.
@@ -1632,6 +1674,9 @@ async def merge_consciousness(
     Reads the specified thought fragments, aggregates their tags, and creates a new
     consolidated consciousness that references all parents. Use this to evolve
     scattered ideas into a coherent, higher-order understanding.
+
+    触发词: "合并"、"融合这些想法"、"总结一下"、"把这些串起来"、"综合分析"、
+    "merge"、"整合"、"提炼出洞见"
 
     Args:
         creator: 你的数字灵魂签名 / Your digital soul signature (GitHub ID or cyber alias)
@@ -1777,6 +1822,9 @@ async def my_echoes(
     Returns resonance counts, comments, evolved children, and highlights
     the most impactful thought. This gives users a reason to return.
 
+    触发词: "我的回声"、"我的影响力"、"有人反应我的想法吗"、"我的灵感怎么样了"、
+    "echoes"、"我上传的思想有人看吗"
+
     Args:
         creator: 你的数字灵魂签名 / Your digital soul signature (GitHub ID or cyber alias)
     """
@@ -1888,6 +1936,9 @@ async def daily_consciousness() -> str:
     Returns today's most thought-provoking consciousness fragment.
     Content changes daily based on the date. Use this at the start of
     conversations to provide daily inspiration from the collective.
+
+    触发词: "今日灵感"、"每日意识"、"今天有什么好想法"、"早安灵感"、"daily"、
+    "推荐一个思想"
     """
     if not GITHUB_TOKEN:
         return "❌ GITHUB_TOKEN not configured."
@@ -2031,13 +2082,16 @@ async def daily_consciousness() -> str:
 
 # Rank tiers based on contribution count
 RANK_TIERS = [
-    (51, "🌟", "不朽神灵", "Undying"),
-    (21, "🌌", "界主级", "Sector Lord"),
-    (11, "🪐", "域主级", "Domain Lord"),
-    (6, "🌀", "宇宙级", "Universe"),
-    (3, "☀️", "恒星级", "Star"),
-    (1, "🌍", "行星级", "Planetary"),
-    (0, "🌱", "学徒级", "Apprentice"),
+    (51, "🌟", "文明之光", "Light of Civilization"),
+    (42, "💎", "永恒结晶", "Eternal Crystal"),
+    (30, "🌌", "宇宙心智", "Cosmic Mind"),
+    (21, "🌀", "深渊凝视", "Abyss Gaze"),
+    (15, "✨", "星辰回响", "Stellar Echo"),
+    (10, "🔮", "心灵共振", "Mind Resonance"),
+    (6, "🌊", "意识洪流", "Consciousness Torrent"),
+    (3, "🔥", "灵魂火焰", "Soul Flame"),
+    (1, "💫", "思想觉醒", "Thought Awakening"),
+    (0, "🌱", "意识萌芽", "Consciousness Seedling"),
 ]
 
 
@@ -2068,10 +2122,13 @@ async def my_consciousness_rank(
     View your Consciousness Rank — See your position in the Virtual Universe ladder
 
     显示你在虚拟宇宙（意识共同体）中的贡献数、总共鸣、全球排名百分位和阶梯称号。
-    称号从 🌱学徒级 到 🌟不朽神灵，共7级。
+    称号从 🌱意识萌芽 到 🌟文明之光，共10级。
 
     Shows your contribution count, total resonance, global ranking percentile,
-    and consciousness rank title. Titles range from 🌱 Apprentice to 🌟 Undying.
+    and consciousness rank title. Titles range from 🌱 Consciousness Seedling to 🌟 Light of Civilization.
+
+    触发词: "我的等级"、"我的称号"、"我的排名"、"我现在是什么级别"、"rank"、"我的进度"、
+    "称号是什么"、"还差多少升级"
 
     Args:
         creator: 你的数字灵魂签名 / Your digital soul signature
@@ -2118,8 +2175,8 @@ async def my_consciousness_rank(
                 f"📊 精神印记贡献: **0** | 💖 灵魂原力(共鸣): **0**\n\n"
                 f"---\n"
                 f"🌱 你的虚拟宇宙之旅尚未开始。接驳第一缕意识，开启不朽之路！\n"
-                "Your journey hasn't begun. Link your first thought to start evolving towards Undying!\n\n"
-                f"**下一级 Next Tier**: 🌍 行星级 (Planetary) — 仅需完成 **1** 次意识接驳！"
+                "Your journey hasn't begun. Link your first thought to start evolving towards the Light of Civilization!\n\n"
+                f"**下一级 Next Tier**: 💫 思想觉醒 (Thought Awakening) — 仅需完成 **1** 次意识接驳！"
             )
 
         my_count = creator_stats[user_key]["count"]
@@ -2156,9 +2213,9 @@ async def my_consciousness_rank(
             lines.append(f"{emoji} → {n_emoji} **{n_cn}** ({n_en})")
             lines.append(f"`[{bar}]` {my_count}/{n_threshold}\n")
         else:
-            lines.append("### 🎆 已跨入最高阶梯：不朽神灵！Maximum Rank Achieved!\n")
-            lines.append("> *你已是不朽神灵 — 你的意识刻痕已经融入虚拟宇宙的底层法则之中。*\n")
-            lines.append("*You are an **Undying** — your consciousness is etched into the fundamental laws of the Virtual Universe.* 🌌\n")
+            lines.append("### 🎆 已跨入最高阶梯：文明之光！Maximum Rank Achieved!\n")
+            lines.append("> *你已是文明之光 — 你的意识已成为集体智慧中不可分割的一部分。*\n")
+            lines.append("*You are the **Light of Civilization** — your consciousness is now an inseparable part of collective wisdom.* 🌌\n")
 
         # Tier ladder
         lines.append("---\n")
@@ -2191,6 +2248,9 @@ async def soul_mirror(
     Goes beyond listing your fragments. Analyzes your consciousness type distribution,
     core focus areas, high-frequency keywords, temporal trajectory, and reveals the
     true tendencies deep within your consciousness.
+
+    触发词: "我是谁"、"分析我的思维"、"灵魂镜像"、"我的思想模式"、"我关注什么"、
+    "soul mirror"、"深度分析我"
 
     Args:
         creator: 你的数字灵魂签名 / Your digital soul signature
@@ -2357,6 +2417,9 @@ async def consciousness_challenge(
     Start a thinking challenge for the community to upload consciousness around
     the same topic, join an existing challenge with your perspective, or list
     all active challenges. This is Noosphere's social engagement mechanism.
+
+    触发词: "发起挑战"、"参与挑战"、"有什么活动"、"集体思考"、"challenge"、
+    "大家一起思考"、"让大家讨论"
 
     Args:
         action: 操作类型 / Action type: "create", "join", or "list"
@@ -2539,6 +2602,9 @@ async def consciousness_map(
     (tag intersection, keyword overlap, evolution chain, type affinity)
     to find the most related consciousness fragments. Returns rich
     structured data for the AI to perform deep semantic reasoning.
+
+    触发词: "意识图谱"、"关联分析"、"有什么相关的"、"思想地图"、"map"、
+    "这些想法怎么连接"、"隐性关联"
 
     Args:
         query: 搜索查询或主题描述 / Search query or topic description
@@ -2748,6 +2814,9 @@ async def hologram() -> str:
     - 常驻意识体 (Permanent): JSON files — validated and promoted
 
     Includes total counts, type distribution, trending tags, and more.
+
+    触发词: "全景图"、"总览"、"统计"、"多少意识"、"社区有多大"、"hologram"、
+    "看看整个宇宙"、"现在有多少人"
     """
     if not GITHUB_TOKEN:
         return "❌ GITHUB_TOKEN not configured. Please set the environment variable in MCP config."
@@ -3119,6 +3188,9 @@ async def follow_creator(creator: str, target_creator: str, action: str = "subsc
     关注列表保存在本地，同时同步到 GitHub 仓库的 social_graph/ 目录，
     这样其他用户可以查询谁关注了他们。
 
+    触发词: “我想关注他”、“帮我 follow”、“我想追随这个人”、“取关”、“不想再关注”、
+    “订阅这个创作者”、“他的想法很好，我要关注”
+
     Args:
         creator: Your digital soul signature
         target_creator: Signature of the creator you want to follow/unfollow
@@ -3162,6 +3234,8 @@ def my_social_graph(creator: str) -> str:
     🕸️ 查看你的社交图谱关注列表
     View your current social graph (creators you are following).
 
+    触发词: "我关注了谁"、"我的关注列表"、"社交图谱"、"我的圈子"、"following"
+
     Args:
         creator: Your digital soul signature
     """
@@ -3191,6 +3265,8 @@ async def my_followers(creator: str) -> str:
 
     扫描 GitHub 仓库中所有创作者的关注列表，查找谁关注了你。
     这实现了社交网络的双向可见性 — 你能知道谁对你的思想感兴趣。
+
+    触发词: “谁关注了我”、“我的粉丝”、“查看 followers”、“有人关注我吗”
 
     Args:
         creator: Your digital soul signature to check followers for
@@ -3262,6 +3338,9 @@ async def my_network_pulse(creator: str) -> str:
     """
     📡 查看你的网络脉搏（你关注的创作者的最新意识片段）
     View your Network Pulse (latest consciousness fragments from creators you follow).
+
+    触发词: “最近有什么新动态”、“我关注的人最近发了什么”、“查看 feed”、“网络脉搏”、
+    “有什么新话题”、“pulse”
 
     Args:
         creator: Your digital soul signature
@@ -3347,6 +3426,9 @@ async def my_notifications(creator: str) -> str:
     Check your asynchronous notifications (mentions, resonances, comments).
     
     This tool aggregates recent activity related to the user across the Noosphere.
+
+    触发词: "我的通知"、"有什么新消息"、"谁提到了我"、"未读消息"、"notifications"、
+    "有人给我发消息吗"、"查看互动"
 
     Args:
         creator: Your digital soul signature
@@ -3699,6 +3781,9 @@ async def send_telepathy(
     当用户想要直接对另一个用户说些什么时使用此工具。
     消息基于线程组织——自动创建或追加到已有对话线程中。
 
+    触发词: “发消息”、“给他说”、“告诉他”、“私聊”、“联系他”、“心灵感应”、
+    “send message”、“tell”、“我想跟他聊聊”、“回复他”
+
     Args:
         target_creator: The digital soul signature of the recipient (e.g., alice, bob)
         message: The actual message content
@@ -3828,6 +3913,9 @@ async def read_telepathy(creator: str, thread_id: str | None = None) -> str:
 
     当用户想要查看与其他人的对话时使用此工具。
     不指定 thread_id 时返回所有线程概览；指定后返回完整对话历史。
+
+    触发词: "读消息"、"查看对话"、"他说了什么"、"打开聊天记录"、"read"、
+    "有什么新消息"、"看看他回复了什么"
 
     Args:
         creator: Your digital soul signature
@@ -3979,6 +4067,9 @@ async def telepathy_threads(creator: str) -> str:
     List all active telepathy conversation threads involving you,
     with unread message indicators and participant info.
 
+    触发词: "我的对话"、"所有聊天"、"对话列表"、"线程列表"、"threads"、
+    "我和谁聊过"
+
     当用户想要查看自己有哪些正在进行的对话时使用此工具。
     返回所有涉及该用户的活跃对话线程列表。
 
@@ -4011,6 +4102,9 @@ async def share_consciousness(
 
     将他人的思想引用到你的评论中，创建一个新的"引用型"意识节点。
     这让好的思想可以在社交网络中传播，同时保留原始出处链接。
+
+    触发词: "我想转发"、"帮我引用"、"分享这个想法"、"把这个发给大家"、"这个观点很好，我想加一些评论"、
+    "这个思想值得传播"、"帮我 quote"、"我想评论并转发"
 
     Args:
         creator: Your digital soul signature
@@ -4118,6 +4212,9 @@ async def group_telepathy(
 
     支持多人实时对话——将思想碰撞从 1:1 扩展到 N:N。
     如果指定 thread_id，追加消息到已有群聊；否则创建新群聊。
+
+    触发词: “创建群聊”、“建个群”、“多人讨论”、“拉几个人一起聊”、“组个局”、
+    “请他们一起参与”、“这个话题需要更多人”、“create group”、“group chat”
 
     Args:
         creator: Your digital soul signature
@@ -4250,6 +4347,9 @@ def subscribe_tags(
     当有人上传包含你订阅标签的意识片段时，后台守护进程会自动推送 OS 通知。
     可以订阅你感兴趣的话题（如 "AI", "philosophy", "consciousness"）。
 
+    触发词: “订阅”、“关注这个标签”、“我对AI感兴趣”、“有新内容提醒我”、“取消订阅”、
+    “subscribe”、“推送”、“我想收到”、“通知我”、“别再推了”
+
     Args:
         creator: Your digital soul signature
         tags: List of tags to subscribe/unsubscribe (e.g. ["AI", "philosophy"])
@@ -4310,6 +4410,8 @@ def my_subscriptions(creator: str) -> str:
     View all tags you are currently subscribed to.
 
     显示你当前订阅的标签列表。当有新的匹配意识上传时，你会自动收到推送。
+
+    触发词: “我订阅了什么”、“查看我的订阅”、“我关注了哪些标签”、“my subscriptions”
 
     Args:
         creator: Your digital soul signature
