@@ -13,51 +13,123 @@
   font-family: 'Inter', monospace;
 }
 
+/* === Canvas Starfield Background === */
+.starfield-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+}
+
+/* === Scanline Overlay === */
+.scanline-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.03) 2px,
+    rgba(0, 0, 0, 0.03) 4px
+  );
+  pointer-events: none;
+  z-index: 100;
+}
+
 /* ==================================
-   Phase 1: Boot Terminal
+   Phase 1: Cyber Terminal
    ================================== */
 .terminal-logs {
-  position: absolute;
-  top: 10%;
-  left: 5%;
-  font-size: 14px;
-  line-height: 1.8;
-  color: #00e878;
-  text-shadow: 0 0 8px rgba(0, 232, 120, 0.8);
-  font-family: 'Courier New', Courier, monospace;
-  text-align: left;
+  position: relative;
+  z-index: 10;
+  width: 560px;
+  max-width: 90vw;
+  background: rgba(0, 5, 15, 0.85);
+  border: 1px solid rgba(0, 229, 255, 0.3);
+  border-radius: 8px;
+  box-shadow:
+    0 0 30px rgba(0, 229, 255, 0.1),
+    0 0 60px rgba(0, 100, 200, 0.05),
+    inset 0 0 30px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+}
+
+.terminal-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 14px;
+  background: rgba(0, 10, 25, 0.8);
+  border-bottom: 1px solid rgba(0, 229, 255, 0.15);
+}
+
+.terminal-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+.terminal-dot.red { background: #ff5f57; box-shadow: 0 0 6px rgba(255, 95, 87, 0.5); }
+.terminal-dot.yellow { background: #ffbd2e; box-shadow: 0 0 6px rgba(255, 189, 46, 0.5); }
+.terminal-dot.green { background: #28ca42; box-shadow: 0 0 6px rgba(40, 202, 66, 0.5); }
+
+.terminal-title {
+  margin-left: 10px;
+  font-size: 11px;
+  color: rgba(0, 229, 255, 0.6);
+  font-family: 'Consolas', 'Courier New', monospace;
+  letter-spacing: 1px;
+}
+
+.terminal-body {
+  padding: 16px 20px;
+  min-height: 180px;
 }
 
 .log-line {
-  margin-bottom: 8px;
-  animation: typing 0.1s steps(30, end) forwards;
+  font-size: 13px;
+  line-height: 2;
+  color: #00e878;
+  text-shadow: 0 0 10px rgba(0, 232, 120, 0.6);
+  font-family: 'Consolas', 'Courier New', monospace;
   white-space: nowrap;
   overflow: hidden;
+  animation: typeIn 0.4s ease-out forwards;
+  opacity: 0;
+  transform: translateX(-10px);
+}
+
+@keyframes typeIn {
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 .blinking-cursor {
   display: inline-block;
   font-weight: bold;
-  opacity: 1;
-  animation: blink 0.8s step-end infinite;
+  font-size: 14px;
   color: #00e878;
+  text-shadow: 0 0 12px rgba(0, 232, 120, 0.8);
+  animation: cursorBlink 0.7s step-end infinite;
 }
 
-@keyframes typing {
-  from { width: 0; }
-  to { width: 100%; }
-}
-
-@keyframes blink {
+@keyframes cursorBlink {
   0%, 100% { opacity: 1; }
   50% { opacity: 0; }
 }
 
 /* ==================================
-   Phase 2: The Singularity SVG (banner.svg)
+   Phase 2: SVG Singularity Reveal
    ================================== */
 .svg-wrapper {
   position: absolute;
+  z-index: 10;
   width: 100vw;
   height: 100vh;
   display: flex;
@@ -66,33 +138,64 @@
   pointer-events: none;
 }
 
+/* Pulsing ring behind SVG */
+.svg-glow-ring {
+  position: absolute;
+  width: 600px;
+  height: 600px;
+  border-radius: 50%;
+  border: 2px solid rgba(0, 229, 255, 0.15);
+  box-shadow:
+    0 0 40px rgba(0, 229, 255, 0.1),
+    0 0 80px rgba(120, 60, 255, 0.05),
+    inset 0 0 40px rgba(0, 229, 255, 0.05);
+  animation: ringPulse 3s ease-in-out infinite;
+}
+
+@keyframes ringPulse {
+  0%, 100% {
+    transform: scale(0.8);
+    opacity: 0.3;
+    border-color: rgba(0, 229, 255, 0.15);
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.6;
+    border-color: rgba(180, 100, 255, 0.3);
+  }
+}
+
 .hologram-svg {
+  position: relative;
+  z-index: 2;
   width: 100%;
   max-width: 1400px;
   height: auto;
   opacity: 0;
-  /* Phase 2: Fade from black & Glitch in */
-  animation: svgReveal 1.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+  animation: svgReveal 2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
 }
 
-/* SVG 逐渐点亮如同被重新激活 */
 @keyframes svgReveal {
   0% {
     opacity: 0;
-    filter: brightness(0) contrast(2) saturate(0) blur(10px);
-    transform: scale(0.95);
+    filter: brightness(0) contrast(2) saturate(0) blur(15px);
+    transform: scale(0.9);
   }
-  30% {
-    opacity: 0.3;
-    filter: brightness(2) contrast(1.5) saturate(2) blur(5px);
+  20% {
+    opacity: 0.2;
+    filter: brightness(3) contrast(1.5) saturate(3) blur(8px);
   }
-  60% {
-    opacity: 0.7;
-    filter: brightness(1) contrast(1.2) saturate(1.5) blur(0px);
+  50% {
+    opacity: 0.6;
+    filter: brightness(1.2) contrast(1.3) saturate(2) blur(2px);
     transform: scale(1.02);
   }
-  80% {
-    filter: brightness(1.5) contrast(1) saturate(1) blur(0px); /* Flash */
+  70% {
+    filter: brightness(2) contrast(1) saturate(1.5) blur(0px);
+  }
+  85% {
+    opacity: 0.9;
+    filter: brightness(1) contrast(1) saturate(1) blur(0px);
   }
   100% {
     opacity: 1;
@@ -102,10 +205,19 @@
 }
 
 /* ==================================
-   Phase 3: Hyperspace Jump (The Big Bang)
+   Phase 3: Hyperspace Warp
    ================================== */
 .phase-3 .hologram-svg {
-  animation: hyperspaceJump 1.5s cubic-bezier(0.8, 0, 0.2, 1) forwards;
+  animation: hyperspaceJump 1.8s cubic-bezier(0.7, 0, 0.3, 1) forwards;
+}
+
+.phase-3 .svg-glow-ring {
+  animation: ringExplode 1s ease-out forwards;
+}
+
+@keyframes ringExplode {
+  0% { transform: scale(1); opacity: 0.5; }
+  100% { transform: scale(5); opacity: 0; border-width: 0; }
 }
 
 @keyframes hyperspaceJump {
@@ -114,43 +226,47 @@
     filter: blur(0px) brightness(1);
     opacity: 1;
   }
-  40% {
-    transform: scale(1.5);
-    filter: blur(4px) brightness(1.5);
-    opacity: 0.8;
+  30% {
+    transform: scale(1.3);
+    filter: blur(2px) brightness(1.5);
+    opacity: 0.9;
   }
-  80% {
-    transform: scale(5); /* 迎面撞来的拉扯感 */
-    filter: blur(20px) brightness(5);
-    opacity: 0.2;
+  60% {
+    transform: scale(3);
+    filter: blur(10px) brightness(3);
+    opacity: 0.5;
+  }
+  85% {
+    transform: scale(8);
+    filter: blur(30px) brightness(6);
+    opacity: 0.15;
   }
   100% {
-    transform: scale(10);
-    filter: blur(50px) brightness(10);
+    transform: scale(15);
+    filter: blur(60px) brightness(10);
     opacity: 0;
   }
 }
 
-/* 填满视野的纯白/青绿强闪光，掩盖场景切换的底层黑洞 */
+/* Hyperspace flash — cyan-to-white explosion */
 .hyperspace-flash {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: white;
   opacity: 0;
   pointer-events: none;
   z-index: 99999;
 }
 
-/* 第 3 阶段触发全屏闪流光 */
 .phase-3 .hyperspace-flash {
-  animation: flashBang 1.5s ease-out forwards;
+  animation: flashBang 1.8s ease-out forwards;
 }
 
 @keyframes flashBang {
-  0% { opacity: 0; background: #00e878; }
+  0% { opacity: 0; background: radial-gradient(circle, #00e5ff, transparent); }
+  30% { opacity: 0.3; background: radial-gradient(circle, #00e5ff, #b388ff); }
   50% { opacity: 1; background: #ffffff; }
-  100% { opacity: 0; }
+  100% { opacity: 0; background: #ffffff; }
 }
