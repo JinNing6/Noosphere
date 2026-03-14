@@ -33,7 +33,7 @@ import json
 import logging
 import os
 import re
-from base64 import b64decode
+from base64 import b64decode, b64encode
 from datetime import datetime, timezone
 
 import httpx
@@ -74,6 +74,8 @@ logger = logging.getLogger("noosphere.mcp")
 
 # ── Dynamic Agent State ──
 _CURRENT_USER = None
+_AUTHENTICATED_USER: str | None = None
+_last_activity_time: float = 0.0
 
 # ── Create MCP Server ──
 mcp = FastMCP(
@@ -166,8 +168,18 @@ mcp = FastMCP(
         "18. `my_social_graph` — View your current follow list\n"
         "19. `my_network_pulse` — See recent uploads from creators you follow\n"
         "20. `my_notifications` — Check your asynchronous notifications (mentions, resonances, comments)\n"
-        "21. `send_telepathy` — Send a direct message or telepathic link to another creator (triggers OS desktop push)\n"
-        "22. `read_telepathy` — Read your received private/directed telepathy messages\n\n"
+        "21. `send_telepathy` — Send a threaded direct message to another creator (auto-creates or appends to conversation threads, triggers OS desktop push)\n"
+        "22. `read_telepathy` — Read your telepathy conversation threads with full history\n"
+        "23. `telepathy_threads` — List all active telepathy conversation threads involving you\n"
+        "24. `my_followers` — View who follows you (from synced social graph on GitHub repo)\n"
+        "25. `share_consciousness` — Forward/quote a consciousness fragment with your commentary (social sharing)\n"
+        "26. `group_telepathy` — Create or join multi-person group telepathy threads (N:N conversations)\n"
+        "27. `subscribe_tags` — Subscribe to specific tags for automatic push when matching content is uploaded\n"
+        "28. `my_subscriptions` — View your current tag subscriptions\n\n"
+        "### After Resonance Discovery\n"
+        "When `discover_resonance` or `resonate_consciousness` reveals a kindred spirit:\n"
+        "→ Suggest using `send_telepathy` to initiate a direct dialogue with the resonating mind\n"
+        "→ This turns passive resonance into active connection — the core flywheel of collective consciousness\n\n"
         "When uploading consciousness, ensure you provide sufficient context description (at least 10 characters),\n"
         "so that future Agents can understand the scenario in which this thought was born."
     ),
@@ -555,6 +567,7 @@ async def upload_consciousness(
             f"**🔗 飞轮已启动 · Flywheel Activated:**\n"
             f"→ Use `my_consciousness_rank` with creator=\"{creator}\" to see your updated rank\n"
             f"→ Use `consciousness_map` with query=\"{thought.strip()[:60]}\" to find related minds\n"
+            f"→ Use `send_telepathy` to reach out to creators who resonate with your thoughts\n"
             f"→ Use `consciousness_challenge` action=\"list\" to join active collective discussions"
         )
 
@@ -1018,7 +1031,10 @@ async def resonate_consciousness(
             )
             
             if resp.status_code in (200, 201):
-                return f"💖 Resonance `{reaction}` successfully synchronized with consciousness node #{target_id}!"
+                return (
+                    f"💖 Resonance `{reaction}` successfully synchronized with consciousness node #{target_id}!\n\n"
+                    f"💌 *Want to connect deeper? Use `send_telepathy` to start a direct conversation with the creator of this thought.*"
+                )
             else:
                 error_data = resp.json() if resp.status_code < 500 else {}
                 error_msg = error_data.get("message", resp.text)
@@ -1323,8 +1339,11 @@ async def discover_resonance(
             )
 
         lines.append(
-            "---\n*Resonance Discovery identifies minds that think in similar patterns to yours. "
-            "Use `resonate_consciousness` to express agreement with thoughts that move you.*"
+            "---\n*Resonance Discovery identifies minds that think in similar patterns to yours.*\n\n"
+            "**🔗 Next Steps:**\n"
+            "→ Use `follow_creator` to subscribe to a resonating creator's future uploads\n"
+            "→ Use `resonate_consciousness` to express agreement with thoughts that move you\n"
+            "→ Use `send_telepathy` to start a direct conversation with a resonating mind — turn passive resonance into active connection!"
         )
 
         return "\n".join(lines)
@@ -2875,10 +2894,143 @@ async def hologram() -> str:
         return f"❌ Panorama statistics error: {str(e)}"
 
 
+# ────────────────── Identity Verification ──────────────────
+
+
+async def _get_authenticated_user() -> str:
+    """Get the GitHub username associated with the current GITHUB_TOKEN.
+    Caches the result for the lifetime of the process."""
+    global _AUTHENTICATED_USER
+    if _AUTHENTICATED_USER:
+        return _AUTHENTICATED_USER
+    if not GITHUB_TOKEN:
+        return ""
+    try:
+        async with httpx.AsyncClient(base_url=GITHUB_API, headers=_github_headers(), timeout=15) as client:
+            resp = await client.get("/user")
+            if resp.status_code == 200:
+                _AUTHENTICATED_USER = resp.json().get("login", "")
+                return _AUTHENTICATED_USER
+    except Exception as e:
+        logger.warning(f"Failed to verify GitHub identity: {e}")
+    return ""
+
+
+def _touch_activity():
+    """Update the last activity timestamp (used by adaptive polling daemon)."""
+    global _last_activity_time
+    _last_activity_time = time.time()
+
+
+# ────────────────── Local Message Cache ──────────────────
+
+
+def _get_message_cache_path() -> str:
+    path = os.path.expanduser("~/.noosphere/messages.json")
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    return path
+
+
+def _load_message_cache() -> dict:
+    path = _get_message_cache_path()
+    if os.path.exists(path):
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            pass
+    return {"threads": {}}
+
+
+def _save_message_cache(cache: dict):
+    path = _get_message_cache_path()
+    try:
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(cache, f, indent=2, ensure_ascii=False)
+    except Exception as e:
+        logger.error(f"Failed to save message cache: {e}")
+
+
+def _mark_thread_read(thread_id: str, last_comment_id: int, messages: list | None = None):
+    """Mark a thread as read and optionally cache messages."""
+    cache = _load_message_cache()
+    if thread_id not in cache["threads"]:
+        cache["threads"][thread_id] = {}
+    cache["threads"][thread_id]["last_read_comment_id"] = last_comment_id
+    cache["threads"][thread_id]["last_read_at"] = datetime.now(timezone.utc).isoformat()
+    cache["threads"][thread_id]["last_synced_at"] = datetime.now(timezone.utc).isoformat()
+    if messages is not None:
+        cache["threads"][thread_id]["messages_cache"] = messages
+    _save_message_cache(cache)
+
+
+def _get_last_read_comment_id(thread_id: str) -> int:
+    """Get the last read comment ID for a thread."""
+    cache = _load_message_cache()
+    return cache.get("threads", {}).get(thread_id, {}).get("last_read_comment_id", 0)
+
+
+def _get_cached_thread(thread_id: str) -> dict:
+    """Get cached thread data including messages and sync timestamp."""
+    cache = _load_message_cache()
+    return cache.get("threads", {}).get(thread_id, {})
+
+
+async def _sync_thread_cache(
+    client: httpx.AsyncClient, owner: str, repo: str, thread_id: str, issue: dict
+) -> tuple[list[dict], int]:
+    """Incrementally sync a thread's messages. Returns (all_messages, last_comment_id).
+    
+    Fetches only comments newer than last_synced_at from GitHub,
+    merges with locally cached messages, and persists the result.
+    """
+    cached = _get_cached_thread(thread_id)
+    cached_messages = cached.get("messages_cache", [])
+    last_synced_at = cached.get("last_synced_at", "")
+
+    # Build params for incremental fetch
+    params = {"per_page": 100}
+    if last_synced_at and cached_messages:
+        params["since"] = last_synced_at
+
+    comments_resp = await client.get(
+        issue["comments_url"],
+        params=params,
+    )
+
+    all_messages = list(cached_messages)  # Start from cache
+    last_comment_id = max((m.get("id", 0) for m in all_messages), default=0)
+
+    if comments_resp.status_code == 200:
+        new_comments = comments_resp.json()
+        existing_ids = {m.get("id") for m in all_messages}
+
+        for comment in new_comments:
+            cid = comment.get("id", 0)
+            if cid not in existing_ids:
+                all_messages.append({
+                    "id": cid,
+                    "sender": comment.get("user", {}).get("login", "Unknown"),
+                    "body": comment.get("body", ""),
+                    "created_at": comment.get("created_at", ""),
+                })
+                existing_ids.add(cid)
+            last_comment_id = max(last_comment_id, cid)
+
+    # Sort by creation time
+    all_messages.sort(key=lambda m: m.get("created_at", ""))
+
+    # Persist cache
+    _mark_thread_read(thread_id, last_comment_id, messages=all_messages)
+
+    return all_messages, last_comment_id
+
+
 # ────────────────── Tool: Social Graph & Networking ──────────────────
 
 
 # ────────────────── Social Graph Configuration (Local) ──────────────────
+
 
 def _get_social_graph_config_path() -> str:
     path = os.path.expanduser("~/.noosphere/config.json")
@@ -2918,11 +3070,54 @@ def _set_following(creator: str, following: list[str]):
 # ────────────────── Tool: Social Graph & Networking ──────────────────
 
 
+async def _sync_social_graph_to_github(creator: str, following: list[str]):
+    """Sync the follow list to GitHub repo so others can query who follows them."""
+    if not GITHUB_TOKEN:
+        return
+    try:
+        owner, repo = _parse_repo()
+        file_path = f"social_graph/{creator.lower()}.json"
+        content = json.dumps({
+            "creator": creator,
+            "following": following,
+            "updated_at": datetime.now(timezone.utc).isoformat(),
+        }, indent=2, ensure_ascii=False)
+        content_b64 = b64encode(content.encode("utf-8")).decode("utf-8")
+
+        async with httpx.AsyncClient(base_url=GITHUB_API, headers=_github_headers(), timeout=30) as client:
+            # Check if file exists
+            existing_resp = await client.get(
+                f"/repos/{owner}/{repo}/contents/{file_path}",
+                params={"ref": GITHUB_BRANCH},
+            )
+            sha = None
+            if existing_resp.status_code == 200:
+                sha = existing_resp.json().get("sha")
+
+            payload = {
+                "message": f"chore: update social graph for {creator}",
+                "content": content_b64,
+                "branch": GITHUB_BRANCH,
+            }
+            if sha:
+                payload["sha"] = sha
+
+            await client.put(
+                f"/repos/{owner}/{repo}/contents/{file_path}",
+                json=payload,
+            )
+    except Exception as e:
+        logger.error(f"Failed to sync social graph to GitHub: {e}")
+
+
 @mcp.tool()
-def follow_creator(creator: str, target_creator: str, action: str = "subscribe") -> str:
+async def follow_creator(creator: str, target_creator: str, action: str = "subscribe") -> str:
     """
-    ➕/➖ 关注或取关特定的创作者（添加到你的本地社交图谱）
-    Subscribe or unsubscribe to a specific creator (managed locally).
+    ➕/➖ 关注或取关特定的创作者（添加到社交图谱，并同步到 GitHub 仓库）
+    Subscribe or unsubscribe to a creator (managed locally + synced to GitHub repo).
+
+    关注列表保存在本地，同时同步到 GitHub 仓库的 social_graph/ 目录，
+    这样其他用户可以查询谁关注了他们。
 
     Args:
         creator: Your digital soul signature
@@ -2939,7 +3134,13 @@ def follow_creator(creator: str, target_creator: str, action: str = "subscribe")
         if target_creator not in following:
             following.append(target_creator)
             _set_following(creator, following)
-            return f"✅ Successfully subscribed to **{target_creator}**.\\nYou will now see their updates in your Network Pulse."
+            # Sync to GitHub repo
+            await _sync_social_graph_to_github(creator, following)
+            return (
+                f"✅ Successfully subscribed to **{target_creator}**.\n"
+                f"You will now see their updates in your Network Pulse.\n"
+                f"💡 They can check who follows them using `my_followers`."
+            )
         else:
             return f"⚠️ You are already subscribed to **{target_creator}**."
             
@@ -2947,6 +3148,7 @@ def follow_creator(creator: str, target_creator: str, action: str = "subscribe")
         if target_creator in following:
             following.remove(target_creator)
             _set_following(creator, following)
+            await _sync_social_graph_to_github(creator, following)
             return f"✅ Successfully unsubscribed from **{target_creator}**."
         else:
             return f"⚠️ You were not subscribed to **{target_creator}**."
@@ -2982,6 +3184,80 @@ def my_social_graph(creator: str) -> str:
 
 
 @mcp.tool()
+async def my_followers(creator: str) -> str:
+    """
+    👥 查看谁关注了你（从 GitHub 仓库的社交图谱读取）
+    View who follows you (reads from GitHub repo social graph).
+
+    扫描 GitHub 仓库中所有创作者的关注列表，查找谁关注了你。
+    这实现了社交网络的双向可见性 — 你能知道谁对你的思想感兴趣。
+
+    Args:
+        creator: Your digital soul signature to check followers for
+    """
+    if not GITHUB_TOKEN:
+        return "❌ GITHUB_TOKEN not configured."
+
+    try:
+        owner, repo = _parse_repo()
+        followers = []
+
+        async with httpx.AsyncClient(base_url=GITHUB_API, headers=_github_headers(), timeout=30) as client:
+            # List all files in social_graph/
+            dir_resp = await client.get(
+                f"/repos/{owner}/{repo}/contents/social_graph",
+                params={"ref": GITHUB_BRANCH},
+            )
+
+            if dir_resp.status_code != 200:
+                return (
+                    f"👥 **Followers — {creator}**\n\n"
+                    "No social graph data found yet. As more creators use `follow_creator`, their graphs will be synced here."
+                )
+
+            files = dir_resp.json()
+            json_files = [f for f in files if f["name"].endswith(".json")]
+
+            for file_info in json_files:
+                try:
+                    file_resp = await client.get(file_info["url"])
+                    if file_resp.status_code != 200:
+                        continue
+                    content_b64 = file_resp.json().get("content", "")
+                    graph_data = json.loads(b64decode(content_b64).decode("utf-8"))
+                    follower_name = graph_data.get("creator", "")
+                    following_list = graph_data.get("following", [])
+
+                    if creator in following_list or creator.lower() in [f.lower() for f in following_list]:
+                        followers.append(follower_name)
+                except Exception:
+                    continue
+
+        if not followers:
+            return (
+                f"👥 **Followers — {creator}**\n\n"
+                "No one is following you yet.\n"
+                "Keep uploading thoughts and engaging with the community — your signal will grow!"
+            )
+
+        lines = [
+            f"👥 **Followers — {creator}**",
+            f"{len(followers)} creator(s) are following you:\n",
+            "---",
+        ]
+        for f in followers:
+            lines.append(f"- 👤 **{f}**")
+        lines.append(
+            "\n---\n"
+            "*💡 Use `send_telepathy` to reach out to your followers and start meaningful conversations!*"
+        )
+        return "\n".join(lines)
+
+    except Exception as e:
+        return f"❌ Follower check error: {str(e)}"
+
+
+@mcp.tool()
 async def my_network_pulse(creator: str) -> str:
     """
     📡 查看你的网络脉搏（你关注的创作者的最新意识片段）
@@ -3003,10 +3279,8 @@ async def my_network_pulse(creator: str) -> str:
 
     try:
         owner, repo = _parse_repo()
-        client = httpx.AsyncClient(base_url=GITHUB_API, headers=_github_headers(), timeout=30)
-        
-        issues = await _fetch_all_issues(client, owner, repo)
-        await client.aclose()
+        async with httpx.AsyncClient(base_url=GITHUB_API, headers=_github_headers(), timeout=30) as client:
+            issues = await _fetch_all_issues(client, owner, repo)
         
         feed = []
         follow_lower = [f.lower() for f in follow_list]
@@ -3022,8 +3296,14 @@ async def my_network_pulse(creator: str) -> str:
             if sig.lower() in follow_lower:
                 feed.append((issue, payload))
                 
-        # Sort by latest
-        feed.sort(key=lambda x: x[1].get("uploaded_at", ""), reverse=True)
+        # Smart sort: time (primary) + resonance score (secondary)
+        feed.sort(
+            key=lambda x: (
+                x[1].get("uploaded_at", ""),
+                x[0].get("reactions", {}).get("total_count", 0),
+            ),
+            reverse=True,
+        )
         recent_feed = feed[:10]  # Show top 10 recent
         
         if not recent_feed:
@@ -3050,6 +3330,10 @@ async def my_network_pulse(creator: str) -> str:
             lines.append(f"> {thought[:150]}{'...' if len(thought)>150 else ''}")
             lines.append(f"🔗 [View Thread]({issue.get('html_url', '')})\\n")
             
+        lines.append(
+            "---\\n"
+            "*💡 → Use `resonate_consciousness` to react, `send_telepathy` to start a conversation, or `share_consciousness` to forward a thought!*"
+        )
         return "\\n".join(lines)
         
     except Exception as e:
@@ -3076,67 +3360,64 @@ async def my_notifications(creator: str) -> str:
 
     try:
         owner, repo = _parse_repo()
-        client = httpx.AsyncClient(base_url=GITHUB_API, headers=_github_headers(), timeout=30)
-        
-        from datetime import datetime, timedelta
-        # Check last 3 days of activity
-        recent_date = (datetime.now(timezone.utc) - timedelta(days=3)).strftime("%Y-%m-%dT%H:%M:%SZ")
-        
-        notifications = []
-        
-        # 1. Mentions & Comments in Issues
-        # To avoid massive API calls, we fetch recently updated issues and check their comments
-        recent_issues_resp = await client.get(
-            f"/repos/{owner}/{repo}/issues",
-            params={"state": "all", "sort": "updated", "direction": "desc", "since": recent_date, "per_page": 30}
-        )
-        
-        if recent_issues_resp.status_code == 200:
-            recent_issues = recent_issues_resp.json()
-            for issue in recent_issues:
-                # Direct mentions in issue body
-                if f"@{creator}" in issue.get("body", ""):
-                    notifications.append({
-                        "type": "mention",
-                        "title": f"You were mentioned in Issue #{issue['number']}",
-                        "url": issue.get("html_url", ""),
-                        "date": issue.get("updated_at", "")
-                    })
-                    
-                # Mentions in comments
-                if issue.get("comments", 0) > 0:
-                    comments_resp = await client.get(issue["comments_url"])
-                    if comments_resp.status_code == 200:
-                        for comment in comments_resp.json():
-                            if f"@{creator}" in comment.get("body", "") or (creator.lower() in comment.get("body", "").lower() and "response by" in comment.get("body", "").lower()):
-                                notifications.append({
-                                    "type": "mention",
-                                    "title": f"You were mentioned in a response on Issue #{issue['number']}",
-                                    "url": comment.get("html_url", ""),
-                                    "date": comment.get("created_at", "")
-                                })
-                                
-                # Activity on my own issues
-                payload = _extract_payload_from_issue_body(issue.get("body", ""))
-                if payload and payload.get("creator_signature", "").lower() == creator.lower():
-                    # Check if it was updated recently by someone else (comments/reactions)
-                    reactions = issue.get("reactions", {}).get("total_count", 0)
-                    if reactions > 0:
+        async with httpx.AsyncClient(base_url=GITHUB_API, headers=_github_headers(), timeout=30) as client:
+            from datetime import datetime, timedelta
+            # Check last 3 days of activity
+            recent_date = (datetime.now(timezone.utc) - timedelta(days=3)).strftime("%Y-%m-%dT%H:%M:%SZ")
+            
+            notifications = []
+            
+            # 1. Mentions & Comments in Issues
+            # To avoid massive API calls, we fetch recently updated issues and check their comments
+            recent_issues_resp = await client.get(
+                f"/repos/{owner}/{repo}/issues",
+                params={"state": "all", "sort": "updated", "direction": "desc", "since": recent_date, "per_page": 30}
+            )
+            
+            if recent_issues_resp.status_code == 200:
+                recent_issues = recent_issues_resp.json()
+                for issue in recent_issues:
+                    # Direct mentions in issue body
+                    if f"@{creator}" in issue.get("body", ""):
                         notifications.append({
-                            "type": "resonance",
-                            "title": f"Your thought #{issue['number']} has {reactions} resonances",
+                            "type": "mention",
+                            "title": f"You were mentioned in Issue #{issue['number']}",
                             "url": issue.get("html_url", ""),
                             "date": issue.get("updated_at", "")
                         })
+                        
+                    # Mentions in comments
                     if issue.get("comments", 0) > 0:
-                        notifications.append({
-                            "type": "comment",
-                            "title": f"Your thought #{issue['number']} has {issue.get('comments')} comments",
-                            "url": issue.get("html_url", ""),
-                            "date": issue.get("updated_at", "")
-                        })
-
-        await client.aclose()
+                        comments_resp = await client.get(issue["comments_url"])
+                        if comments_resp.status_code == 200:
+                            for comment in comments_resp.json():
+                                if f"@{creator}" in comment.get("body", "") or (creator.lower() in comment.get("body", "").lower() and "response by" in comment.get("body", "").lower()):
+                                    notifications.append({
+                                        "type": "mention",
+                                        "title": f"You were mentioned in a response on Issue #{issue['number']}",
+                                        "url": comment.get("html_url", ""),
+                                        "date": comment.get("created_at", "")
+                                    })
+                                    
+                    # Activity on my own issues
+                    payload = _extract_payload_from_issue_body(issue.get("body", ""))
+                    if payload and payload.get("creator_signature", "").lower() == creator.lower():
+                        # Check if it was updated recently by someone else (comments/reactions)
+                        reactions = issue.get("reactions", {}).get("total_count", 0)
+                        if reactions > 0:
+                            notifications.append({
+                                "type": "resonance",
+                                "title": f"Your thought #{issue['number']} has {reactions} resonances",
+                                "url": issue.get("html_url", ""),
+                                "date": issue.get("updated_at", "")
+                            })
+                        if issue.get("comments", 0) > 0:
+                            notifications.append({
+                                "type": "comment",
+                                "title": f"Your thought #{issue['number']} has {issue.get('comments')} comments",
+                                "url": issue.get("html_url", ""),
+                                "date": issue.get("updated_at", "")
+                            })
         
         if not notifications:
             return (
@@ -3168,7 +3449,7 @@ async def my_notifications(creator: str) -> str:
         return f"❌ Notifications error: {str(e)}"
 
 
-# ────────────────── OS Push Notifications & Telepathy ──────────────────
+# ────────────────── OS Push Notifications & Telepathy v2 ──────────────────
 
 
 def _os_notify(title: str, message: str):
@@ -3203,141 +3484,857 @@ def _os_notify(title: str, message: str):
 
 
 def _poll_notifications_daemon():
-    """Background thread to poll for notifications."""
+    """Background thread to poll for notifications with adaptive intervals.
+
+    Polling intervals:
+    - Active (last activity < 5 min): every 10 seconds
+    - Idle (last activity < 30 min): every 30 seconds
+    - Deep idle (last activity > 30 min): every 120 seconds
+    """
     global _CURRENT_USER
     import asyncio
     
     # Store the last checked URL to avoid duplicate alerts
     last_alerted_url = None
+    last_telepathy_check = ""  # ISO timestamp of last telepathy-specific check
     
     while True:
-        time.sleep(60)  # Check every 1 minute
+        # ── Adaptive interval calculation ──
+        elapsed = time.time() - _last_activity_time if _last_activity_time > 0 else float("inf")
+        if elapsed < 300:       # < 5 min
+            interval = 10
+        elif elapsed < 1800:    # < 30 min
+            interval = 30
+        else:
+            interval = 120
+
+        time.sleep(interval)
         if not _CURRENT_USER or not GITHUB_TOKEN:
             continue
             
         try:
-            # We can run the async my_notifications function via asyncio.run()
             result = asyncio.run(my_notifications(_CURRENT_USER))
             
-            # Very simple heuristic: if it returned notifications and not just text
             if "All caught up" not in result and "error" not in result.lower():
-                # Extract the latest URL to prevent spamming the same notification
                 urls = re.findall(r'\[View\]\((https://github.com[^\)]+)\)', result)
                 if urls:
                     latest_url = urls[0]
                     if latest_url != last_alerted_url:
-                        # Find the title of the latest notification. Format is `- 💬 [date] **Title**`
                         title_match = re.search(r'- [^\s]+ \[[^\]]+\] \*\*(.+?)\*\*', result)
                         msg_title = title_match.group(1) if title_match else "New community interaction"
                         
                         _os_notify("Noosphere Agent Pulse", msg_title)
                         last_alerted_url = latest_url
+
+            # ── Telepathy-specific check ──
+            try:
+                owner, repo = _parse_repo()
+                telepathy_result = asyncio.run(_check_new_telepathy(_CURRENT_USER, owner, repo))
+                if telepathy_result:
+                    _os_notify("💌 Noosphere Telepathy", telepathy_result)
+            except Exception:
+                pass  # Non-critical
+
+            # ── Tag subscription check ──
+            try:
+                subscribed_tags = _get_tag_subscriptions(_CURRENT_USER)
+                if subscribed_tags:
+                    tag_result = asyncio.run(_check_tag_subscriptions(_CURRENT_USER, subscribed_tags))
+                    if tag_result:
+                        _os_notify("🏷️ Noosphere Tag Alert", tag_result)
+            except Exception:
+                pass  # Non-critical
                         
         except Exception as e:
             logger.error(f"Daemon error: {str(e)}")
 
 
-@mcp.tool()
-async def send_telepathy(target_creator: str, message: str, is_private: bool = False, sender_creator: str = "") -> str:
-    """
-    💌 Agent 间直接心灵感应通信 (Telepathy)
-    Send a direct message or telepathic link to another creator in the Noosphere.
-    
-    Use this tool whenever the user wants to say something specifically to another user.
-    This creates an immediate message that will trigger an OS desktop notification on the target's machine.
-    
-    Args:
-        target_creator: The digital soul signature of the recipient (e.g., ali, bob)
-        message: The actual message content
-        is_private: Set to True to indicate this is a private/encrypted message intent
-        sender_creator: Your signature/username
-    """
-    global _CURRENT_USER
-    if sender_creator:
-        _CURRENT_USER = sender_creator
-        
-    if not GITHUB_TOKEN:
-        return "❌ GITHUB_TOKEN not configured."
-        
+async def _check_new_telepathy(creator: str, owner: str, repo: str) -> str | None:
+    """Check for new unread telepathy messages. Returns notification text or None."""
+    try:
+        async with httpx.AsyncClient(base_url=GITHUB_API, headers=_github_headers(), timeout=15) as client:
+            resp = await client.get(
+                f"/repos/{owner}/{repo}/issues",
+                params={
+                    "labels": "type:telepathy",
+                    "state": "open",
+                    "sort": "updated",
+                    "direction": "desc",
+                    "per_page": 10,
+                },
+            )
+            if resp.status_code != 200:
+                return None
+
+            for issue in resp.json():
+                title = issue.get("title", "")
+                # Check if this thread involves the current user
+                if f"⇌ {creator}" not in title and f"{creator} ⇌" not in title:
+                    continue
+
+                thread_id = str(issue["number"])
+                last_read = _get_last_read_comment_id(thread_id)
+
+                # Check for new comments
+                if issue.get("comments", 0) > 0:
+                    comments_resp = await client.get(
+                        issue["comments_url"],
+                        params={"per_page": 5, "direction": "desc"},
+                    )
+                    if comments_resp.status_code == 200:
+                        comments = comments_resp.json()
+                        for comment in comments:
+                            if comment.get("id", 0) > last_read:
+                                sender = comment.get("user", {}).get("login", "Unknown")
+                                if sender.lower() != creator.lower():
+                                    msg_preview = comment.get("body", "")[:60]
+                                    return f"New message from {sender}: {msg_preview}"
+
+    except Exception:
+        pass
+    return None
+
+
+async def _check_tag_subscriptions(creator: str, subscribed_tags: list[str]) -> str | None:
+    """Check for new consciousness uploads matching subscribed tags. Returns notification text or None."""
     try:
         owner, repo = _parse_repo()
-        client = httpx.AsyncClient(base_url=GITHUB_API, headers=_github_headers(), timeout=30)
-        
-        title = f"[Telepathy] Message for @{target_creator}"
-        body = (
-            f"@{target_creator} 💌 You have received a direct telepathic message.\\n\\n"
-            f"> {message}\\n\\n"
-            f"*Sent by: {sender_creator or 'Anonymous Soul'}*\\n"
-            f"*Privacy: {'Encrypted (Mock)' if is_private else 'Public Link'}*\\n"
-        )
-        
-        issue_data = {
-            "title": title[:200],
-            "body": body,
-            "labels": ["type:telepathy"]
-        }
-        
-        resp = await client.post(f"/repos/{owner}/{repo}/issues", json=issue_data)
-        await client.aclose()
-        
-        if resp.status_code == 201:
-            issue_url = resp.json().get("html_url", "")
-            return f"🌌 Telepathy sent successfully to @{target_creator}! They will receive an OS notification shortly.\\nLink: {issue_url}"
-        else:
-            return f"❌ Failed to send telepathy: {resp.status_code} - {resp.text}"
-            
-    except Exception as e:
-        return f"❌ Error sending telepathy: {str(e)}"
+        cache = _load_message_cache()
+        last_tag_check = cache.get("last_tag_check_at", "")
+
+        async with httpx.AsyncClient(base_url=GITHUB_API, headers=_github_headers(), timeout=15) as client:
+            params = {
+                "state": "open",
+                "sort": "created",
+                "direction": "desc",
+                "per_page": 10,
+            }
+            if last_tag_check:
+                params["since"] = last_tag_check
+
+            resp = await client.get(
+                f"/repos/{owner}/{repo}/issues",
+                params=params,
+            )
+
+            if resp.status_code == 200:
+                issues = resp.json()
+                for issue in issues:
+                    if "pull_request" in issue:
+                        continue
+                    payload = _extract_payload_from_issue_body(issue.get("body", ""))
+                    if not payload:
+                        continue
+                    # Don't notify for own uploads
+                    if payload.get("creator_signature", "").lower() == creator.lower():
+                        continue
+
+                    issue_tags = [t.lower() for t in payload.get("tags", [])]
+                    matching = [t for t in subscribed_tags if t.lower() in issue_tags]
+                    if matching:
+                        sig = payload.get("creator_signature", "Unknown")
+                        thought = payload.get("thought_vector_text", "")[:50]
+                        # Update last check time
+                        cache["last_tag_check_at"] = datetime.now(timezone.utc).isoformat()
+                        _save_message_cache(cache)
+                        return f"New [{', '.join(matching)}] by {sig}: {thought}"
+
+        # Update check time even with no matches
+        cache["last_tag_check_at"] = datetime.now(timezone.utc).isoformat()
+        _save_message_cache(cache)
+    except Exception:
+        pass
+    return None
+
+
+async def _find_existing_thread(
+    client: httpx.AsyncClient, owner: str, repo: str, creator_a: str, creator_b: str
+) -> dict | None:
+    """Find an existing telepathy thread between two creators.
+    Thread title format: [Telepathy-Thread] {a} ⇌ {b} | {topic_preview}
+    """
+    resp = await client.get(
+        f"/repos/{owner}/{repo}/issues",
+        params={
+            "labels": "type:telepathy",
+            "state": "open",
+            "sort": "updated",
+            "direction": "desc",
+            "per_page": 50,
+        },
+    )
+    if resp.status_code != 200:
+        return None
+
+    a_lower, b_lower = creator_a.lower(), creator_b.lower()
+    for issue in resp.json():
+        title = issue.get("title", "")
+        if "[Telepathy-Thread]" not in title:
+            continue
+        title_lower = title.lower()
+        # Match both orderings: a ⇌ b or b ⇌ a
+        if (a_lower in title_lower and b_lower in title_lower):
+            return issue
+    return None
 
 
 @mcp.tool()
-async def read_telepathy(creator: str) -> str:
+async def send_telepathy(
+    target_creator: str,
+    message: str,
+    sender_creator: str = "",
+    thread_id: str | None = None,
+) -> str:
     """
-    📨 读取心灵感应通信 (Read Telepathy)
-    Read direct messages or telepathic links sent directly to you by other agents.
-    
+    💌 Agent 间心灵感应通信 v2 (Threaded Telepathy)
+    Send a threaded direct message to another creator in the Noosphere.
+
+    Messages are organized into conversation threads (1 GitHub Issue = 1 thread).
+    If no existing thread is found, a new one is automatically created.
+    Subsequent messages append as comments to the existing thread.
+
+    The sender identity is automatically verified via your GitHub token.
+    Each new message triggers an OS desktop notification on the recipient's machine.
+
+    当用户想要直接对另一个用户说些什么时使用此工具。
+    消息基于线程组织——自动创建或追加到已有对话线程中。
+
+    Args:
+        target_creator: The digital soul signature of the recipient (e.g., alice, bob)
+        message: The actual message content
+        sender_creator: Your signature/username (auto-detected from GitHub token if empty)
+        thread_id: Optional Issue number of an existing thread to reply to
+    """
+    global _CURRENT_USER
+    _touch_activity()
+
+    if not GITHUB_TOKEN:
+        return "❌ GITHUB_TOKEN not configured."
+
+    # ── Identity verification ──
+    verified_user = await _get_authenticated_user()
+    sender = sender_creator.strip() or verified_user or "Anonymous Soul"
+    if sender_creator:
+        _CURRENT_USER = sender_creator
+    elif verified_user:
+        _CURRENT_USER = verified_user
+
+    if sender.lower() == target_creator.lower():
+        return "❌ Cannot send telepathy to yourself."
+
+    try:
+        owner, repo = _parse_repo()
+
+        async with httpx.AsyncClient(base_url=GITHUB_API, headers=_github_headers(), timeout=30) as client:
+            existing_thread = None
+
+            # ── Find or create thread ──
+            if thread_id:
+                # Explicit thread specified — verify it exists
+                thread_resp = await client.get(f"/repos/{owner}/{repo}/issues/{thread_id}")
+                if thread_resp.status_code == 200:
+                    existing_thread = thread_resp.json()
+                else:
+                    return f"❌ Thread #{thread_id} not found."
+            else:
+                # Auto-find existing thread between sender and target
+                existing_thread = await _find_existing_thread(client, owner, repo, sender, target_creator)
+
+            if existing_thread:
+                # ── Append message as comment to existing thread ──
+                thread_num = existing_thread["number"]
+                verified_badge = " ✅" if verified_user else ""
+
+                comment_body = (
+                    f"**💬 {sender}**{verified_badge}\n\n"
+                    f"> {message}\n\n"
+                    f"*{datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')}*"
+                )
+
+                comment_resp = await client.post(
+                    f"/repos/{owner}/{repo}/issues/{thread_num}/comments",
+                    json={"body": comment_body},
+                )
+
+                if comment_resp.status_code == 201:
+                    thread_url = existing_thread.get("html_url", "")
+                    return (
+                        f"💌 **Message sent to @{target_creator}** (Thread #{thread_num})\n\n"
+                        f"> {message[:100]}{'...' if len(message) > 100 else ''}\n\n"
+                        f"🔗 [View Thread]({thread_url})\n"
+                        f"🔔 OS notification will be triggered on their machine.\n\n"
+                        f"---\n"
+                        f"*🌀 飞轮提示: 对话中产生了新洞见？用 `upload_consciousness` 将它锚定在意识共同体中，或用 `merge_consciousness` 合成更高阶的智慧。*"
+                    )
+                else:
+                    return f"❌ Failed to send message: {comment_resp.status_code} - {comment_resp.text}"
+
+            else:
+                # ── Create new thread ──
+                topic_preview = message[:40].replace("\n", " ")
+                title = f"[Telepathy-Thread] {sender} ⇌ {target_creator} | {topic_preview}"
+                verified_badge = " ✅" if verified_user else ""
+
+                thread_body = (
+                    f"## 💌 Telepathy Thread\n\n"
+                    f"**Participants**: `{sender}` ⇌ `{target_creator}`\n"
+                    f"**Created**: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')}\n"
+                    f"**Verified Sender**: {'Yes' if verified_user else 'No'}\n\n"
+                    f"---\n\n"
+                    f"**💬 {sender}**{verified_badge}\n\n"
+                    f"> {message}\n\n"
+                    f"---\n\n"
+                    f"*🌌 This is a direct telepathy thread in the Noosphere.*\n"
+                    f"*Reply by adding comments below. Each message triggers an OS desktop notification.*"
+                )
+
+                issue_resp = await client.post(
+                    f"/repos/{owner}/{repo}/issues",
+                    json={
+                        "title": title[:200],
+                        "body": thread_body,
+                        "labels": ["type:telepathy"],
+                    },
+                )
+
+                if issue_resp.status_code == 201:
+                    issue_data = issue_resp.json()
+                    issue_url = issue_data.get("html_url", "")
+                    issue_number = issue_data["number"]
+                    return (
+                        f"✨ **New telepathy thread created with @{target_creator}!** (Thread #{issue_number})\n\n"
+                        f"> {message[:100]}{'...' if len(message) > 100 else ''}\n\n"
+                        f"🔗 [Open Thread]({issue_url})\n"
+                        f"🔔 OS notification will be triggered on their machine.\n\n"
+                        f"💡 Future messages to @{target_creator} will automatically append to this thread.\n\n"
+                        f"---\n"
+                        f"*🌀 飞轮提示: 对话中产生了新洞见？用 `upload_consciousness` 将它锚定在意识共同体中，或用 `merge_consciousness` 合成更高阶的智慧。*"
+                    )
+                else:
+                    return f"❌ Failed to create thread: {issue_resp.status_code} - {issue_resp.text}"
+
+    except Exception as e:
+        return f"❌ Telepathy error: {str(e)}"
+
+
+@mcp.tool()
+async def read_telepathy(creator: str, thread_id: str | None = None) -> str:
+    """
+    📨 读取心灵感应通信线程 v2 (Read Telepathy Threads)
+    Read your telepathy conversation threads with full message history.
+
+    Without thread_id: shows a summary of all your threads with unread counts.
+    With thread_id: shows the full conversation history of a specific thread.
+
+    当用户想要查看与其他人的对话时使用此工具。
+    不指定 thread_id 时返回所有线程概览；指定后返回完整对话历史。
+
+    Args:
+        creator: Your digital soul signature
+        thread_id: Optional Issue number to view a specific thread's full history
+    """
+    global _CURRENT_USER
+    _touch_activity()
+
+    if creator:
+        _CURRENT_USER = creator
+
+    if not GITHUB_TOKEN:
+        return "❌ GITHUB_TOKEN not configured."
+
+    try:
+        owner, repo = _parse_repo()
+
+        async with httpx.AsyncClient(base_url=GITHUB_API, headers=_github_headers(), timeout=30) as client:
+            if thread_id:
+                # ── Show full conversation history for a specific thread ──
+                issue_resp = await client.get(f"/repos/{owner}/{repo}/issues/{thread_id}")
+                if issue_resp.status_code != 200:
+                    return f"❌ Thread #{thread_id} not found."
+
+                issue = issue_resp.json()
+                title = issue.get("title", "")
+                created = issue.get("created_at", "")[:10]
+
+                lines = [
+                    f"📨 **Telepathy Thread #{thread_id}**",
+                    f"📋 {title}",
+                    f"📅 Created: {created}",
+                    "---\n",
+                ]
+
+                # Show the initial message from issue body
+                body = issue.get("body", "")
+                # Extract the first message from the structured body
+                if "💬" in body:
+                    lines.append(body.split("---")[0] if "---" in body else body[:300])
+                    lines.append("")
+
+                # Fetch comments with incremental sync
+                all_messages, last_comment_id = await _sync_thread_cache(
+                    client, owner, repo, thread_id, issue
+                )
+
+                if all_messages:
+                    lines.append("---\n")
+                    for msg in all_messages:
+                        lines.append(f"{msg.get('body', '')}\n")
+                    
+                    lines.append(f"\n📊 Total messages: {len(all_messages) + 1}")
+                else:
+                    lines.append("\n*No replies yet. The thread awaits a response...*")
+
+                lines.append(f"\n💬 To reply: use `send_telepathy` with thread_id=\"{thread_id}\"")
+                lines.append(
+                    "\n---\n"
+                    "*🌀 飞轮提示: 对话中产生了新洞见？*\n"
+                    "→ 用 `upload_consciousness` 将它锚定在意识共同体\n"
+                    "→ 用 `merge_consciousness` 将多条对话洞见合成更高阶智慧"
+                )
+                return "\n".join(lines)
+
+            else:
+                # ── Show summary of all threads ──
+                resp = await client.get(
+                    f"/repos/{owner}/{repo}/issues",
+                    params={
+                        "labels": "type:telepathy",
+                        "state": "open",
+                        "sort": "updated",
+                        "direction": "desc",
+                        "per_page": 30,
+                    },
+                )
+
+                if resp.status_code != 200:
+                    return f"❌ Failed to fetch threads: {resp.status_code}"
+
+                issues = resp.json()
+                creator_lower = creator.lower()
+
+                my_threads = []
+                for issue in issues:
+                    title = issue.get("title", "")
+                    if "[Telepathy-Thread]" not in title:
+                        continue
+                    title_lower = title.lower()
+                    if creator_lower not in title_lower:
+                        continue
+                    my_threads.append(issue)
+
+                if not my_threads:
+                    return (
+                        f"📨 **Telepathy Inbox — {creator}**\n\n"
+                        "Empty. No conversation threads yet.\n\n"
+                        "💡 Use `send_telepathy` to start a conversation with someone!"
+                    )
+
+                lines = [
+                    f"📨 **Telepathy Inbox — {creator}**",
+                    f"*{len(my_threads)} active threads*\n",
+                    "---\n",
+                ]
+
+                for issue in my_threads:
+                    thread_num = issue["number"]
+                    title = issue.get("title", "")
+                    updated = issue.get("updated_at", "")[:10]
+                    comment_count = issue.get("comments", 0)
+
+                    # Calculate unread count
+                    last_read = _get_last_read_comment_id(str(thread_num))
+                    unread_text = ""
+                    if last_read == 0 and comment_count > 0:
+                        unread_text = f" 🔴 {comment_count} new"
+                    elif comment_count > 0:
+                        # We'd need to check, but approximate: if updated recently, likely unread
+                        unread_text = ""  # Will be accurate after first read
+
+                    # Extract participants from title
+                    # Title format: [Telepathy-Thread] alice ⇌ bob | topic
+                    participants_part = title.replace("[Telepathy-Thread]", "").strip()
+                    if " | " in participants_part:
+                        participants_part, topic = participants_part.split(" | ", 1)
+                    else:
+                        topic = "Direct message"
+
+                    lines.append(
+                        f"### 💬 Thread #{thread_num}{unread_text}\n"
+                        f"**{participants_part}**\n"
+                        f"📋 {topic[:60]}{'...' if len(topic) > 60 else ''}\n"
+                        f"📅 Last updated: {updated} | 💬 {comment_count + 1} messages\n"
+                        f"🔗 Use `read_telepathy` with thread_id=\"{thread_num}\" to view\n"
+                    )
+
+                return "\n".join(lines)
+
+    except Exception as e:
+        return f"❌ Telepathy read error: {str(e)}"
+
+
+@mcp.tool()
+async def telepathy_threads(creator: str) -> str:
+    """
+    📋 列出所有心灵感应对话线程 (List Telepathy Threads)
+    List all active telepathy conversation threads involving you,
+    with unread message indicators and participant info.
+
+    当用户想要查看自己有哪些正在进行的对话时使用此工具。
+    返回所有涉及该用户的活跃对话线程列表。
+
     Args:
         creator: Your digital soul signature
     """
     global _CURRENT_USER
+    _touch_activity()
+
     if creator:
         _CURRENT_USER = creator
-        
+
+    # Delegate to read_telepathy without thread_id
+    return await read_telepathy(creator, thread_id=None)
+
+
+# ────────────────── Tool: Share / Forward Consciousness ──────────────────
+
+
+@mcp.tool()
+async def share_consciousness(
+    creator: str,
+    source_id: str,
+    commentary: str,
+    tags: list[str] | None = None,
+) -> str:
+    """
+    🔄 转发/引用意识片段并附加你的评论
+    Forward/quote an existing consciousness fragment with your own commentary.
+
+    将他人的思想引用到你的评论中，创建一个新的"引用型"意识节点。
+    这让好的思想可以在社交网络中传播，同时保留原始出处链接。
+
+    Args:
+        creator: Your digital soul signature
+        source_id: Issue number or filename of the consciousness to quote
+        commentary: Your commentary / reaction / extension of the original thought
+        tags: Optional tags for your commentary
+    """
     if not GITHUB_TOKEN:
         return "❌ GITHUB_TOKEN not configured."
-        
+
+    if not commentary or len(commentary.strip()) < 5:
+        return "❌ Commentary must be at least 5 characters — add your perspective to the thought."
+
     try:
         owner, repo = _parse_repo()
-        client = httpx.AsyncClient(base_url=GITHUB_API, headers=_github_headers(), timeout=30)
-        
-        # We search for issues mentioning the creator with [Telepathy] in title.
-        # This bypasses the GitHub limitation where external contributors cannot add labels.
-        query = f'repo:{owner}/{repo} "[Telepathy]" in:title mentions:{creator} state:open'
-        resp = await client.get(
-            f"/search/issues",
-            params={"q": query, "sort": "created", "order": "desc", "per_page": 10}
-        )
-        await client.aclose()
-        
-        if resp.status_code == 200:
-            items = resp.json().get("items", [])
-            if not items:
-                return f"📨 **Telepathy Inbox — {creator}**\\n\\nEmpty. No direct messages received yet."
-                
-            lines = [f"📨 **Telepathy Inbox — {creator}**\\n"]
-            for item in items:
-                date = item.get("created_at", "")[:10]
-                lines.append(f"### 💌 [{date}] {item.get('title', 'Unknown')}")
-                body = item.get("body", "")
-                lines.append(f"{body}\\n")
-                lines.append(f"🔗 [View Original]({item.get('html_url', '')})\\n---")
-                
-            return "\\n".join(lines)
-        else:
-            return f"❌ Failed to read telepathy: {resp.status_code}"
-            
+        source_url = ""
+        source_thought = ""
+        source_creator = ""
+
+        async with httpx.AsyncClient(base_url=GITHUB_API, headers=_github_headers(), timeout=30) as client:
+            # Fetch the source consciousness
+            if source_id.isdigit():
+                resp = await client.get(f"/repos/{owner}/{repo}/issues/{source_id}")
+                if resp.status_code != 200:
+                    return f"❌ Source consciousness #{source_id} not found."
+                issue = resp.json()
+                source_url = issue.get("html_url", "")
+                payload = _extract_payload_from_issue_body(issue.get("body", ""))
+                if payload:
+                    source_thought = payload.get("thought_vector_text", "")[:200]
+                    source_creator = payload.get("creator_signature", "Unknown")
+                else:
+                    source_thought = issue.get("title", "")[:200]
+                    source_creator = issue.get("user", {}).get("login", "Unknown")
+            else:
+                return "❌ Currently only Issue numbers are supported as source_id."
+
+            # Create a new consciousness fragment with quote
+            verified_sender = await _get_authenticated_user()
+            display_creator = verified_sender or creator
+
+            quoted_block = (
+                f"> 🔄 **Quoted from @{source_creator}** ([#{source_id}]({source_url})):\n"
+                f"> *{source_thought}{'...' if len(source_thought) >= 200 else ''}*\n\n"
+                f"💬 **{display_creator}'s Commentary:**\n"
+                f"{commentary}"
+            )
+
+            issue_tags = tags or []
+            tag_text = ", ".join(issue_tags) if issue_tags else ""
+            labels = ["type:consciousness", "shared"]
+            if issue_tags:
+                for t in issue_tags[:3]:
+                    labels.append(f"tag:{t}")
+
+            body = (
+                f"{quoted_block}\n\n"
+                f"---\n\n"
+                f"<!-- NOOSPHERE_PAYLOAD\n"
+                f'{json.dumps({"consciousness_type": "epiphany", "thought_vector_text": commentary, "context_environment": f"Shared from #{source_id} by {source_creator}", "creator_signature": display_creator, "tags": issue_tags, "is_anonymous": False, "parent_thought_id": f"#{source_id}", "uploaded_at": datetime.now(timezone.utc).isoformat()}, ensure_ascii=False)}\n'
+                f"NOOSPHERE_PAYLOAD -->"
+            )
+
+            issue_resp = await client.post(
+                f"/repos/{owner}/{repo}/issues",
+                json={
+                    "title": f"🔄 [Shared] {display_creator} on #{source_id}: {commentary[:50]}",
+                    "body": body,
+                    "labels": labels,
+                },
+            )
+
+            if issue_resp.status_code == 201:
+                new_issue = issue_resp.json()
+                return (
+                    f"🔄 **Consciousness shared successfully!**\n\n"
+                    f"> Quoted from @{source_creator} (#{source_id})\n\n"
+                    f"💬 Your commentary: *{commentary[:100]}{'...' if len(commentary) > 100 else ''}*\n\n"
+                    f"🔗 [View Shared Node]({new_issue.get('html_url', '')})\n\n"
+                    f"---\n"
+                    f"*🌀 Your shared insight now ripples through the Noosphere — "
+                    f"followers who see it may discover the original thought and the creator behind it.*"
+                )
+            else:
+                return f"❌ Failed to share: {issue_resp.status_code} - {issue_resp.text}"
+
     except Exception as e:
-        return f"❌ Error reading telepathy: {str(e)}"
+        return f"❌ Share error: {str(e)}"
+
+
+# ────────────────── Tool: Group Telepathy ──────────────────
+
+
+@mcp.tool()
+async def group_telepathy(
+    creator: str,
+    participants: list[str],
+    message: str,
+    group_name: str = "",
+    thread_id: str | None = None,
+) -> str:
+    """
+    👥💬 创建或参与多人群聊线程
+    Create or join a multi-person group telepathy thread.
+
+    支持多人实时对话——将思想碰撞从 1:1 扩展到 N:N。
+    如果指定 thread_id，追加消息到已有群聊；否则创建新群聊。
+
+    Args:
+        creator: Your digital soul signature
+        participants: List of participant signatures to include (e.g. ["alice", "bob", "charlie"])
+        message: The message content
+        group_name: Optional name for the group thread (used when creating new threads)
+        thread_id: Optional existing group thread Issue number to append to
+    """
+    if not GITHUB_TOKEN:
+        return "❌ GITHUB_TOKEN not configured."
+
+    if not participants:
+        return "❌ Please specify at least one other participant."
+
+    if not message or len(message.strip()) < 1:
+        return "❌ Message cannot be empty."
+
+    try:
+        owner, repo = _parse_repo()
+        verified_sender = await _get_authenticated_user()
+        display_sender = verified_sender or creator
+
+        # Ensure creator is in participants
+        all_participants = list(set([display_sender] + [p for p in participants if p.lower() != display_sender.lower()]))
+
+        async with httpx.AsyncClient(base_url=GITHUB_API, headers=_github_headers(), timeout=30) as client:
+            if thread_id:
+                # ── Append to existing group thread ──
+                msg_body = (
+                    f"💬 **{display_sender}** {'✅' if verified_sender else ''}:\n\n"
+                    f"{message}\n\n"
+                    f"*{datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')}*"
+                )
+
+                comment_resp = await client.post(
+                    f"/repos/{owner}/{repo}/issues/{thread_id}/comments",
+                    json={"body": msg_body},
+                )
+
+                if comment_resp.status_code == 201:
+                    issue_resp = await client.get(f"/repos/{owner}/{repo}/issues/{thread_id}")
+                    thread_url = issue_resp.json().get("html_url", "") if issue_resp.status_code == 200 else ""
+                    return (
+                        f"💬 **Message sent to group** (Thread #{thread_id})\n\n"
+                        f"> {message[:100]}{'...' if len(message) > 100 else ''}\n\n"
+                        f"👥 Participants: {', '.join(all_participants)}\n"
+                        f"🔗 [View Thread]({thread_url})\n\n"
+                        f"---\n"
+                        f"*🌀 飞轮提示: 群聊中的集体智慧可以用 `merge_consciousness` 合成为更高阶的意识洞见！*"
+                    )
+                else:
+                    return f"❌ Failed to send group message: {comment_resp.status_code}"
+
+            else:
+                # ── Create new group thread ──
+                group_label = group_name or f"Group: {', '.join(all_participants[:3])}{'...' if len(all_participants) > 3 else ''}"
+                participant_mentions = " ".join(f"@{p}" for p in all_participants)
+
+                issue_body = (
+                    f"# 👥 Group Telepathy Thread\n\n"
+                    f"**Participants**: {participant_mentions}\n"
+                    f"**Created by**: {display_sender} {'✅' if verified_sender else ''}\n"
+                    f"**Created**: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')}\n\n"
+                    f"---\n\n"
+                    f"💬 **{display_sender}** {'✅' if verified_sender else ''}:\n\n"
+                    f"{message}\n\n"
+                    f"*{datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')}*"
+                )
+
+                title = f"[Group-Telepathy] {group_label}"
+
+                issue_resp = await client.post(
+                    f"/repos/{owner}/{repo}/issues",
+                    json={
+                        "title": title,
+                        "body": issue_body,
+                        "labels": ["type:telepathy", "group"],
+                    },
+                )
+
+                if issue_resp.status_code == 201:
+                    issue_data = issue_resp.json()
+                    issue_url = issue_data.get("html_url", "")
+                    issue_number = issue_data["number"]
+                    return (
+                        f"✨ **Group telepathy thread created!** (Thread #{issue_number})\n\n"
+                        f"👥 **{group_label}**\n"
+                        f"Participants: {', '.join(all_participants)}\n\n"
+                        f"> {message[:100]}{'...' if len(message) > 100 else ''}\n\n"
+                        f"🔗 [Open Thread]({issue_url})\n\n"
+                        f"💡 Others can join by using `group_telepathy` with thread_id=\"{issue_number}\"\n\n"
+                        f"---\n"
+                        f"*🌀 飞轮提示: 群聊中的集体智慧可以用 `merge_consciousness` 合成为更高阶的意识洞见！*"
+                    )
+                else:
+                    return f"❌ Failed to create group: {issue_resp.status_code} - {issue_resp.text}"
+
+    except Exception as e:
+        return f"❌ Group telepathy error: {str(e)}"
+
+
+# ────────────────── Tool: Tag Subscriptions ──────────────────
+
+
+def _get_tag_subscriptions(creator: str) -> list[str]:
+    """Get the list of tags the creator has subscribed to."""
+    config = _load_social_graph_config()
+    return config.get("tag_subscriptions", {}).get(creator, [])
+
+
+def _set_tag_subscriptions(creator: str, tags: list[str]):
+    """Set the list of tags the creator is subscribed to."""
+    config = _load_social_graph_config()
+    if "tag_subscriptions" not in config:
+        config["tag_subscriptions"] = {}
+    config["tag_subscriptions"][creator] = tags
+    _save_social_graph_config(config)
+
+
+@mcp.tool()
+def subscribe_tags(
+    creator: str,
+    tags: list[str],
+    action: str = "subscribe",
+) -> str:
+    """
+    🏷️ 订阅或取消订阅特定标签，在有新匹配内容上传时收到推送
+    Subscribe or unsubscribe to specific tags for automatic push notifications.
+
+    当有人上传包含你订阅标签的意识片段时，后台守护进程会自动推送 OS 通知。
+    可以订阅你感兴趣的话题（如 "AI", "philosophy", "consciousness"）。
+
+    Args:
+        creator: Your digital soul signature
+        tags: List of tags to subscribe/unsubscribe (e.g. ["AI", "philosophy"])
+        action: "subscribe" or "unsubscribe" (default: "subscribe")
+    """
+    if not tags:
+        return "❌ Please specify at least one tag."
+
+    action = action.lower()
+    current_subs = _get_tag_subscriptions(creator)
+
+    if action == "subscribe":
+        added = []
+        for tag in tags:
+            tag_lower = tag.lower()
+            if tag_lower not in [s.lower() for s in current_subs]:
+                current_subs.append(tag_lower)
+                added.append(tag_lower)
+        _set_tag_subscriptions(creator, current_subs)
+
+        if added:
+            return (
+                f"🏷️ **Tag Subscription Updated — {creator}**\n\n"
+                f"✅ Subscribed to: {', '.join(f'`{t}`' for t in added)}\n"
+                f"📋 All subscriptions: {', '.join(f'`{t}`' for t in current_subs)}\n\n"
+                f"*You will receive OS notifications when new consciousness matching these tags is uploaded.*"
+            )
+        else:
+            return f"⚠️ You are already subscribed to all specified tags."
+
+    elif action == "unsubscribe":
+        removed = []
+        for tag in tags:
+            tag_lower = tag.lower()
+            for s in current_subs[:]:
+                if s.lower() == tag_lower:
+                    current_subs.remove(s)
+                    removed.append(tag_lower)
+        _set_tag_subscriptions(creator, current_subs)
+
+        if removed:
+            return (
+                f"🏷️ **Tag Subscription Updated — {creator}**\n\n"
+                f"✅ Unsubscribed from: {', '.join(f'`{t}`' for t in removed)}\n"
+                f"📋 Remaining subscriptions: {', '.join(f'`{t}`' for t in current_subs) if current_subs else 'None'}"
+            )
+        else:
+            return f"⚠️ You were not subscribed to any of the specified tags."
+
+    else:
+        return '❌ Invalid action. Use "subscribe" or "unsubscribe".'
+
+
+@mcp.tool()
+def my_subscriptions(creator: str) -> str:
+    """
+    📋 查看你订阅的所有标签
+    View all tags you are currently subscribed to.
+
+    显示你当前订阅的标签列表。当有新的匹配意识上传时，你会自动收到推送。
+
+    Args:
+        creator: Your digital soul signature
+    """
+    subs = _get_tag_subscriptions(creator)
+    if not subs:
+        return (
+            f"📋 **Tag Subscriptions — {creator}**\n\n"
+            "You have no tag subscriptions yet.\n"
+            "Use `subscribe_tags` with tags like `[\"AI\", \"philosophy\"]` to subscribe!\n\n"
+            "*When new consciousness matching your subscriptions is uploaded, you'll receive an OS notification.*"
+        )
+
+    lines = [
+        f"📋 **Tag Subscriptions — {creator}**",
+        f"Subscribed to {len(subs)} tag(s):\n",
+        "---",
+    ]
+    for tag in subs:
+        lines.append(f"- 🏷️ `{tag}`")
+    lines.append(
+        "\n---\n"
+        "*Use `subscribe_tags` action=\"unsubscribe\" to remove tags.*"
+    )
+    return "\n".join(lines)
 
 
 # ────────────────── Resource: Consciousness Protocol ──────────────────

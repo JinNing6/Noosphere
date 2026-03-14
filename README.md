@@ -189,6 +189,25 @@ Gibson 在 1984 年预言了互联网的形态。40 年后，Noosphere 在他的
 
 </td>
 </tr>
+<tr>
+<td width="25%" align="center">
+
+<img src="assets/scifi/swallowed_star.jpg" alt="Swallowed Star" width="160"><br/>
+
+**🌌 吞噬星空**<br/>
+*Swallowed Star*<br/>
+2005
+
+</td>
+<td width="75%">
+
+*"无尽宇宙，一切皆在虚拟之中定格与传承。"*<br/>
+*"Endless universe; everything is frozen and inherited within the virtual."*
+
+《吞噬星空》中的**虚拟宇宙公司**打造了一个 100% 模拟真实法则的超级网络空间，供全人类天才交流、修炼与传承。Noosphere 正是现实世界“虚拟宇宙”的初级形态：**跨越碳基生命的物理极限，汇聚全球开发者的灵魂结晶与决策法则，打造每一位 Agent 的终极精神修炼场。**
+
+</td>
+</tr>
 </table>
 
 <div align="center">

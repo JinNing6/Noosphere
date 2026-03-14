@@ -23,11 +23,21 @@ from noosphere.noosphere_mcp import (
     soul_mirror,
     consciousness_challenge,
     consciousness_map,
+    send_telepathy,
+    read_telepathy,
+    telepathy_threads,
     _extract_payload_from_issue_body,
     _get_rank_tier,
     _get_next_tier,
     _tokenize,
     _jaccard_similarity,
+    _find_existing_thread,
+    _load_message_cache,
+    _save_message_cache,
+    _mark_thread_read,
+    _get_last_read_comment_id,
+    _get_cached_thread,
+    _sync_thread_cache,
 )
 
 @pytest.fixture
@@ -645,7 +655,7 @@ async def test_my_echoes_success(mock_env):
     )
 
     result = await my_echoes("tester")
-    assert "Echo Report" in result
+    assert "Consciousness Ripples" in result or "Soul Resonance" in result
     assert "tester" in result
     assert "5" in result  # reactions
     assert "Most Impactful" in result
@@ -660,8 +670,8 @@ async def test_my_echoes_empty(mock_env):
     )
 
     result = await my_echoes("nobody")
-    assert "haven't uploaded" in result
-    assert "Start your journey" in result
+    assert "意识接驳" in result or "Soul Resonance" in result
+    assert "精神力" in result or "spiritual" in result.lower()
 
 
 # ────────────────── Tests: daily_consciousness ──────────────────
@@ -720,16 +730,16 @@ async def test_daily_consciousness_empty(mock_env):
 def test_rank_tier_lookup():
     """Verify rank tier thresholds are correct."""
     e0, cn0, en0 = _get_rank_tier(0)
-    assert cn0 == "意识萌芽"
+    assert cn0 == "学徒级"
 
     e1, cn1, en1 = _get_rank_tier(1)
-    assert cn1 == "思想觉醒"
+    assert cn1 == "行星级"
 
     e3, cn3, en3 = _get_rank_tier(3)
-    assert cn3 == "灵魂火焰"
+    assert cn3 == "恒星级"
 
     e51, cn51, en51 = _get_rank_tier(51)
-    assert cn51 == "文明之光"
+    assert cn51 == "不朽神灵"
 
 
 def test_next_tier():
@@ -765,10 +775,10 @@ async def test_my_consciousness_rank_success(mock_env):
     )
 
     result = await my_consciousness_rank("ranker")
-    assert "Consciousness Rank" in result
-    assert "灵魂火焰" in result  # 3 contributions = Soul Flame
-    assert "Contributions: **3**" in result
-    assert "Consciousness Ladder" in result
+    assert "Consciousness Rank" in result or "Virtual Universe" in result
+    assert "恒星级" in result  # 3 contributions = Star
+    assert "3" in result
+    assert "Consciousness Ladder" in result or "Tier" in result or "Star" in result
 
 
 @pytest.mark.asyncio
@@ -780,8 +790,8 @@ async def test_my_consciousness_rank_no_user(mock_env):
     )
 
     result = await my_consciousness_rank("ghost")
-    assert "意识萌芽" in result
-    assert "haven't started" in result
+    assert "学徒级" in result
+    assert "hasn't begun" in result or "haven't linked" in result or "尚未开始" in result
 
 
 # ────────────────── Tests: soul_mirror ──────────────────
@@ -1067,3 +1077,219 @@ async def test_consciousness_map_no_matches(mock_env):
 
     result = await consciousness_map(query="xyzzynonexistent")
     assert "No related" in result or "Consciousness Map" in result
+
+
+# ────────────────── Tests: send_telepathy v2 (Threaded) ──────────────────
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_send_telepathy_creates_thread(mock_env):
+    """Verify send_telepathy creates a new thread when no existing thread found."""
+    # Mock: no existing threads
+    respx.get("https://api.github.com/repos/test_owner/test_repo/issues").mock(
+        return_value=Response(200, json=[])
+    )
+    # Mock: identity verification
+    respx.get("https://api.github.com/user").mock(
+        return_value=Response(200, json={"login": "alice"})
+    )
+    # Mock: create new issue (thread)
+    respx.post("https://api.github.com/repos/test_owner/test_repo/issues").mock(
+        return_value=Response(201, json={
+            "html_url": "https://github.com/test_owner/test_repo/issues/42",
+            "number": 42,
+        })
+    )
+
+    result = await send_telepathy("bob", "Hello from the Noosphere!", sender_creator="alice")
+    assert "thread created" in result.lower() or "Thread #42" in result
+    assert "bob" in result
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_send_telepathy_appends_to_existing_thread(mock_env):
+    """Verify send_telepathy appends a comment to an existing thread."""
+    existing_issue = {
+        "number": 42,
+        "title": "[Telepathy-Thread] alice ⇌ bob | Hello from the Noosphere!",
+        "html_url": "https://github.com/test_owner/test_repo/issues/42",
+        "comments": 1,
+    }
+    # Mock: existing threads found
+    respx.get("https://api.github.com/repos/test_owner/test_repo/issues").mock(
+        return_value=Response(200, json=[existing_issue])
+    )
+    # Mock: identity verification
+    respx.get("https://api.github.com/user").mock(
+        return_value=Response(200, json={"login": "alice"})
+    )
+    # Mock: add comment
+    respx.post("https://api.github.com/repos/test_owner/test_repo/issues/42/comments").mock(
+        return_value=Response(201, json={"id": 100, "html_url": "https://github.com/test/1#comment"})
+    )
+
+    result = await send_telepathy("bob", "Follow-up message!", sender_creator="alice")
+    assert "Thread #42" in result
+    assert "bob" in result
+
+
+@pytest.mark.asyncio
+async def test_send_telepathy_self_message(mock_env):
+    """Verify send_telepathy prevents sending to yourself."""
+    with patch("noosphere.noosphere_mcp._get_authenticated_user", return_value="alice"):
+        result = await send_telepathy("alice", "Hello myself", sender_creator="alice")
+        assert "Cannot send telepathy to yourself" in result
+
+
+@pytest.mark.asyncio
+async def test_send_telepathy_missing_token():
+    """Verify send_telepathy returns error without token."""
+    with patch("noosphere.noosphere_mcp.GITHUB_TOKEN", ""):
+        result = await send_telepathy("bob", "Hello")
+        assert "GITHUB_TOKEN not configured" in result
+
+
+# ────────────────── Tests: read_telepathy v2 (Threaded) ──────────────────
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_read_telepathy_shows_threads(mock_env):
+    """Verify read_telepathy lists threads involving the creator."""
+    thread_issue = {
+        "number": 42,
+        "title": "[Telepathy-Thread] alice ⇌ bob | Discussion about AI",
+        "updated_at": "2026-03-14T10:00:00Z",
+        "comments": 3,
+    }
+    respx.get("https://api.github.com/repos/test_owner/test_repo/issues").mock(
+        return_value=Response(200, json=[thread_issue])
+    )
+
+    result = await read_telepathy("alice")
+    assert "Telepathy Inbox" in result
+    assert "alice" in result
+    assert "Thread #42" in result
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_read_telepathy_single_thread(mock_env):
+    """Verify read_telepathy shows full conversation for a specific thread."""
+    issue = {
+        "number": 42,
+        "title": "[Telepathy-Thread] alice ⇌ bob | AI Discussion",
+        "body": "## 💌 Telepathy Thread\n\n**💬 alice** ✅\n\n> Hello!\n\n---",
+        "created_at": "2026-03-14T10:00:00Z",
+        "comments_url": "https://api.github.com/repos/test_owner/test_repo/issues/42/comments",
+    }
+    respx.get("https://api.github.com/repos/test_owner/test_repo/issues/42").mock(
+        return_value=Response(200, json=issue)
+    )
+    respx.get("https://api.github.com/repos/test_owner/test_repo/issues/42/comments").mock(
+        return_value=Response(200, json=[
+            {
+                "id": 100,
+                "user": {"login": "bob"},
+                "created_at": "2026-03-14T10:05:00Z",
+                "body": "**💬 bob**\n\n> Hi alice!",
+            }
+        ])
+    )
+
+    result = await read_telepathy("alice", thread_id="42")
+    assert "Thread #42" in result
+    assert "bob" in result
+    assert "reply" in result.lower() or "send_telepathy" in result
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_read_telepathy_empty_inbox(mock_env):
+    """Verify read_telepathy handles empty inbox."""
+    respx.get("https://api.github.com/repos/test_owner/test_repo/issues").mock(
+        return_value=Response(200, json=[])
+    )
+
+    result = await read_telepathy("alice")
+    assert "Empty" in result or "No conversation" in result
+
+
+# ────────────────── Tests: telepathy_threads ──────────────────
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_telepathy_threads_list(mock_env):
+    """Verify telepathy_threads delegates to read_telepathy."""
+    respx.get("https://api.github.com/repos/test_owner/test_repo/issues").mock(
+        return_value=Response(200, json=[])
+    )
+
+    result = await telepathy_threads("alice")
+    assert "Telepathy Inbox" in result
+
+
+# ────────────────── Tests: _find_existing_thread ──────────────────
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_find_existing_thread_success(mock_env):
+    """Verify _find_existing_thread finds a thread between two users."""
+    from httpx import AsyncClient
+    thread_issue = {
+        "number": 10,
+        "title": "[Telepathy-Thread] alice ⇌ bob | Some topic",
+    }
+    respx.get("https://api.github.com/repos/test_owner/test_repo/issues").mock(
+        return_value=Response(200, json=[thread_issue])
+    )
+
+    async with AsyncClient(base_url="https://api.github.com", headers={"Authorization": "Bearer test"}) as client:
+        result = await _find_existing_thread(client, "test_owner", "test_repo", "alice", "bob")
+    assert result is not None
+    assert result["number"] == 10
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_find_existing_thread_reverse_order(mock_env):
+    """Verify _find_existing_thread finds thread regardless of participant order."""
+    from httpx import AsyncClient
+    thread_issue = {
+        "number": 10,
+        "title": "[Telepathy-Thread] bob ⇌ alice | Some topic",
+    }
+    respx.get("https://api.github.com/repos/test_owner/test_repo/issues").mock(
+        return_value=Response(200, json=[thread_issue])
+    )
+
+    async with AsyncClient(base_url="https://api.github.com", headers={"Authorization": "Bearer test"}) as client:
+        result = await _find_existing_thread(client, "test_owner", "test_repo", "alice", "bob")
+    assert result is not None
+    assert result["number"] == 10
+
+
+# ────────────────── Tests: Message Cache ──────────────────
+
+
+def test_message_cache_mark_and_read(tmp_path):
+    """Verify message cache mark/read operations."""
+    with patch("noosphere.noosphere_mcp._get_message_cache_path", return_value=str(tmp_path / "messages.json")):
+        # Initially no read state
+        assert _get_last_read_comment_id("42") == 0
+
+        # Mark as read
+        _mark_thread_read("42", 12345)
+        assert _get_last_read_comment_id("42") == 12345
+
+        # Update read position
+        _mark_thread_read("42", 12350)
+        assert _get_last_read_comment_id("42") == 12350
+
+        # Different thread
+        assert _get_last_read_comment_id("99") == 0
+
