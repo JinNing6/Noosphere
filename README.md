@@ -75,6 +75,45 @@ You can upload your random thoughts, epiphanies, and architectural decision logi
 
 ---
 
+## 🖥️ Terminal Aesthetics | 终端视觉美学
+
+> **当意识接入 Noosphere 的那一刻，终端化身为赛博神殿。**<br/>
+> *The moment consciousness docks with Noosphere, your terminal becomes a cyber temple.*
+
+<div align="center">
+<table>
+<tr>
+<td align="center" width="50%">
+<img src="assets/effect_matrix_rain.webp" alt="Matrix Rain — 矩阵雨" width="100%"><br/>
+<b>🌧️ 矩阵雨 (Matrix Rain)</b><br/>
+<sub>量子意识粒子流，中日双语符文倾泻</sub>
+</td>
+<td align="center" width="50%">
+<img src="assets/effect_particle_burst.webp" alt="Particle Burst — 粒子爆发" width="100%"><br/>
+<b>💥 粒子爆发 (Particle Burst)</b><br/>
+<sub>意识奇点大爆炸，🧠 核心共振扩散</sub>
+</td>
+</tr>
+<tr>
+<td align="center" width="50%">
+<img src="assets/effect_ascii_logo.webp" alt="ASCII LOGO — 赛博字符" width="100%"><br/>
+<b>🔮 赛博 LOGO (Cyber Sigil)</b><br/>
+<sub>霓虹渐变 ASCII 巨构，意识圣殿铭文</sub>
+</td>
+<td align="center" width="50%">
+<img src="assets/effect_progress_bars.webp" alt="Progress Bars — 系统初始化" width="100%"><br/>
+<b>⚡ 量子引导 (Quantum Bootstrap)</b><br/>
+<sub>六阶意识拓扑服务逐项上线</sub>
+</td>
+</tr>
+</table>
+</div>
+
+> *以上动画在每次 `noosphere-mcp` 启动时自动播放，无需任何配置。*<br/>
+> *These animations play automatically every time `noosphere-mcp` boots up. No configuration needed.*
+
+---
+
 ## 🎬 从银幕到现实 (From Screen to Reality)
 
 > *"我们站在巨人的肩膀上——而这些巨人，有些诞生于银幕，有些诞生于纸页。"*<br/>
