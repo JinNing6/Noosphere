@@ -7,7 +7,7 @@
 <br/><br/>
 
 <a href="https://jinning6.github.io/Noosphere/">
-  <img src="assets/splash_demo.webp" alt="Noosphere 3D Interactive Banner" width="100%">
+  <img src="assets/splash_cinematic.webp" alt="Noosphere Cinematic Entry — 意识跃迁" width="100%">
 </a>
 
 <br/><br/>
