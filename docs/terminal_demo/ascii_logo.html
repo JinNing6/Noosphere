@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>ASCII LOGO — Cinematic</title>
+<style>
+  * { margin: 0; padding: 0; }
+  body { background: #000; overflow: hidden; }
+  canvas { display: block; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+canvas.width = 820;
+canvas.height = 400;
+
+const logoLines = [
+  "███╗   ██╗ ██████╗  ██████╗ ███████╗██████╗ ██╗  ██╗███████╗██████╗ ███████╗",
+  "████╗  ██║██╔═══██╗██╔═══██╗██╔════╝██╔══██╗██║  ██║██╔════╝██╔══██╗██╔════╝",
+  "██╔██╗ ██║██║   ██║██║   ██║███████╗██████╔╝███████║█████╗  ██████╔╝█████╗  ",
+  "██║╚██╗██║██║   ██║██║   ██║╚════██║██╔═══╝ ██╔══██║██╔══╝  ██╔══██╗██╔══╝  ",
+  "██║ ╚████║╚██████╔╝╚██████╔╝███████║██║     ██║  ██║███████╗██║  ██║███████╗",
+  "╚═╝  ╚═══╝ ╚═════╝  ╚═════╝ ╚══════╝╚═╝     ╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝╚══════╝"
+];
+
+const subtitle1 = "将你的意识，锚定在永恒的数字宇宙。";
+const subtitle2 = "Anchor your consciousness in the eternal digital universe.";
+
+// Color gradient for logo lines (top=cyan, mid=purple, bottom=magenta)
+const lineColors = [
+  [0, 229, 255],   // cyan
+  [0, 200, 255],   // cyan-blue
+  [140, 120, 255], // purple
+  [160, 100, 255], // purple
+  [255, 64, 129],  // magenta-pink
+  [255, 50, 100],  // hot pink
+];
+
+let frame = 0;
+let revealProgress = 0; // 0 to 1
+const revealSpeed = 0.008;
+let glitchTimer = 0;
+
+// Particle system for background ambiance
+const bgParticles = [];
+for (let i = 0; i < 60; i++) {
+  bgParticles.push({
+    x: Math.random() * canvas.width,
+    y: Math.random() * canvas.height,
+    vx: (Math.random() - 0.5) * 0.3,
+    vy: -0.2 - Math.random() * 0.5,
+    size: 0.5 + Math.random() * 1.5,
+    alpha: 0.1 + Math.random() * 0.3,
+    hue: 170 + Math.random() * 50,
+  });
+}
+
+function drawScanlines() {
+  ctx.save();
+  ctx.globalAlpha = 0.04;
+  ctx.fillStyle = '#000';
+  for (let y = 0; y < canvas.height; y += 2) {
+    ctx.fillRect(0, y, canvas.width, 1);
+  }
+  ctx.restore();
+}
+
+function drawBgParticles() {
+  for (const p of bgParticles) {
+    p.x += p.vx;
+    p.y += p.vy;
+    if (p.y < -5) { p.y = canvas.height + 5; p.x = Math.random() * canvas.width; }
+    if (p.x < -5 || p.x > canvas.width + 5) p.x = Math.random() * canvas.width;
+
+    ctx.save();
+    ctx.globalAlpha = p.alpha * (0.5 + Math.sin(frame * 0.03 + p.x) * 0.5);
+    ctx.fillStyle = `hsl(${p.hue}, 80%, 70%)`;
+    ctx.shadowColor = `hsl(${p.hue}, 100%, 60%)`;
+    ctx.shadowBlur = 5;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+}
+
+function drawLogo() {
+  const fontSize = 11;
+  const lineHeight = 17;
+  const startY = 100;
+  const startX = 40;
+
+  for (let i = 0; i < logoLines.length; i++) {
+    const line = logoLines[i];
+    const lineReveal = Math.max(0, Math.min(1, (revealProgress - i * 0.08) / 0.3));
+    if (lineReveal <= 0) continue;
+
+    const charsToShow = Math.floor(line.length * lineReveal);
+    const [r, g, b] = lineColors[i];
+
+    // Neon glow pulse
+    const pulse = Math.sin(frame * 0.04 + i * 0.5) * 0.15 + 0.85;
+
+    for (let j = 0; j < charsToShow; j++) {
+      const ch = line[j];
+      if (ch === ' ') continue;
+
+      const x = startX + j * (fontSize * 0.62);
+      const y = startY + i * lineHeight;
+
+      // Glitch effect
+      let offsetX = 0, offsetY = 0;
+      if (glitchTimer > 0 && Math.random() < 0.1) {
+        offsetX = (Math.random() - 0.5) * 4;
+        offsetY = (Math.random() - 0.5) * 2;
+      }
+
+      ctx.save();
+      ctx.font = `bold ${fontSize}px 'Consolas', 'Courier New', monospace`;
+      ctx.shadowColor = `rgba(${r}, ${g}, ${b}, 0.9)`;
+      ctx.shadowBlur = 8 + pulse * 6;
+      ctx.fillStyle = `rgba(${Math.min(r + 60, 255)}, ${Math.min(g + 60, 255)}, ${Math.min(b + 60, 255)}, ${pulse})`;
+      ctx.fillText(ch, x + offsetX, y + offsetY);
+
+      // Double shadow for extra glow
+      ctx.shadowBlur = 15;
+      ctx.globalAlpha = 0.3;
+      ctx.fillText(ch, x + offsetX, y + offsetY);
+      ctx.restore();
+    }
+
+    // Leading edge highlight
+    if (lineReveal < 1 && lineReveal > 0) {
+      const edgeX = startX + charsToShow * (fontSize * 0.62);
+      ctx.save();
+      ctx.globalAlpha = 0.6;
+      ctx.shadowColor = '#fff';
+      ctx.shadowBlur = 20;
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(edgeX - 2, startY + i * lineHeight - lineHeight + 4, 3, lineHeight);
+      ctx.restore();
+    }
+  }
+}
+
+function drawSubtitle() {
+  const subReveal = Math.max(0, Math.min(1, (revealProgress - 0.7) / 0.25));
+  if (subReveal <= 0) return;
+
+  const y1 = 230;
+  const y2 = 252;
+
+  ctx.save();
+  ctx.globalAlpha = subReveal;
+  ctx.textAlign = 'center';
+
+  // Chinese subtitle
+  ctx.font = 'bold 16px sans-serif';
+  ctx.shadowColor = '#ffd740';
+  ctx.shadowBlur = 12;
+  ctx.fillStyle = '#ffd740';
+  ctx.fillText(subtitle1, canvas.width / 2, y1);
+
+  // English subtitle
+  ctx.font = '12px "Consolas", monospace';
+  ctx.shadowColor = 'rgba(255,255,255,0.5)';
+  ctx.shadowBlur = 6;
+  ctx.fillStyle = 'rgba(255,255,255,0.5)';
+  ctx.fillText(subtitle2, canvas.width / 2, y2);
+
+  ctx.restore();
+}
+
+function drawHorizontalLine() {
+  const lineReveal = Math.max(0, Math.min(1, (revealProgress - 0.6) / 0.2));
+  if (lineReveal <= 0) return;
+
+  const y = 270;
+  const maxW = 400;
+  const w = maxW * lineReveal;
+
+  ctx.save();
+  ctx.globalAlpha = 0.4;
+  const grad = ctx.createLinearGradient(canvas.width/2 - w/2, 0, canvas.width/2 + w/2, 0);
+  grad.addColorStop(0, 'rgba(0,229,255,0)');
+  grad.addColorStop(0.3, 'rgba(0,229,255,0.8)');
+  grad.addColorStop(0.5, 'rgba(180,100,255,1)');
+  grad.addColorStop(0.7, 'rgba(255,64,129,0.8)');
+  grad.addColorStop(1, 'rgba(255,50,100,0)');
+  ctx.strokeStyle = grad;
+  ctx.lineWidth = 1;
+  ctx.shadowColor = '#b388ff';
+  ctx.shadowBlur = 10;
+  ctx.beginPath();
+  ctx.moveTo(canvas.width/2 - w/2, y);
+  ctx.lineTo(canvas.width/2 + w/2, y);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function draw() {
+  frame++;
+
+  // Background
+  ctx.fillStyle = 'rgba(0, 1, 4, 0.15)';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  drawBgParticles();
+  drawLogo();
+  drawHorizontalLine();
+  drawSubtitle();
+  drawScanlines();
+
+  // Advance reveal
+  if (revealProgress < 1.1) {
+    revealProgress += revealSpeed;
+  } else {
+    // Glitch cycle
+    if (Math.random() < 0.005) glitchTimer = 8;
+    if (glitchTimer > 0) glitchTimer--;
+
+    // Reset after hold
+    if (revealProgress > 2.5) {
+      revealProgress = 0;
+      ctx.fillStyle = '#000';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+    revealProgress += 0.005;
+  }
+
+  // Vignette
+  const vg = ctx.createRadialGradient(canvas.width/2, canvas.height/2, canvas.height*0.3, canvas.width/2, canvas.height/2, canvas.height*0.7);
+  vg.addColorStop(0, 'rgba(0,0,0,0)');
+  vg.addColorStop(1, 'rgba(0,0,0,0.6)');
+  ctx.fillStyle = vg;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  requestAnimationFrame(draw);
+}
+
+draw();
+</script>
+</body>
+</html>

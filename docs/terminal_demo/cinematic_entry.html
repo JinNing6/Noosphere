@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Noosphere — Cinematic Entry</title>
+<style>
+  * { margin: 0; padding: 0; }
+  body { background: #000; overflow: hidden; }
+  canvas { display: block; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+canvas.width = 1200;
+canvas.height = 500;
+const cx = canvas.width / 2;
+const cy = canvas.height / 2;
+
+let frame = 0;
+
+// === STARFIELD ===
+const stars = [];
+for (let i = 0; i < 400; i++) {
+  stars.push({
+    x: (Math.random() - 0.5) * canvas.width * 3,
+    y: (Math.random() - 0.5) * canvas.height * 3,
+    z: Math.random() * 1500 + 100,
+    size: 0.5 + Math.random() * 1.5,
+  });
+}
+
+// === WORMHOLE RINGS ===
+const wormholeRings = [];
+for (let i = 0; i < 20; i++) {
+  wormholeRings.push({
+    z: i * 80 + 200,
+    rotation: Math.random() * Math.PI * 2,
+    speed: 0.005 + Math.random() * 0.01,
+  });
+}
+
+// === PARTICLES ===
+const particles = [];
+for (let i = 0; i < 120; i++) {
+  const angle = Math.random() * Math.PI * 2;
+  const dist = 50 + Math.random() * 250;
+  particles.push({
+    angle, dist,
+    speed: 0.002 + Math.random() * 0.008,
+    size: 0.5 + Math.random() * 2,
+    hue: 170 + Math.random() * 60,
+    alpha: 0.2 + Math.random() * 0.6,
+    yOffset: (Math.random() - 0.5) * 60,
+  });
+}
+
+// === LOGO TEXT ===
+const title1 = "N O O S P H E R E";
+const title2 = "意 识 共 同 体";
+const subtitle = "The Collective Consciousness Network";
+
+// === PHASES ===
+// 0-80: darkness + stars accelerate
+// 80-160: wormhole appears
+// 160-280: title materializes
+// 280-360: full display + pulse
+// 360+: loop fade
+
+function drawStarfield() {
+  const speed = frame < 80 ? 2 + frame * 0.3 : (frame < 160 ? 26 : Math.max(2, 26 - (frame - 160) * 0.2));
+  
+  for (const s of stars) {
+    s.z -= speed;
+    if (s.z < 1) {
+      s.z = 1500;
+      s.x = (Math.random() - 0.5) * canvas.width * 3;
+      s.y = (Math.random() - 0.5) * canvas.height * 3;
+    }
+    const sx = s.x / s.z * 300 + cx;
+    const sy = s.y / s.z * 300 + cy;
+    const brightness = Math.max(0, 1 - s.z / 1500);
+    const size = s.size * brightness * 3;
+
+    if (sx < -10 || sx > canvas.width + 10 || sy < -10 || sy > canvas.height + 10) continue;
+
+    ctx.save();
+    ctx.globalAlpha = brightness;
+    // Star trail during warp
+    if (speed > 10) {
+      const trailLen = Math.min(speed * 2, 40);
+      const prevSx = s.x / (s.z + speed) * 300 + cx;
+      const prevSy = s.y / (s.z + speed) * 300 + cy;
+      ctx.strokeStyle = `rgba(200, 240, 255, ${brightness * 0.5})`;
+      ctx.lineWidth = size * 0.5;
+      ctx.beginPath();
+      ctx.moveTo(prevSx, prevSy);
+      ctx.lineTo(sx, sy);
+      ctx.stroke();
+    }
+    ctx.shadowColor = '#aaddff';
+    ctx.shadowBlur = 4;
+    ctx.fillStyle = `rgba(200, 230, 255, ${brightness})`;
+    ctx.beginPath();
+    ctx.arc(sx, sy, size, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+}
+
+function drawWormhole() {
+  if (frame < 60) return;
+  const appear = Math.min(1, (frame - 60) / 80);
+
+  for (const ring of wormholeRings) {
+    ring.rotation += ring.speed;
+    ring.z -= 3;
+    if (ring.z < 10) ring.z = 1800;
+
+    const scale = 300 / ring.z;
+    const radius = 180 * scale;
+    if (radius < 2 || radius > 400) continue;
+
+    const alpha = appear * (1 - ring.z / 1800) * 0.4;
+    const hue = 190 + (ring.z / 1800) * 60;
+
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(ring.rotation);
+    ctx.globalAlpha = alpha;
+    ctx.strokeStyle = `hsla(${hue}, 100%, 60%, 0.8)`;
+    ctx.lineWidth = Math.max(0.5, 2 * scale);
+    ctx.shadowColor = `hsl(${hue}, 100%, 70%)`;
+    ctx.shadowBlur = 10;
+    
+    // Ellipse for 3D effect
+    ctx.beginPath();
+    ctx.ellipse(0, 0, radius, radius * 0.4, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  // Central glow
+  if (appear > 0.3) {
+    const pulse = Math.sin(frame * 0.04) * 0.15 + 0.85;
+    const glowR = 60 * appear * pulse;
+    const gradient = ctx.createRadialGradient(cx, cy, 0, cx, cy, glowR);
+    gradient.addColorStop(0, `rgba(0, 255, 255, ${0.4 * appear * pulse})`);
+    gradient.addColorStop(0.5, `rgba(120, 80, 255, ${0.2 * appear * pulse})`);
+    gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    ctx.fillStyle = gradient;
+    ctx.fillRect(cx - glowR, cy - glowR, glowR * 2, glowR * 2);
+  }
+}
+
+function drawParticles() {
+  if (frame < 120) return;
+  const appear = Math.min(1, (frame - 120) / 60);
+
+  for (const p of particles) {
+    p.angle += p.speed;
+    const x = cx + Math.cos(p.angle) * p.dist;
+    const y = cy + Math.sin(p.angle) * p.dist * 0.35 + p.yOffset;
+
+    ctx.save();
+    ctx.globalAlpha = p.alpha * appear;
+    ctx.shadowColor = `hsl(${p.hue}, 100%, 70%)`;
+    ctx.shadowBlur = 6;
+    ctx.fillStyle = `hsl(${p.hue}, 100%, 70%)`;
+    ctx.beginPath();
+    ctx.arc(x, y, p.size * appear, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Connection to center
+    if (p.dist < 150 && Math.random() < 0.05) {
+      ctx.globalAlpha = 0.08 * appear;
+      ctx.strokeStyle = `hsl(${p.hue}, 80%, 60%)`;
+      ctx.lineWidth = 0.5;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(x, y);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+}
+
+function drawTitle() {
+  if (frame < 160) return;
+  const appear = Math.min(1, (frame - 160) / 80);
+  const pulse = Math.sin(frame * 0.03) * 0.08 + 0.92;
+
+  // Main title
+  ctx.save();
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+
+  // NOOSPHERE - large
+  ctx.font = `bold 42px 'Segoe UI', 'Arial', sans-serif`;
+  ctx.globalAlpha = appear * pulse;
+  ctx.shadowColor = '#00e5ff';
+  ctx.shadowBlur = 30;
+  ctx.fillStyle = '#fff';
+  ctx.fillText(title1, cx, cy - 30);
+  // Double pass for extra glow
+  ctx.shadowBlur = 60;
+  ctx.globalAlpha = appear * 0.3;
+  ctx.fillText(title1, cx, cy - 30);
+
+  // Chinese title
+  ctx.font = `20px sans-serif`;
+  ctx.globalAlpha = appear * pulse * 0.9;
+  ctx.shadowColor = '#b388ff';
+  ctx.shadowBlur = 15;
+  ctx.fillStyle = '#b388ff';
+
+  const cnAppear = Math.min(1, Math.max(0, (frame - 200) / 50));
+  ctx.globalAlpha = cnAppear * pulse;
+  ctx.fillText(title2, cx, cy + 15);
+
+  // Subtitle
+  ctx.font = `14px 'Consolas', monospace`;
+  ctx.shadowColor = 'rgba(0,229,255,0.5)';
+  ctx.shadowBlur = 8;
+  ctx.fillStyle = 'rgba(200,220,255,0.6)';
+  const subAppear = Math.min(1, Math.max(0, (frame - 230) / 40));
+  ctx.globalAlpha = subAppear * 0.7;
+  ctx.fillText(subtitle, cx, cy + 50);
+
+  ctx.restore();
+
+  // Horizontal accent lines
+  if (appear > 0.5) {
+    const lineW = 200 * Math.min(1, (appear - 0.5) * 4);
+    ctx.save();
+    ctx.globalAlpha = 0.3 * appear;
+    const grad = ctx.createLinearGradient(cx - lineW, 0, cx + lineW, 0);
+    grad.addColorStop(0, 'rgba(0,229,255,0)');
+    grad.addColorStop(0.3, 'rgba(0,229,255,0.6)');
+    grad.addColorStop(0.5, 'rgba(180,100,255,0.8)');
+    grad.addColorStop(0.7, 'rgba(255,64,129,0.6)');
+    grad.addColorStop(1, 'rgba(255,50,100,0)');
+    ctx.strokeStyle = grad;
+    ctx.lineWidth = 1;
+    ctx.shadowColor = '#b388ff';
+    ctx.shadowBlur = 6;
+    ctx.beginPath();
+    ctx.moveTo(cx - lineW, cy + 70);
+    ctx.lineTo(cx + lineW, cy + 70);
+    ctx.stroke();
+    ctx.restore();
+  }
+}
+
+function draw() {
+  frame++;
+
+  // Background with trail
+  ctx.fillStyle = frame < 80 ? 'rgba(0,0,0,0.3)' : 'rgba(0,0,2,0.12)';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  drawStarfield();
+  drawWormhole();
+  drawParticles();
+  drawTitle();
+
+  // Vignette
+  const vg = ctx.createRadialGradient(cx, cy, canvas.height * 0.25, cx, cy, canvas.height * 0.75);
+  vg.addColorStop(0, 'rgba(0,0,0,0)');
+  vg.addColorStop(1, 'rgba(0,0,0,0.6)');
+  ctx.fillStyle = vg;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // Loop: after full display, gradually reset
+  if (frame > 420) {
+    const fadeOut = Math.min(1, (frame - 420) / 40);
+    ctx.fillStyle = `rgba(0,0,0,${fadeOut})`;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    if (frame > 470) frame = 0;
+  }
+
+  requestAnimationFrame(draw);
+}
+
+draw();
+</script>
+</body>
+</html>

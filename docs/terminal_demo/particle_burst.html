@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Particle Burst — Cinematic</title>
+<style>
+  * { margin: 0; padding: 0; }
+  body { background: #000; overflow: hidden; }
+  canvas { display: block; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+canvas.width = 720;
+canvas.height = 400;
+
+const cx = canvas.width / 2;
+const cy = canvas.height / 2;
+const particles = [];
+const rings = [];
+let frame = 0;
+let phase = 0; // 0=gather, 1=explode, 2=reform
+let phaseTimer = 0;
+
+class Particle {
+  constructor() {
+    this.reset();
+  }
+  reset() {
+    const angle = Math.random() * Math.PI * 2;
+    const dist = 20 + Math.random() * 180;
+    this.x = cx + Math.cos(angle) * dist;
+    this.y = cy + Math.sin(angle) * dist;
+    this.targetX = this.x;
+    this.targetY = this.y;
+    this.vx = 0;
+    this.vy = 0;
+    this.size = 1 + Math.random() * 2.5;
+    this.life = 1;
+    this.hue = 170 + Math.random() * 40; // cyan-blue spectrum
+    this.brightness = 50 + Math.random() * 50;
+    this.angle = angle;
+    this.dist = dist;
+    this.orbitSpeed = (Math.random() - 0.5) * 0.02;
+  }
+  update() {
+    if (phase === 0) {
+      // Orbiting toward center
+      this.angle += this.orbitSpeed;
+      this.dist *= 0.995;
+      this.targetX = cx + Math.cos(this.angle) * this.dist;
+      this.targetY = cy + Math.sin(this.angle) * this.dist;
+      this.x += (this.targetX - this.x) * 0.05;
+      this.y += (this.targetY - this.y) * 0.05;
+    } else if (phase === 1) {
+      // Explosion
+      this.x += this.vx;
+      this.y += this.vy;
+      this.vx *= 0.97;
+      this.vy *= 0.97;
+      this.life -= 0.008;
+    } else {
+      // Reform
+      const angle = Math.random() * Math.PI * 2;
+      const dist = 20 + Math.random() * 180;
+      this.targetX = cx + Math.cos(angle) * dist;
+      this.targetY = cy + Math.sin(angle) * dist;
+      this.x += (this.targetX - this.x) * 0.03;
+      this.y += (this.targetY - this.y) * 0.03;
+      this.life = Math.min(this.life + 0.02, 1);
+      this.dist = dist;
+      this.angle = angle;
+    }
+  }
+  draw() {
+    if (this.life <= 0) return;
+    ctx.save();
+    ctx.globalAlpha = this.life;
+    ctx.shadowColor = `hsl(${this.hue}, 100%, ${this.brightness}%)`;
+    ctx.shadowBlur = 10 + this.size * 3;
+    ctx.fillStyle = `hsl(${this.hue}, 100%, ${this.brightness}%)`;
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.size * this.life, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+}
+
+class ShockwaveRing {
+  constructor() {
+    this.radius = 0;
+    this.maxRadius = 220;
+    this.life = 1;
+    this.speed = 4 + Math.random() * 3;
+  }
+  update() {
+    this.radius += this.speed;
+    this.life = 1 - this.radius / this.maxRadius;
+    this.speed *= 0.98;
+  }
+  draw() {
+    if (this.life <= 0) return;
+    ctx.save();
+    ctx.globalAlpha = this.life * 0.6;
+    ctx.strokeStyle = `hsl(180, 100%, ${60 + this.life * 40}%)`;
+    ctx.lineWidth = 2 * this.life;
+    ctx.shadowColor = '#00ffff';
+    ctx.shadowBlur = 20;
+    ctx.beginPath();
+    ctx.arc(cx, cy, this.radius, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+  }
+}
+
+// Init particles
+for (let i = 0; i < 200; i++) {
+  particles.push(new Particle());
+}
+
+function explode() {
+  phase = 1;
+  phaseTimer = 0;
+  // Give particles velocity
+  for (const p of particles) {
+    const angle = Math.atan2(p.y - cy, p.x - cx);
+    const speed = 3 + Math.random() * 8;
+    p.vx = Math.cos(angle) * speed;
+    p.vy = Math.sin(angle) * speed;
+    p.hue = 170 + Math.random() * 60;
+    p.brightness = 70 + Math.random() * 30;
+  }
+  // Add shockwaves
+  rings.push(new ShockwaveRing());
+  setTimeout(() => rings.push(new ShockwaveRing()), 100);
+  setTimeout(() => rings.push(new ShockwaveRing()), 250);
+}
+
+function drawCore() {
+  // Central brain glow
+  const pulse = Math.sin(frame * 0.05) * 0.3 + 0.7;
+  const gradient = ctx.createRadialGradient(cx, cy, 0, cx, cy, 30 * pulse);
+  gradient.addColorStop(0, `rgba(0, 255, 255, ${0.8 * pulse})`);
+  gradient.addColorStop(0.4, `rgba(180, 100, 255, ${0.4 * pulse})`);
+  gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+  ctx.fillStyle = gradient;
+  ctx.fillRect(cx - 40, cy - 40, 80, 80);
+
+  // Core symbol
+  ctx.save();
+  ctx.globalAlpha = pulse;
+  ctx.font = `${20 + pulse * 5}px sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.shadowColor = '#00ffff';
+  ctx.shadowBlur = 25;
+  ctx.fillStyle = '#fff';
+  ctx.fillText('🧠', cx, cy);
+  ctx.restore();
+}
+
+function drawConnectionLines() {
+  ctx.save();
+  ctx.globalAlpha = 0.15;
+  ctx.strokeStyle = '#00e5ff';
+  ctx.lineWidth = 0.5;
+  for (let i = 0; i < particles.length; i += 3) {
+    const p = particles[i];
+    const dist = Math.hypot(p.x - cx, p.y - cy);
+    if (dist < 120 && p.life > 0.3) {
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(p.x, p.y);
+      ctx.stroke();
+    }
+  }
+  ctx.restore();
+}
+
+function draw() {
+  frame++;
+  phaseTimer++;
+
+  // Fade trail
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.12)';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // Phase transitions
+  if (phase === 0 && phaseTimer > 150) explode();
+  if (phase === 1 && phaseTimer > 120) { phase = 2; phaseTimer = 0; }
+  if (phase === 2 && phaseTimer > 100) {
+    phase = 0;
+    phaseTimer = 0;
+    for (const p of particles) p.reset();
+    rings.length = 0;
+  }
+
+  drawConnectionLines();
+  if (phase !== 1) drawCore();
+
+  for (const p of particles) { p.update(); p.draw(); }
+  for (let i = rings.length - 1; i >= 0; i--) {
+    rings[i].update();
+    rings[i].draw();
+    if (rings[i].life <= 0) rings.splice(i, 1);
+  }
+
+  // Explosion core flash
+  if (phase === 1 && phaseTimer < 15) {
+    ctx.save();
+    ctx.globalAlpha = (1 - phaseTimer / 15) * 0.6;
+    const fg = ctx.createRadialGradient(cx, cy, 0, cx, cy, 100);
+    fg.addColorStop(0, '#ffffff');
+    fg.addColorStop(0.3, '#00ffff');
+    fg.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = fg;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.restore();
+  }
+
+  // Vignette
+  const vg = ctx.createRadialGradient(cx, cy, canvas.height * 0.25, cx, cy, canvas.height * 0.65);
+  vg.addColorStop(0, 'rgba(0,0,0,0)');
+  vg.addColorStop(1, 'rgba(0,0,0,0.5)');
+  ctx.fillStyle = vg;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  requestAnimationFrame(draw);
+}
+
+draw();
+</script>
+</body>
+</html>

@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Matrix Rain — Cinematic</title>
+<style>
+  * { margin: 0; padding: 0; }
+  body { background: #000; overflow: hidden; }
+  canvas { display: block; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+canvas.width = 720;
+canvas.height = 400;
+
+const chars = "ノ互識意智圏菩提脳界宇宙量子01アイウエオカキクケコサシスセソ夢魂念覚光闇".split('');
+const fontSize = 14;
+const columns = Math.floor(canvas.width / fontSize);
+
+// Each column gets its own state
+const drops = [];
+const speeds = [];
+const brightness = [];
+const trails = [];
+
+for (let i = 0; i < columns; i++) {
+  drops[i] = Math.random() * -50;
+  speeds[i] = 0.3 + Math.random() * 0.8;
+  brightness[i] = 0.3 + Math.random() * 0.7;
+  trails[i] = 8 + Math.floor(Math.random() * 15);
+}
+
+// Glow layers
+let frame = 0;
+const pulsePhase = Math.random() * Math.PI * 2;
+
+function draw() {
+  frame++;
+
+  // Semi-transparent black for trail fade — variable opacity for depth
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.06)';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // Subtle scanlines
+  if (frame % 3 === 0) {
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.03)';
+    for (let y = 0; y < canvas.height; y += 3) {
+      ctx.fillRect(0, y, canvas.width, 1);
+    }
+  }
+
+  for (let i = 0; i < columns; i++) {
+    const x = i * fontSize;
+    const y = drops[i] * fontSize;
+
+    if (y > 0 && y < canvas.height) {
+      const ch = chars[Math.floor(Math.random() * chars.length)];
+      const pulse = Math.sin(frame * 0.03 + pulsePhase + i * 0.1) * 0.3 + 0.7;
+      const b = brightness[i] * pulse;
+
+      // Lead character: bright white/cyan with glow
+      ctx.save();
+      ctx.shadowColor = '#00ffcc';
+      ctx.shadowBlur = 15;
+      ctx.font = `bold ${fontSize}px 'Consolas', monospace`;
+      ctx.fillStyle = `rgba(200, 255, 255, ${Math.min(b + 0.3, 1)})`;
+      ctx.fillText(ch, x, y);
+      ctx.restore();
+
+      // Trail characters: green/cyan gradient
+      for (let t = 1; t < trails[i]; t++) {
+        const trailY = y - t * fontSize;
+        if (trailY > 0 && trailY < canvas.height) {
+          const trailChar = chars[Math.floor(Math.random() * chars.length)];
+          const fade = 1 - t / trails[i];
+          const r = Math.floor(fade * 0);
+          const g = Math.floor(fade * (180 + b * 75));
+          const bVal = Math.floor(fade * (100 + b * 155));
+          ctx.font = `${fontSize}px 'Consolas', monospace`;
+          ctx.fillStyle = `rgba(${r}, ${g}, ${bVal}, ${fade * b * 0.8})`;
+          ctx.fillText(trailChar, x, trailY);
+        }
+      }
+    }
+
+    drops[i] += speeds[i];
+    if (drops[i] * fontSize > canvas.height + trails[i] * fontSize) {
+      drops[i] = Math.random() * -20;
+      speeds[i] = 0.3 + Math.random() * 0.8;
+      brightness[i] = 0.3 + Math.random() * 0.7;
+    }
+  }
+
+  // Occasional bright "flash" column
+  if (Math.random() < 0.02) {
+    const flashCol = Math.floor(Math.random() * columns);
+    brightness[flashCol] = 1.0;
+    speeds[flashCol] = 1.5;
+  }
+
+  // Vignette
+  const gradient = ctx.createRadialGradient(
+    canvas.width / 2, canvas.height / 2, canvas.height * 0.3,
+    canvas.width / 2, canvas.height / 2, canvas.height * 0.7
+  );
+  gradient.addColorStop(0, 'rgba(0,0,0,0)');
+  gradient.addColorStop(1, 'rgba(0,0,0,0.4)');
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  requestAnimationFrame(draw);
+}
+
+draw();
+</script>
+</body>
+</html>

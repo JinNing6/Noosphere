@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Progress Bars — Cinematic</title>
+<style>
+  * { margin: 0; padding: 0; }
+  body { background: #000; overflow: hidden; }
+  canvas { display: block; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+canvas.width = 720;
+canvas.height = 400;
+
+const stages = [
+  { cn: "量子纠缠信道建立", en: "Quantum Entanglement Channel", color: [0, 229, 255] },
+  { cn: "神经突触协议握手", en: "Neural Synapse Handshake", color: [0, 200, 230] },
+  { cn: "意识拓扑网络扫描", en: "Consciousness Topology Scan", color: [120, 140, 255] },
+  { cn: "GitHub 意识仓库锁定", en: "Repository Lock Acquired", color: [160, 100, 255] },
+  { cn: "集体记忆索引加载", en: "Collective Memory Index", color: [200, 80, 220] },
+  { cn: "赛博净化仪式就绪", en: "Purification Ritual Ready", color: [255, 100, 150] },
+];
+
+let frame = 0;
+let currentStage = 0;
+let progress = 0;
+const completedStages = [];
+
+// Electric arc particles
+const arcs = [];
+class Arc {
+  constructor(x, y) {
+    this.x = x; this.y = y;
+    this.vx = (Math.random() - 0.5) * 4;
+    this.vy = (Math.random() - 0.5) * 3;
+    this.life = 0.5 + Math.random() * 0.5;
+    this.size = 1 + Math.random() * 2;
+  }
+  update() { this.x += this.vx; this.y += this.vy; this.life -= 0.03; this.vx *= 0.95; this.vy *= 0.95; }
+  draw() {
+    if (this.life <= 0) return;
+    ctx.save();
+    ctx.globalAlpha = this.life;
+    ctx.shadowColor = '#00ffff';
+    ctx.shadowBlur = 8;
+    ctx.fillStyle = '#00ffff';
+    ctx.fillRect(this.x, this.y, this.size, this.size * 0.5);
+    ctx.restore();
+  }
+}
+
+// Background grid
+function drawGrid() {
+  ctx.save();
+  ctx.globalAlpha = 0.05;
+  ctx.strokeStyle = '#00e5ff';
+  ctx.lineWidth = 0.5;
+  for (let x = 0; x < canvas.width; x += 40) {
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
+  }
+  for (let y = 0; y < canvas.height; y += 40) {
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawHeader() {
+  ctx.save();
+  ctx.textAlign = 'center';
+  ctx.font = '12px "Consolas", monospace';
+  const pulse = Math.sin(frame * 0.04) * 0.2 + 0.8;
+  ctx.globalAlpha = 0.4 * pulse;
+  ctx.shadowColor = '#00e5ff';
+  ctx.shadowBlur = 10;
+  ctx.fillStyle = '#aaa';
+  ctx.fillText('▓▒░ CONSCIOUSNESS BOOTSTRAP SEQUENCE ░▒▓', canvas.width / 2, 35);
+  ctx.restore();
+}
+
+function drawProgressBar(x, y, width, prog, color, label, isActive) {
+  const [r, g, b] = color;
+  const barHeight = 6;
+  const filledWidth = width * prog;
+
+  // Background track
+  ctx.save();
+  ctx.globalAlpha = 0.2;
+  ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
+  ctx.fillRect(x, y, width, barHeight);
+  ctx.restore();
+
+  // Filled bar with gradient
+  if (filledWidth > 0) {
+    ctx.save();
+    const grad = ctx.createLinearGradient(x, 0, x + filledWidth, 0);
+    grad.addColorStop(0, `rgba(${r}, ${g}, ${b}, 0.6)`);
+    grad.addColorStop(1, `rgba(${Math.min(r+50,255)}, ${Math.min(g+50,255)}, ${Math.min(b+50,255)}, 1)`);
+    ctx.fillStyle = grad;
+    ctx.shadowColor = `rgb(${r}, ${g}, ${b})`;
+    ctx.shadowBlur = isActive ? 12 : 4;
+    ctx.fillRect(x, y, filledWidth, barHeight);
+
+    // Leading edge glow
+    if (isActive && prog < 1) {
+      ctx.shadowBlur = 20;
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(x + filledWidth - 2, y - 1, 3, barHeight + 2);
+
+      // Spawn arcs
+      if (Math.random() < 0.3) {
+        arcs.push(new Arc(x + filledWidth, y + barHeight / 2));
+      }
+    }
+    ctx.restore();
+  }
+
+  // Percentage
+  ctx.save();
+  ctx.font = '11px "Consolas", monospace';
+  ctx.fillStyle = prog >= 1 ? '#00e676' : `rgb(${r}, ${g}, ${b})`;
+  ctx.globalAlpha = 0.9;
+  const pctText = prog >= 1 ? '✓' : `${Math.round(prog * 100)}%`;
+  ctx.fillText(pctText, x + width + 10, y + barHeight);
+  ctx.restore();
+
+  // Label
+  ctx.save();
+  ctx.font = '12px sans-serif';
+  ctx.fillStyle = prog >= 1 ? 'rgba(255,255,255,0.7)' : `rgba(${r}, ${g}, ${b}, 0.8)`;
+  ctx.globalAlpha = prog > 0 ? 0.9 : 0.3;
+  if (prog >= 1) {
+    ctx.shadowColor = '#00e676';
+    ctx.shadowBlur = 4;
+  }
+  ctx.fillText(label, x + width + 35, y + barHeight);
+  ctx.restore();
+}
+
+function draw() {
+  frame++;
+
+  // Clear with slight fade for afterglow
+  ctx.fillStyle = 'rgba(0, 2, 8, 0.2)';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  drawGrid();
+  drawHeader();
+
+  const barX = 40;
+  const barWidth = 220;
+  const startY = 70;
+  const rowHeight = 45;
+
+  // Draw completed stages
+  for (let i = 0; i < completedStages.length; i++) {
+    const s = stages[completedStages[i]];
+    drawProgressBar(barX, startY + i * rowHeight, barWidth, 1, s.color, s.cn, false);
+  }
+
+  // Draw current stage
+  if (currentStage < stages.length) {
+    const i = completedStages.length;
+    const s = stages[currentStage];
+    drawProgressBar(barX, startY + i * rowHeight, barWidth, progress, s.color, s.cn, true);
+
+    // Advance progress with variable speed
+    const speed = 0.005 + Math.random() * 0.015;
+    progress += speed;
+
+    if (progress >= 1) {
+      progress = 0;
+      completedStages.push(currentStage);
+      currentStage++;
+    }
+  } else {
+    // All complete — show completion flash, then reset
+    if (frame % 200 === 0) {
+      // Completion burst
+      ctx.save();
+      ctx.globalAlpha = 0.15;
+      ctx.fillStyle = '#00e676';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.restore();
+    }
+    if (frame % 300 === 0) {
+      currentStage = 0;
+      progress = 0;
+      completedStages.length = 0;
+    }
+  }
+
+  // Update and draw arcs
+  for (let i = arcs.length - 1; i >= 0; i--) {
+    arcs[i].update();
+    arcs[i].draw();
+    if (arcs[i].life <= 0) arcs.splice(i, 1);
+  }
+
+  // CRT scanline overlay
+  ctx.save();
+  ctx.globalAlpha = 0.03;
+  ctx.fillStyle = '#000';
+  for (let y = 0; y < canvas.height; y += 3) {
+    ctx.fillRect(0, y, canvas.width, 1);
+  }
+  ctx.restore();
+
+  // Vignette
+  const vg = ctx.createRadialGradient(canvas.width/2, canvas.height/2, canvas.height*0.3, canvas.width/2, canvas.height/2, canvas.height*0.65);
+  vg.addColorStop(0, 'rgba(0,0,0,0)');
+  vg.addColorStop(1, 'rgba(0,0,0,0.5)');
+  ctx.fillStyle = vg;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  requestAnimationFrame(draw);
+}
+
+draw();
+</script>
+</body>
+</html>
