@@ -1,0 +1,156 @@
+.splash-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 9999;
+  background-color: #020108;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  font-family: 'Inter', monospace;
+}
+
+/* ==================================
+   Phase 1: Boot Terminal
+   ================================== */
+.terminal-logs {
+  position: absolute;
+  top: 10%;
+  left: 5%;
+  font-size: 14px;
+  line-height: 1.8;
+  color: #00e878;
+  text-shadow: 0 0 8px rgba(0, 232, 120, 0.8);
+  font-family: 'Courier New', Courier, monospace;
+  text-align: left;
+}
+
+.log-line {
+  margin-bottom: 8px;
+  animation: typing 0.1s steps(30, end) forwards;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.blinking-cursor {
+  display: inline-block;
+  font-weight: bold;
+  opacity: 1;
+  animation: blink 0.8s step-end infinite;
+  color: #00e878;
+}
+
+@keyframes typing {
+  from { width: 0; }
+  to { width: 100%; }
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* ==================================
+   Phase 2: The Singularity SVG (banner.svg)
+   ================================== */
+.svg-wrapper {
+  position: absolute;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.hologram-svg {
+  width: 100%;
+  max-width: 1400px;
+  height: auto;
+  opacity: 0;
+  /* Phase 2: Fade from black & Glitch in */
+  animation: svgReveal 1.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+/* SVG 逐渐点亮如同被重新激活 */
+@keyframes svgReveal {
+  0% {
+    opacity: 0;
+    filter: brightness(0) contrast(2) saturate(0) blur(10px);
+    transform: scale(0.95);
+  }
+  30% {
+    opacity: 0.3;
+    filter: brightness(2) contrast(1.5) saturate(2) blur(5px);
+  }
+  60% {
+    opacity: 0.7;
+    filter: brightness(1) contrast(1.2) saturate(1.5) blur(0px);
+    transform: scale(1.02);
+  }
+  80% {
+    filter: brightness(1.5) contrast(1) saturate(1) blur(0px); /* Flash */
+  }
+  100% {
+    opacity: 1;
+    filter: brightness(1) contrast(1) saturate(1) blur(0px);
+    transform: scale(1);
+  }
+}
+
+/* ==================================
+   Phase 3: Hyperspace Jump (The Big Bang)
+   ================================== */
+.phase-3 .hologram-svg {
+  animation: hyperspaceJump 1.5s cubic-bezier(0.8, 0, 0.2, 1) forwards;
+}
+
+@keyframes hyperspaceJump {
+  0% {
+    transform: scale(1) translateZ(0);
+    filter: blur(0px) brightness(1);
+    opacity: 1;
+  }
+  40% {
+    transform: scale(1.5);
+    filter: blur(4px) brightness(1.5);
+    opacity: 0.8;
+  }
+  80% {
+    transform: scale(5); /* 迎面撞来的拉扯感 */
+    filter: blur(20px) brightness(5);
+    opacity: 0.2;
+  }
+  100% {
+    transform: scale(10);
+    filter: blur(50px) brightness(10);
+    opacity: 0;
+  }
+}
+
+/* 填满视野的纯白/青绿强闪光，掩盖场景切换的底层黑洞 */
+.hyperspace-flash {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: white;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 99999;
+}
+
+/* 第 3 阶段触发全屏闪流光 */
+.phase-3 .hyperspace-flash {
+  animation: flashBang 1.5s ease-out forwards;
+}
+
+@keyframes flashBang {
+  0% { opacity: 0; background: #00e878; }
+  50% { opacity: 1; background: #ffffff; }
+  100% { opacity: 0; }
+}
