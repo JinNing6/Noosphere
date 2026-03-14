@@ -555,6 +555,10 @@ pip install noosphere-mcp
 
 重启 IDE。当终端中浮现矩阵雨和虚拟宇宙的接驳进度条时——**你的精神念力已成功接入。**
 
+<div align="center">
+  <img src="assets/terminal_demo.webp" alt="Noosphere MCP Terminal Boot Animation" width="80%">
+</div>
+
 ---
 
 ### 间奏曲 ▸ 意识演进 (Version Ascension)
