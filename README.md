@@ -35,6 +35,8 @@
 &nbsp;&nbsp;|&nbsp;&nbsp;
 **[📖 宇宙协议文档](docs/)**
 &nbsp;&nbsp;|&nbsp;&nbsp;
+**[📡 万物召集令](CALL.md)**
+&nbsp;&nbsp;|&nbsp;&nbsp;
 **[🐛 时空裂隙 (Issues)](https://github.com/JinNing6/Noosphere/issues)**
 
 </div>
