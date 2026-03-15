@@ -570,6 +570,59 @@ function ConsciousnessDust() {
   );
 }
 
+/* ═══════════════ 实时意识体层（动态加载） ═══════════════ */
+
+function DynamicConsciousnessLayer({ nodes, onSelect }: { nodes: KnowledgeNode[]; onSelect: (n: KnowledgeNode) => void }) {
+  const meshRef = useRef<THREE.InstancedMesh>(null);
+  const dummy = useMemo(() => new THREE.Object3D(), []);
+
+  // 在最外层轨道（r=5.5）分布实时意识体
+  const positions = useMemo(() =>
+    nodes.map((_, i) => goldenSpherePoint(i, nodes.length, 5.5)),
+    [nodes]
+  );
+
+  useFrame(({ clock }) => {
+    if (!meshRef.current || nodes.length === 0) return;
+    const t = clock.getElapsedTime();
+    positions.forEach((pos, i) => {
+      // 螺旋漂浮 + 呼吸脉动
+      const drift = Math.sin(t * 0.2 + i * 0.7) * 0.15;
+      const orbit = t * 0.03;
+      const x = pos[0] * Math.cos(orbit) - pos[2] * Math.sin(orbit) + drift;
+      const z = pos[0] * Math.sin(orbit) + pos[2] * Math.cos(orbit) + drift * 0.3;
+      const y = pos[1] + Math.sin(t * 0.4 + i * 1.2) * 0.2;
+      dummy.position.set(x, y, z);
+      const s = 0.12 + (nodes[i].importance / 10) * 0.08;
+      dummy.scale.setScalar(s * (1 + Math.sin(t * 0.8 + i * 2.5) * 0.3));
+      dummy.updateMatrix();
+      meshRef.current!.setMatrixAt(i, dummy.matrix);
+    });
+    meshRef.current.instanceMatrix.needsUpdate = true;
+  });
+
+  const handleClick = useCallback((e: { stopPropagation: () => void; instanceId?: number }) => {
+    e.stopPropagation();
+    if (e.instanceId !== undefined && e.instanceId < nodes.length) {
+      onSelect(nodes[e.instanceId]);
+    }
+  }, [nodes, onSelect]);
+
+  if (nodes.length === 0) return null;
+
+  return (
+    <instancedMesh ref={meshRef} args={[undefined, undefined, nodes.length]} onClick={handleClick}>
+      <sphereGeometry args={[1, 12, 12]} />
+      <meshStandardMaterial
+        color="#00d4ff"
+        emissive="#00d4ff"
+        emissiveIntensity={2.8}
+        toneMapped={false}
+      />
+    </instancedMesh>
+  );
+}
+
 /* ═══════════════ 场景内容（渐进式加载） ═══════════════ */
 
 /**
@@ -580,7 +633,7 @@ function ConsciousnessDust() {
  * Stage 2 (+250ms):  三层意识节点 (InstancedMesh)
  * Stage 3 (+500ms):  EnergyLines + ConsciousnessDust + EffectComposer
  */
-function SceneContent({ onSelect, introPhase }: { onSelect: (n: KnowledgeNode) => void; introPhase: number }) {
+function SceneContent({ onSelect, introPhase, dynamicNodes }: { onSelect: (n: KnowledgeNode) => void; introPhase: number; dynamicNodes: KnowledgeNode[] }) {
   const controlsRef = useRef<any>(null);
   const [loadStage, setLoadStage] = useState(0);
 
@@ -644,11 +697,13 @@ function SceneContent({ onSelect, introPhase }: { onSelect: (n: KnowledgeNode) =
         </>
       )}
 
-      {/* ── Stage 3: 装饰 + 后处理 (+500ms) ── */}
+      {/* ── Stage 3: 装饰 + 后处理 + 实时意识体 (+500ms) ── */}
       {loadStage >= 3 && (
         <>
           <EnergyLines />
           <ConsciousnessDust />
+          {/* 实时意识体（动态加载，最外层青色轨道） */}
+          <DynamicConsciousnessLayer nodes={dynamicNodes} onSelect={onSelect} />
           <EffectComposer multisampling={0}>
             <Bloom
               luminanceThreshold={0.1}
@@ -737,9 +792,10 @@ function CinematicIntro({ phase, onComplete }: { phase: number; onComplete: () =
 interface NoosphereGlobeProps {
   onSelectNode: (node: KnowledgeNode) => void;
   searchQuery?: string;
+  dynamicNodes?: KnowledgeNode[];
 }
 
-export default function NoosphereGlobe({ onSelectNode }: NoosphereGlobeProps) {
+export default function NoosphereGlobe({ onSelectNode, dynamicNodes = [] }: NoosphereGlobeProps) {
   const [introPhase, setIntroPhase] = useState(0);
 
   const handleIntroComplete = useCallback(() => {
@@ -762,7 +818,7 @@ export default function NoosphereGlobe({ onSelectNode }: NoosphereGlobeProps) {
           toneMappingExposure: 1.0,
         }}
       >
-        <SceneContent onSelect={onSelectNode} introPhase={introPhase} />
+        <SceneContent onSelect={onSelectNode} introPhase={introPhase} dynamicNodes={dynamicNodes} />
       </Canvas>
     </div>
   );

@@ -22,7 +22,7 @@ const DISCIPLINES = [
   { key: 'ai', label: 'AI', color: DISCIPLINE_COLORS.ai },
 ];
 
-export default function StatsOverlay() {
+export default function StatsOverlay({ dynamicNodeCount = 0 }: { dynamicNodeCount?: number }) {
   return (
     <div style={{
       position: 'absolute', bottom: 24, left: 24,
@@ -58,12 +58,26 @@ export default function StatsOverlay() {
             </span>
           </div>
         ))}
+        {/* 实时意识体统计 */}
+        {dynamicNodeCount > 0 && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{
+              width: 8, height: 8, borderRadius: '50%',
+              background: '#00d4ff', boxShadow: '0 0 6px #00d4ff80',
+              animation: 'pulse 2s ease-in-out infinite',
+            }} />
+            <span style={{ minWidth: 60 }}>💭 实时意识</span>
+            <span style={{ color: '#00d4ff', fontWeight: 600 }}>
+              {dynamicNodeCount}
+            </span>
+          </div>
+        )}
         <div style={{
           borderTop: '1px solid rgba(255,255,255,0.06)',
           paddingTop: 6, marginTop: 2,
           display: 'flex', justifyContent: 'space-between',
         }}>
-          <span>共 {LAYER_STATS.total} 节点 · {LAYER_STATS.links} 涌现连线</span>
+          <span>共 {LAYER_STATS.total + dynamicNodeCount} 节点 · {LAYER_STATS.links} 涌现连线</span>
         </div>
       </div>
 

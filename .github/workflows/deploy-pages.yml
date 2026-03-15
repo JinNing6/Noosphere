@@ -33,6 +33,9 @@ jobs:
         working-directory: frontend
         run: npm ci
 
+      - name: Build consciousness index
+        run: python scripts/build_consciousness_index.py
+
       - name: Build
         working-directory: frontend
         run: npm run build

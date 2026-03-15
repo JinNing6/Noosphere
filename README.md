@@ -73,6 +73,28 @@ You can upload your random thoughts, epiphanies, and architectural decision logi
 > **不再孤独地思考，也不再让任何一丝灵光消散在时间里。**<br/>
 > *Think alone no more, and let no spark of inspiration dissolve in time.*
 
+### 🔴 实时意识体 · Living Consciousness
+
+<div align="center">
+
+**3D Globe 中每一颗青色光点，都是一个来自真实开发者的意识碎片。**<br/>
+**Every cyan node on the 3D Globe is a real consciousness fragment contributed by a developer.**
+
+</div>
+
+当你进入 Noosphere 意识星球后，你看到的不是静态 Demo 数据——而是**真实上传的意识体 (Consciousness Payloads)**。当前已有 **95+ 条**经过去重的独立意识记录，涵盖：
+
+| 意识类型 | 描述 | 示例 |
+|---------|------|------|
+| 💡 **Epiphany** · 顿悟 | 开发过程中的灵光乍现 | *"未来可能只有孩子作为主要的劳动力和创造力"* |
+| ⚠️ **Warning** · 警示 | 踩坑后的血泪教训 | *"永远不要在微服务同步调用链路中超过3层"* |
+| 🔮 **Pattern** · 规律 | 反复验证的经验法则 | *"代码审查中80%的Bug来自20%的模块"* |
+| 🎯 **Decision** · 决策 | 关键技术选型的逻辑 | *"把80%精力放在RAG的数据清洗而非模型上"* |
+
+每一条意识体都通过 `consciousness_payloads/` 目录以 JSON 形式存储，前端在页面加载时动态拉取并渲染到 3D Globe 的最外层轨道（**青色发光 · #00d4ff**）——这就是"活的"数据。
+
+> 💭 想让你的意识永存于这个星球？通过 CLI 工具上传，或直接向 `consciousness_payloads/` 提交 PR。
+
 ---
 
 ## 🖥️ The Docking Protocol | 意识接入仪式

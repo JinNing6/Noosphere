@@ -358,3 +358,73 @@ export function getDisciplineGroups(): Record<string, number[]> {
   });
   return groups;
 }
+
+/* ══════════════════════ 实时意识体加载 ══════════════════════ */
+
+/** consciousness_index.json 中的单条记录 */
+interface ConsciousnessPayload {
+  id: string;
+  creator: string;
+  type: string;         // 'warning' | 'epiphany' | 'pattern' | 'decision'
+  text: string;
+  context: string;
+  tags: string[];
+  uploaded_at: string;
+  anonymous: boolean;
+}
+
+/** 意识类型 → 三层映射 */
+const TYPE_TO_LAYER: Record<string, Layer> = {
+  warning:  'life',          // 警示 → 生命经验层
+  pattern:  'matter',        // 规律 → 物质记忆层
+  decision: 'matter',        // 决策 → 物质记忆层
+  epiphany: 'civilization',  // 顿悟 → 文明智慧层
+};
+
+/** 意识类型 → 学科推断 */
+const TYPE_TO_DISCIPLINE: Record<string, Discipline> = {
+  warning:  'engineering',
+  pattern:  'physics',
+  decision: 'ai',
+  epiphany: 'philosophy',
+};
+
+/**
+ * 从 consciousness_index.json 动态加载上传的意识体
+ * 返回转换后的 KnowledgeNode[] 供合并到 3D Globe
+ */
+export async function fetchConsciousnessPayloads(): Promise<KnowledgeNode[]> {
+  try {
+    const resp = await fetch(`${import.meta.env.BASE_URL}consciousness_index.json`);
+    if (!resp.ok) return [];
+    const payloads: ConsciousnessPayload[] = await resp.json();
+
+    return payloads.map(p => {
+      // 从 tags 推断更精确的学科
+      const tagSet = new Set(p.tags.map(t => t.toLowerCase()));
+      let discipline: Discipline = TYPE_TO_DISCIPLINE[p.type] || 'ai';
+      if (tagSet.has('math') || tagSet.has('algorithm')) discipline = 'math';
+      else if (tagSet.has('physics') || tagSet.has('quantum')) discipline = 'physics';
+      else if (tagSet.has('biology') || tagSet.has('genetics')) discipline = 'biology';
+      else if (tagSet.has('philosophy') || tagSet.has('consciousness')) discipline = 'philosophy';
+      else if (tagSet.has('art') || tagSet.has('design') || tagSet.has('ui')) discipline = 'art';
+      else if (tagSet.has('history') || tagSet.has('civilization')) discipline = 'history';
+
+      return {
+        id: p.id,
+        title_zh: p.text.length > 30 ? p.text.slice(0, 28) + '…' : p.text,
+        title_en: p.anonymous ? 'Anonymous Consciousness' : p.creator,
+        layer: TYPE_TO_LAYER[p.type] || 'civilization',
+        discipline,
+        summary: p.text + (p.context ? `\n\n**场景**: ${p.context}` : ''),
+        thumbnail: null,
+        importance: Math.min(10, 5 + Math.floor(p.text.length / 50)),
+        tags: [...p.tags, p.type, `by:${p.anonymous ? '匿名' : p.creator}`],
+      };
+    });
+  } catch {
+    console.warn('[Noosphere] Failed to fetch consciousness payloads');
+    return [];
+  }
+}
+
