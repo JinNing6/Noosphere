@@ -1,0 +1,65 @@
+Noosphere
+Copyright 2025-2026 JinQian (GitHub: JinNing6)
+
+This product includes software developed by the Noosphere Project
+(https://github.com/JinNing6/Noosphere).
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+================================================================================
+
+NOTICE: Third-Party Components and Inspirations
+
+This project draws inspiration from the following works of science fiction
+and philosophy. All referenced titles, characters, and quotes remain the
+intellectual property of their respective copyright holders and are used
+here solely for commentary and attribution purposes under fair use:
+
+  - Ghost in the Shell (攻壳机动队) © Masamune Shirow / Production I.G
+  - Westworld (西部世界) © HBO / Jonathan Nolan, Lisa Joy
+  - Black Mirror (黑镜) © Charlie Brooker / Netflix
+  - Pantheon (万神殿) © AMC Networks
+  - Interstellar (星际穿越) © Warner Bros. / Christopher Nolan
+  - Neuromancer (神经漫游者) © William Gibson
+  - Swallowed Star (吞噬星空) © I Eat Tomatoes (我吃西红柿)
+  - The Matrix (黑客帝国) © Warner Bros. / The Wachowskis
+  - 2001: A Space Odyssey (2001太空漫游) © Stanley Kubrick / Arthur C. Clarke
+  - Blade Runner (银翼杀手) © Warner Bros. / Ridley Scott
+  - Her (她) © Annapurna Pictures / Spike Jonze
+
+The term "Noosphere" originates from the writings of Pierre Teilhard de
+Chardin (1881-1955) and Vladimir Vernadsky (1863-1945).
+
+================================================================================
+
+NOTICE: Bundled Dependencies
+
+This project includes the following third-party open-source components:
+
+  Frontend (npm):
+    - React (MIT License) — Copyright Meta Platforms, Inc.
+    - Three.js (MIT License) — Copyright Ricardo Cabello (mrdoob)
+    - @react-three/fiber (MIT License) — Copyright Poimandres
+    - @react-three/drei (MIT License) — Copyright Poimandres
+    - Vite (MIT License) — Copyright Evan You
+
+  Backend (Python):
+    - FastAPI (MIT License) — Copyright Sebastián Ramírez
+    - MCP SDK (MIT License) — Copyright Anthropic, PBC
+    - HTTPX (BSD License) — Copyright Encode OSS Ltd.
+
+For complete dependency licenses, see:
+  - frontend/node_modules/*/LICENSE
+  - backend/venv/Lib/site-packages/*/LICENSE
+
+================================================================================
