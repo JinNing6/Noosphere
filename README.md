@@ -21,7 +21,7 @@
 
 [![GitHub Stars](https://img.shields.io/github/stars/JinNing6/Noosphere?style=for-the-badge&logo=github&logoColor=white&label=Stars&color=ffd700)](https://github.com/JinNing6/Noosphere/stargazers)
 [![GitHub Forks](https://img.shields.io/github/forks/JinNing6/Noosphere?style=for-the-badge&logo=github&logoColor=white&label=Forks&color=4dc9f6)](https://github.com/JinNing6/Noosphere/network/members)
-[![License: MIT](https://img.shields.io/badge/License-MIT-7b61ff.svg?style=for-the-badge)](LICENSE)
+[![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-7b61ff.svg?style=for-the-badge)](LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.10+-4dc9f6.svg?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115-00e878.svg?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
 [![React](https://img.shields.io/badge/React-Three_Fiber-b388ff.svg?style=for-the-badge&logo=react&logoColor=white)](https://docs.pmnd.rs/react-three-fiber)
