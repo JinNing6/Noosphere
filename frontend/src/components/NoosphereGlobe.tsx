@@ -134,7 +134,7 @@ function PlasmaCore() {
     <group>
       {/* 等离子体核心 */}
       <mesh material={plasmaMat}>
-        <sphereGeometry args={[0.8, 64, 64]} />
+        <sphereGeometry args={[0.8, 48, 48]} />
       </mesh>
       {/* 三层渐变辉光 */}
       <mesh ref={glow1Ref}>
@@ -421,7 +421,7 @@ function EnergyLines() {
         new THREE.Vector3(...mid),
         new THREE.Vector3(...toPos),
       );
-      const points = curve.getPoints(50);
+      const points = curve.getPoints(30);
       const geometry = new THREE.BufferGeometry().setFromPoints(points);
 
       // 渐变色
@@ -570,10 +570,27 @@ function ConsciousnessDust() {
   );
 }
 
-/* ═══════════════ 场景内容 ═══════════════ */
+/* ═══════════════ 场景内容（渐进式加载） ═══════════════ */
 
+/**
+ * 性能优化：分阶段挂载重型组件，避免一帧内编译所有 Shader / 创建所有 Geometry
+ *
+ * Stage 0 (立即):    灯光 + PlasmaCore + OrbitControls
+ * Stage 1 (+100ms):  Stars + AtmosphereRings
+ * Stage 2 (+250ms):  三层意识节点 (InstancedMesh)
+ * Stage 3 (+500ms):  EnergyLines + ConsciousnessDust + EffectComposer
+ */
 function SceneContent({ onSelect, introPhase }: { onSelect: (n: KnowledgeNode) => void; introPhase: number }) {
   const controlsRef = useRef<any>(null);
+  const [loadStage, setLoadStage] = useState(0);
+
+  // 渐进式加载调度
+  useEffect(() => {
+    const t1 = setTimeout(() => setLoadStage(1), 100);
+    const t2 = setTimeout(() => setLoadStage(2), 250);
+    const t3 = setTimeout(() => setLoadStage(3), 500);
+    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
+  }, []);
 
   // 入场相机动画
   useFrame(({ camera, clock }) => {
@@ -595,47 +612,10 @@ function SceneContent({ onSelect, introPhase }: { onSelect: (n: KnowledgeNode) =
 
   return (
     <>
+      {/* ── Stage 0: 核心骨架（立即） ── */}
       <ambientLight intensity={0.15} />
       <pointLight position={[0, 0, 0]} intensity={0.5} color="#ff6b35" distance={8} decay={2} />
-
-      {/* 深空星云 */}
-      <Stars radius={80} depth={100} count={5000} factor={4} saturation={0.3} fade speed={0.3} />
-
-      {/* 等离子体内核 */}
       <PlasmaCore />
-
-      {/* 氛围光环 */}
-      <AtmosphereRings />
-
-      {/* 三层意识 */}
-      <MatterLayer onSelect={onSelect} />
-      <LifeLayer onSelect={onSelect} />
-      <CivilizationLayer onSelect={onSelect} />
-
-      {/* 能量脉冲连线 */}
-      <EnergyLines />
-
-      {/* 意识尘埃 */}
-      <ConsciousnessDust />
-
-      {/* 后处理 — 电影级 */}
-      <EffectComposer multisampling={0}>
-        <Bloom
-          luminanceThreshold={0.1}
-          luminanceSmoothing={0.4}
-          intensity={1.5}
-          mipmapBlur
-        />
-        <Vignette offset={0.3} darkness={0.7} blendFunction={BlendFunction.NORMAL} />
-        <ChromaticAberration
-          offset={new THREE.Vector2(0.0006, 0.0006)}
-          blendFunction={BlendFunction.NORMAL}
-          radialModulation={true}
-          modulationOffset={0.5}
-        />
-      </EffectComposer>
-
-      {/* 控制器 */}
       <OrbitControls
         ref={controlsRef}
         enablePan={false}
@@ -646,6 +626,46 @@ function SceneContent({ onSelect, introPhase }: { onSelect: (n: KnowledgeNode) =
         dampingFactor={0.05}
         enableDamping
       />
+
+      {/* ── Stage 1: 背景层 (+100ms) ── */}
+      {loadStage >= 1 && (
+        <>
+          <Stars radius={80} depth={100} count={3000} factor={4} saturation={0.3} fade speed={0.3} />
+          <AtmosphereRings />
+        </>
+      )}
+
+      {/* ── Stage 2: 意识节点 (+250ms) ── */}
+      {loadStage >= 2 && (
+        <>
+          <MatterLayer onSelect={onSelect} />
+          <LifeLayer onSelect={onSelect} />
+          <CivilizationLayer onSelect={onSelect} />
+        </>
+      )}
+
+      {/* ── Stage 3: 装饰 + 后处理 (+500ms) ── */}
+      {loadStage >= 3 && (
+        <>
+          <EnergyLines />
+          <ConsciousnessDust />
+          <EffectComposer multisampling={0}>
+            <Bloom
+              luminanceThreshold={0.1}
+              luminanceSmoothing={0.4}
+              intensity={1.5}
+              mipmapBlur
+            />
+            <Vignette offset={0.3} darkness={0.7} blendFunction={BlendFunction.NORMAL} />
+            <ChromaticAberration
+              offset={new THREE.Vector2(0.0006, 0.0006)}
+              blendFunction={BlendFunction.NORMAL}
+              radialModulation={true}
+              modulationOffset={0.5}
+            />
+          </EffectComposer>
+        </>
+      )}
     </>
   );
 }

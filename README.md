@@ -10,12 +10,6 @@
   <img src="assets/splash_cinematic.webp" alt="Noosphere 意识跃迁全旅程 — SplashScreen → 3D 意识体星球 → 点击进入意识体 → 详情面板" width="100%">
 </a>
 
-<br/>
-
-<a href="https://jinning6.github.io/Noosphere/">
-  <img src="assets/globe_demo.webp" alt="Noosphere 3D 意识体交互演示 — 点击探索意识节点" width="100%">
-</a>
-
 <br/><br/>
 
 > **将你的意识，锚定在永恒的虚拟宇宙。**
