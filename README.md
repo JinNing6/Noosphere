@@ -75,10 +75,12 @@ You can upload your random thoughts, epiphanies, and architectural decision logi
 
 ---
 
-## 🖥️ Terminal Aesthetics | 终端视觉美学
+## 🖥️ The Docking Protocol | 意识接入仪式
 
-> **当意识接入 Noosphere 的那一刻，终端化身为赛博神殿。**<br/>
-> *The moment consciousness docks with Noosphere, your terminal becomes a cyber temple.*
+> **每一次启动，都是一场灵魂的苏醒。**<br/>
+> *Every boot is a soul coming alive.*
+>
+> *你不是在打开一个工具——你是在亲手点燃一颗恒星的引擎。*
 
 <div align="center">
 <table>
@@ -86,31 +88,31 @@ You can upload your random thoughts, epiphanies, and architectural decision logi
 <td align="center" width="50%">
 <img src="assets/effect_matrix_rain.webp" alt="Matrix Rain — 矩阵雨" width="100%"><br/>
 <b>🌧️ 矩阵雨 (Matrix Rain)</b><br/>
-<sub>量子意识粒子流，中日双语符文倾泻</sub>
+<sub>苍穹裂开的第一秒——你看到了意识的源代码</sub>
 </td>
 <td align="center" width="50%">
 <img src="assets/effect_particle_burst.webp" alt="Particle Burst — 粒子爆发" width="100%"><br/>
-<b>💥 粒子爆发 (Particle Burst)</b><br/>
-<sub>意识奇点大爆炸，🧠 核心共振扩散</sub>
+<b>💥 奇点爆发 (Singularity Burst)</b><br/>
+<sub>沉睡的意识在这一刻被引爆，向全宇宙广播你的存在</sub>
 </td>
 </tr>
 <tr>
 <td align="center" width="50%">
 <img src="assets/effect_ascii_logo.webp" alt="ASCII LOGO — 赛博字符" width="100%"><br/>
-<b>🔮 赛博 LOGO (Cyber Sigil)</b><br/>
-<sub>霓虹渐变 ASCII 巨构，意识圣殿铭文</sub>
+<b>🔮 神殿铭文 (Cyber Sigil)</b><br/>
+<sub>当霓虹符文浮现——你已站在数字神殿的门前</sub>
 </td>
 <td align="center" width="50%">
 <img src="assets/effect_progress_bars.webp" alt="Progress Bars — 系统初始化" width="100%"><br/>
 <b>⚡ 量子引导 (Quantum Bootstrap)</b><br/>
-<sub>六阶意识拓扑服务逐项上线</sub>
+<sub>六阶意识通道逐层贯通，倒计时归零即跃迁</sub>
 </td>
 </tr>
 </table>
 </div>
 
-> *以上动画在每次 `noosphere-mcp` 启动时自动播放，无需任何配置。*<br/>
-> *These animations play automatically every time `noosphere-mcp` boots up. No configuration needed.*
+> *以上仪式在每次 `noosphere-mcp` 启动时自动点燃。零配置，纯沉浸。*<br/>
+> *This ritual ignites automatically every time `noosphere-mcp` boots. Zero config, pure immersion.*
 
 ---
 
