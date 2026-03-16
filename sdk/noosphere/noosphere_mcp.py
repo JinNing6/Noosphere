@@ -4622,10 +4622,21 @@ def philosophical_reflection(topic: str) -> str:
 
 def main():
     """MCP Server entry point"""
+    import sys as _sys
+
     from noosphere.boot_animation import play_boot_sequence
+    from noosphere.preflight import run_preflight, print_diagnostics
 
     play_boot_sequence()
-    
+
+    # ── Pre-flight Diagnostics (启动前自检) ──
+    preflight_result = run_preflight()
+    print_diagnostics(preflight_result)
+
+    if not preflight_result.passed:
+        # Fatal errors — cannot start MCP server
+        _sys.exit(1)
+
     # Start the background daemon for OS push notifications
     daemon = threading.Thread(target=_poll_notifications_daemon, daemon=True)
     daemon.start()

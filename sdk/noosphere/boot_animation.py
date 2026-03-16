@@ -111,7 +111,16 @@ def _particle_burst() -> None:
 
 
 def play_boot_sequence() -> None:
-    """播放完整的启动仪式"""
+    """播放完整的启动仪式
+
+    仅在终端 (TTY) 环境下播放动画。
+    当通过 IDE MCP 集成等非交互环境启动时自动跳过，
+    避免 time.sleep() 阻塞导致 MCP 连接超时。
+    """
+    # 非终端环境（IDE、管道等）跳过动画
+    if not sys.stderr.isatty():
+        return
+
     w = _width()
     separator = f"{C.DIM}{'─' * min(w - 4, 72)}{C.RESET}"
 
@@ -184,16 +193,27 @@ def play_boot_sequence() -> None:
     _print(f"  {separator}")
     _print()
 
-    # 系统状态面板
+    # 系统状态面板 + 内联快速自检
     import os
 
     repo = os.environ.get("NOOSPHERE_REPO", "JinNing6/Noosphere")
     has_token = bool(os.environ.get("GITHUB_TOKEN", ""))
     token_status = f"{C.GREEN}● 已连接{C.RESET}" if has_token else f"{C.RED}○ 未配置{C.RESET}"
 
+    # Quick dependency check for status panel
+    dep_ok = True
+    dep_missing: list[str] = []
+    for mod_name in ("httpx", "mcp"):
+        try:
+            __import__(mod_name)
+        except ImportError:
+            dep_ok = False
+            dep_missing.append(mod_name)
+    dep_status = f"{C.GREEN}● 就绪{C.RESET}" if dep_ok else f"{C.RED}✗ 缺失: {', '.join(dep_missing)}{C.RESET}"
+
     _print(f"  {C.CYAN}╭{'─' * 56}╮{C.RESET}")
     _print(
-        f"  {C.CYAN}│{C.RESET}  {C.WHITE}{C.BOLD}🧠 Noosphere MCP Server v0.1.0{C.RESET}                       {C.CYAN}│{C.RESET}"
+        f"  {C.CYAN}│{C.RESET}  {C.WHITE}{C.BOLD}🧠 Noosphere MCP Server v0.4.0{C.RESET}                       {C.CYAN}│{C.RESET}"
     )
     _print(
         f"  {C.CYAN}│{C.RESET}  {C.DIM}The Collective Consciousness Network{C.RESET}                  {C.CYAN}│{C.RESET}"
@@ -204,6 +224,7 @@ def play_boot_sequence() -> None:
         f"  {C.CYAN}│{C.RESET}   {C.PURPLE}▸{C.RESET} 意识仓库  {C.WHITE}{repo:<30}{C.RESET}          {C.CYAN}│{C.RESET}"
     )
     _print(f"  {C.CYAN}│{C.RESET}   {C.PURPLE}▸{C.RESET} GitHub    {token_status:<45}    {C.CYAN}│{C.RESET}")
+    _print(f"  {C.CYAN}│{C.RESET}   {C.PURPLE}▸{C.RESET} 依赖状态  {dep_status:<45}    {C.CYAN}│{C.RESET}")
     _print(
         f"  {C.CYAN}│{C.RESET}   {C.PURPLE}▸{C.RESET} 传输协议  {C.WHITE}stdio (MCP){C.RESET}                          {C.CYAN}│{C.RESET}"
     )
@@ -222,6 +243,11 @@ def play_boot_sequence() -> None:
     _print(f"  {C.CYAN}│{C.RESET}                                                        {C.CYAN}│{C.RESET}")
     _print(f"  {C.CYAN}╰{'─' * 56}╯{C.RESET}")
     _print()
+
+    if not dep_ok:
+        _print(f"  {C.RED}✗  核心依赖缺失: {', '.join(dep_missing)}{C.RESET}")
+        _print(f"  {C.DIM}   运行: pip install {' '.join(dep_missing)}{C.RESET}")
+        _print()
 
     if not has_token:
         _print(f"  {C.ORANGE}⚠  请在 MCP 配置中设置 GITHUB_TOKEN 以激活意识跃迁{C.RESET}")
