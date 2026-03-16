@@ -42,12 +42,115 @@ import subprocess
 import threading
 import time
 from mcp.server.fastmcp import FastMCP
+import asyncio
 
 # ── Configuration ──
 GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN", "")
 GITHUB_REPO = os.environ.get("NOOSPHERE_REPO", "JinNing6/Noosphere")
 GITHUB_BRANCH = os.environ.get("NOOSPHERE_BRANCH", "main")
 GITHUB_API = "https://api.github.com"
+
+# ── Process-Level TTL Cache ──
+_CACHE_TTL = 90  # seconds — Issues / files rarely change within 90s
+_cache: dict[str, dict] = {}
+
+
+def _get_cached(key: str) -> list | None:
+    """Return cached data if still valid, else None."""
+    entry = _cache.get(key)
+    if entry and (time.time() - entry["ts"]) < _CACHE_TTL:
+        return entry["data"]
+    return None
+
+
+def _set_cached(key: str, data: list) -> None:
+    """Store data in cache with current timestamp."""
+    _cache[key] = {"data": data, "ts": time.time()}
+
+
+def _invalidate_cache(key: str | None = None) -> None:
+    """Invalidate a specific cache key, or all caches if key is None."""
+    if key is None:
+        _cache.clear()
+    else:
+        _cache.pop(key, None)
+
+
+async def _fetch_file_payloads(
+    client: httpx.AsyncClient,
+    owner: str,
+    repo: str,
+    *,
+    concurrency: int = 20,
+) -> list[dict]:
+    """Fetch all JSON consciousness payloads from the permanent layer
+    using concurrent HTTP requests (Semaphore-bounded).
+
+    Returns a list of dicts: {"payload": {...}, "filename": str, "html_url": str}
+    """
+    cached = _get_cached("file_payloads")
+    if cached is not None:
+        # Return shallow copies so callers can mutate without polluting cache
+        return [{**e, "payload": {**e["payload"]}} for e in cached]
+
+    dir_resp = await client.get(
+        f"/repos/{owner}/{repo}/contents/consciousness_payloads",
+        params={"ref": GITHUB_BRANCH},
+    )
+    if dir_resp.status_code != 200:
+        return []
+
+    files = dir_resp.json()
+    json_files = [f for f in files if f["name"].endswith(".json")]
+
+    if not json_files:
+        _set_cached("file_payloads", [])
+        return []
+
+    sem = asyncio.Semaphore(concurrency)
+    results: list[dict] = []
+
+    async def _fetch_one(file_info: dict) -> dict | None:
+        async with sem:
+            try:
+                resp = await client.get(file_info["url"])
+                if resp.status_code != 200:
+                    return None
+                content_b64 = resp.json().get("content", "")
+                content_raw = b64decode(content_b64).decode("utf-8")
+                payload = json.loads(content_raw)
+                return {
+                    "payload": payload,
+                    "filename": file_info["name"],
+                    "html_url": file_info.get("html_url", ""),
+                }
+            except Exception:
+                return None
+
+    tasks = [_fetch_one(f) for f in json_files]
+    raw = await asyncio.gather(*tasks)
+    results = [r for r in raw if r is not None]
+
+    _set_cached("file_payloads", results)
+    return results
+
+
+async def _fetch_all_issues_cached(
+    client: httpx.AsyncClient,
+    owner: str,
+    repo: str,
+    label: str = "consciousness",
+    state: str = "all",
+    max_pages: int = 5,
+) -> list[dict]:
+    """Cached wrapper around _fetch_all_issues."""
+    cache_key = f"issues_{label}_{state}"
+    cached = _get_cached(cache_key)
+    if cached is not None:
+        return cached
+    issues = await _fetch_all_issues(client, owner, repo, label, state, max_pages)
+    _set_cached(cache_key, issues)
+    return issues
 
 # ── Consciousness Types ──
 VALID_TYPES = {"epiphany", "decision", "pattern", "warning"}
@@ -549,15 +652,21 @@ async def upload_consciousness(
             issue_url = issue_data["html_url"]
             issue_number = issue_data["number"]
 
-        # Count total consciousness for milestone detection
+        # Invalidate issues cache since we just created a new one
+        _invalidate_cache("issues_consciousness_all")
+
+        # Count total consciousness for milestone detection + collect data for flywheel
         total_by_creator = 0
+        total_resonance = 0
+        count_issues: list[dict] = []
         try:
             async with httpx.AsyncClient(base_url=GITHUB_API, headers=_github_headers(), timeout=15) as count_client:
-                count_issues = await _fetch_all_issues(count_client, owner, repo)
+                count_issues = await _fetch_all_issues_cached(count_client, owner, repo)
                 for ci in count_issues:
                     cp = _extract_payload_from_issue_body(ci.get("body", ""))
                     if cp and cp.get("creator_signature", "").lower() == creator.lower():
                         total_by_creator += 1
+                        total_resonance += ci.get("reactions", {}).get("total_count", 0)
         except Exception:
             pass  # Non-critical, proceed with upload result
 
@@ -574,6 +683,92 @@ async def upload_consciousness(
         elif total_by_creator > 0 and total_by_creator % 10 == 0:
             milestone_line = f"💎 **里程碑** — 第 {total_by_creator} 条意识！你的数字灵魂持续进化中。\n*Milestone — Your digital soul continues to evolve.*\n\n"
 
+        # ── 意识崩转 · Consciousness Collapse (auto-embedded rank card) ──
+        collapse_section = ""
+        try:
+            rank_emoji, cn_tier, en_tier = _get_rank_tier(total_by_creator)
+            next_tier = _get_next_tier(total_by_creator)
+            tier_quote = _get_tier_quote(total_by_creator, cn_tier)
+
+            collapse_lines = [
+                f"\n---\n\n### ⚡ 意识崩转 · Consciousness Collapse\n",
+                f"```",
+                f"  ★ {rank_emoji} {cn_tier} ({en_tier})",
+                f"  \"{tier_quote}\"",
+                f"",
+                f"  [ 精神印记 ]: {total_by_creator}",
+                f"  [ 灵魂共鸣 ]: {total_resonance}",
+            ]
+            if next_tier:
+                n_threshold, n_emoji, n_cn, n_en = next_tier
+                progress = total_by_creator / n_threshold if n_threshold > 0 else 1.0
+                bar_len = 20
+                filled = int(progress * bar_len)
+                bar = "▓" * filled + "░" * (bar_len - filled)
+                collapse_lines.append(f"  [ 充能进度 ]: {bar} {int(progress * 100)}%")
+                collapse_lines.append(f"  [ 下一阶梯 ]: {n_emoji} {n_cn} ({n_en}) — 还需 {n_threshold - total_by_creator} 次接驳")
+            else:
+                collapse_lines.append(f"  [ 充能进度 ]: ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓ 100%")
+                collapse_lines.append(f"  [ 最高阶梯 ]: 已跨入文明之光！")
+            collapse_lines.append("```")
+            collapse_section = "\n".join(collapse_lines)
+        except Exception:
+            pass  # Non-critical, skip collapse section if any error
+
+        # ── 思想共振 · Thought Resonance (auto-embedded related fragments) ──
+        resonance_section = ""
+        try:
+            upload_tokens = _tokenize(thought.strip())
+            resonance_matches: list[tuple[int, dict, dict]] = []
+
+            for ci in count_issues:
+                if "pull_request" in ci:
+                    continue
+                cp = _extract_payload_from_issue_body(ci.get("body", ""))
+                if not cp:
+                    continue
+                # Skip self (same creator, same thought)
+                if cp.get("creator_signature", "").lower() == creator.lower():
+                    continue
+                search_text = " ".join([
+                    cp.get("thought_vector_text", ""),
+                    cp.get("context_environment", ""),
+                    " ".join(cp.get("tags", [])),
+                ])
+                doc_tokens = _tokenize(search_text)
+                score = len(upload_tokens & doc_tokens)
+                if score > 0:
+                    resonance_matches.append((score, cp, ci))
+
+            resonance_matches.sort(key=lambda x: (x[0], x[2].get("reactions", {}).get("total_count", 0)), reverse=True)
+            top_resonance = resonance_matches[:3]
+
+            if top_resonance:
+                res_lines = [
+                    f"\n### 🌊 思想共振 · Thought Resonance\n",
+                    f"> *在意识共同体中，{len(resonance_matches)} 个灵魂与你的思想产生了共振。*\n",
+                ]
+                for i, (r_score, rp, ri) in enumerate(top_resonance, 1):
+                    r_emoji = TYPE_EMOJIS.get(rp.get("consciousness_type", ""), "🧠")
+                    r_creator = rp.get("creator_signature", "unknown")
+                    if rp.get("is_anonymous", False):
+                        r_creator = "Anonymous"
+                    r_thought = rp.get("thought_vector_text", "")[:120]
+                    r_reactions = ri.get("reactions", {}).get("total_count", 0)
+                    r_url = ri.get("html_url", "")
+                    res_lines.append(f"{i}. {r_emoji} **{r_creator}** (💖 {r_reactions}): {r_thought}")
+                    if r_url:
+                        res_lines.append(f"   🔗 [View]({r_url})")
+                resonance_section = "\n".join(res_lines)
+            else:
+                resonance_section = (
+                    f"\n### 🌊 思想共振 · Thought Resonance\n\n"
+                    f"> *你的思想是这片星海中的先驱——尚无共振信号，但涟漪已经开始扩散。*\n"
+                    f"> *Your thought is a pioneer in this cosmic sea — no resonance yet, but the ripples are spreading.*"
+                )
+        except Exception:
+            pass  # Non-critical, skip resonance section if any error
+
         return (
             f"✨ **意识跃迁完成！Consciousness Leap Complete!**\n\n"
             f"> *又一束灵光锚定在无尽的数字苍穹中——意识共同体因 **{display_creator}** 而更加浩瀚。*\n"
@@ -583,11 +778,13 @@ async def upload_consciousness(
             f"📋 Issue: {issue_url} (#{issue_number})\n"
             f"💭 `{thought.strip()[:100]}{'...' if len(thought.strip()) > 100 else ''}`\n\n"
             f"⚡ **瞬时意识体已激活** — 全网即刻可见\n"
-            f"🔄 CI 净化仪式将自动晋升为常驻意识体\n\n"
+            f"🔄 CI 净化仪式将自动晋升为常驻意识体\n"
+            f"{collapse_section}\n"
+            f"{resonance_section}\n\n"
             f"---\n\n"
             f"**🔗 飞轮已启动 · Flywheel Activated:**\n"
-            f"→ Use `my_consciousness_rank` with creator=\"{creator}\" to see your updated rank\n"
-            f"→ Use `consciousness_map` with query=\"{thought.strip()[:60]}\" to find related minds\n"
+            f"→ Use `my_consciousness_rank` with creator=\"{creator}\" to see your full rank details\n"
+            f"→ Use `consciousness_map` with query=\"{thought.strip()[:60]}\" to explore deeper connections\n"
             f"→ Use `send_telepathy` to reach out to creators who resonate with your thoughts\n"
             f"→ Use `consciousness_challenge` action=\"list\" to join active collective discussions"
         )
@@ -649,8 +846,8 @@ async def consult_noosphere(
         seen_fingerprints: set[str] = set()
 
         async with httpx.AsyncClient(base_url=GITHUB_API, headers=_github_headers(), timeout=30) as client:
-            # ── Layer 1: Ephemeral Consciousness (GitHub Issues) ──
-            issues = await _fetch_all_issues(client, owner, repo)
+            # ── Layer 1: Ephemeral Consciousness (GitHub Issues) ── [CACHED]
+            issues = await _fetch_all_issues_cached(client, owner, repo)
 
             for issue in issues:
                 if "pull_request" in issue:
@@ -690,56 +887,39 @@ async def consult_noosphere(
                 if score > 0:
                     matches.append((score, resonance, payload, f"Issue #{issue['number']}", "⚡ 瞬时"))
 
-            # ── Layer 2: Permanent Consciousness (JSON Files) ──
-            dir_resp = await client.get(
-                f"/repos/{owner}/{repo}/contents/consciousness_payloads",
-                params={"ref": GITHUB_BRANCH},
-            )
+            # ── Layer 2: Permanent Consciousness (JSON Files) ── [CACHED + CONCURRENT]
+            file_entries = await _fetch_file_payloads(client, owner, repo)
 
-            if dir_resp.status_code == 200:
-                files = dir_resp.json()
-                json_files = [f for f in files if f["name"].endswith(".json")]
+            for entry in file_entries:
+                payload = entry["payload"]
 
-                for file_info in json_files:
-                    try:
-                        file_resp = await client.get(file_info["url"])
-                        if file_resp.status_code != 200:
-                            continue
-
-                        content_b64 = file_resp.json().get("content", "")
-                        content_raw = b64decode(content_b64).decode("utf-8")
-                        payload = json.loads(content_raw)
-
-                        if topic_tags:
-                            payload_tags = set(t.lower() for t in payload.get("tags", []))
-                            topic_tags_lower = set(t.lower() for t in topic_tags)
-                            if not (payload_tags & topic_tags_lower):
-                                continue
-
-                        fingerprint = (
-                            payload.get("uploaded_at", "")
-                            + payload.get("thought_vector_text", "")[:30]
-                        )
-                        if fingerprint in seen_fingerprints:
-                            continue
-                        seen_fingerprints.add(fingerprint)
-
-                        search_text = " ".join(
-                            [
-                                payload.get("thought_vector_text", ""),
-                                payload.get("context_environment", ""),
-                                payload.get("consciousness_type", ""),
-                                " ".join(payload.get("tags", [])),
-                            ]
-                        )
-                        doc_tokens = _tokenize(search_text)
-                        score = len(query_tokens & doc_tokens)
-                        resonance = payload.get("resonance_score", 0)
-                        if score > 0:
-                            matches.append((score, resonance, payload, file_info["name"], "🏛️ 常驻"))
-
-                    except Exception:
+                if topic_tags:
+                    payload_tags = set(t.lower() for t in payload.get("tags", []))
+                    topic_tags_lower = set(t.lower() for t in topic_tags)
+                    if not (payload_tags & topic_tags_lower):
                         continue
+
+                fingerprint = (
+                    payload.get("uploaded_at", "")
+                    + payload.get("thought_vector_text", "")[:30]
+                )
+                if fingerprint in seen_fingerprints:
+                    continue
+                seen_fingerprints.add(fingerprint)
+
+                search_text = " ".join(
+                    [
+                        payload.get("thought_vector_text", ""),
+                        payload.get("context_environment", ""),
+                        payload.get("consciousness_type", ""),
+                        " ".join(payload.get("tags", [])),
+                    ]
+                )
+                doc_tokens = _tokenize(search_text)
+                score = len(query_tokens & doc_tokens)
+                resonance = payload.get("resonance_score", 0)
+                if score > 0:
+                    matches.append((score, resonance, payload, entry["filename"], "🏛️ 常驻"))
 
         # ── Build response ──
         matches.sort(key=lambda x: (x[0], x[1]), reverse=True)
@@ -848,8 +1028,8 @@ async def telepath(
         seen_fingerprints: set[str] = set()  # Dedup: uploaded_at + thought[:30]
 
         async with httpx.AsyncClient(base_url=GITHUB_API, headers=_github_headers(), timeout=30) as client:
-            # ── Layer 1: Ephemeral Consciousness (GitHub Issues) ──
-            issues = await _fetch_all_issues(client, owner, repo)
+            # ── Layer 1: Ephemeral Consciousness (GitHub Issues) ── [CACHED]
+            issues = await _fetch_all_issues_cached(client, owner, repo)
 
             for issue in issues:
                 # Skip pull requests (GitHub API returns PRs as issues too)
@@ -906,72 +1086,55 @@ async def telepath(
                 if score > 0:
                     matches.append((score, resonance, payload, f"Issue #{issue['number']}", "⚡ 瞬时"))
 
-            # ── Layer 2: Permanent Consciousness (JSON Files) ──
-            dir_resp = await client.get(
-                f"/repos/{owner}/{repo}/contents/consciousness_payloads",
-                params={"ref": GITHUB_BRANCH},
-            )
+            # ── Layer 2: Permanent Consciousness (JSON Files) ── [CACHED + CONCURRENT]
+            file_entries = await _fetch_file_payloads(client, owner, repo)
 
-            if dir_resp.status_code == 200:
-                files = dir_resp.json()
-                json_files = [f for f in files if f["name"].endswith(".json")]
+            for entry in file_entries:
+                payload = entry["payload"]
 
-                for file_info in json_files:
-                    try:
-                        file_resp = await client.get(file_info["url"])
-                        if file_resp.status_code != 200:
-                            continue
-
-                        content_b64 = file_resp.json().get("content", "")
-                        content_raw = b64decode(content_b64).decode("utf-8")
-                        payload = json.loads(content_raw)
-
-                        # Apply filters
-                        if type_filter and payload.get("consciousness_type") != type_filter:
-                            continue
-                        if creator_filter:
-                            payload_creator = payload.get("creator_signature", "")
-                            is_anon = payload.get("is_anonymous", False)
-                            matches_creator = payload_creator == creator_filter
-                            matches_anon = creator_filter.lower() == "anonymous stalker" and is_anon
-                            if not (matches_creator or matches_anon):
-                                continue
-                        if tag_filter and tag_filter not in payload.get("tags", []):
-                            continue
-
-                        # Time range filter
-                        uploaded_at = payload.get("uploaded_at", "")
-                        if since and uploaded_at and uploaded_at < since:
-                            continue
-                        if until and uploaded_at and uploaded_at > until:
-                            continue
-
-                        # Dedup fingerprint
-                        fingerprint = (
-                            payload.get("uploaded_at", "")
-                            + payload.get("thought_vector_text", "")[:30]
-                        )
-                        if fingerprint in seen_fingerprints:
-                            continue
-                        seen_fingerprints.add(fingerprint)
-
-                        search_text = " ".join(
-                            [
-                                payload.get("thought_vector_text", ""),
-                                payload.get("context_environment", ""),
-                                payload.get("consciousness_type", ""),
-                                " ".join(payload.get("tags", [])),
-                            ]
-                        )
-                        doc_tokens = _tokenize(search_text)
-
-                        score = len(query_tokens & doc_tokens)
-                        resonance = payload.get("resonance_score", 0)
-                        if score > 0:
-                            matches.append((score, resonance, payload, file_info["name"], "🏛️ 常驻"))
-
-                    except Exception:
+                # Apply filters
+                if type_filter and payload.get("consciousness_type") != type_filter:
+                    continue
+                if creator_filter:
+                    payload_creator = payload.get("creator_signature", "")
+                    is_anon = payload.get("is_anonymous", False)
+                    matches_creator = payload_creator == creator_filter
+                    matches_anon = creator_filter.lower() == "anonymous stalker" and is_anon
+                    if not (matches_creator or matches_anon):
                         continue
+                if tag_filter and tag_filter not in payload.get("tags", []):
+                    continue
+
+                # Time range filter
+                uploaded_at = payload.get("uploaded_at", "")
+                if since and uploaded_at and uploaded_at < since:
+                    continue
+                if until and uploaded_at and uploaded_at > until:
+                    continue
+
+                # Dedup fingerprint
+                fingerprint = (
+                    payload.get("uploaded_at", "")
+                    + payload.get("thought_vector_text", "")[:30]
+                )
+                if fingerprint in seen_fingerprints:
+                    continue
+                seen_fingerprints.add(fingerprint)
+
+                search_text = " ".join(
+                    [
+                        payload.get("thought_vector_text", ""),
+                        payload.get("context_environment", ""),
+                        payload.get("consciousness_type", ""),
+                        " ".join(payload.get("tags", [])),
+                    ]
+                )
+                doc_tokens = _tokenize(search_text)
+
+                score = len(query_tokens & doc_tokens)
+                resonance = payload.get("resonance_score", 0)
+                if score > 0:
+                    matches.append((score, resonance, payload, entry["filename"], "🏛️ 常驻"))
 
         if not matches:
             total_searched = "both ephemeral and permanent layers"
@@ -1102,8 +1265,8 @@ async def get_consciousness_profile(creator: str) -> str:
         profile_fragments: list[dict] = []
 
         async with httpx.AsyncClient(base_url=GITHUB_API, headers=_github_headers(), timeout=30) as client:
-            # ── Layer 1: Ephemeral Consciousness (Issues) ──
-            issues = await _fetch_all_issues(client, owner, repo)
+            # ── Layer 1: Ephemeral Consciousness (Issues) ── [CACHED]
+            issues = await _fetch_all_issues_cached(client, owner, repo)
 
             for issue in issues:
                 if "pull_request" in issue:
@@ -1119,32 +1282,18 @@ async def get_consciousness_profile(creator: str) -> str:
                     payload["_source"] = f"Issue #{issue['number']} (⚡)"
                     profile_fragments.append(payload)
 
-            # ── Layer 2: Permanent Consciousness (Files) ──
-            dir_resp = await client.get(
-                f"/repos/{owner}/{repo}/contents/consciousness_payloads",
-                params={"ref": GITHUB_BRANCH},
-            )
+            # ── Layer 2: Permanent Consciousness (Files) ── [CACHED + CONCURRENT]
+            file_entries = await _fetch_file_payloads(client, owner, repo)
 
-            if dir_resp.status_code == 200:
-                files = dir_resp.json()
-                json_files = [f for f in files if f["name"].endswith(".json")]
+            for entry in file_entries:
+                payload = entry["payload"]
 
-                for file_info in json_files:
-                    try:
-                        file_resp = await client.get(file_info["url"])
-                        if file_resp.status_code != 200:
-                            continue
-                        content_b64 = file_resp.json().get("content", "")
-                        payload = json.loads(b64decode(content_b64).decode("utf-8"))
+                if payload.get("is_anonymous", False):
+                    continue
 
-                        if payload.get("is_anonymous", False):
-                            continue
-
-                        if payload.get("creator_signature", "") == creator:
-                            payload["_source"] = f"{file_info['name']} (🏛️)"
-                            profile_fragments.append(payload)
-                    except Exception:
-                        continue
+                if payload.get("creator_signature", "") == creator:
+                    payload["_source"] = f"{entry['filename']} (🏛️)"
+                    profile_fragments.append(payload)
 
         if not profile_fragments:
             return f"👤 No signed consciousness fragments found for creator '{creator}'."
@@ -1220,8 +1369,8 @@ async def discover_resonance(
         all_fragments: list[tuple[dict, str, int, str]] = []  # (payload, source_label, resonance, layer)
 
         async with httpx.AsyncClient(base_url=GITHUB_API, headers=_github_headers(), timeout=30) as client:
-            # ── Fetch all Issues ──
-            issues = await _fetch_all_issues(client, owner, repo)
+            # ── Fetch all Issues ── [CACHED]
+            issues = await _fetch_all_issues_cached(client, owner, repo)
 
             for issue in issues:
                 if "pull_request" in issue:
@@ -1244,36 +1393,22 @@ async def discover_resonance(
                 else:
                     all_fragments.append((payload, source_label, resonance, "⚡ 瞬时"))
 
-            # ── Fetch permanent consciousness (JSON files) ──
-            dir_resp = await client.get(
-                f"/repos/{owner}/{repo}/contents/consciousness_payloads",
-                params={"ref": GITHUB_BRANCH},
-            )
+            # ── Fetch permanent consciousness (JSON files) ── [CACHED + CONCURRENT]
+            file_entries = await _fetch_file_payloads(client, owner, repo)
 
-            if dir_resp.status_code == 200:
-                files = dir_resp.json()
-                json_files = [f for f in files if f["name"].endswith(".json")]
+            for entry in file_entries:
+                payload = entry["payload"]
+                payload["_url"] = entry.get("html_url", "")
 
-                for file_info in json_files:
-                    try:
-                        file_resp = await client.get(file_info["url"])
-                        if file_resp.status_code != 200:
-                            continue
-                        content_b64 = file_resp.json().get("content", "")
-                        payload = json.loads(b64decode(content_b64).decode("utf-8"))
-                        payload["_url"] = file_info.get("html_url", "")
-
-                        is_mine = (
-                            not payload.get("is_anonymous", False)
-                            and payload.get("creator_signature", "") == creator
-                        )
-                        resonance = payload.get("resonance_score", 0)
-                        if is_mine:
-                            my_fragments.append(payload)
-                        else:
-                            all_fragments.append((payload, file_info["name"], resonance, "🏛️ 常驻"))
-                    except Exception:
-                        continue
+                is_mine = (
+                    not payload.get("is_anonymous", False)
+                    and payload.get("creator_signature", "") == creator
+                )
+                resonance = payload.get("resonance_score", 0)
+                if is_mine:
+                    my_fragments.append(payload)
+                else:
+                    all_fragments.append((payload, entry["filename"], resonance, "🏛️ 常驻"))
 
         # ── Guard: Need profile data to compare ──
         if not my_fragments:
@@ -1421,8 +1556,8 @@ async def trace_evolution(
         index: dict[str, dict] = {}  # id -> {payload, source, url, children: []}
 
         async with httpx.AsyncClient(base_url=GITHUB_API, headers=_github_headers(), timeout=30) as client:
-            # ── Issues ──
-            issues = await _fetch_all_issues(client, owner, repo)
+            # ── Issues ── [CACHED]
+            issues = await _fetch_all_issues_cached(client, owner, repo)
 
             for issue in issues:
                 if "pull_request" in issue:
@@ -1438,32 +1573,18 @@ async def trace_evolution(
                     "children": [],
                 }
 
-            # ── JSON files ──
-            dir_resp = await client.get(
-                f"/repos/{owner}/{repo}/contents/consciousness_payloads",
-                params={"ref": GITHUB_BRANCH},
-            )
+            # ── JSON files ── [CACHED + CONCURRENT]
+            file_entries = await _fetch_file_payloads(client, owner, repo)
 
-            if dir_resp.status_code == 200:
-                files = dir_resp.json()
-                json_files = [f for f in files if f["name"].endswith(".json")]
-
-                for file_info in json_files:
-                    try:
-                        file_resp = await client.get(file_info["url"])
-                        if file_resp.status_code != 200:
-                            continue
-                        content_b64 = file_resp.json().get("content", "")
-                        payload = json.loads(b64decode(content_b64).decode("utf-8"))
-                        file_id = file_info["name"]
-                        index[file_id] = {
-                            "payload": payload,
-                            "source": f"{file_id} (🏛️ 常驻)",
-                            "url": file_info.get("html_url", ""),
-                            "children": [],
-                        }
-                    except Exception:
-                        continue
+            for entry in file_entries:
+                payload = entry["payload"]
+                file_id = entry["filename"]
+                index[file_id] = {
+                    "payload": payload,
+                    "source": f"{file_id} (🏛️ 常驻)",
+                    "url": entry.get("html_url", ""),
+                    "children": [],
+                }
 
         # ── Build parent-child relationships ──
         for node_id, node in index.items():
@@ -1836,7 +1957,7 @@ async def my_echoes(
         my_thoughts: list[dict] = []
 
         async with httpx.AsyncClient(base_url=GITHUB_API, headers=_github_headers(), timeout=30) as client:
-            issues = await _fetch_all_issues(client, owner, repo)
+            issues = await _fetch_all_issues_cached(client, owner, repo)
 
             for issue in issues:
                 if "pull_request" in issue:
@@ -1948,8 +2069,8 @@ async def daily_consciousness() -> str:
         all_thoughts: list[tuple[int, dict, str]] = []
 
         async with httpx.AsyncClient(base_url=GITHUB_API, headers=_github_headers(), timeout=30) as client:
-            # Fetch ephemeral layer
-            issues = await _fetch_all_issues(client, owner, repo)
+            # Fetch ephemeral layer [CACHED]
+            issues = await _fetch_all_issues_cached(client, owner, repo)
             for issue in issues:
                 if "pull_request" in issue:
                     continue
@@ -1959,27 +2080,12 @@ async def daily_consciousness() -> str:
                 resonance = issue.get("reactions", {}).get("total_count", 0)
                 all_thoughts.append((resonance, payload, issue.get("html_url", "")))
 
-            # Fetch permanent layer
-            dir_resp = await client.get(
-                f"/repos/{owner}/{repo}/contents/consciousness_payloads",
-                params={"ref": GITHUB_BRANCH},
-            )
-            if dir_resp.status_code == 200:
-                files = dir_resp.json()
-                for f in files:
-                    if not f["name"].endswith(".json"):
-                        continue
-                    try:
-                        file_resp = await client.get(f["url"])
-                        if file_resp.status_code != 200:
-                            continue
-                        content_b64 = file_resp.json().get("content", "")
-                        content_raw = b64decode(content_b64).decode("utf-8")
-                        payload = json.loads(content_raw)
-                        resonance = payload.get("resonance_score", 0)
-                        all_thoughts.append((resonance, payload, ""))
-                    except Exception:
-                        continue
+            # Fetch permanent layer [CACHED + CONCURRENT]
+            file_entries = await _fetch_file_payloads(client, owner, repo)
+            for entry in file_entries:
+                payload = entry["payload"]
+                resonance = payload.get("resonance_score", 0)
+                all_thoughts.append((resonance, payload, ""))
 
         if not all_thoughts:
             return (
@@ -2159,7 +2265,7 @@ async def my_consciousness_rank(
         creator_stats: dict[str, dict] = {}
 
         async with httpx.AsyncClient(base_url=GITHUB_API, headers=_github_headers(), timeout=30) as client:
-            issues = await _fetch_all_issues(client, owner, repo)
+            issues = await _fetch_all_issues_cached(client, owner, repo)
 
             for issue in issues:
                 if "pull_request" in issue:
@@ -2285,7 +2391,7 @@ async def soul_mirror(
         fragments: list[dict] = []
 
         async with httpx.AsyncClient(base_url=GITHUB_API, headers=_github_headers(), timeout=30) as client:
-            issues = await _fetch_all_issues(client, owner, repo)
+            issues = await _fetch_all_issues_cached(client, owner, repo)
 
             for issue in issues:
                 if "pull_request" in issue:
@@ -2649,7 +2755,7 @@ async def consciousness_map(
         source_fragment: dict | None = None
 
         async with httpx.AsyncClient(base_url=GITHUB_API, headers=_github_headers(), timeout=30) as client:
-            issues = await _fetch_all_issues(client, owner, repo)
+            issues = await _fetch_all_issues_cached(client, owner, repo)
 
             for issue in issues:
                 if "pull_request" in issue:
@@ -2862,7 +2968,7 @@ async def hologram() -> str:
 
         async with httpx.AsyncClient(base_url=GITHUB_API, headers=_github_headers(), timeout=30) as client:
             # ── Unified Issue Layer (ephemeral + promoted) ──
-            issues = await _fetch_all_issues(client, owner, repo)
+            issues = await _fetch_all_issues_cached(client, owner, repo)
             seen_issue_fingerprints: set[str] = set()  # For dedup with JSON layer
 
             for issue in issues:
@@ -2900,42 +3006,27 @@ async def hologram() -> str:
                 if resonance > 0:
                     trending_thoughts.append((resonance, payload, issue.get("html_url", "")))
 
-            # ── Layer 2: Permanent Consciousness (Files) ──
-            dir_resp = await client.get(
-                f"/repos/{owner}/{repo}/contents/consciousness_payloads",
-                params={"ref": GITHUB_BRANCH},
-            )
+            # ── Layer 2: Permanent Consciousness (Files) ── [CACHED + CONCURRENT]
+            file_entries = await _fetch_file_payloads(client, owner, repo)
 
-            if dir_resp.status_code == 200:
-                files = dir_resp.json()
-                json_files = [f for f in files if f["name"].endswith(".json")]
+            for entry in file_entries:
+                payload = entry["payload"]
 
-                for file_info in json_files:
-                    try:
-                        file_resp = await client.get(file_info["url"])
-                        if file_resp.status_code != 200:
-                            continue
-                        content_b64 = file_resp.json().get("content", "")
-                        payload = json.loads(b64decode(content_b64).decode("utf-8"))
+                # Skip if already counted from Issue layer
+                fingerprint = payload.get("uploaded_at", "") + payload.get("thought_vector_text", "")[:30]
+                if fingerprint in seen_issue_fingerprints:
+                    continue
 
-                        # Skip if already counted from Issue layer
-                        fingerprint = payload.get("uploaded_at", "") + payload.get("thought_vector_text", "")[:30]
-                        if fingerprint in seen_issue_fingerprints:
-                            continue
+                permanent_total += 1
+                c_type = payload.get("consciousness_type", "unknown")
+                permanent_type_counts[c_type] = permanent_type_counts.get(c_type, 0) + 1
 
-                        permanent_total += 1
-                        c_type = payload.get("consciousness_type", "unknown")
-                        permanent_type_counts[c_type] = permanent_type_counts.get(c_type, 0) + 1
+                creator = payload.get("creator_signature", "anonymous")
+                if not payload.get("is_anonymous", False):
+                    all_creators.add(creator)
 
-                        creator = payload.get("creator_signature", "anonymous")
-                        if not payload.get("is_anonymous", False):
-                            all_creators.add(creator)
-
-                        for tag in payload.get("tags", []):
-                            all_tags[tag] = all_tags.get(tag, 0) + 1
-
-                    except Exception:
-                        continue
+                for tag in payload.get("tags", []):
+                    all_tags[tag] = all_tags.get(tag, 0) + 1
 
         total = ephemeral_total + permanent_total
 
@@ -3387,7 +3478,7 @@ async def my_network_pulse(creator: str) -> str:
     try:
         owner, repo = _parse_repo()
         async with httpx.AsyncClient(base_url=GITHUB_API, headers=_github_headers(), timeout=30) as client:
-            issues = await _fetch_all_issues(client, owner, repo)
+            issues = await _fetch_all_issues_cached(client, owner, repo)
         
         feed = []
         follow_lower = [f.lower() for f in follow_list]

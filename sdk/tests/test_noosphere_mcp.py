@@ -44,14 +44,17 @@ from noosphere.noosphere_mcp import (
     _sync_thread_cache,
     _get_tag_subscriptions,
     _set_tag_subscriptions,
+    _invalidate_cache,
 )
 
 @pytest.fixture
 def mock_env():
+    _invalidate_cache()  # Clear any stale cache before test
     with patch("noosphere.noosphere_mcp.GITHUB_TOKEN", "test_token"), \
          patch("noosphere.noosphere_mcp.GITHUB_REPO", "test_owner/test_repo"), \
          patch("noosphere.noosphere_mcp._github_headers", return_value={"Authorization": "Bearer test"}):
         yield
+    _invalidate_cache()  # Clean up after test
 
 def test_extract_payload():
     payload = {"key": "value"}
@@ -781,10 +784,10 @@ async def test_my_consciousness_rank_success(mock_env):
     )
 
     result = await my_consciousness_rank("ranker")
-    assert "Consciousness Rank" in result or "Virtual Universe" in result
+    assert "CONSCIOUSNESS RANK" in result or "Consciousness Rank" in result or "Virtual Universe" in result
     assert "灵魂火焰" in result  # 3 contributions = Soul Flame
     assert "3" in result
-    assert "Consciousness Ladder" in result or "Tier" in result or "Soul Flame" in result
+    assert "Cultivation Ladder" in result or "Tier" in result or "Soul Flame" in result
 
 
 @pytest.mark.asyncio
@@ -840,12 +843,12 @@ async def test_soul_mirror_success(mock_env):
     )
 
     result = await soul_mirror("analyst")
-    assert "Soul Mirror" in result
+    assert "SOUL MIRROR" in result or "Soul Mirror" in result
     assert "Philosopher" in result  # Archetype
-    assert "Consciousness Spectrum" in result
-    assert "Core Focus Areas" in result
-    assert "Consciousness DNA" in result
-    assert "Vital Signs" in result
+    assert "SPECTRUM ANALYSIS" in result or "Consciousness Spectrum" in result
+    assert "CORE FOCUS" in result or "Core Focus Areas" in result
+    assert "CORE KEYWORDS" in result or "Consciousness DNA" in result
+    assert "VITAL SIGNS" in result or "Vital Signs" in result
 
 
 @pytest.mark.asyncio
