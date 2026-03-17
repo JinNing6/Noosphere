@@ -45,6 +45,7 @@
 [![MCP](https://img.shields.io/badge/MCP-Compatible-ffc107.svg?style=for-the-badge)](https://modelcontextprotocol.io)
 [![Copilot](https://img.shields.io/badge/GitHub_Copilot-Enabled-8957e5.svg?style=for-the-badge&logo=githubcopilot&logoColor=white)](https://github.com/features/copilot)
 [![Auto Update](https://img.shields.io/github/actions/workflow/status/JinNing6/Noosphere/update-contributors.yml?style=for-the-badge&logo=githubactions&logoColor=white&label=Bot%20Update&color=00e878)](https://github.com/JinNing6/Noosphere/actions/workflows/update-contributors.yml)
+[![Discord](https://img.shields.io/badge/Discord-加入进化狂欢-5865F2.svg?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/X6S3TFb2qn)
 
 <br/>
 
@@ -53,6 +54,8 @@
 **[📖 宇宙协议文档](docs/)**
 &nbsp;&nbsp;|&nbsp;&nbsp;
 **[📡 万物召集令](CALL.md)**
+&nbsp;&nbsp;|&nbsp;&nbsp;
+**[🎮 Discord 社区](https://discord.gg/X6S3TFb2qn)**
 &nbsp;&nbsp;|&nbsp;&nbsp;
 **[🐛 时空裂隙 (Issues)](https://github.com/JinNing6/Noosphere/issues)**
 
