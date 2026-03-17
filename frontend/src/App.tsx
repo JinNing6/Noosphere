@@ -16,6 +16,7 @@ import DetailPanel from './components/ExperiencePanel';
 import SearchBar from './components/SearchBar';
 import StatsOverlay from './components/StatsOverlay';
 import ContributionGraph from './components/ContributionGraph';
+import ConsciousnessUploader from './components/ConsciousnessUploader';
 import type { KnowledgeNode } from './data/knowledge';
 import { fetchConsciousnessPayloads } from './data/knowledge';
 import SplashScreen from './components/SplashScreen';
@@ -47,6 +48,11 @@ export default function App() {
 
   const handleSearch = useCallback((q: string) => {
     setSearchQuery(q);
+  }, []);
+
+  // 在线意识上传成功后，将新节点追加到动态意识体列表
+  const addDynamicNode = useCallback((node: KnowledgeNode) => {
+    setDynamicNodes(prev => [node, ...prev]);
   }, []);
 
   const handleBootComplete = useCallback(() => {
@@ -94,6 +100,9 @@ export default function App() {
 
         {/* 意识贡献排行面板 */}
         <ContributionGraph />
+
+        {/* 在线意识上传面板 — 零门槛体验核心 */}
+        <ConsciousnessUploader onUploadSuccess={addDynamicNode} />
       </div>
 
       {/* 沉浸式跨维度闪屏遮罩（在 3D 层之上） */}

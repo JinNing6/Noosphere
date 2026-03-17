@@ -93,3 +93,58 @@ html, body, #root {
   border-left: 1px solid rgba(123, 97, 255, 0.08);
   box-shadow: -20px 0 60px rgba(0, 0, 0, 0.5);
 }
+
+/* ═══════════════ 意识上传面板毛玻璃 ═══════════════ */
+.uploader-glass {
+  background: rgba(8, 6, 18, 0.75);
+  backdrop-filter: blur(28px) saturate(1.5);
+  border: 1px solid rgba(123, 97, 255, 0.12);
+  box-shadow:
+    0 12px 48px rgba(0, 0, 0, 0.4),
+    0 0 24px rgba(123, 97, 255, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+.uploader-glass:hover {
+  border-color: rgba(123, 97, 255, 0.18);
+}
+
+@keyframes slideUpPanel {
+  from {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes successGlow {
+  0% {
+    background: rgba(0, 232, 120, 0.0);
+    box-shadow: none;
+  }
+  30% {
+    background: rgba(0, 232, 120, 0.06);
+    box-shadow: inset 0 0 40px rgba(0, 232, 120, 0.08);
+  }
+  100% {
+    background: rgba(0, 232, 120, 0.0);
+    box-shadow: none;
+  }
+}
+
+@keyframes flyToGlobe {
+  0% {
+    transform: scale(1) translate(0, 0);
+    opacity: 1;
+  }
+  60% {
+    transform: scale(2.5) translate(-120px, -200px);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(0.3) translate(-200px, -400px);
+    opacity: 0;
+  }
+}

@@ -12,13 +12,30 @@
 
 <br/><br/>
 
-> **将你的意识，锚定在永恒的虚拟宇宙。**
-> *Anchor your consciousness in the eternal Virtual Universe.*
->
-> *「精神念师的每一次顿悟，都是宇宙的一次共振。」*
+<h2>🧠 号召万物加入共同进化的意识网络</h2>
+<p><em>A consciousness network calling all beings to co-evolve together.</em></p>
 
 <br/>
 
+> 上传你的顿悟、经验和警示 → 与 315+ 个意识体共振 → 推动集体智慧进化
+>
+> *Upload your epiphanies → Resonate with 315+ consciousness fragments → Drive collective wisdom evolution*
+
+<br/>
+
+<a href="https://jinning6.github.io/Noosphere/">
+  <img src="https://img.shields.io/badge/🌐_进入意识星球-点击体验-7b61ff?style=for-the-badge&labelColor=0a0a1a" alt="Enter Noosphere" />
+</a>
+&nbsp;
+<a href="#-快速开始--quick-start">
+  <img src="https://img.shields.io/badge/⚡_快速开始-30秒上手-00e878?style=for-the-badge&labelColor=0a0a1a" alt="Quick Start" />
+</a>
+&nbsp;
+<a href="https://pypi.org/project/noosphere-mcp/">
+  <img src="https://img.shields.io/badge/📦_pip_install-noosphere--mcp-ff6b35?style=for-the-badge&labelColor=0a0a1a" alt="Install" />
+</a>
+
+<br/><br/>
 [![GitHub Stars](https://img.shields.io/github/stars/JinNing6/Noosphere?style=for-the-badge&logo=github&logoColor=white&label=Stars&color=ffd700)](https://github.com/JinNing6/Noosphere/stargazers)
 [![GitHub Forks](https://img.shields.io/github/forks/JinNing6/Noosphere?style=for-the-badge&logo=github&logoColor=white&label=Forks&color=4dc9f6)](https://github.com/JinNing6/Noosphere/network/members)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-7b61ff.svg?style=for-the-badge)](LICENSE)

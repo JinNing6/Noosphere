@@ -1,0 +1,8 @@
+{
+  "name": "noosphere-badge",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "@octokit/rest": "^21.0.0"
+  }
+}
