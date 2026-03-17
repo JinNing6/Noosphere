@@ -8,13 +8,19 @@
  *   ✨ 自发光节点（emissive glow）
  *   ⚡ 能量脉冲连线（动态光点）
  *   🎬 电影级入场动画（镜头推进 + 涟漪展开）
- *   🌌 后处理：Bloom + Vignette + ChromaticAberration
+ *   🌌 后处理：Bloom + Vignette
+ *
+ * 性能优化（v2）：
+ *   🚀 模块级预计算索引映射，消除 O(n²) filter
+ *   🧱 EnergyLines 合并为单一 LineSegments，GPU 对象 45→3
+ *   ♻️ Zero-Allocation 帧循环，消除每帧 clone/new
+ *   📐 DPR 上限 1.5 + Bloom 固定分辨率 512
  */
 
 import { useRef, useMemo, useState, useCallback, useEffect } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls, Stars } from '@react-three/drei';
-import { EffectComposer, Bloom, Vignette, ChromaticAberration } from '@react-three/postprocessing';
+import { EffectComposer, Bloom, Vignette } from '@react-three/postprocessing';
 import { BlendFunction } from 'postprocessing';
 import * as THREE from 'three';
 import { useTranslation } from 'react-i18next';
@@ -44,6 +50,24 @@ function getNodeColor(node: KnowledgeNode): string {
   if (node.layer === 'life') return LAYER_COLORS.life;
   return DISCIPLINE_COLORS[node.discipline || 'ai'] || LAYER_COLORS.civilization;
 }
+
+/* ═══════════════ 预计算索引映射（O(1) 查找） ═══════════════ */
+
+const NODE_BY_ID = new Map(ALL_NODES.map(n => [n.id, n]));
+const NODE_INDEX_IN_LAYER = new Map<string, number>();
+const LAYER_COUNTS: Record<string, number> = { matter: 0, life: 0, civilization: 0 };
+
+// 统计各层节点数量
+ALL_NODES.forEach(n => {
+  LAYER_COUNTS[n.layer] = (LAYER_COUNTS[n.layer] || 0) + 1;
+});
+// 构建每个节点在其所属层内的索引
+const _layerCounters: Record<string, number> = { matter: 0, life: 0, civilization: 0 };
+ALL_NODES.forEach(n => {
+  NODE_INDEX_IN_LAYER.set(n.id, _layerCounters[n.layer]++);
+});
+// 层 → 球面半径映射
+const LAYER_RADIUS: Record<string, number> = { matter: 1.5, life: 2.8, civilization: 4.5 };
 
 
 /* ═══════════════ 等离子体内核组件 ═══════════════ */
@@ -383,30 +407,37 @@ function CivilizationLayer({ onSelect }: { onSelect: (n: KnowledgeNode) => void 
   );
 }
 
-/* ═══════════════ 能量脉冲连线 ═══════════════ */
+/* ═══════════════ 能量脉冲连线（性能优化版：合并 LineSegments + Zero-Allocation） ═══════════════ */
+
+// 预分配的临时 Color 对象，帧循环中复用，避免每帧 new/clone
+const _tmpColor = new THREE.Color();
+const _tmpVec3 = new THREE.Vector3();
 
 function EnergyLines() {
-  const groupRef = useRef<THREE.Group>(null);
+  const lineRef = useRef<THREE.LineSegments>(null);
   const pulsePointsRef = useRef<THREE.Points>(null);
 
-  // 构建曲线 + 脉冲光点
-  const { lines, pulseCount, curveData } = useMemo(() => {
-    const lineObjs: THREE.Line[] = [];
+  // 预计算：合并所有曲线到单一几何体 + 脉冲曲线数据
+  const { mergedPositions, mergedColors, totalLineVertices, curveData, pulseCount } = useMemo(() => {
+    const POINTS_PER_CURVE = 31; // getPoints(30) → 31 个点
     const curves: { curve: THREE.QuadraticBezierCurve3; fromColor: THREE.Color; toColor: THREE.Color }[] = [];
-    let count = 0;
+
+    // 第一遍：收集有效连线的曲线数据（所有查找都是 O(1)）
+    const validLinks: { curve: THREE.QuadraticBezierCurve3; fromColor: THREE.Color; toColor: THREE.Color; linkIdx: number }[] = [];
 
     EMERGENCE_LINKS.forEach((link, i) => {
-      const fromNode = ALL_NODES.find(n => n.id === link.from);
-      const toNode = ALL_NODES.find(n => n.id === link.to);
+      const fromNode = NODE_BY_ID.get(link.from);
+      const toNode = NODE_BY_ID.get(link.to);
       if (!fromNode || !toNode) return;
 
-      const fromIdx = ALL_NODES.filter(n => n.layer === fromNode.layer).indexOf(fromNode);
-      const fromTotal = ALL_NODES.filter(n => n.layer === fromNode.layer).length;
-      const toIdx = ALL_NODES.filter(n => n.layer === toNode.layer).indexOf(toNode);
-      const toTotal = ALL_NODES.filter(n => n.layer === toNode.layer).length;
+      // O(1) 索引查找，替代原来的 O(n) filter + indexOf
+      const fromIdx = NODE_INDEX_IN_LAYER.get(fromNode.id) ?? 0;
+      const fromTotal = LAYER_COUNTS[fromNode.layer] ?? 1;
+      const toIdx = NODE_INDEX_IN_LAYER.get(toNode.id) ?? 0;
+      const toTotal = LAYER_COUNTS[toNode.layer] ?? 1;
 
-      const fromR = fromNode.layer === 'matter' ? 1.5 : fromNode.layer === 'life' ? 2.8 : 4.5;
-      const toR = toNode.layer === 'matter' ? 1.5 : toNode.layer === 'life' ? 2.8 : 4.5;
+      const fromR = LAYER_RADIUS[fromNode.layer] ?? 4.5;
+      const toR = LAYER_RADIUS[toNode.layer] ?? 4.5;
 
       const fromPos = goldenSpherePoint(fromIdx, fromTotal, fromR);
       const toPos = goldenSpherePoint(toIdx, toTotal, toR);
@@ -422,73 +453,123 @@ function EnergyLines() {
         new THREE.Vector3(...mid),
         new THREE.Vector3(...toPos),
       );
-      const points = curve.getPoints(30);
-      const geometry = new THREE.BufferGeometry().setFromPoints(points);
 
-      // 渐变色
       const fromColor = new THREE.Color(getNodeColor(fromNode));
       const toColor = new THREE.Color(getNodeColor(toNode));
-      const colors = new Float32Array(points.length * 3);
-      points.forEach((_, pi) => {
-        const t = pi / (points.length - 1);
-        const c = fromColor.clone().lerp(toColor, t);
-        colors[pi * 3] = c.r;
-        colors[pi * 3 + 1] = c.g;
-        colors[pi * 3 + 2] = c.b;
-      });
-      geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-
-      const material = new THREE.LineBasicMaterial({
-        vertexColors: true, transparent: true, opacity: 0.15, toneMapped: false,
-      });
-
-      lineObjs.push(new THREE.Line(geometry, material));
+      validLinks.push({ curve, fromColor, toColor, linkIdx: i });
       curves.push({ curve, fromColor, toColor });
-      count++;
     });
 
-    return { lines: lineObjs, pulseCount: count, curveData: curves };
+    // 第二遍：构建合并几何体
+    // LineSegments 使用成对顶点：每条线段需要 (POINTS_PER_CURVE - 1) 个 segment = 2*(POINTS_PER_CURVE-1) 个顶点
+    const SEGMENTS_PER_CURVE = POINTS_PER_CURVE - 1;
+    const VERTS_PER_CURVE = SEGMENTS_PER_CURVE * 2;
+    const totalVerts = validLinks.length * VERTS_PER_CURVE;
+    const positions = new Float32Array(totalVerts * 3);
+    const colors = new Float32Array(totalVerts * 3);
+
+    // 临时 Color 用于插值，避免 clone
+    const interpColor = new THREE.Color();
+
+    validLinks.forEach((vl, linkI) => {
+      const points = vl.curve.getPoints(POINTS_PER_CURVE - 1);
+      const baseVert = linkI * VERTS_PER_CURVE;
+
+      for (let seg = 0; seg < SEGMENTS_PER_CURVE; seg++) {
+        const v0 = baseVert + seg * 2;
+        const v1 = v0 + 1;
+        const p0 = points[seg];
+        const p1 = points[seg + 1];
+
+        positions[v0 * 3]     = p0.x;
+        positions[v0 * 3 + 1] = p0.y;
+        positions[v0 * 3 + 2] = p0.z;
+        positions[v1 * 3]     = p1.x;
+        positions[v1 * 3 + 1] = p1.y;
+        positions[v1 * 3 + 2] = p1.z;
+
+        // 渐变色插值（复用 interpColor，零分配）
+        const t0 = seg / SEGMENTS_PER_CURVE;
+        const t1 = (seg + 1) / SEGMENTS_PER_CURVE;
+        interpColor.copy(vl.fromColor).lerp(vl.toColor, t0);
+        colors[v0 * 3]     = interpColor.r;
+        colors[v0 * 3 + 1] = interpColor.g;
+        colors[v0 * 3 + 2] = interpColor.b;
+        interpColor.copy(vl.fromColor).lerp(vl.toColor, t1);
+        colors[v1 * 3]     = interpColor.r;
+        colors[v1 * 3 + 1] = interpColor.g;
+        colors[v1 * 3 + 2] = interpColor.b;
+      }
+    });
+
+    return {
+      mergedPositions: positions,
+      mergedColors: colors,
+      totalLineVertices: totalVerts,
+      curveData: curves,
+      pulseCount: curves.length,
+    };
   }, []);
 
-  // 脉冲光点动画
+  // 合并几何体（单一 BufferGeometry + 单一 Material）
+  const lineGeometry = useMemo(() => {
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(mergedPositions, 3));
+    geo.setAttribute('color', new THREE.BufferAttribute(mergedColors, 3));
+    return geo;
+  }, [mergedPositions, mergedColors]);
+
+  const lineMaterial = useMemo(() => new THREE.LineBasicMaterial({
+    vertexColors: true, transparent: true, opacity: 0.15, toneMapped: false,
+  }), []);
+
+  // 脉冲光点缓冲区
+  const pulseGeo = useMemo(() => ({
+    pos: new Float32Array(pulseCount * 3),
+    col: new Float32Array(pulseCount * 3),
+  }), [pulseCount]);
+
+  // 脉冲光点动画 (Zero-Allocation: 使用预分配 _tmpColor & _tmpVec3)
   useFrame(({ clock }) => {
     if (!pulsePointsRef.current) return;
     const t = clock.getElapsedTime();
     const posArr = pulsePointsRef.current.geometry.attributes.position.array as Float32Array;
     const colArr = pulsePointsRef.current.geometry.attributes.color.array as Float32Array;
 
-    curveData.forEach((cd, i) => {
+    for (let i = 0; i < curveData.length; i++) {
+      const cd = curveData[i];
       const progress = (t * 0.15 + i * 0.15) % 1;
-      const pt = cd.curve.getPoint(progress);
-      posArr[i * 3] = pt.x;
-      posArr[i * 3 + 1] = pt.y;
-      posArr[i * 3 + 2] = pt.z;
-      const c = cd.fromColor.clone().lerp(cd.toColor, progress);
-      colArr[i * 3] = c.r;
-      colArr[i * 3 + 1] = c.g;
-      colArr[i * 3 + 2] = c.b;
-    });
+      // 复用预分配的 _tmpVec3，避免 curve.getPoint 创建新对象
+      cd.curve.getPointAt(progress, _tmpVec3);
+      posArr[i * 3]     = _tmpVec3.x;
+      posArr[i * 3 + 1] = _tmpVec3.y;
+      posArr[i * 3 + 2] = _tmpVec3.z;
+      // 复用预分配的 _tmpColor，零分配插值
+      _tmpColor.copy(cd.fromColor).lerp(cd.toColor, progress);
+      colArr[i * 3]     = _tmpColor.r;
+      colArr[i * 3 + 1] = _tmpColor.g;
+      colArr[i * 3 + 2] = _tmpColor.b;
+    }
     pulsePointsRef.current.geometry.attributes.position.needsUpdate = true;
     pulsePointsRef.current.geometry.attributes.color.needsUpdate = true;
 
-    // 连线呼吸
-    lines.forEach((line, i) => {
-      (line.material as THREE.LineBasicMaterial).opacity = 0.1 + Math.sin(t * 0.4 + i * 1.3) * 0.06;
-    });
+    // 连线呼吸（单一材质统一控制）
+    lineMaterial.opacity = 0.1 + Math.sin(t * 0.4) * 0.06;
   });
 
-  // 脉冲光点初始化
-  const pulseGeo = useMemo(() => {
-    const pos = new Float32Array(pulseCount * 3);
-    const col = new Float32Array(pulseCount * 3);
-    return { pos, col };
-  }, [pulseCount]);
+  // dispose 保障
+  useEffect(() => {
+    return () => {
+      lineGeometry.dispose();
+      lineMaterial.dispose();
+    };
+  }, [lineGeometry, lineMaterial]);
 
   return (
-    <group ref={groupRef}>
-      {lines.map((line, i) => (
-        <primitive key={i} object={line} />
-      ))}
+    <group>
+      {/* 合并的 LineSegments：1 个 GPU 对象替代原来 15 个 */}
+      <lineSegments ref={lineRef} geometry={lineGeometry} material={lineMaterial} />
+      {/* 脉冲光点 */}
       <points ref={pulsePointsRef}>
         <bufferGeometry>
           <bufferAttribute attach="attributes-position" args={[pulseGeo.pos, 3]} />
@@ -684,7 +765,7 @@ function SceneContent({ onSelect, introPhase, dynamicNodes }: { onSelect: (n: Kn
       {/* ── Stage 1: 背景层 (+100ms) ── */}
       {loadStage >= 1 && (
         <>
-          <Stars radius={80} depth={100} count={3000} factor={4} saturation={0.3} fade speed={0.3} />
+          <Stars radius={80} depth={100} count={1500} factor={4} saturation={0.3} fade speed={0.3} />
           <AtmosphereRings />
         </>
       )}
@@ -711,14 +792,10 @@ function SceneContent({ onSelect, introPhase, dynamicNodes }: { onSelect: (n: Kn
               luminanceSmoothing={0.4}
               intensity={1.5}
               mipmapBlur
+              width={512}
+              height={512}
             />
             <Vignette offset={0.3} darkness={0.7} blendFunction={BlendFunction.NORMAL} />
-            <ChromaticAberration
-              offset={new THREE.Vector2(0.0006, 0.0006)}
-              blendFunction={BlendFunction.NORMAL}
-              radialModulation={true}
-              modulationOffset={0.5}
-            />
           </EffectComposer>
         </>
       )}
@@ -813,6 +890,7 @@ export default function NoosphereGlobe({ onSelectNode, dynamicNodes = [] }: Noos
       <Canvas
         camera={{ position: [0, 5, 25], fov: 50 }}
         style={{ background: '#050510' }}
+        dpr={[1, 1.5]}
         gl={{
           antialias: true,
           alpha: false,
