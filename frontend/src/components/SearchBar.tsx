@@ -4,12 +4,14 @@
  */
 
 import { useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface SearchBarProps {
   onSearch: (query: string) => void;
 }
 
 export default function SearchBar({ onSearch }: SearchBarProps) {
+  const { t } = useTranslation();
   const [query, setQuery] = useState('');
 
   const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -40,7 +42,7 @@ export default function SearchBar({ onSearch }: SearchBarProps) {
           type="text"
           value={query}
           onChange={handleChange}
-          placeholder="探索万物智识..."
+          placeholder={t('search.placeholder')}
           style={{
             background: 'none', border: 'none', outline: 'none',
             color: '#e0e0ff', fontSize: 14,

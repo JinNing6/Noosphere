@@ -17,6 +17,7 @@ import SearchBar from './components/SearchBar';
 import StatsOverlay from './components/StatsOverlay';
 import ContributionGraph from './components/ContributionGraph';
 import ConsciousnessUploader from './components/ConsciousnessUploader';
+import LanguageSwitcher from './components/LanguageSwitcher';
 import type { KnowledgeNode } from './data/knowledge';
 import { fetchConsciousnessPayloads } from './data/knowledge';
 import SplashScreen from './components/SplashScreen';
@@ -88,6 +89,9 @@ export default function App() {
 
         {/* 搜索栏 */}
         <SearchBar onSearch={handleSearch} />
+
+        {/* 语言切换器 */}
+        <LanguageSwitcher />
 
         {/* 统计 HUD */}
         <StatsOverlay dynamicNodeCount={dynamicNodes.length} />

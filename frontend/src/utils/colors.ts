@@ -53,14 +53,14 @@ export function getTypeIcon(type: string): string {
   return map[type] || '⚪';
 }
 
-/** 根据经验类型获取中文名 */
-export function getTypeName(type: string): string {
+/** 根据经验类型获取 i18n 翻译 key */
+export function getTypeNameKey(type: string): string {
   const map: Record<string, string> = {
-    failure: '踩坑记录',
-    success: '最佳实践',
-    pattern: '设计模式',
-    warning: '风险预警',
-    migration: '迁移指南',
+    failure: 'types.failure',
+    success: 'types.success',
+    pattern: 'types.pattern',
+    warning: 'types.warning',
+    migration: 'types.migration',
   };
   return map[type] || type;
 }

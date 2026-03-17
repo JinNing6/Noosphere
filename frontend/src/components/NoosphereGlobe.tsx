@@ -17,6 +17,7 @@ import { OrbitControls, Stars } from '@react-three/drei';
 import { EffectComposer, Bloom, Vignette, ChromaticAberration } from '@react-three/postprocessing';
 import { BlendFunction } from 'postprocessing';
 import * as THREE from 'three';
+import { useTranslation } from 'react-i18next';
 
 import type { KnowledgeNode, Discipline } from '../data/knowledge';
 import {
@@ -728,6 +729,8 @@ function SceneContent({ onSelect, introPhase, dynamicNodes }: { onSelect: (n: Kn
 /* ═══════════════ 电影级入场覆盖 ═══════════════ */
 
 function CinematicIntro({ phase, onComplete }: { phase: number; onComplete: () => void }) {
+  const { t } = useTranslation();
+
   useEffect(() => {
     const timer = setTimeout(onComplete, 5000);
     return () => clearTimeout(timer);
@@ -762,7 +765,7 @@ function CinematicIntro({ phase, onComplete }: { phase: number; onComplete: () =
           marginBottom: 12,
           animation: 'slideUp 2s ease 0.5s both',
         }}>
-          THE COLLECTIVE CONSCIOUSNESS NETWORK
+          {t('intro.subtitle')}
         </div>
 
         <div style={{
@@ -780,7 +783,7 @@ function CinematicIntro({ phase, onComplete }: { phase: number; onComplete: () =
           marginTop: 16,
           animation: 'slideUp 2s ease 1.5s both',
         }}>
-          万物存在本身的意识脉动
+          {t('intro.tagline')}
         </div>
       </div>
     </div>

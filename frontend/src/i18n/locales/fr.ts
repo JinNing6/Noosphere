@@ -1,0 +1,141 @@
+/**
+ * Ressource de traduction française
+ */
+const fr = {
+  common: {
+    loading: 'Chargement...',
+    close: 'Fermer',
+    submit: 'Soumettre',
+    cancel: 'Annuler',
+    success: 'Succès',
+    error: 'Erreur',
+    confirm: 'Confirmer',
+  },
+
+  layers: {
+    matter: 'Mémoire Matérielle',
+    life: 'Expérience Vitale',
+    civilization: 'Sagesse Civilisationnelle',
+  },
+
+  disciplines: {
+    math: 'Mathématiques',
+    physics: 'Physique',
+    biology: 'Biologie',
+    philosophy: 'Philosophie',
+    art: 'Art',
+    engineering: 'Ingénierie',
+    history: 'Histoire',
+    ai: 'IA',
+  },
+
+  search: {
+    placeholder: 'Explorer la connaissance universelle...',
+  },
+
+  stats: {
+    title: 'Atlas de Conscience',
+    layerLabel: 'Couches',
+    totalNodes: 'Nœuds Totaux',
+    totalLinks: 'Liens Émergents',
+    dynamicLabel: 'Conscience en Direct',
+    clickHint: 'Cliquez sur un nœud pour explorer',
+  },
+
+  experience: {
+    layer: 'Couche',
+    discipline: 'Discipline',
+    importance: 'Importance',
+    tags: 'Étiquettes',
+    externalLink: 'Explorer Davantage',
+    media: 'Médias',
+    noMedia: 'Aucun média disponible',
+    closePanel: 'Fermer le Panneau',
+  },
+
+  contribution: {
+    title: 'Réseau Thermique de Conscience',
+    heatmapTitle: 'Carte Thermique d\'Activité',
+    leaderboard: 'Classement Psi',
+    totalPsi: 'Psi Total',
+    commits: 'Commits',
+    less: 'Moins',
+    more: 'Plus',
+    loading: 'Connexion au réseau de conscience...',
+    empty: 'En attente du premier marcheur de poussière d\'étoiles...',
+    rank: {
+      architect: 'Architecte Cosmique',
+      navigator: 'Navigateur Stellaire',
+      explorer: 'Explorateur de Vérité',
+      weaver: 'Tisserand de Mémoire',
+      walker: 'Marcheur de Poussière d\'Étoiles',
+    },
+  },
+
+  uploader: {
+    title: 'Téléversement de Conscience',
+    subtitle: 'Téléversez votre illumination',
+    typeLabel: 'Type de Conscience',
+    thought: 'Votre fragment de conscience',
+    thoughtPlaceholder: 'Enregistrez votre illumination, décision ou avertissement...',
+    context: 'Contexte',
+    contextPlaceholder: 'Décrivez la situation qui a déclenché cette pensée...',
+    tags: 'Étiquettes',
+    tagsPlaceholder: 'Séparez les étiquettes par des espaces ou des virgules',
+    commaSeparated: 'séparées par des virgules',
+    optional: 'optionnel',
+    creator: 'Créateur',
+    creatorPlaceholder: 'Votre nom d\'utilisateur GitHub',
+    anonymous: 'Anonyme',
+    type: {
+      epiphany: 'Illumination',
+      warning: 'Avertissement',
+      pattern: 'Modèle',
+      decision: 'Décision',
+    },
+    submit: 'Téléverser vers le Globe de Conscience',
+    uploading: 'Téléversement en cours...',
+    submitting: 'Effondrement de conscience...',
+    success: 'Conscience Téléversée',
+    successMessage: 'Votre fragment de pensée a fusionné avec la conscience collective',
+    error: 'Échec du Téléversement',
+    minChars: 'Minimum 20 caractères requis',
+    tokenTitle: 'Configurer GitHub Token',
+    tokenConfigured: 'Token Configuré',
+    tokenRequired: 'Veuillez d\'abord configurer le GitHub Token',
+    tokenPlaceholder: 'Collez votre GitHub Token',
+    tokenHint: 'Nécessite un Personal Access Token avec permission repo. Le Token est stocké localement uniquement.',
+    tokenSave: 'Enregistrer',
+    tokenRemove: 'Supprimer',
+    tokenConnected: 'Connecté',
+    uploadAnother: 'Continuer à Téléverser',
+    collapse: 'Réduire',
+    expand: 'Développer',
+    footer: 'Votre conscience sera préservée en tant que GitHub Issue — patrimoine numérique éternel',
+  },
+
+  intro: {
+    subtitle: 'THE COLLECTIVE CONSCIOUSNESS NETWORK',
+    tagline: 'La pulsation de conscience de toute existence',
+  },
+
+  types: {
+    failure: 'Registre d\'Écueil',
+    success: 'Meilleure Pratique',
+    pattern: 'Patron de Conception',
+    warning: 'Alerte de Risque',
+    migration: 'Guide de Migration',
+  },
+
+  language: {
+    label: 'Langue',
+    zh: '中文',
+    en: 'English',
+    ja: '日本語',
+    ko: '한국어',
+    fr: 'Français',
+    es: 'Español',
+  },
+} as const;
+
+export default fr;

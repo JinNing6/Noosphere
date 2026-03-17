@@ -18,12 +18,12 @@ export interface Contributor {
   totalScore: number; // Psi = commits × 10
 }
 
-export function calculateTitle(score: number): { label: string; color: string; icon: string; glow: string } {
-  if (score >= 3000) return { label: '宇宙建筑师', color: '#ffd700', icon: '👑', glow: '0 0 16px rgba(255, 215, 0, 0.6)' };
-  if (score >= 1000) return { label: '星海领航员', color: '#7b61ff', icon: '🪐', glow: '0 0 12px rgba(123, 97, 255, 0.5)' };
-  if (score >= 500)  return { label: '真理探索家', color: '#00e878', icon: '🌌', glow: '0 0 8px rgba(0, 232, 120, 0.4)' };
-  if (score >= 100)  return { label: '记忆编织者', color: '#00d4ff', icon: '💫', glow: '0 0 8px rgba(0, 212, 255, 0.3)' };
-  return { label: '星尘行者', color: 'rgba(255,255,255,0.6)', icon: '🌟', glow: 'none' };
+export function calculateTitle(score: number): { labelKey: string; color: string; icon: string; glow: string } {
+  if (score >= 3000) return { labelKey: 'contribution.rank.architect', color: '#ffd700', icon: '👑', glow: '0 0 16px rgba(255, 215, 0, 0.6)' };
+  if (score >= 1000) return { labelKey: 'contribution.rank.navigator', color: '#7b61ff', icon: '🪐', glow: '0 0 12px rgba(123, 97, 255, 0.5)' };
+  if (score >= 500)  return { labelKey: 'contribution.rank.explorer', color: '#00e878', icon: '🌌', glow: '0 0 8px rgba(0, 232, 120, 0.4)' };
+  if (score >= 100)  return { labelKey: 'contribution.rank.weaver', color: '#00d4ff', icon: '💫', glow: '0 0 8px rgba(0, 212, 255, 0.3)' };
+  return { labelKey: 'contribution.rank.walker', color: 'rgba(255,255,255,0.6)', icon: '🌟', glow: 'none' };
 }
 
 /**

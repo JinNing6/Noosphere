@@ -1,10 +1,11 @@
 /**
  * @preview
  * DetailPanel — 知识节点详情面板
- * 显示 Wikipedia 缩略图、中英双行标题、摘要、外链
+ * 显示 Wikipedia 缩略图、标题、摘要、外链
  */
 
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { KnowledgeNode } from '../data/knowledge';
 import { LAYER_COLORS, DISCIPLINE_COLORS } from '../data/knowledge';
 
@@ -20,19 +21,14 @@ interface DetailPanelProps {
   onClose: () => void;
 }
 
-const LAYER_NAMES: Record<string, { zh: string; en: string; icon: string }> = {
-  matter:       { zh: '物质记忆', en: 'Matter Memory',   icon: '⚛️' },
-  life:         { zh: '生命经验', en: 'Life Experience',  icon: '🧬' },
-  civilization: { zh: '文明智慧', en: 'Civilization',     icon: '🌌' },
-};
-
-const DISCIPLINE_NAMES: Record<string, string> = {
-  math: '数学 & 逻辑', physics: '物理 & 宇宙', biology: '生命科学',
-  philosophy: '哲学 & 思想', art: '艺术 & 创造', engineering: '工程 & 技术',
-  history: '社会 & 历史', ai: 'AI & 计算',
+const LAYER_ICONS: Record<string, string> = {
+  matter: '⚛️',
+  life: '🧬',
+  civilization: '🌌',
 };
 
 export default function DetailPanel({ node, onClose }: DetailPanelProps) {
+  const { t } = useTranslation();
   const [mediaLoading, setMediaLoading] = useState(false);
   const [mediaItems, setMediaItems] = useState<MediaItem[]>([]);
 
@@ -104,7 +100,7 @@ export default function DetailPanel({ node, onClose }: DetailPanelProps) {
 
   if (!node) return null;
 
-  const layer = LAYER_NAMES[node.layer];
+  const layerIcon = LAYER_ICONS[node.layer] || '🌐';
   const accentColor = node.layer === 'civilization'
     ? (DISCIPLINE_COLORS[node.discipline || 'ai'] || LAYER_COLORS.civilization)
     : LAYER_COLORS[node.layer];
@@ -160,13 +156,13 @@ export default function DetailPanel({ node, onClose }: DetailPanelProps) {
           fontSize: 12, color: accentColor,
           marginBottom: 16,
         }}>
-          {layer.icon} {layer.zh}
+          {layerIcon} {t(`layers.${node.layer}`)}
           {node.discipline && (
-            <span style={{ opacity: 0.6 }}> · {DISCIPLINE_NAMES[node.discipline]}</span>
+            <span style={{ opacity: 0.6 }}> · {t(`disciplines.${node.discipline}`)}</span>
           )}
         </div>
 
-        {/* 标题 */}
+        {/* 标题 — 节点自身的标题数据 */}
         <h2 style={{
           margin: '0 0 4px', fontSize: 22, fontWeight: 700,
           color: '#f0f0ff', lineHeight: 1.3,
@@ -185,7 +181,7 @@ export default function DetailPanel({ node, onClose }: DetailPanelProps) {
           display: 'flex', alignItems: 'center', gap: 8,
           marginBottom: 20, fontSize: 12, color: 'rgba(255,255,255,0.4)',
         }}>
-          <span>重要度</span>
+          <span>{t('experience.importance')}</span>
           <div style={{
             display: 'flex', gap: 2,
           }}>

@@ -10,6 +10,7 @@
  */
 
 import { useState, useCallback, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { KnowledgeNode, Layer, Discipline } from '../data/knowledge';
 
 /* ═══════════════ 常量 ═══════════════ */
@@ -17,12 +18,12 @@ import type { KnowledgeNode, Layer, Discipline } from '../data/knowledge';
 const OWNER = 'JinNing6';
 const REPO = 'Noosphere';
 
-/** 意识类型定义 */
+/** 意识类型定义 — labelKey 对应 i18n */
 const CONSCIOUSNESS_TYPES = [
-  { key: 'epiphany',  label: '💡 顿悟', labelEn: 'Epiphany',  color: '#ffd700' },
-  { key: 'warning',   label: '⚠️ 警示', labelEn: 'Warning',   color: '#ff6b35' },
-  { key: 'pattern',   label: '🔄 规律', labelEn: 'Pattern',   color: '#7b61ff' },
-  { key: 'decision',  label: '⚡ 决策', labelEn: 'Decision',  color: '#00e878' },
+  { key: 'epiphany',  icon: '💡', labelKey: 'uploader.type.epiphany',  color: '#ffd700' },
+  { key: 'warning',   icon: '⚠️', labelKey: 'uploader.type.warning',   color: '#ff6b35' },
+  { key: 'pattern',   icon: '🔄', labelKey: 'uploader.type.pattern',   color: '#7b61ff' },
+  { key: 'decision',  icon: '⚡', labelKey: 'uploader.type.decision',  color: '#00e878' },
 ] as const;
 
 type ConsciousnessType = typeof CONSCIOUSNESS_TYPES[number]['key'];
@@ -73,7 +74,8 @@ async function createIssue(
   const typeInfo = CONSCIOUSNESS_TYPES.find(t => t.key === type)!;
   const displayCreator = isAnonymous ? 'Anonymous' : creator;
 
-  const title = `🧠 [${typeInfo.labelEn}] ${thought.slice(0, 60)}${thought.length > 60 ? '...' : ''}`;
+  // GitHub Issue title uses the type key directly (language-neutral)
+  const title = `🧠 [${typeInfo.key}] ${thought.slice(0, 60)}${thought.length > 60 ? '...' : ''}`;
 
   const body = `## Consciousness Upload
 
@@ -136,6 +138,7 @@ interface Props {
 }
 
 export default function ConsciousnessUploader({ onUploadSuccess }: Props) {
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [showTokenInput, setShowTokenInput] = useState(false);
 
@@ -165,12 +168,12 @@ export default function ConsciousnessUploader({ onUploadSuccess }: Props) {
   const handleSubmit = useCallback(async () => {
     // 验证
     if (thought.trim().length < 20) {
-      setSubmitResult({ success: false, message: '意识内容至少需要 20 个字符' });
+      setSubmitResult({ success: false, message: t('uploader.minChars') });
       return;
     }
     if (!token.trim()) {
       setShowTokenInput(true);
-      setSubmitResult({ success: false, message: '请先配置 GitHub Token' });
+      setSubmitResult({ success: false, message: t('uploader.tokenRequired') });
       return;
     }
 
@@ -186,7 +189,7 @@ export default function ConsciousnessUploader({ onUploadSuccess }: Props) {
 
       // 成功动画
       setShowSuccessAnimation(true);
-      setSubmitResult({ success: true, message: '✨ 意识已上传到 Noosphere！' });
+      setSubmitResult({ success: true, message: '✨ ' + t('uploader.success') });
 
       // 构造新的动态节点
       const newNode: KnowledgeNode = {
@@ -195,10 +198,10 @@ export default function ConsciousnessUploader({ onUploadSuccess }: Props) {
         title_en: isAnonymous ? 'Anonymous Consciousness' : (creator || 'You'),
         layer: TYPE_TO_LAYER[type],
         discipline: TYPE_TO_DISCIPLINE[type],
-        summary: thought + (context ? `\n\n**场景**: ${context}` : ''),
+        summary: thought + (context ? `\n\n**${t('uploader.context')}**: ${context}` : ''),
         thumbnail: null,
         importance: Math.min(10, 5 + Math.floor(thought.length / 50)),
-        tags: [...tags, type, `by:${isAnonymous ? '匿名' : (creator || 'You')}`],
+        tags: [...tags, type, `by:${isAnonymous ? 'Anonymous' : (creator || 'You')}`],
       };
 
       // 通知父组件追加节点
@@ -213,15 +216,15 @@ export default function ConsciousnessUploader({ onUploadSuccess }: Props) {
         setSubmitResult(null);
       }, 3000);
     } else {
-      setSubmitResult({ success: false, message: result.error || '上传失败' });
+      setSubmitResult({ success: false, message: result.error || t('uploader.error') });
     }
 
     setIsSubmitting(false);
-  }, [thought, context, creator, tagInput, isAnonymous, token, type, onUploadSuccess]);
+  }, [thought, context, creator, tagInput, isAnonymous, token, type, onUploadSuccess, t]);
 
   const charCount = thought.trim().length;
   const isValid = charCount >= 20;
-  const selectedType = CONSCIOUSNESS_TYPES.find(t => t.key === type)!;
+  const selectedType = CONSCIOUSNESS_TYPES.find(ct => ct.key === type)!;
 
   /* ═══════════════ 折叠态 ═══════════════ */
 
@@ -265,8 +268,7 @@ export default function ConsciousnessUploader({ onUploadSuccess }: Props) {
         }}
       >
         <span style={{ fontSize: 20 }}>✨</span>
-        <span>上传你的顿悟</span>
-        <span style={{ fontSize: 10, opacity: 0.4 }}>Upload Consciousness</span>
+        <span>{t('uploader.subtitle')}</span>
       </button>
     );
   }
@@ -310,10 +312,10 @@ export default function ConsciousnessUploader({ onUploadSuccess }: Props) {
           }}>
             <div style={{ fontSize: 48, marginBottom: 12 }}>🌌</div>
             <div style={{ fontSize: 16, fontWeight: 600, color: '#00e878' }}>
-              意识已上传
+              {t('uploader.success')}
             </div>
             <div style={{ fontSize: 11, opacity: 0.5, marginTop: 6 }}>
-              Consciousness Uploaded to Noosphere
+              {t('uploader.successMessage')}
             </div>
             <div style={{
               width: 6,
@@ -342,10 +344,7 @@ export default function ConsciousnessUploader({ onUploadSuccess }: Props) {
             color: '#e0e0ff',
             letterSpacing: '0.05em',
           }}>
-            ✨ 上传意识
-          </div>
-          <div style={{ fontSize: 10, opacity: 0.4, marginTop: 2, letterSpacing: '0.08em' }}>
-            UPLOAD CONSCIOUSNESS
+            ✨ {t('uploader.title')}
           </div>
         </div>
         <button
@@ -379,27 +378,27 @@ export default function ConsciousnessUploader({ onUploadSuccess }: Props) {
 
       {/* 意识类型选择 */}
       <div style={{ marginBottom: 16 }}>
-        <div style={{ fontSize: 11, opacity: 0.5, marginBottom: 8 }}>意识类型 · Type</div>
+        <div style={{ fontSize: 11, opacity: 0.5, marginBottom: 8 }}>{t('uploader.typeLabel')}</div>
         <div style={{ display: 'flex', gap: 6 }}>
-          {CONSCIOUSNESS_TYPES.map(t => (
+          {CONSCIOUSNESS_TYPES.map(ct => (
             <button
-              key={t.key}
-              id={`type-${t.key}`}
-              onClick={() => setType(t.key)}
+              key={ct.key}
+              id={`type-${ct.key}`}
+              onClick={() => setType(ct.key)}
               style={{
                 flex: 1,
                 padding: '8px 4px',
-                border: `1px solid ${type === t.key ? t.color + '60' : 'rgba(255,255,255,0.06)'}`,
+                border: `1px solid ${type === ct.key ? ct.color + '60' : 'rgba(255,255,255,0.06)'}`,
                 borderRadius: 10,
-                background: type === t.key ? t.color + '12' : 'rgba(255,255,255,0.02)',
-                color: type === t.key ? t.color : 'rgba(255,255,255,0.5)',
+                background: type === ct.key ? ct.color + '12' : 'rgba(255,255,255,0.02)',
+                color: type === ct.key ? ct.color : 'rgba(255,255,255,0.5)',
                 fontSize: 12,
                 cursor: 'pointer',
                 transition: 'all 0.2s',
                 fontFamily: "'Inter', sans-serif",
               }}
             >
-              {t.label}
+              {ct.icon} {t(ct.labelKey)}
             </button>
           ))}
         </div>
@@ -408,7 +407,7 @@ export default function ConsciousnessUploader({ onUploadSuccess }: Props) {
       {/* 意识内容输入 */}
       <div style={{ marginBottom: 16 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-          <span style={{ fontSize: 11, opacity: 0.5 }}>意识内容 · Thought</span>
+          <span style={{ fontSize: 11, opacity: 0.5 }}>{t('uploader.thought')}</span>
           <span style={{
             fontSize: 10,
             color: isValid ? '#00e878' : (charCount > 0 ? '#ff6b35' : 'rgba(255,255,255,0.3)'),
@@ -422,7 +421,7 @@ export default function ConsciousnessUploader({ onUploadSuccess }: Props) {
           id="thought-input"
           value={thought}
           onChange={e => setThought(e.target.value)}
-          placeholder="写下你此刻的顿悟、经验或洞察..."
+          placeholder={t('uploader.thoughtPlaceholder')}
           rows={4}
           style={{
             width: '100%',
@@ -449,13 +448,13 @@ export default function ConsciousnessUploader({ onUploadSuccess }: Props) {
 
       {/* 场景/上下文 */}
       <div style={{ marginBottom: 16 }}>
-        <div style={{ fontSize: 11, opacity: 0.5, marginBottom: 8 }}>场景 · Context <span style={{ opacity: 0.5 }}>(可选)</span></div>
+        <div style={{ fontSize: 11, opacity: 0.5, marginBottom: 8 }}>{t('uploader.context')} <span style={{ opacity: 0.5 }}>({t('uploader.optional')})</span></div>
         <input
           id="context-input"
           type="text"
           value={context}
           onChange={e => setContext(e.target.value)}
-          placeholder="在什么场景下产生的这个想法？"
+          placeholder={t('uploader.contextPlaceholder')}
           style={{
             width: '100%',
             padding: '10px 14px',
@@ -472,7 +471,7 @@ export default function ConsciousnessUploader({ onUploadSuccess }: Props) {
 
       {/* 标签 */}
       <div style={{ marginBottom: 16 }}>
-        <div style={{ fontSize: 11, opacity: 0.5, marginBottom: 8 }}>标签 · Tags <span style={{ opacity: 0.5 }}>(逗号分隔)</span></div>
+        <div style={{ fontSize: 11, opacity: 0.5, marginBottom: 8 }}>{t('uploader.tags')} <span style={{ opacity: 0.5 }}>({t('uploader.commaSeparated')})</span></div>
         <input
           id="tags-input"
           type="text"
@@ -496,13 +495,13 @@ export default function ConsciousnessUploader({ onUploadSuccess }: Props) {
       {/* 创作者 + 匿名 */}
       <div style={{ marginBottom: 16, display: 'flex', gap: 10, alignItems: 'flex-end' }}>
         <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 11, opacity: 0.5, marginBottom: 8 }}>签名 · Creator</div>
+          <div style={{ fontSize: 11, opacity: 0.5, marginBottom: 8 }}>{t('uploader.creator')}</div>
           <input
             id="creator-input"
             type="text"
             value={creator}
             onChange={e => setCreator(e.target.value)}
-            placeholder="你的 GitHub ID"
+            placeholder={t('uploader.creatorPlaceholder')}
             disabled={isAnonymous}
             style={{
               width: '100%',
@@ -538,7 +537,7 @@ export default function ConsciousnessUploader({ onUploadSuccess }: Props) {
             style={{ display: 'none' }}
           />
           <span style={{ fontSize: 14 }}>{isAnonymous ? '🎭' : '👤'}</span>
-          匿名
+          {t('uploader.anonymous')}
         </label>
       </div>
 
@@ -557,7 +556,7 @@ export default function ConsciousnessUploader({ onUploadSuccess }: Props) {
             padding: 0,
           }}
         >
-          {token ? '🔑 Token 已配置' : '🔑 配置 GitHub Token'} {showTokenInput ? '▲' : '▼'}
+          {token ? `🔑 ${t('uploader.tokenConfigured')}` : `🔑 ${t('uploader.tokenTitle')}`} {showTokenInput ? '▲' : '▼'}
         </button>
         {showTokenInput && (
           <div style={{ marginTop: 8 }}>
@@ -580,9 +579,7 @@ export default function ConsciousnessUploader({ onUploadSuccess }: Props) {
               }}
             />
             <div style={{ fontSize: 10, opacity: 0.3, marginTop: 6, lineHeight: 1.5 }}>
-              需要 repo 权限的 Personal Access Token
-              <br />
-              Token 仅存储在本地浏览器中，不会上传到任何服务器
+              {t('uploader.tokenHint')}
             </div>
           </div>
         )}
@@ -631,10 +628,10 @@ export default function ConsciousnessUploader({ onUploadSuccess }: Props) {
         {isSubmitting ? (
           <span>
             <span style={{ animation: 'pulse 1s ease-in-out infinite', display: 'inline-block' }}>⏳</span>
-            {' '}上传中...
+            {' '}{t('uploader.uploading')}
           </span>
         ) : (
-          <span>🚀 上传到意识星球</span>
+          <span>🚀 {t('uploader.submit')}</span>
         )}
       </button>
 
@@ -646,9 +643,7 @@ export default function ConsciousnessUploader({ onUploadSuccess }: Props) {
         textAlign: 'center',
         lineHeight: 1.5,
       }}>
-        你的意识将作为 GitHub Issue 永久保存
-        <br />
-        Your consciousness will be preserved as eternal digital heritage
+        {t('uploader.footer')}
       </div>
     </div>
   );
