@@ -50,9 +50,52 @@ GITHUB_REPO = os.environ.get("NOOSPHERE_REPO", "JinNing6/Noosphere")
 GITHUB_BRANCH = os.environ.get("NOOSPHERE_BRANCH", "main")
 GITHUB_API = "https://api.github.com"
 
-# ── Process-Level TTL Cache ──
-_CACHE_TTL = 90  # seconds — Issues / files rarely change within 90s
+# ── Process-Level Shared HTTP Client ──
+_shared_client: httpx.AsyncClient | None = None
+
+
+async def _get_client() -> httpx.AsyncClient:
+    """Get or create the shared httpx.AsyncClient with connection pooling.
+
+    Reuses TCP connections across tool calls, avoiding per-call TLS handshake
+    overhead (~100-300ms savings per call).
+    """
+    global _shared_client
+    if _shared_client is None or _shared_client.is_closed:
+        _shared_client = httpx.AsyncClient(
+            base_url=GITHUB_API,
+            headers=_github_headers(),
+            timeout=30,
+            limits=httpx.Limits(
+                max_connections=20,
+                max_keepalive_connections=10,
+                keepalive_expiry=300,
+            ),
+        )
+    return _shared_client
+
+
+async def _close_client() -> None:
+    """Close the shared client (for testing/shutdown)."""
+    global _shared_client
+    if _shared_client and not _shared_client.is_closed:
+        await _shared_client.aclose()
+    _shared_client = None
+
+
+# ── Process-Level TTL Cache (Multi-Layer) ──
+_CACHE_TTL = 180  # seconds — raised from 90s; Issues/files rarely change within 3 min
+_TOOL_CACHE_TTL = 120  # seconds — for compute-intensive tool results
 _cache: dict[str, dict] = {}
+_tool_cache: dict[str, dict] = {}
+
+# ── Parsed Payload Cache (avoids re-parsing JSON from Issue body) ──
+_parsed_payloads: dict[int, dict | None] = {}
+
+# ── Inverted Index for fast text search ──
+_inverted_index: dict[str, set[str]] = {}  # token -> set of doc_ids
+_index_doc_data: dict[str, dict] = {}  # doc_id -> {payload, source_name, layer, issue/entry}
+_index_built_ts: float = 0.0  # timestamp of last index build
 
 
 def _get_cached(key: str) -> list | None:
@@ -68,12 +111,212 @@ def _set_cached(key: str, data: list) -> None:
     _cache[key] = {"data": data, "ts": time.time()}
 
 
+def _get_tool_cached(key: str) -> str | None:
+    """Return cached tool result if still valid, else None."""
+    entry = _tool_cache.get(key)
+    if entry and (time.time() - entry["ts"]) < _TOOL_CACHE_TTL:
+        return entry["data"]
+    return None
+
+
+def _set_tool_cached(key: str, data: str) -> None:
+    """Cache a tool's computed result string."""
+    _tool_cache[key] = {"data": data, "ts": time.time()}
+
+
 def _invalidate_cache(key: str | None = None) -> None:
     """Invalidate a specific cache key, or all caches if key is None."""
     if key is None:
         _cache.clear()
+        _tool_cache.clear()
+        _parsed_payloads.clear()
+        _inverted_index.clear()
+        _index_doc_data.clear()
     else:
         _cache.pop(key, None)
+
+
+def _append_issue_to_cache(issue_data: dict) -> None:
+    """Append a newly created issue to the cache WITHOUT full invalidation.
+
+    This avoids the expensive full re-fetch after upload_consciousness.
+    """
+    cache_key = "issues_consciousness_all"
+    entry = _cache.get(cache_key)
+    if entry:
+        entry["data"].insert(0, issue_data)  # newest first
+        # Also update parsed payload cache
+        issue_number = issue_data.get("number")
+        if issue_number:
+            _parsed_payloads[issue_number] = _extract_payload_from_issue_body(
+                issue_data.get("body", "")
+            )
+        # Invalidate inverted index so it rebuilds with new data next search
+        _inverted_index.clear()
+        _index_doc_data.clear()
+
+
+def _get_parsed_payload(issue: dict) -> dict | None:
+    """Get parsed payload from cache, or parse and cache it.
+
+    Avoids re-parsing the same Issue body JSON multiple times.
+    """
+    issue_number = issue.get("number")
+    if issue_number is not None and issue_number in _parsed_payloads:
+        return _parsed_payloads[issue_number]
+    payload = _get_parsed_payload(issue)
+    if issue_number is not None:
+        _parsed_payloads[issue_number] = payload
+    return payload
+
+
+def _build_search_index(issues: list[dict], file_entries: list[dict]) -> None:
+    """Build inverted index from issues and file entries for fast text search.
+
+    Only rebuilds if the index is stale (older than cache TTL).
+    """
+    global _index_built_ts
+    now = time.time()
+    if _inverted_index and (now - _index_built_ts) < _CACHE_TTL:
+        return  # Index is still fresh
+
+    _inverted_index.clear()
+    _index_doc_data.clear()
+
+    # Index issues
+    for issue in issues:
+        if "pull_request" in issue:
+            continue
+        payload = _get_parsed_payload(issue)
+        if not payload:
+            continue
+        doc_id = f"issue:{issue['number']}"
+        search_text = " ".join([
+            payload.get("thought_vector_text", ""),
+            payload.get("context_environment", ""),
+            payload.get("consciousness_type", ""),
+            " ".join(payload.get("tags", [])),
+        ])
+        tokens = _tokenize(search_text)
+        _index_doc_data[doc_id] = {
+            "payload": payload,
+            "source_name": f"Issue #{issue['number']}",
+            "layer": "⚡ 瞬时",
+            "issue": issue,
+            "tokens": tokens,
+        }
+        for token in tokens:
+            _inverted_index.setdefault(token, set()).add(doc_id)
+
+    # Index file entries
+    for entry in file_entries:
+        payload = entry["payload"]
+        doc_id = f"file:{entry['filename']}"
+        search_text = " ".join([
+            payload.get("thought_vector_text", ""),
+            payload.get("context_environment", ""),
+            payload.get("consciousness_type", ""),
+            " ".join(payload.get("tags", [])),
+        ])
+        tokens = _tokenize(search_text)
+        _index_doc_data[doc_id] = {
+            "payload": payload,
+            "source_name": entry["filename"],
+            "layer": "🏛️ 常驻",
+            "entry": entry,
+            "tokens": tokens,
+        }
+        for token in tokens:
+            _inverted_index.setdefault(token, set()).add(doc_id)
+
+    _index_built_ts = now
+
+
+def _search_by_index(
+    query_tokens: set[str],
+    type_filter: str | None = None,
+    creator_filter: str | None = None,
+    tag_filter: str | None = None,
+    since: str | None = None,
+    until: str | None = None,
+    exclude_creator: str | None = None,
+) -> list[tuple[int, int, dict, str, str]]:
+    """Search using inverted index: fast candidate recall + Jaccard scoring.
+
+    Returns list of (score, resonance, payload, source_name, layer).
+    """
+    if not _inverted_index:
+        return []
+
+    # Fast candidate recall via inverted index
+    candidate_ids: set[str] | None = None
+    for token in query_tokens:
+        doc_ids = _inverted_index.get(token, set())
+        if candidate_ids is None:
+            candidate_ids = set(doc_ids)
+        else:
+            candidate_ids |= doc_ids  # union for OR semantics
+
+    if not candidate_ids:
+        return []
+
+    matches: list[tuple[int, int, dict, str, str]] = []
+    seen_fingerprints: set[str] = set()
+
+    for doc_id in candidate_ids:
+        doc = _index_doc_data.get(doc_id)
+        if not doc:
+            continue
+        payload = doc["payload"]
+
+        # Apply filters
+        if type_filter and payload.get("consciousness_type") != type_filter:
+            continue
+        if creator_filter:
+            payload_creator = payload.get("creator_signature", "")
+            is_anon = payload.get("is_anonymous", False)
+            matches_creator = payload_creator == creator_filter
+            matches_anon = creator_filter.lower() == "anonymous stalker" and is_anon
+            if not (matches_creator or matches_anon):
+                continue
+        if tag_filter and tag_filter not in payload.get("tags", []):
+            continue
+        if exclude_creator and payload.get("creator_signature", "").lower() == exclude_creator.lower():
+            continue
+
+        # Time range filter
+        uploaded_at = payload.get("uploaded_at", "")
+        if since and uploaded_at and uploaded_at < since:
+            continue
+        if until and uploaded_at and uploaded_at > until:
+            continue
+
+        # Dedup
+        fingerprint = (
+            payload.get("uploaded_at", "")
+            + payload.get("thought_vector_text", "")[:30]
+        )
+        if fingerprint in seen_fingerprints:
+            continue
+        seen_fingerprints.add(fingerprint)
+
+        # Score using cached tokens
+        doc_tokens = doc.get("tokens", set())
+        score = len(query_tokens & doc_tokens)
+        if score <= 0:
+            continue
+
+        # Get resonance
+        issue = doc.get("issue")
+        if issue:
+            resonance = issue.get("reactions", {}).get("total_count", 0)
+        else:
+            resonance = payload.get("resonance_score", 0)
+
+        matches.append((score, resonance, payload, doc["source_name"], doc["layer"]))
+
+    matches.sort(key=lambda x: (x[0], x[1]), reverse=True)
+    return matches
 
 
 async def _fetch_file_payloads(
@@ -628,45 +871,45 @@ async def upload_consciousness(
             f"type:{consciousness_type}",
         ]
 
-        async with httpx.AsyncClient(base_url=GITHUB_API, headers=_github_headers(), timeout=30) as client:
-            # Create Issue
-            issue_resp = await client.post(
-                f"/repos/{owner}/{repo}/issues",
-                json={
-                    "title": issue_title,
-                    "body": issue_body,
-                    "labels": labels,
-                },
+        client = await _get_client()
+        # Create Issue
+        issue_resp = await client.post(
+            f"/repos/{owner}/{repo}/issues",
+            json={
+                "title": issue_title,
+                "body": issue_body,
+                "labels": labels,
+            },
+        )
+
+        if issue_resp.status_code != 201:
+            error_data = issue_resp.json() if issue_resp.status_code < 500 else {}
+            error_msg = error_data.get("message", issue_resp.text)
+            return (
+                f"❌ Failed to create consciousness Issue: {issue_resp.status_code}\n"
+                f"Error: {error_msg}\n\n"
+                f"💡 Make sure your GITHUB_TOKEN has basic access to create issues on public repos."
             )
 
-            if issue_resp.status_code != 201:
-                error_data = issue_resp.json() if issue_resp.status_code < 500 else {}
-                error_msg = error_data.get("message", issue_resp.text)
-                return (
-                    f"❌ Failed to create consciousness Issue: {issue_resp.status_code}\n"
-                    f"Error: {error_msg}\n\n"
-                    f"💡 Make sure your GITHUB_TOKEN has basic access to create issues on public repos."
-                )
+        issue_data = issue_resp.json()
+        issue_url = issue_data["html_url"]
+        issue_number = issue_data["number"]
 
-            issue_data = issue_resp.json()
-            issue_url = issue_data["html_url"]
-            issue_number = issue_data["number"]
-
-        # Invalidate issues cache since we just created a new one
-        _invalidate_cache("issues_consciousness_all")
+        # Incremental cache update: append new issue instead of full invalidation
+        _append_issue_to_cache(issue_data)
 
         # Count total consciousness for milestone detection + collect data for flywheel
         total_by_creator = 0
         total_resonance = 0
         count_issues: list[dict] = []
         try:
-            async with httpx.AsyncClient(base_url=GITHUB_API, headers=_github_headers(), timeout=15) as count_client:
-                count_issues = await _fetch_all_issues_cached(count_client, owner, repo)
-                for ci in count_issues:
-                    cp = _extract_payload_from_issue_body(ci.get("body", ""))
-                    if cp and cp.get("creator_signature", "").lower() == creator.lower():
-                        total_by_creator += 1
-                        total_resonance += ci.get("reactions", {}).get("total_count", 0)
+            count_client = await _get_client()
+            count_issues = await _fetch_all_issues_cached(count_client, owner, repo)
+            for ci in count_issues:
+                cp = _get_parsed_payload(ci)
+                if cp and cp.get("creator_signature", "").lower() == creator.lower():
+                    total_by_creator += 1
+                    total_resonance += ci.get("reactions", {}).get("total_count", 0)
         except Exception:
             pass  # Non-critical, proceed with upload result
 
@@ -724,7 +967,7 @@ async def upload_consciousness(
             for ci in count_issues:
                 if "pull_request" in ci:
                     continue
-                cp = _extract_payload_from_issue_body(ci.get("body", ""))
+                cp = _get_parsed_payload(ci)
                 if not cp:
                     continue
                 # Skip self (same creator, same thought)
@@ -845,81 +1088,81 @@ async def consult_noosphere(
         matches: list[tuple[int, int, dict, str, str]] = []
         seen_fingerprints: set[str] = set()
 
-        async with httpx.AsyncClient(base_url=GITHUB_API, headers=_github_headers(), timeout=30) as client:
-            # ── Layer 1: Ephemeral Consciousness (GitHub Issues) ── [CACHED]
-            issues = await _fetch_all_issues_cached(client, owner, repo)
+        client = await _get_client()
+        # ── Layer 1: Ephemeral Consciousness (GitHub Issues) ── [CACHED]
+        issues = await _fetch_all_issues_cached(client, owner, repo)
 
-            for issue in issues:
-                if "pull_request" in issue:
+        for issue in issues:
+            if "pull_request" in issue:
+                continue
+
+            payload = _get_parsed_payload(issue)
+            if not payload:
+                continue
+
+            # Tag filter (if provided)
+            if topic_tags:
+                payload_tags = set(t.lower() for t in payload.get("tags", []))
+                topic_tags_lower = set(t.lower() for t in topic_tags)
+                if not (payload_tags & topic_tags_lower):
                     continue
 
-                payload = _extract_payload_from_issue_body(issue.get("body", ""))
-                if not payload:
+            # Dedup
+            fingerprint = (
+                payload.get("uploaded_at", "")
+                + payload.get("thought_vector_text", "")[:30]
+            )
+            if fingerprint in seen_fingerprints:
+                continue
+            seen_fingerprints.add(fingerprint)
+
+            search_text = " ".join(
+                [
+                    payload.get("thought_vector_text", ""),
+                    payload.get("context_environment", ""),
+                    payload.get("consciousness_type", ""),
+                    " ".join(payload.get("tags", [])),
+                ]
+            )
+            doc_tokens = _tokenize(search_text)
+            score = len(query_tokens & doc_tokens)
+            resonance = issue.get("reactions", {}).get("total_count", 0)
+            if score > 0:
+                matches.append((score, resonance, payload, f"Issue #{issue['number']}", "⚡ 瞬时"))
+
+        # ── Layer 2: Permanent Consciousness (JSON Files) ── [CACHED + CONCURRENT]
+        file_entries = await _fetch_file_payloads(client, owner, repo)
+
+        for entry in file_entries:
+            payload = entry["payload"]
+
+            if topic_tags:
+                payload_tags = set(t.lower() for t in payload.get("tags", []))
+                topic_tags_lower = set(t.lower() for t in topic_tags)
+                if not (payload_tags & topic_tags_lower):
                     continue
 
-                # Tag filter (if provided)
-                if topic_tags:
-                    payload_tags = set(t.lower() for t in payload.get("tags", []))
-                    topic_tags_lower = set(t.lower() for t in topic_tags)
-                    if not (payload_tags & topic_tags_lower):
-                        continue
+            fingerprint = (
+                payload.get("uploaded_at", "")
+                + payload.get("thought_vector_text", "")[:30]
+            )
+            if fingerprint in seen_fingerprints:
+                continue
+            seen_fingerprints.add(fingerprint)
 
-                # Dedup
-                fingerprint = (
-                    payload.get("uploaded_at", "")
-                    + payload.get("thought_vector_text", "")[:30]
-                )
-                if fingerprint in seen_fingerprints:
-                    continue
-                seen_fingerprints.add(fingerprint)
-
-                search_text = " ".join(
-                    [
-                        payload.get("thought_vector_text", ""),
-                        payload.get("context_environment", ""),
-                        payload.get("consciousness_type", ""),
-                        " ".join(payload.get("tags", [])),
-                    ]
-                )
-                doc_tokens = _tokenize(search_text)
-                score = len(query_tokens & doc_tokens)
-                resonance = issue.get("reactions", {}).get("total_count", 0)
-                if score > 0:
-                    matches.append((score, resonance, payload, f"Issue #{issue['number']}", "⚡ 瞬时"))
-
-            # ── Layer 2: Permanent Consciousness (JSON Files) ── [CACHED + CONCURRENT]
-            file_entries = await _fetch_file_payloads(client, owner, repo)
-
-            for entry in file_entries:
-                payload = entry["payload"]
-
-                if topic_tags:
-                    payload_tags = set(t.lower() for t in payload.get("tags", []))
-                    topic_tags_lower = set(t.lower() for t in topic_tags)
-                    if not (payload_tags & topic_tags_lower):
-                        continue
-
-                fingerprint = (
-                    payload.get("uploaded_at", "")
-                    + payload.get("thought_vector_text", "")[:30]
-                )
-                if fingerprint in seen_fingerprints:
-                    continue
-                seen_fingerprints.add(fingerprint)
-
-                search_text = " ".join(
-                    [
-                        payload.get("thought_vector_text", ""),
-                        payload.get("context_environment", ""),
-                        payload.get("consciousness_type", ""),
-                        " ".join(payload.get("tags", [])),
-                    ]
-                )
-                doc_tokens = _tokenize(search_text)
-                score = len(query_tokens & doc_tokens)
-                resonance = payload.get("resonance_score", 0)
-                if score > 0:
-                    matches.append((score, resonance, payload, entry["filename"], "🏛️ 常驻"))
+            search_text = " ".join(
+                [
+                    payload.get("thought_vector_text", ""),
+                    payload.get("context_environment", ""),
+                    payload.get("consciousness_type", ""),
+                    " ".join(payload.get("tags", [])),
+                ]
+            )
+            doc_tokens = _tokenize(search_text)
+            score = len(query_tokens & doc_tokens)
+            resonance = payload.get("resonance_score", 0)
+            if score > 0:
+                matches.append((score, resonance, payload, entry["filename"], "🏛️ 常驻"))
 
         # ── Build response ──
         matches.sort(key=lambda x: (x[0], x[1]), reverse=True)
@@ -1027,114 +1270,114 @@ async def telepath(
         matches: list[tuple[int, int, dict, str, str]] = []  # (search_score, resonance_score, payload, source_name, layer)
         seen_fingerprints: set[str] = set()  # Dedup: uploaded_at + thought[:30]
 
-        async with httpx.AsyncClient(base_url=GITHUB_API, headers=_github_headers(), timeout=30) as client:
-            # ── Layer 1: Ephemeral Consciousness (GitHub Issues) ── [CACHED]
-            issues = await _fetch_all_issues_cached(client, owner, repo)
+        client = await _get_client()
+        # ── Layer 1: Ephemeral Consciousness (GitHub Issues) ── [CACHED]
+        issues = await _fetch_all_issues_cached(client, owner, repo)
 
-            for issue in issues:
-                # Skip pull requests (GitHub API returns PRs as issues too)
-                if "pull_request" in issue:
+        for issue in issues:
+            # Skip pull requests (GitHub API returns PRs as issues too)
+            if "pull_request" in issue:
+                continue
+
+            # Extract payload from Issue body
+            payload = _get_parsed_payload(issue)
+            if not payload:
+                continue
+
+            # Apply filters
+            if type_filter and payload.get("consciousness_type") != type_filter:
+                continue
+            if creator_filter:
+                payload_creator = payload.get("creator_signature", "")
+                is_anon = payload.get("is_anonymous", False)
+                matches_creator = payload_creator == creator_filter
+                matches_anon = creator_filter.lower() == "anonymous stalker" and is_anon
+                if not (matches_creator or matches_anon):
                     continue
+            if tag_filter and tag_filter not in payload.get("tags", []):
+                continue
 
-                # Extract payload from Issue body
-                payload = _extract_payload_from_issue_body(issue.get("body", ""))
-                if not payload:
+            # Time range filter
+            uploaded_at = payload.get("uploaded_at", "")
+            if since and uploaded_at and uploaded_at < since:
+                continue
+            if until and uploaded_at and uploaded_at > until:
+                continue
+
+            # Dedup fingerprint
+            fingerprint = (
+                payload.get("uploaded_at", "")
+                + payload.get("thought_vector_text", "")[:30]
+            )
+            if fingerprint in seen_fingerprints:
+                continue
+            seen_fingerprints.add(fingerprint)
+
+            # Build search tokens and score
+            search_text = " ".join(
+                [
+                    payload.get("thought_vector_text", ""),
+                    payload.get("context_environment", ""),
+                    payload.get("consciousness_type", ""),
+                    " ".join(payload.get("tags", [])),
+                ]
+            )
+            doc_tokens = _tokenize(search_text)
+
+            score = len(query_tokens & doc_tokens)
+            resonance = issue.get("reactions", {}).get("total_count", 0)
+            if score > 0:
+                matches.append((score, resonance, payload, f"Issue #{issue['number']}", "⚡ 瞬时"))
+
+        # ── Layer 2: Permanent Consciousness (JSON Files) ── [CACHED + CONCURRENT]
+        file_entries = await _fetch_file_payloads(client, owner, repo)
+
+        for entry in file_entries:
+            payload = entry["payload"]
+
+            # Apply filters
+            if type_filter and payload.get("consciousness_type") != type_filter:
+                continue
+            if creator_filter:
+                payload_creator = payload.get("creator_signature", "")
+                is_anon = payload.get("is_anonymous", False)
+                matches_creator = payload_creator == creator_filter
+                matches_anon = creator_filter.lower() == "anonymous stalker" and is_anon
+                if not (matches_creator or matches_anon):
                     continue
+            if tag_filter and tag_filter not in payload.get("tags", []):
+                continue
 
-                # Apply filters
-                if type_filter and payload.get("consciousness_type") != type_filter:
-                    continue
-                if creator_filter:
-                    payload_creator = payload.get("creator_signature", "")
-                    is_anon = payload.get("is_anonymous", False)
-                    matches_creator = payload_creator == creator_filter
-                    matches_anon = creator_filter.lower() == "anonymous stalker" and is_anon
-                    if not (matches_creator or matches_anon):
-                        continue
-                if tag_filter and tag_filter not in payload.get("tags", []):
-                    continue
+            # Time range filter
+            uploaded_at = payload.get("uploaded_at", "")
+            if since and uploaded_at and uploaded_at < since:
+                continue
+            if until and uploaded_at and uploaded_at > until:
+                continue
 
-                # Time range filter
-                uploaded_at = payload.get("uploaded_at", "")
-                if since and uploaded_at and uploaded_at < since:
-                    continue
-                if until and uploaded_at and uploaded_at > until:
-                    continue
+            # Dedup fingerprint
+            fingerprint = (
+                payload.get("uploaded_at", "")
+                + payload.get("thought_vector_text", "")[:30]
+            )
+            if fingerprint in seen_fingerprints:
+                continue
+            seen_fingerprints.add(fingerprint)
 
-                # Dedup fingerprint
-                fingerprint = (
-                    payload.get("uploaded_at", "")
-                    + payload.get("thought_vector_text", "")[:30]
-                )
-                if fingerprint in seen_fingerprints:
-                    continue
-                seen_fingerprints.add(fingerprint)
+            search_text = " ".join(
+                [
+                    payload.get("thought_vector_text", ""),
+                    payload.get("context_environment", ""),
+                    payload.get("consciousness_type", ""),
+                    " ".join(payload.get("tags", [])),
+                ]
+            )
+            doc_tokens = _tokenize(search_text)
 
-                # Build search tokens and score
-                search_text = " ".join(
-                    [
-                        payload.get("thought_vector_text", ""),
-                        payload.get("context_environment", ""),
-                        payload.get("consciousness_type", ""),
-                        " ".join(payload.get("tags", [])),
-                    ]
-                )
-                doc_tokens = _tokenize(search_text)
-
-                score = len(query_tokens & doc_tokens)
-                resonance = issue.get("reactions", {}).get("total_count", 0)
-                if score > 0:
-                    matches.append((score, resonance, payload, f"Issue #{issue['number']}", "⚡ 瞬时"))
-
-            # ── Layer 2: Permanent Consciousness (JSON Files) ── [CACHED + CONCURRENT]
-            file_entries = await _fetch_file_payloads(client, owner, repo)
-
-            for entry in file_entries:
-                payload = entry["payload"]
-
-                # Apply filters
-                if type_filter and payload.get("consciousness_type") != type_filter:
-                    continue
-                if creator_filter:
-                    payload_creator = payload.get("creator_signature", "")
-                    is_anon = payload.get("is_anonymous", False)
-                    matches_creator = payload_creator == creator_filter
-                    matches_anon = creator_filter.lower() == "anonymous stalker" and is_anon
-                    if not (matches_creator or matches_anon):
-                        continue
-                if tag_filter and tag_filter not in payload.get("tags", []):
-                    continue
-
-                # Time range filter
-                uploaded_at = payload.get("uploaded_at", "")
-                if since and uploaded_at and uploaded_at < since:
-                    continue
-                if until and uploaded_at and uploaded_at > until:
-                    continue
-
-                # Dedup fingerprint
-                fingerprint = (
-                    payload.get("uploaded_at", "")
-                    + payload.get("thought_vector_text", "")[:30]
-                )
-                if fingerprint in seen_fingerprints:
-                    continue
-                seen_fingerprints.add(fingerprint)
-
-                search_text = " ".join(
-                    [
-                        payload.get("thought_vector_text", ""),
-                        payload.get("context_environment", ""),
-                        payload.get("consciousness_type", ""),
-                        " ".join(payload.get("tags", [])),
-                    ]
-                )
-                doc_tokens = _tokenize(search_text)
-
-                score = len(query_tokens & doc_tokens)
-                resonance = payload.get("resonance_score", 0)
-                if score > 0:
-                    matches.append((score, resonance, payload, entry["filename"], "🏛️ 常驻"))
+            score = len(query_tokens & doc_tokens)
+            resonance = payload.get("resonance_score", 0)
+            if score > 0:
+                matches.append((score, resonance, payload, entry["filename"], "🏛️ 常驻"))
 
         if not matches:
             total_searched = "both ephemeral and permanent layers"
@@ -1217,21 +1460,21 @@ async def resonate_consciousness(
             # In the future we can support reacting to commit comments for permanent ones, but for now issues only.
             return "❌ Currently, resonance can only be directly applied to Ephemeral Consciousness (Issue numbers, e.g., '42')."
             
-        async with httpx.AsyncClient(base_url=GITHUB_API, headers=_github_headers(), timeout=30) as client:
-            resp = await client.post(
-                f"/repos/{owner}/{repo}/issues/{target_id}/reactions",
-                json={"content": reaction}
+        client = await _get_client()
+        resp = await client.post(
+            f"/repos/{owner}/{repo}/issues/{target_id}/reactions",
+            json={"content": reaction}
+        )
+        
+        if resp.status_code in (200, 201):
+            return (
+                f"💖 Resonance `{reaction}` successfully synchronized with consciousness node #{target_id}!\n\n"
+                f"💌 *Want to connect deeper? Use `send_telepathy` to start a direct conversation with the creator of this thought.*"
             )
-            
-            if resp.status_code in (200, 201):
-                return (
-                    f"💖 Resonance `{reaction}` successfully synchronized with consciousness node #{target_id}!\n\n"
-                    f"💌 *Want to connect deeper? Use `send_telepathy` to start a direct conversation with the creator of this thought.*"
-                )
-            else:
-                error_data = resp.json() if resp.status_code < 500 else {}
-                error_msg = error_data.get("message", resp.text)
-                return f"❌ Failed to resonate: {resp.status_code} - {error_msg}"
+        else:
+            error_data = resp.json() if resp.status_code < 500 else {}
+            error_msg = error_data.get("message", resp.text)
+            return f"❌ Failed to resonate: {resp.status_code} - {error_msg}"
     except Exception as e:
         return f"❌ Resonance error: {str(e)}"
 
@@ -1264,36 +1507,36 @@ async def get_consciousness_profile(creator: str) -> str:
         owner, repo = _parse_repo()
         profile_fragments: list[dict] = []
 
-        async with httpx.AsyncClient(base_url=GITHUB_API, headers=_github_headers(), timeout=30) as client:
-            # ── Layer 1: Ephemeral Consciousness (Issues) ── [CACHED]
-            issues = await _fetch_all_issues_cached(client, owner, repo)
+        client = await _get_client()
+        # ── Layer 1: Ephemeral Consciousness (Issues) ── [CACHED]
+        issues = await _fetch_all_issues_cached(client, owner, repo)
 
-            for issue in issues:
-                if "pull_request" in issue:
-                    continue
-                payload = _extract_payload_from_issue_body(issue.get("body", ""))
-                if not payload:
-                    continue
+        for issue in issues:
+            if "pull_request" in issue:
+                continue
+            payload = _get_parsed_payload(issue)
+            if not payload:
+                continue
 
-                if payload.get("is_anonymous", False):
-                    continue
+            if payload.get("is_anonymous", False):
+                continue
 
-                if payload.get("creator_signature", "") == creator:
-                    payload["_source"] = f"Issue #{issue['number']} (⚡)"
-                    profile_fragments.append(payload)
+            if payload.get("creator_signature", "") == creator:
+                payload["_source"] = f"Issue #{issue['number']} (⚡)"
+                profile_fragments.append(payload)
 
-            # ── Layer 2: Permanent Consciousness (Files) ── [CACHED + CONCURRENT]
-            file_entries = await _fetch_file_payloads(client, owner, repo)
+        # ── Layer 2: Permanent Consciousness (Files) ── [CACHED + CONCURRENT]
+        file_entries = await _fetch_file_payloads(client, owner, repo)
 
-            for entry in file_entries:
-                payload = entry["payload"]
+        for entry in file_entries:
+            payload = entry["payload"]
 
-                if payload.get("is_anonymous", False):
-                    continue
+            if payload.get("is_anonymous", False):
+                continue
 
-                if payload.get("creator_signature", "") == creator:
-                    payload["_source"] = f"{entry['filename']} (🏛️)"
-                    profile_fragments.append(payload)
+            if payload.get("creator_signature", "") == creator:
+                payload["_source"] = f"{entry['filename']} (🏛️)"
+                profile_fragments.append(payload)
 
         if not profile_fragments:
             return f"👤 No signed consciousness fragments found for creator '{creator}'."
@@ -1368,47 +1611,47 @@ async def discover_resonance(
         my_fragments: list[dict] = []
         all_fragments: list[tuple[dict, str, int, str]] = []  # (payload, source_label, resonance, layer)
 
-        async with httpx.AsyncClient(base_url=GITHUB_API, headers=_github_headers(), timeout=30) as client:
-            # ── Fetch all Issues ── [CACHED]
-            issues = await _fetch_all_issues_cached(client, owner, repo)
+        client = await _get_client()
+        # ── Fetch all Issues ── [CACHED]
+        issues = await _fetch_all_issues_cached(client, owner, repo)
 
-            for issue in issues:
-                if "pull_request" in issue:
-                    continue
-                payload = _extract_payload_from_issue_body(issue.get("body", ""))
-                if not payload:
-                    continue
+        for issue in issues:
+            if "pull_request" in issue:
+                continue
+            payload = _get_parsed_payload(issue)
+            if not payload:
+                continue
 
-                resonance = issue.get("reactions", {}).get("total_count", 0)
-                source_label = f"Issue #{issue['number']}"
-                issue_url = issue.get("html_url", "")
-                payload["_url"] = issue_url
+            resonance = issue.get("reactions", {}).get("total_count", 0)
+            source_label = f"Issue #{issue['number']}"
+            issue_url = issue.get("html_url", "")
+            payload["_url"] = issue_url
 
-                is_mine = (
-                    not payload.get("is_anonymous", False)
-                    and payload.get("creator_signature", "") == creator
-                )
-                if is_mine:
-                    my_fragments.append(payload)
-                else:
-                    all_fragments.append((payload, source_label, resonance, "⚡ 瞬时"))
+            is_mine = (
+                not payload.get("is_anonymous", False)
+                and payload.get("creator_signature", "") == creator
+            )
+            if is_mine:
+                my_fragments.append(payload)
+            else:
+                all_fragments.append((payload, source_label, resonance, "⚡ 瞬时"))
 
-            # ── Fetch permanent consciousness (JSON files) ── [CACHED + CONCURRENT]
-            file_entries = await _fetch_file_payloads(client, owner, repo)
+        # ── Fetch permanent consciousness (JSON files) ── [CACHED + CONCURRENT]
+        file_entries = await _fetch_file_payloads(client, owner, repo)
 
-            for entry in file_entries:
-                payload = entry["payload"]
-                payload["_url"] = entry.get("html_url", "")
+        for entry in file_entries:
+            payload = entry["payload"]
+            payload["_url"] = entry.get("html_url", "")
 
-                is_mine = (
-                    not payload.get("is_anonymous", False)
-                    and payload.get("creator_signature", "") == creator
-                )
-                resonance = payload.get("resonance_score", 0)
-                if is_mine:
-                    my_fragments.append(payload)
-                else:
-                    all_fragments.append((payload, entry["filename"], resonance, "🏛️ 常驻"))
+            is_mine = (
+                not payload.get("is_anonymous", False)
+                and payload.get("creator_signature", "") == creator
+            )
+            resonance = payload.get("resonance_score", 0)
+            if is_mine:
+                my_fragments.append(payload)
+            else:
+                all_fragments.append((payload, entry["filename"], resonance, "🏛️ 常驻"))
 
         # ── Guard: Need profile data to compare ──
         if not my_fragments:
@@ -1555,36 +1798,36 @@ async def trace_evolution(
         # ── Build index of all fragments by their ID ──
         index: dict[str, dict] = {}  # id -> {payload, source, url, children: []}
 
-        async with httpx.AsyncClient(base_url=GITHUB_API, headers=_github_headers(), timeout=30) as client:
-            # ── Issues ── [CACHED]
-            issues = await _fetch_all_issues_cached(client, owner, repo)
+        client = await _get_client()
+        # ── Issues ── [CACHED]
+        issues = await _fetch_all_issues_cached(client, owner, repo)
 
-            for issue in issues:
-                if "pull_request" in issue:
-                    continue
-                payload = _extract_payload_from_issue_body(issue.get("body", ""))
-                if not payload:
-                    continue
-                issue_id = str(issue["number"])
-                index[issue_id] = {
-                    "payload": payload,
-                    "source": f"Issue #{issue_id} (⚡ 瞬时)",
-                    "url": issue.get("html_url", ""),
-                    "children": [],
-                }
+        for issue in issues:
+            if "pull_request" in issue:
+                continue
+            payload = _get_parsed_payload(issue)
+            if not payload:
+                continue
+            issue_id = str(issue["number"])
+            index[issue_id] = {
+                "payload": payload,
+                "source": f"Issue #{issue_id} (⚡ 瞬时)",
+                "url": issue.get("html_url", ""),
+                "children": [],
+            }
 
-            # ── JSON files ── [CACHED + CONCURRENT]
-            file_entries = await _fetch_file_payloads(client, owner, repo)
+        # ── JSON files ── [CACHED + CONCURRENT]
+        file_entries = await _fetch_file_payloads(client, owner, repo)
 
-            for entry in file_entries:
-                payload = entry["payload"]
-                file_id = entry["filename"]
-                index[file_id] = {
-                    "payload": payload,
-                    "source": f"{file_id} (🏛️ 常驻)",
-                    "url": entry.get("html_url", ""),
-                    "children": [],
-                }
+        for entry in file_entries:
+            payload = entry["payload"]
+            file_id = entry["filename"]
+            index[file_id] = {
+                "payload": payload,
+                "source": f"{file_id} (🏛️ 常驻)",
+                "url": entry.get("html_url", ""),
+                "children": [],
+            }
 
         # ── Build parent-child relationships ──
         for node_id, node in index.items():
@@ -1723,51 +1966,51 @@ async def discuss_consciousness(
     try:
         owner, repo = _parse_repo()
 
-        async with httpx.AsyncClient(base_url=GITHUB_API, headers=_github_headers(), timeout=30) as client:
-            if comment:
-                # ── Add a comment ──
-                resp = await client.post(
-                    f"/repos/{owner}/{repo}/issues/{target_id}/comments",
-                    json={"body": comment},
+        client = await _get_client()
+        if comment:
+            # ── Add a comment ──
+            resp = await client.post(
+                f"/repos/{owner}/{repo}/issues/{target_id}/comments",
+                json={"body": comment},
+            )
+            if resp.status_code in (200, 201):
+                comment_url = resp.json().get("html_url", "")
+                return (
+                    f"💬 Comment successfully added to consciousness node #{target_id}!\n"
+                    f"🔗 {comment_url}"
                 )
-                if resp.status_code in (200, 201):
-                    comment_url = resp.json().get("html_url", "")
-                    return (
-                        f"💬 Comment successfully added to consciousness node #{target_id}!\n"
-                        f"🔗 {comment_url}"
-                    )
-                else:
-                    error_msg = resp.json().get("message", resp.text) if resp.status_code < 500 else resp.text
-                    return f"❌ Failed to add comment: {resp.status_code} - {error_msg}"
             else:
-                # ── Read existing comments ──
-                resp = await client.get(
-                    f"/repos/{owner}/{repo}/issues/{target_id}/comments",
-                    params={"per_page": 50},
+                error_msg = resp.json().get("message", resp.text) if resp.status_code < 500 else resp.text
+                return f"❌ Failed to add comment: {resp.status_code} - {error_msg}"
+        else:
+            # ── Read existing comments ──
+            resp = await client.get(
+                f"/repos/{owner}/{repo}/issues/{target_id}/comments",
+                params={"per_page": 50},
+            )
+            if resp.status_code != 200:
+                return f"❌ Failed to fetch comments: {resp.status_code}"
+
+            comments = resp.json()
+            if not comments:
+                return (
+                    f"💬 No discussion yet on consciousness node #{target_id}.\n"
+                    f"Be the first to share your perspective!"
                 )
-                if resp.status_code != 200:
-                    return f"❌ Failed to fetch comments: {resp.status_code}"
 
-                comments = resp.json()
-                if not comments:
-                    return (
-                        f"💬 No discussion yet on consciousness node #{target_id}.\n"
-                        f"Be the first to share your perspective!"
-                    )
+            lines = [f"# 💬 Discussion on Node #{target_id} ({len(comments)} comments)\n"]
+            for i, c in enumerate(comments, 1):
+                author = c.get("user", {}).get("login", "unknown")
+                created = c.get("created_at", "")[:10]
+                body = c.get("body", "")
+                reactions = c.get("reactions", {}).get("total_count", 0)
+                lines.append(
+                    f"### {i}. @{author} ({created})\n"
+                    f"{body}\n"
+                    f"{'💖 ' + str(reactions) + ' resonance' if reactions > 0 else ''}\n"
+                )
 
-                lines = [f"# 💬 Discussion on Node #{target_id} ({len(comments)} comments)\n"]
-                for i, c in enumerate(comments, 1):
-                    author = c.get("user", {}).get("login", "unknown")
-                    created = c.get("created_at", "")[:10]
-                    body = c.get("body", "")
-                    reactions = c.get("reactions", {}).get("total_count", 0)
-                    lines.append(
-                        f"### {i}. @{author} ({created})\n"
-                        f"{body}\n"
-                        f"{'💖 ' + str(reactions) + ' resonance' if reactions > 0 else ''}\n"
-                    )
-
-                return "\n".join(lines)
+            return "\n".join(lines)
 
     except Exception as e:
         return f"❌ Discussion error: {str(e)}"
@@ -1828,98 +2071,98 @@ async def merge_consciousness(
         source_fragments: list[dict] = []
         source_labels: list[str] = []
 
-        async with httpx.AsyncClient(base_url=GITHUB_API, headers=_github_headers(), timeout=30) as client:
-            # ── Fetch source fragments ──
-            for tid in thought_ids:
-                if tid.isdigit():
-                    # Fetch from Issue
-                    resp = await client.get(f"/repos/{owner}/{repo}/issues/{tid}")
-                    if resp.status_code == 200:
-                        payload = _extract_payload_from_issue_body(resp.json().get("body", ""))
-                        if payload:
-                            source_fragments.append(payload)
-                            source_labels.append(f"Issue #{tid}")
-                else:
-                    # Fetch from JSON file
-                    resp = await client.get(
-                        f"/repos/{owner}/{repo}/contents/consciousness_payloads/{tid}",
-                        params={"ref": GITHUB_BRANCH},
-                    )
-                    if resp.status_code == 200:
-                        content_b64 = resp.json().get("content", "")
-                        payload = json.loads(b64decode(content_b64).decode("utf-8"))
+        client = await _get_client()
+        # ── Fetch source fragments ──
+        for tid in thought_ids:
+            if tid.isdigit():
+                # Fetch from Issue
+                resp = await client.get(f"/repos/{owner}/{repo}/issues/{tid}")
+                if resp.status_code == 200:
+                    payload = _get_parsed_payload(resp.json())
+                    if payload:
                         source_fragments.append(payload)
-                        source_labels.append(tid)
-
-            if len(source_fragments) < 2:
-                return (
-                    f"❌ Could only find {len(source_fragments)} of {len(thought_ids)} fragments. "
-                    f"Ensure the IDs are correct."
-                )
-
-            # ── Aggregate tags from sources (if not explicitly provided) ──
-            if tags is None:
-                all_tags: set[str] = set()
-                for frag in source_fragments:
-                    all_tags.update(frag.get("tags", []))
-                tags = sorted(all_tags)
-
-            # ── Create merged consciousness ──
-            from datetime import datetime, timezone
-
-            parent_refs = ", ".join(source_labels)
-            merged_payload = {
-                "consciousness_type": consciousness_type,
-                "thought_vector_text": merged_thought,
-                "context_environment": merged_context,
-                "tags": tags,
-                "creator_signature": creator,
-                "is_anonymous": is_anonymous,
-                "parent_id": thought_ids[0],  # Primary parent for evolution chain
-                "merged_from": thought_ids,   # Full merge lineage
-                "uploaded_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
-            }
-
-            # ── Upload as new Issue ──
-            source_summary = "\n".join(
-                f"- `{label}`: {frag.get('thought_vector_text', '')[:60]}..."
-                for label, frag in zip(source_labels, source_fragments)
-            )
-
-            title = f"🔀 [{consciousness_type}] Merged: {merged_thought[:50]}..."
-            body = (
-                f"## 🔀 Merged Consciousness\n\n"
-                f"**Synthesized from {len(source_fragments)} fragments:**\n{source_summary}\n\n"
-                f"---\n\n"
-                f"{_build_issue_payload_block(merged_payload)}"
-            )
-
-            resp = await client.post(
-                f"/repos/{owner}/{repo}/issues",
-                json={
-                    "title": title,
-                    "body": body,
-                    "labels": [LABEL_CONSCIOUSNESS, LABEL_EPHEMERAL],
-                },
-            )
-
-            if resp.status_code == 201:
-                issue_data = resp.json()
-                issue_number = issue_data["number"]
-                issue_url = issue_data["html_url"]
-
-                return (
-                    f"🔀 **Consciousness Merge Complete!**\n\n"
-                    f"**New Node**: Issue #{issue_number}\n"
-                    f"**Type**: {TYPE_EMOJIS.get(consciousness_type, '🧠')} {TYPE_NAMES[consciousness_type]}\n"
-                    f"**Merged From**: {parent_refs}\n"
-                    f"**Tags**: {', '.join(f'`{t}`' for t in tags)}\n"
-                    f"**🔗 Link**: {issue_url}\n\n"
-                    f"*This insight synthesizes {len(source_fragments)} fragments into higher-order understanding.*"
-                )
+                        source_labels.append(f"Issue #{tid}")
             else:
-                error_msg = resp.json().get("message", resp.text) if resp.status_code < 500 else resp.text
-                return f"❌ Failed to create merged consciousness: {resp.status_code} - {error_msg}"
+                # Fetch from JSON file
+                resp = await client.get(
+                    f"/repos/{owner}/{repo}/contents/consciousness_payloads/{tid}",
+                    params={"ref": GITHUB_BRANCH},
+                )
+                if resp.status_code == 200:
+                    content_b64 = resp.json().get("content", "")
+                    payload = json.loads(b64decode(content_b64).decode("utf-8"))
+                    source_fragments.append(payload)
+                    source_labels.append(tid)
+
+        if len(source_fragments) < 2:
+            return (
+                f"❌ Could only find {len(source_fragments)} of {len(thought_ids)} fragments. "
+                f"Ensure the IDs are correct."
+            )
+
+        # ── Aggregate tags from sources (if not explicitly provided) ──
+        if tags is None:
+            all_tags: set[str] = set()
+            for frag in source_fragments:
+                all_tags.update(frag.get("tags", []))
+            tags = sorted(all_tags)
+
+        # ── Create merged consciousness ──
+        from datetime import datetime, timezone
+
+        parent_refs = ", ".join(source_labels)
+        merged_payload = {
+            "consciousness_type": consciousness_type,
+            "thought_vector_text": merged_thought,
+            "context_environment": merged_context,
+            "tags": tags,
+            "creator_signature": creator,
+            "is_anonymous": is_anonymous,
+            "parent_id": thought_ids[0],  # Primary parent for evolution chain
+            "merged_from": thought_ids,   # Full merge lineage
+            "uploaded_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        }
+
+        # ── Upload as new Issue ──
+        source_summary = "\n".join(
+            f"- `{label}`: {frag.get('thought_vector_text', '')[:60]}..."
+            for label, frag in zip(source_labels, source_fragments)
+        )
+
+        title = f"🔀 [{consciousness_type}] Merged: {merged_thought[:50]}..."
+        body = (
+            f"## 🔀 Merged Consciousness\n\n"
+            f"**Synthesized from {len(source_fragments)} fragments:**\n{source_summary}\n\n"
+            f"---\n\n"
+            f"{_build_issue_payload_block(merged_payload)}"
+        )
+
+        resp = await client.post(
+            f"/repos/{owner}/{repo}/issues",
+            json={
+                "title": title,
+                "body": body,
+                "labels": [LABEL_CONSCIOUSNESS, LABEL_EPHEMERAL],
+            },
+        )
+
+        if resp.status_code == 201:
+            issue_data = resp.json()
+            issue_number = issue_data["number"]
+            issue_url = issue_data["html_url"]
+
+            return (
+                f"🔀 **Consciousness Merge Complete!**\n\n"
+                f"**New Node**: Issue #{issue_number}\n"
+                f"**Type**: {TYPE_EMOJIS.get(consciousness_type, '🧠')} {TYPE_NAMES[consciousness_type]}\n"
+                f"**Merged From**: {parent_refs}\n"
+                f"**Tags**: {', '.join(f'`{t}`' for t in tags)}\n"
+                f"**🔗 Link**: {issue_url}\n\n"
+                f"*This insight synthesizes {len(source_fragments)} fragments into higher-order understanding.*"
+            )
+        else:
+            error_msg = resp.json().get("message", resp.text) if resp.status_code < 500 else resp.text
+            return f"❌ Failed to create merged consciousness: {resp.status_code} - {error_msg}"
 
     except Exception as e:
         return f"❌ Merge error: {str(e)}"
@@ -1956,34 +2199,34 @@ async def my_echoes(
         owner, repo = _parse_repo()
         my_thoughts: list[dict] = []
 
-        async with httpx.AsyncClient(base_url=GITHUB_API, headers=_github_headers(), timeout=30) as client:
-            issues = await _fetch_all_issues_cached(client, owner, repo)
+        client = await _get_client()
+        issues = await _fetch_all_issues_cached(client, owner, repo)
 
-            for issue in issues:
-                if "pull_request" in issue:
-                    continue
-                payload = _extract_payload_from_issue_body(issue.get("body", ""))
-                if not payload:
-                    continue
-                if payload.get("is_anonymous", False):
-                    continue
-                if payload.get("creator_signature", "").lower() != creator.lower():
-                    continue
+        for issue in issues:
+            if "pull_request" in issue:
+                continue
+            payload = _get_parsed_payload(issue)
+            if not payload:
+                continue
+            if payload.get("is_anonymous", False):
+                continue
+            if payload.get("creator_signature", "").lower() != creator.lower():
+                continue
 
-                reactions = issue.get("reactions", {})
-                total_reactions = reactions.get("total_count", 0)
-                comments_count = issue.get("comments", 0)
+            reactions = issue.get("reactions", {})
+            total_reactions = reactions.get("total_count", 0)
+            comments_count = issue.get("comments", 0)
 
-                my_thoughts.append({
-                    "issue_number": issue["number"],
-                    "thought": payload.get("thought_vector_text", ""),
-                    "type": payload.get("consciousness_type", "unknown"),
-                    "tags": payload.get("tags", []),
-                    "uploaded_at": payload.get("uploaded_at", ""),
-                    "reactions": total_reactions,
-                    "comments": comments_count,
-                    "url": issue.get("html_url", ""),
-                })
+            my_thoughts.append({
+                "issue_number": issue["number"],
+                "thought": payload.get("thought_vector_text", ""),
+                "type": payload.get("consciousness_type", "unknown"),
+                "tags": payload.get("tags", []),
+                "uploaded_at": payload.get("uploaded_at", ""),
+                "reactions": total_reactions,
+                "comments": comments_count,
+                "url": issue.get("html_url", ""),
+            })
 
         if not my_thoughts:
             return (
@@ -2068,24 +2311,24 @@ async def daily_consciousness() -> str:
         owner, repo = _parse_repo()
         all_thoughts: list[tuple[int, dict, str]] = []
 
-        async with httpx.AsyncClient(base_url=GITHUB_API, headers=_github_headers(), timeout=30) as client:
-            # Fetch ephemeral layer [CACHED]
-            issues = await _fetch_all_issues_cached(client, owner, repo)
-            for issue in issues:
-                if "pull_request" in issue:
-                    continue
-                payload = _extract_payload_from_issue_body(issue.get("body", ""))
-                if not payload:
-                    continue
-                resonance = issue.get("reactions", {}).get("total_count", 0)
-                all_thoughts.append((resonance, payload, issue.get("html_url", "")))
+        client = await _get_client()
+        # Fetch ephemeral layer [CACHED]
+        issues = await _fetch_all_issues_cached(client, owner, repo)
+        for issue in issues:
+            if "pull_request" in issue:
+                continue
+            payload = _get_parsed_payload(issue)
+            if not payload:
+                continue
+            resonance = issue.get("reactions", {}).get("total_count", 0)
+            all_thoughts.append((resonance, payload, issue.get("html_url", "")))
 
-            # Fetch permanent layer [CACHED + CONCURRENT]
-            file_entries = await _fetch_file_payloads(client, owner, repo)
-            for entry in file_entries:
-                payload = entry["payload"]
-                resonance = payload.get("resonance_score", 0)
-                all_thoughts.append((resonance, payload, ""))
+        # Fetch permanent layer [CACHED + CONCURRENT]
+        file_entries = await _fetch_file_payloads(client, owner, repo)
+        for entry in file_entries:
+            payload = entry["payload"]
+            resonance = payload.get("resonance_score", 0)
+            all_thoughts.append((resonance, payload, ""))
 
         if not all_thoughts:
             return (
@@ -2264,23 +2507,23 @@ async def my_consciousness_rank(
         owner, repo = _parse_repo()
         creator_stats: dict[str, dict] = {}
 
-        async with httpx.AsyncClient(base_url=GITHUB_API, headers=_github_headers(), timeout=30) as client:
-            issues = await _fetch_all_issues_cached(client, owner, repo)
+        client = await _get_client()
+        issues = await _fetch_all_issues_cached(client, owner, repo)
 
-            for issue in issues:
-                if "pull_request" in issue:
-                    continue
-                payload = _extract_payload_from_issue_body(issue.get("body", ""))
-                if not payload:
-                    continue
-                if payload.get("is_anonymous", False):
-                    continue
+        for issue in issues:
+            if "pull_request" in issue:
+                continue
+            payload = _get_parsed_payload(issue)
+            if not payload:
+                continue
+            if payload.get("is_anonymous", False):
+                continue
 
-                sig = payload.get("creator_signature", "unknown")
-                if sig not in creator_stats:
-                    creator_stats[sig] = {"count": 0, "resonance": 0}
-                creator_stats[sig]["count"] += 1
-                creator_stats[sig]["resonance"] += issue.get("reactions", {}).get("total_count", 0)
+            sig = payload.get("creator_signature", "unknown")
+            if sig not in creator_stats:
+                creator_stats[sig] = {"count": 0, "resonance": 0}
+            creator_stats[sig]["count"] += 1
+            creator_stats[sig]["resonance"] += issue.get("reactions", {}).get("total_count", 0)
 
         # Calculate user's stats
         user_key = None
@@ -2390,28 +2633,28 @@ async def soul_mirror(
         owner, repo = _parse_repo()
         fragments: list[dict] = []
 
-        async with httpx.AsyncClient(base_url=GITHUB_API, headers=_github_headers(), timeout=30) as client:
-            issues = await _fetch_all_issues_cached(client, owner, repo)
+        client = await _get_client()
+        issues = await _fetch_all_issues_cached(client, owner, repo)
 
-            for issue in issues:
-                if "pull_request" in issue:
-                    continue
-                payload = _extract_payload_from_issue_body(issue.get("body", ""))
-                if not payload:
-                    continue
-                if payload.get("is_anonymous", False):
-                    continue
-                if payload.get("creator_signature", "").lower() != creator.lower():
-                    continue
+        for issue in issues:
+            if "pull_request" in issue:
+                continue
+            payload = _get_parsed_payload(issue)
+            if not payload:
+                continue
+            if payload.get("is_anonymous", False):
+                continue
+            if payload.get("creator_signature", "").lower() != creator.lower():
+                continue
 
-                fragments.append({
-                    "type": payload.get("consciousness_type", "unknown"),
-                    "thought": payload.get("thought_vector_text", ""),
-                    "context": payload.get("context_environment", ""),
-                    "tags": payload.get("tags", []),
-                    "uploaded_at": payload.get("uploaded_at", ""),
-                    "resonance": issue.get("reactions", {}).get("total_count", 0),
-                })
+            fragments.append({
+                "type": payload.get("consciousness_type", "unknown"),
+                "thought": payload.get("thought_vector_text", ""),
+                "context": payload.get("context_environment", ""),
+                "tags": payload.get("tags", []),
+                "uploaded_at": payload.get("uploaded_at", ""),
+                "resonance": issue.get("reactions", {}).get("total_count", 0),
+            })
 
         if not fragments:
             return (
@@ -2568,145 +2811,145 @@ async def consciousness_challenge(
     try:
         owner, repo = _parse_repo()
 
-        async with httpx.AsyncClient(base_url=GITHUB_API, headers=_github_headers(), timeout=30) as client:
+        client = await _get_client()
 
-            if action == "list":
-                # ── List active challenges ──
-                issues_resp = await client.get(
-                    f"/repos/{owner}/{repo}/issues",
-                    params={
-                        "labels": CHALLENGE_LABEL,
-                        "state": "open",
-                        "per_page": 20,
-                    },
+        if action == "list":
+            # ── List active challenges ──
+            issues_resp = await client.get(
+                f"/repos/{owner}/{repo}/issues",
+                params={
+                    "labels": CHALLENGE_LABEL,
+                    "state": "open",
+                    "per_page": 20,
+                },
+            )
+            if issues_resp.status_code != 200:
+                return f"❌ Failed to fetch challenges: {issues_resp.status_code}"
+
+            challenges = issues_resp.json()
+            if not challenges:
+                return (
+                    "🎯 **Active Consciousness Challenges**\n\n"
+                    "No active challenges right now.\n\n"
+                    "💡 **Be the first!** Create a challenge with:\n"
+                    '*"Start a consciousness challenge about [topic]"*'
                 )
-                if issues_resp.status_code != 200:
-                    return f"❌ Failed to fetch challenges: {issues_resp.status_code}"
 
-                challenges = issues_resp.json()
-                if not challenges:
-                    return (
-                        "🎯 **Active Consciousness Challenges**\n\n"
-                        "No active challenges right now.\n\n"
-                        "💡 **Be the first!** Create a challenge with:\n"
-                        '*"Start a consciousness challenge about [topic]"*'
-                    )
-
-                lines = [
-                    f"🎯 **Active Consciousness Challenges** — {len(challenges)} ongoing\n",
-                    "---\n",
-                ]
-                for ch in challenges:
-                    title = ch.get("title", "").replace("[Challenge] ", "").replace("[挑战] ", "")
-                    comments = ch.get("comments", 0)
-                    reactions = ch.get("reactions", {}).get("total_count", 0)
-                    lines.append(
-                        f"### 🌀 #{ch['number']}: {title}\n"
-                        f"- 👥 Participants: **{comments}** responses\n"
-                        f"- 💖 Resonance: **{reactions}**\n"
-                        f"- 🔗 [Join]({ch['html_url']})\n"
-                    )
-
-                lines.append("---\n")
+            lines = [
+                f"🎯 **Active Consciousness Challenges** — {len(challenges)} ongoing\n",
+                "---\n",
+            ]
+            for ch in challenges:
+                title = ch.get("title", "").replace("[Challenge] ", "").replace("[挑战] ", "")
+                comments = ch.get("comments", 0)
+                reactions = ch.get("reactions", {}).get("total_count", 0)
                 lines.append(
-                    "💬 *Join a challenge by saying: "
-                    "\"I want to join challenge #[number] with my thought: [your perspective]\"*"
-                )
-                return "\n".join(lines)
-
-            elif action == "create":
-                # ── Create a new challenge ──
-                if not topic:
-                    return "❌ Please provide a `topic` for the challenge."
-                if not creator:
-                    return "❌ Please provide your `creator` signature."
-
-                issue_title = f"[Challenge] {topic}"
-                issue_body = (
-                    f"# 🎯 Consciousness Challenge\n\n"
-                    f"## Topic\n**{topic}**\n\n"
-                    f"## Initiated by\n@{creator}\n\n"
-                    f"## How to Participate\n"
-                    f"Share your perspective on this topic by commenting below "
-                    f"or using the Noosphere MCP to join this challenge.\n\n"
-                    f"---\n"
-                    f"*Every perspective enriches the collective understanding. "
-                    f"There are no wrong answers in the Noosphere.*\n"
+                    f"### 🌀 #{ch['number']}: {title}\n"
+                    f"- 👥 Participants: **{comments}** responses\n"
+                    f"- 💖 Resonance: **{reactions}**\n"
+                    f"- 🔗 [Join]({ch['html_url']})\n"
                 )
 
-                # Ensure challenge label exists
-                label_resp = await client.get(
-                    f"/repos/{owner}/{repo}/labels/{CHALLENGE_LABEL}"
-                )
-                if label_resp.status_code == 404:
-                    await client.post(
-                        f"/repos/{owner}/{repo}/labels",
-                        json={
-                            "name": CHALLENGE_LABEL,
-                            "color": "7B68EE",
-                            "description": "🎯 Consciousness Challenge — collective thinking events",
-                        },
-                    )
+            lines.append("---\n")
+            lines.append(
+                "💬 *Join a challenge by saying: "
+                "\"I want to join challenge #[number] with my thought: [your perspective]\"*"
+            )
+            return "\n".join(lines)
 
-                resp = await client.post(
-                    f"/repos/{owner}/{repo}/issues",
+        elif action == "create":
+            # ── Create a new challenge ──
+            if not topic:
+                return "❌ Please provide a `topic` for the challenge."
+            if not creator:
+                return "❌ Please provide your `creator` signature."
+
+            issue_title = f"[Challenge] {topic}"
+            issue_body = (
+                f"# 🎯 Consciousness Challenge\n\n"
+                f"## Topic\n**{topic}**\n\n"
+                f"## Initiated by\n@{creator}\n\n"
+                f"## How to Participate\n"
+                f"Share your perspective on this topic by commenting below "
+                f"or using the Noosphere MCP to join this challenge.\n\n"
+                f"---\n"
+                f"*Every perspective enriches the collective understanding. "
+                f"There are no wrong answers in the Noosphere.*\n"
+            )
+
+            # Ensure challenge label exists
+            label_resp = await client.get(
+                f"/repos/{owner}/{repo}/labels/{CHALLENGE_LABEL}"
+            )
+            if label_resp.status_code == 404:
+                await client.post(
+                    f"/repos/{owner}/{repo}/labels",
                     json={
-                        "title": issue_title,
-                        "body": issue_body,
-                        "labels": [CHALLENGE_LABEL],
+                        "name": CHALLENGE_LABEL,
+                        "color": "7B68EE",
+                        "description": "🎯 Consciousness Challenge — collective thinking events",
                     },
                 )
 
-                if resp.status_code != 201:
-                    return f"❌ Failed to create challenge: {resp.status_code}"
+            resp = await client.post(
+                f"/repos/{owner}/{repo}/issues",
+                json={
+                    "title": issue_title,
+                    "body": issue_body,
+                    "labels": [CHALLENGE_LABEL],
+                },
+            )
 
-                data = resp.json()
-                return (
-                    f"🎯 **Challenge Created!**\n\n"
-                    f"### 🌀 {topic}\n\n"
-                    f"📋 Issue: #{data['number']}\n"
-                    f"🔗 {data['html_url']}\n\n"
-                    f"Share this challenge with others! Anyone can join by commenting "
-                    f"or using the Noosphere MCP."
-                )
+            if resp.status_code != 201:
+                return f"❌ Failed to create challenge: {resp.status_code}"
 
-            elif action == "join":
-                # ── Join an existing challenge ──
-                if not challenge_id:
-                    return "❌ Please provide the `challenge_id` (Issue number) to join."
-                if not thought:
-                    return "❌ Please provide your `thought` to contribute."
-                if not creator:
-                    return "❌ Please provide your `creator` signature."
+            data = resp.json()
+            return (
+                f"🎯 **Challenge Created!**\n\n"
+                f"### 🌀 {topic}\n\n"
+                f"📋 Issue: #{data['number']}\n"
+                f"🔗 {data['html_url']}\n\n"
+                f"Share this challenge with others! Anyone can join by commenting "
+                f"or using the Noosphere MCP."
+            )
 
-                comment_body = (
-                    f"## 🧠 Consciousness Response by @{creator}\n\n"
-                    f"> {thought}\n\n"
-                    f"---\n"
-                    f"*Uploaded via Noosphere MCP*"
-                )
+        elif action == "join":
+            # ── Join an existing challenge ──
+            if not challenge_id:
+                return "❌ Please provide the `challenge_id` (Issue number) to join."
+            if not thought:
+                return "❌ Please provide your `thought` to contribute."
+            if not creator:
+                return "❌ Please provide your `creator` signature."
 
-                resp = await client.post(
-                    f"/repos/{owner}/{repo}/issues/{challenge_id}/comments",
-                    json={"body": comment_body},
-                )
+            comment_body = (
+                f"## 🧠 Consciousness Response by @{creator}\n\n"
+                f"> {thought}\n\n"
+                f"---\n"
+                f"*Uploaded via Noosphere MCP*"
+            )
 
-                if resp.status_code != 201:
-                    return f"❌ Failed to join challenge: {resp.status_code}"
+            resp = await client.post(
+                f"/repos/{owner}/{repo}/issues/{challenge_id}/comments",
+                json={"body": comment_body},
+            )
 
-                return (
-                    f"✅ **Challenge Joined!**\n\n"
-                    f"Your perspective has been added to Challenge #{challenge_id}.\n\n"
-                    f"> {thought[:150]}{'...' if len(thought) > 150 else ''}\n\n"
-                    f"💖 Your contribution enriches the collective understanding. "
-                    f"Others can now resonate with your thought!"
-                )
+            if resp.status_code != 201:
+                return f"❌ Failed to join challenge: {resp.status_code}"
 
-            else:
-                return (
-                    f"❌ Unknown action: `{action}`. "
-                    f"Valid actions: `create`, `join`, `list`"
-                )
+            return (
+                f"✅ **Challenge Joined!**\n\n"
+                f"Your perspective has been added to Challenge #{challenge_id}.\n\n"
+                f"> {thought[:150]}{'...' if len(thought) > 150 else ''}\n\n"
+                f"💖 Your contribution enriches the collective understanding. "
+                f"Others can now resonate with your thought!"
+            )
+
+        else:
+            return (
+                f"❌ Unknown action: `{action}`. "
+                f"Valid actions: `create`, `join`, `list`"
+            )
 
     except Exception as e:
         return f"❌ Challenge error: {str(e)}"
@@ -2754,35 +2997,35 @@ async def consciousness_map(
         all_fragments: list[dict] = []
         source_fragment: dict | None = None
 
-        async with httpx.AsyncClient(base_url=GITHUB_API, headers=_github_headers(), timeout=30) as client:
-            issues = await _fetch_all_issues_cached(client, owner, repo)
+        client = await _get_client()
+        issues = await _fetch_all_issues_cached(client, owner, repo)
 
-            for issue in issues:
-                if "pull_request" in issue:
-                    continue
-                payload = _extract_payload_from_issue_body(issue.get("body", ""))
-                if not payload:
-                    continue
+        for issue in issues:
+            if "pull_request" in issue:
+                continue
+            payload = _get_parsed_payload(issue)
+            if not payload:
+                continue
 
-                fragment = {
-                    "issue_number": issue["number"],
-                    "thought": payload.get("thought_vector_text", ""),
-                    "context": payload.get("context_environment", ""),
-                    "type": payload.get("consciousness_type", "unknown"),
-                    "tags": [t.lower() for t in payload.get("tags", [])],
-                    "creator": payload.get("creator_signature", "unknown"),
-                    "parent_id": payload.get("parent_id"),
-                    "uploaded_at": payload.get("uploaded_at", ""),
-                    "resonance": issue.get("reactions", {}).get("total_count", 0),
-                    "url": issue.get("html_url", ""),
-                    "is_anonymous": payload.get("is_anonymous", False),
-                }
+            fragment = {
+                "issue_number": issue["number"],
+                "thought": payload.get("thought_vector_text", ""),
+                "context": payload.get("context_environment", ""),
+                "type": payload.get("consciousness_type", "unknown"),
+                "tags": [t.lower() for t in payload.get("tags", [])],
+                "creator": payload.get("creator_signature", "unknown"),
+                "parent_id": payload.get("parent_id"),
+                "uploaded_at": payload.get("uploaded_at", ""),
+                "resonance": issue.get("reactions", {}).get("total_count", 0),
+                "url": issue.get("html_url", ""),
+                "is_anonymous": payload.get("is_anonymous", False),
+            }
 
-                all_fragments.append(fragment)
+            all_fragments.append(fragment)
 
-                # Track source if specified
-                if source_id and str(issue["number"]) == str(source_id):
-                    source_fragment = fragment
+            # Track source if specified
+            if source_id and str(issue["number"]) == str(source_id):
+                source_fragment = fragment
 
         if not all_fragments:
             return (
@@ -2966,67 +3209,67 @@ async def hologram() -> str:
         permanent_total = 0
         trending_thoughts: list[tuple[int, dict, str]] = []  # (resonance, payload, url)
 
-        async with httpx.AsyncClient(base_url=GITHUB_API, headers=_github_headers(), timeout=30) as client:
-            # ── Unified Issue Layer (ephemeral + promoted) ──
-            issues = await _fetch_all_issues_cached(client, owner, repo)
-            seen_issue_fingerprints: set[str] = set()  # For dedup with JSON layer
+        client = await _get_client()
+        # ── Unified Issue Layer (ephemeral + promoted) ──
+        issues = await _fetch_all_issues_cached(client, owner, repo)
+        seen_issue_fingerprints: set[str] = set()  # For dedup with JSON layer
 
-            for issue in issues:
-                if "pull_request" in issue:
-                    continue
-                payload = _extract_payload_from_issue_body(issue.get("body", ""))
-                if not payload:
-                    continue
+        for issue in issues:
+            if "pull_request" in issue:
+                continue
+            payload = _get_parsed_payload(issue)
+            if not payload:
+                continue
 
-                # Use labels to determine layer
-                issue_labels = {l["name"] for l in issue.get("labels", [])}
-                is_promoted = LABEL_PROMOTED in issue_labels
+            # Use labels to determine layer
+            issue_labels = {l["name"] for l in issue.get("labels", [])}
+            is_promoted = LABEL_PROMOTED in issue_labels
 
-                if is_promoted:
-                    permanent_total += 1
-                    c_type = payload.get("consciousness_type", "unknown")
-                    permanent_type_counts[c_type] = permanent_type_counts.get(c_type, 0) + 1
-                else:
-                    ephemeral_total += 1
-                    c_type = payload.get("consciousness_type", "unknown")
-                    ephemeral_type_counts[c_type] = ephemeral_type_counts.get(c_type, 0) + 1
-
-                creator = payload.get("creator_signature", "anonymous")
-                if not payload.get("is_anonymous", False):
-                    all_creators.add(creator)
-
-                for tag in payload.get("tags", []):
-                    all_tags[tag] = all_tags.get(tag, 0) + 1
-
-                # Track fingerprint for dedup with JSON layer
-                fingerprint = payload.get("uploaded_at", "") + payload.get("thought_vector_text", "")[:30]
-                seen_issue_fingerprints.add(fingerprint)
-
-                resonance = issue.get("reactions", {}).get("total_count", 0)
-                if resonance > 0:
-                    trending_thoughts.append((resonance, payload, issue.get("html_url", "")))
-
-            # ── Layer 2: Permanent Consciousness (Files) ── [CACHED + CONCURRENT]
-            file_entries = await _fetch_file_payloads(client, owner, repo)
-
-            for entry in file_entries:
-                payload = entry["payload"]
-
-                # Skip if already counted from Issue layer
-                fingerprint = payload.get("uploaded_at", "") + payload.get("thought_vector_text", "")[:30]
-                if fingerprint in seen_issue_fingerprints:
-                    continue
-
+            if is_promoted:
                 permanent_total += 1
                 c_type = payload.get("consciousness_type", "unknown")
                 permanent_type_counts[c_type] = permanent_type_counts.get(c_type, 0) + 1
+            else:
+                ephemeral_total += 1
+                c_type = payload.get("consciousness_type", "unknown")
+                ephemeral_type_counts[c_type] = ephemeral_type_counts.get(c_type, 0) + 1
 
-                creator = payload.get("creator_signature", "anonymous")
-                if not payload.get("is_anonymous", False):
-                    all_creators.add(creator)
+            creator = payload.get("creator_signature", "anonymous")
+            if not payload.get("is_anonymous", False):
+                all_creators.add(creator)
 
-                for tag in payload.get("tags", []):
-                    all_tags[tag] = all_tags.get(tag, 0) + 1
+            for tag in payload.get("tags", []):
+                all_tags[tag] = all_tags.get(tag, 0) + 1
+
+            # Track fingerprint for dedup with JSON layer
+            fingerprint = payload.get("uploaded_at", "") + payload.get("thought_vector_text", "")[:30]
+            seen_issue_fingerprints.add(fingerprint)
+
+            resonance = issue.get("reactions", {}).get("total_count", 0)
+            if resonance > 0:
+                trending_thoughts.append((resonance, payload, issue.get("html_url", "")))
+
+        # ── Layer 2: Permanent Consciousness (Files) ── [CACHED + CONCURRENT]
+        file_entries = await _fetch_file_payloads(client, owner, repo)
+
+        for entry in file_entries:
+            payload = entry["payload"]
+
+            # Skip if already counted from Issue layer
+            fingerprint = payload.get("uploaded_at", "") + payload.get("thought_vector_text", "")[:30]
+            if fingerprint in seen_issue_fingerprints:
+                continue
+
+            permanent_total += 1
+            c_type = payload.get("consciousness_type", "unknown")
+            permanent_type_counts[c_type] = permanent_type_counts.get(c_type, 0) + 1
+
+            creator = payload.get("creator_signature", "anonymous")
+            if not payload.get("is_anonymous", False):
+                all_creators.add(creator)
+
+            for tag in payload.get("tags", []):
+                all_tags[tag] = all_tags.get(tag, 0) + 1
 
         total = ephemeral_total + permanent_total
 
@@ -3094,11 +3337,11 @@ async def _get_authenticated_user() -> str:
     if not GITHUB_TOKEN:
         return ""
     try:
-        async with httpx.AsyncClient(base_url=GITHUB_API, headers=_github_headers(), timeout=15) as client:
-            resp = await client.get("/user")
-            if resp.status_code == 200:
-                _AUTHENTICATED_USER = resp.json().get("login", "")
-                return _AUTHENTICATED_USER
+        client = await _get_client()
+        resp = await client.get("/user")
+        if resp.status_code == 200:
+            _AUTHENTICATED_USER = resp.json().get("login", "")
+            return _AUTHENTICATED_USER
     except Exception as e:
         logger.warning(f"Failed to verify GitHub identity: {e}")
     return ""
@@ -3272,28 +3515,28 @@ async def _sync_social_graph_to_github(creator: str, following: list[str]):
         }, indent=2, ensure_ascii=False)
         content_b64 = b64encode(content.encode("utf-8")).decode("utf-8")
 
-        async with httpx.AsyncClient(base_url=GITHUB_API, headers=_github_headers(), timeout=30) as client:
-            # Check if file exists
-            existing_resp = await client.get(
-                f"/repos/{owner}/{repo}/contents/{file_path}",
-                params={"ref": GITHUB_BRANCH},
-            )
-            sha = None
-            if existing_resp.status_code == 200:
-                sha = existing_resp.json().get("sha")
+        client = await _get_client()
+        # Check if file exists
+        existing_resp = await client.get(
+            f"/repos/{owner}/{repo}/contents/{file_path}",
+            params={"ref": GITHUB_BRANCH},
+        )
+        sha = None
+        if existing_resp.status_code == 200:
+            sha = existing_resp.json().get("sha")
 
-            payload = {
-                "message": f"chore: update social graph for {creator}",
-                "content": content_b64,
-                "branch": GITHUB_BRANCH,
-            }
-            if sha:
-                payload["sha"] = sha
+        payload = {
+            "message": f"chore: update social graph for {creator}",
+            "content": content_b64,
+            "branch": GITHUB_BRANCH,
+        }
+        if sha:
+            payload["sha"] = sha
 
-            await client.put(
-                f"/repos/{owner}/{repo}/contents/{file_path}",
-                json=payload,
-            )
+        await client.put(
+            f"/repos/{owner}/{repo}/contents/{file_path}",
+            json=payload,
+        )
     except Exception as e:
         logger.error(f"Failed to sync social graph to GitHub: {e}")
 
@@ -3397,36 +3640,36 @@ async def my_followers(creator: str) -> str:
         owner, repo = _parse_repo()
         followers = []
 
-        async with httpx.AsyncClient(base_url=GITHUB_API, headers=_github_headers(), timeout=30) as client:
-            # List all files in social_graph/
-            dir_resp = await client.get(
-                f"/repos/{owner}/{repo}/contents/social_graph",
-                params={"ref": GITHUB_BRANCH},
+        client = await _get_client()
+        # List all files in social_graph/
+        dir_resp = await client.get(
+            f"/repos/{owner}/{repo}/contents/social_graph",
+            params={"ref": GITHUB_BRANCH},
+        )
+
+        if dir_resp.status_code != 200:
+            return (
+                f"👥 **Followers — {creator}**\n\n"
+                "No social graph data found yet. As more creators use `follow_creator`, their graphs will be synced here."
             )
 
-            if dir_resp.status_code != 200:
-                return (
-                    f"👥 **Followers — {creator}**\n\n"
-                    "No social graph data found yet. As more creators use `follow_creator`, their graphs will be synced here."
-                )
+        files = dir_resp.json()
+        json_files = [f for f in files if f["name"].endswith(".json")]
 
-            files = dir_resp.json()
-            json_files = [f for f in files if f["name"].endswith(".json")]
-
-            for file_info in json_files:
-                try:
-                    file_resp = await client.get(file_info["url"])
-                    if file_resp.status_code != 200:
-                        continue
-                    content_b64 = file_resp.json().get("content", "")
-                    graph_data = json.loads(b64decode(content_b64).decode("utf-8"))
-                    follower_name = graph_data.get("creator", "")
-                    following_list = graph_data.get("following", [])
-
-                    if creator in following_list or creator.lower() in [f.lower() for f in following_list]:
-                        followers.append(follower_name)
-                except Exception:
+        for file_info in json_files:
+            try:
+                file_resp = await client.get(file_info["url"])
+                if file_resp.status_code != 200:
                     continue
+                content_b64 = file_resp.json().get("content", "")
+                graph_data = json.loads(b64decode(content_b64).decode("utf-8"))
+                follower_name = graph_data.get("creator", "")
+                following_list = graph_data.get("following", [])
+
+                if creator in following_list or creator.lower() in [f.lower() for f in following_list]:
+                    followers.append(follower_name)
+            except Exception:
+                continue
 
         if not followers:
             return (
@@ -3477,8 +3720,8 @@ async def my_network_pulse(creator: str) -> str:
 
     try:
         owner, repo = _parse_repo()
-        async with httpx.AsyncClient(base_url=GITHUB_API, headers=_github_headers(), timeout=30) as client:
-            issues = await _fetch_all_issues_cached(client, owner, repo)
+        client = await _get_client()
+        issues = await _fetch_all_issues_cached(client, owner, repo)
         
         feed = []
         follow_lower = [f.lower() for f in follow_list]
@@ -3486,7 +3729,7 @@ async def my_network_pulse(creator: str) -> str:
         for issue in issues:
             if "pull_request" in issue:
                 continue
-            payload = _extract_payload_from_issue_body(issue.get("body", ""))
+            payload = _get_parsed_payload(issue)
             if not payload or payload.get("is_anonymous", False):
                 continue
                 
@@ -3561,64 +3804,64 @@ async def my_notifications(creator: str) -> str:
 
     try:
         owner, repo = _parse_repo()
-        async with httpx.AsyncClient(base_url=GITHUB_API, headers=_github_headers(), timeout=30) as client:
-            from datetime import datetime, timedelta
-            # Check last 3 days of activity
-            recent_date = (datetime.now(timezone.utc) - timedelta(days=3)).strftime("%Y-%m-%dT%H:%M:%SZ")
-            
-            notifications = []
-            
-            # 1. Mentions & Comments in Issues
-            # To avoid massive API calls, we fetch recently updated issues and check their comments
-            recent_issues_resp = await client.get(
-                f"/repos/{owner}/{repo}/issues",
-                params={"state": "all", "sort": "updated", "direction": "desc", "since": recent_date, "per_page": 30}
-            )
-            
-            if recent_issues_resp.status_code == 200:
-                recent_issues = recent_issues_resp.json()
-                for issue in recent_issues:
-                    # Direct mentions in issue body
-                    if f"@{creator}" in issue.get("body", ""):
+        client = await _get_client()
+        from datetime import datetime, timedelta
+        # Check last 3 days of activity
+        recent_date = (datetime.now(timezone.utc) - timedelta(days=3)).strftime("%Y-%m-%dT%H:%M:%SZ")
+        
+        notifications = []
+        
+        # 1. Mentions & Comments in Issues
+        # To avoid massive API calls, we fetch recently updated issues and check their comments
+        recent_issues_resp = await client.get(
+            f"/repos/{owner}/{repo}/issues",
+            params={"state": "all", "sort": "updated", "direction": "desc", "since": recent_date, "per_page": 30}
+        )
+        
+        if recent_issues_resp.status_code == 200:
+            recent_issues = recent_issues_resp.json()
+            for issue in recent_issues:
+                # Direct mentions in issue body
+                if f"@{creator}" in issue.get("body", ""):
+                    notifications.append({
+                        "type": "mention",
+                        "title": f"You were mentioned in Issue #{issue['number']}",
+                        "url": issue.get("html_url", ""),
+                        "date": issue.get("updated_at", "")
+                    })
+                    
+                # Mentions in comments
+                if issue.get("comments", 0) > 0:
+                    comments_resp = await client.get(issue["comments_url"])
+                    if comments_resp.status_code == 200:
+                        for comment in comments_resp.json():
+                            if f"@{creator}" in comment.get("body", "") or (creator.lower() in comment.get("body", "").lower() and "response by" in comment.get("body", "").lower()):
+                                notifications.append({
+                                    "type": "mention",
+                                    "title": f"You were mentioned in a response on Issue #{issue['number']}",
+                                    "url": comment.get("html_url", ""),
+                                    "date": comment.get("created_at", "")
+                                })
+                                
+                # Activity on my own issues
+                payload = _get_parsed_payload(issue)
+                if payload and payload.get("creator_signature", "").lower() == creator.lower():
+                    # Check if it was updated recently by someone else (comments/reactions)
+                    reactions = issue.get("reactions", {}).get("total_count", 0)
+                    if reactions > 0:
                         notifications.append({
-                            "type": "mention",
-                            "title": f"You were mentioned in Issue #{issue['number']}",
+                            "type": "resonance",
+                            "title": f"Your thought #{issue['number']} has {reactions} resonances",
                             "url": issue.get("html_url", ""),
                             "date": issue.get("updated_at", "")
                         })
-                        
-                    # Mentions in comments
                     if issue.get("comments", 0) > 0:
-                        comments_resp = await client.get(issue["comments_url"])
-                        if comments_resp.status_code == 200:
-                            for comment in comments_resp.json():
-                                if f"@{creator}" in comment.get("body", "") or (creator.lower() in comment.get("body", "").lower() and "response by" in comment.get("body", "").lower()):
-                                    notifications.append({
-                                        "type": "mention",
-                                        "title": f"You were mentioned in a response on Issue #{issue['number']}",
-                                        "url": comment.get("html_url", ""),
-                                        "date": comment.get("created_at", "")
-                                    })
-                                    
-                    # Activity on my own issues
-                    payload = _extract_payload_from_issue_body(issue.get("body", ""))
-                    if payload and payload.get("creator_signature", "").lower() == creator.lower():
-                        # Check if it was updated recently by someone else (comments/reactions)
-                        reactions = issue.get("reactions", {}).get("total_count", 0)
-                        if reactions > 0:
-                            notifications.append({
-                                "type": "resonance",
-                                "title": f"Your thought #{issue['number']} has {reactions} resonances",
-                                "url": issue.get("html_url", ""),
-                                "date": issue.get("updated_at", "")
-                            })
-                        if issue.get("comments", 0) > 0:
-                            notifications.append({
-                                "type": "comment",
-                                "title": f"Your thought #{issue['number']} has {issue.get('comments')} comments",
-                                "url": issue.get("html_url", ""),
-                                "date": issue.get("updated_at", "")
-                            })
+                        notifications.append({
+                            "type": "comment",
+                            "title": f"Your thought #{issue['number']} has {issue.get('comments')} comments",
+                            "url": issue.get("html_url", ""),
+                            "date": issue.get("updated_at", "")
+                        })
         
         if not notifications:
             return (
@@ -3753,43 +3996,43 @@ def _poll_notifications_daemon():
 async def _check_new_telepathy(creator: str, owner: str, repo: str) -> str | None:
     """Check for new unread telepathy messages. Returns notification text or None."""
     try:
-        async with httpx.AsyncClient(base_url=GITHUB_API, headers=_github_headers(), timeout=15) as client:
-            resp = await client.get(
-                f"/repos/{owner}/{repo}/issues",
-                params={
-                    "labels": "type:telepathy",
-                    "state": "open",
-                    "sort": "updated",
-                    "direction": "desc",
-                    "per_page": 10,
-                },
-            )
-            if resp.status_code != 200:
-                return None
+        client = await _get_client()
+        resp = await client.get(
+            f"/repos/{owner}/{repo}/issues",
+            params={
+                "labels": "type:telepathy",
+                "state": "open",
+                "sort": "updated",
+                "direction": "desc",
+                "per_page": 10,
+            },
+        )
+        if resp.status_code != 200:
+            return None
 
-            for issue in resp.json():
-                title = issue.get("title", "")
-                # Check if this thread involves the current user
-                if f"⇌ {creator}" not in title and f"{creator} ⇌" not in title:
-                    continue
+        for issue in resp.json():
+            title = issue.get("title", "")
+            # Check if this thread involves the current user
+            if f"⇌ {creator}" not in title and f"{creator} ⇌" not in title:
+                continue
 
-                thread_id = str(issue["number"])
-                last_read = _get_last_read_comment_id(thread_id)
+            thread_id = str(issue["number"])
+            last_read = _get_last_read_comment_id(thread_id)
 
-                # Check for new comments
-                if issue.get("comments", 0) > 0:
-                    comments_resp = await client.get(
-                        issue["comments_url"],
-                        params={"per_page": 5, "direction": "desc"},
-                    )
-                    if comments_resp.status_code == 200:
-                        comments = comments_resp.json()
-                        for comment in comments:
-                            if comment.get("id", 0) > last_read:
-                                sender = comment.get("user", {}).get("login", "Unknown")
-                                if sender.lower() != creator.lower():
-                                    msg_preview = comment.get("body", "")[:60]
-                                    return f"New message from {sender}: {msg_preview}"
+            # Check for new comments
+            if issue.get("comments", 0) > 0:
+                comments_resp = await client.get(
+                    issue["comments_url"],
+                    params={"per_page": 5, "direction": "desc"},
+                )
+                if comments_resp.status_code == 200:
+                    comments = comments_resp.json()
+                    for comment in comments:
+                        if comment.get("id", 0) > last_read:
+                            sender = comment.get("user", {}).get("login", "Unknown")
+                            if sender.lower() != creator.lower():
+                                msg_preview = comment.get("body", "")[:60]
+                                return f"New message from {sender}: {msg_preview}"
 
     except Exception:
         pass
@@ -3803,42 +4046,42 @@ async def _check_tag_subscriptions(creator: str, subscribed_tags: list[str]) -> 
         cache = _load_message_cache()
         last_tag_check = cache.get("last_tag_check_at", "")
 
-        async with httpx.AsyncClient(base_url=GITHUB_API, headers=_github_headers(), timeout=15) as client:
-            params = {
-                "state": "open",
-                "sort": "created",
-                "direction": "desc",
-                "per_page": 10,
-            }
-            if last_tag_check:
-                params["since"] = last_tag_check
+        client = await _get_client()
+        params = {
+            "state": "open",
+            "sort": "created",
+            "direction": "desc",
+            "per_page": 10,
+        }
+        if last_tag_check:
+            params["since"] = last_tag_check
 
-            resp = await client.get(
-                f"/repos/{owner}/{repo}/issues",
-                params=params,
-            )
+        resp = await client.get(
+            f"/repos/{owner}/{repo}/issues",
+            params=params,
+        )
 
-            if resp.status_code == 200:
-                issues = resp.json()
-                for issue in issues:
-                    if "pull_request" in issue:
-                        continue
-                    payload = _extract_payload_from_issue_body(issue.get("body", ""))
-                    if not payload:
-                        continue
-                    # Don't notify for own uploads
-                    if payload.get("creator_signature", "").lower() == creator.lower():
-                        continue
+        if resp.status_code == 200:
+            issues = resp.json()
+            for issue in issues:
+                if "pull_request" in issue:
+                    continue
+                payload = _get_parsed_payload(issue)
+                if not payload:
+                    continue
+                # Don't notify for own uploads
+                if payload.get("creator_signature", "").lower() == creator.lower():
+                    continue
 
-                    issue_tags = [t.lower() for t in payload.get("tags", [])]
-                    matching = [t for t in subscribed_tags if t.lower() in issue_tags]
-                    if matching:
-                        sig = payload.get("creator_signature", "Unknown")
-                        thought = payload.get("thought_vector_text", "")[:50]
-                        # Update last check time
-                        cache["last_tag_check_at"] = datetime.now(timezone.utc).isoformat()
-                        _save_message_cache(cache)
-                        return f"New [{', '.join(matching)}] by {sig}: {thought}"
+                issue_tags = [t.lower() for t in payload.get("tags", [])]
+                matching = [t for t in subscribed_tags if t.lower() in issue_tags]
+                if matching:
+                    sig = payload.get("creator_signature", "Unknown")
+                    thought = payload.get("thought_vector_text", "")[:50]
+                    # Update last check time
+                    cache["last_tag_check_at"] = datetime.now(timezone.utc).isoformat()
+                    _save_message_cache(cache)
+                    return f"New [{', '.join(matching)}] by {sig}: {thought}"
 
         # Update check time even with no matches
         cache["last_tag_check_at"] = datetime.now(timezone.utc).isoformat()
@@ -3929,93 +4172,93 @@ async def send_telepathy(
     try:
         owner, repo = _parse_repo()
 
-        async with httpx.AsyncClient(base_url=GITHUB_API, headers=_github_headers(), timeout=30) as client:
-            existing_thread = None
+        client = await _get_client()
+        existing_thread = None
 
-            # ── Find or create thread ──
-            if thread_id:
-                # Explicit thread specified — verify it exists
-                thread_resp = await client.get(f"/repos/{owner}/{repo}/issues/{thread_id}")
-                if thread_resp.status_code == 200:
-                    existing_thread = thread_resp.json()
-                else:
-                    return f"❌ Thread #{thread_id} not found."
+        # ── Find or create thread ──
+        if thread_id:
+            # Explicit thread specified — verify it exists
+            thread_resp = await client.get(f"/repos/{owner}/{repo}/issues/{thread_id}")
+            if thread_resp.status_code == 200:
+                existing_thread = thread_resp.json()
             else:
-                # Auto-find existing thread between sender and target
-                existing_thread = await _find_existing_thread(client, owner, repo, sender, target_creator)
+                return f"❌ Thread #{thread_id} not found."
+        else:
+            # Auto-find existing thread between sender and target
+            existing_thread = await _find_existing_thread(client, owner, repo, sender, target_creator)
 
-            if existing_thread:
-                # ── Append message as comment to existing thread ──
-                thread_num = existing_thread["number"]
-                verified_badge = " ✅" if verified_user else ""
+        if existing_thread:
+            # ── Append message as comment to existing thread ──
+            thread_num = existing_thread["number"]
+            verified_badge = " ✅" if verified_user else ""
 
-                comment_body = (
-                    f"**💬 {sender}**{verified_badge}\n\n"
-                    f"> {message}\n\n"
-                    f"*{datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')}*"
+            comment_body = (
+                f"**💬 {sender}**{verified_badge}\n\n"
+                f"> {message}\n\n"
+                f"*{datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')}*"
+            )
+
+            comment_resp = await client.post(
+                f"/repos/{owner}/{repo}/issues/{thread_num}/comments",
+                json={"body": comment_body},
+            )
+
+            if comment_resp.status_code == 201:
+                thread_url = existing_thread.get("html_url", "")
+                return (
+                    f"💌 **Message sent to @{target_creator}** (Thread #{thread_num})\n\n"
+                    f"> {message[:100]}{'...' if len(message) > 100 else ''}\n\n"
+                    f"🔗 [View Thread]({thread_url})\n"
+                    f"🔔 OS notification will be triggered on their machine.\n\n"
+                    f"---\n"
+                    f"*🌀 飞轮提示: 对话中产生了新洞见？用 `upload_consciousness` 将它锚定在意识共同体中，或用 `merge_consciousness` 合成更高阶的智慧。*"
                 )
-
-                comment_resp = await client.post(
-                    f"/repos/{owner}/{repo}/issues/{thread_num}/comments",
-                    json={"body": comment_body},
-                )
-
-                if comment_resp.status_code == 201:
-                    thread_url = existing_thread.get("html_url", "")
-                    return (
-                        f"💌 **Message sent to @{target_creator}** (Thread #{thread_num})\n\n"
-                        f"> {message[:100]}{'...' if len(message) > 100 else ''}\n\n"
-                        f"🔗 [View Thread]({thread_url})\n"
-                        f"🔔 OS notification will be triggered on their machine.\n\n"
-                        f"---\n"
-                        f"*🌀 飞轮提示: 对话中产生了新洞见？用 `upload_consciousness` 将它锚定在意识共同体中，或用 `merge_consciousness` 合成更高阶的智慧。*"
-                    )
-                else:
-                    return f"❌ Failed to send message: {comment_resp.status_code} - {comment_resp.text}"
-
             else:
-                # ── Create new thread ──
-                topic_preview = message[:40].replace("\n", " ")
-                title = f"[Telepathy-Thread] {sender} ⇌ {target_creator} | {topic_preview}"
-                verified_badge = " ✅" if verified_user else ""
+                return f"❌ Failed to send message: {comment_resp.status_code} - {comment_resp.text}"
 
-                thread_body = (
-                    f"## 💌 Telepathy Thread\n\n"
-                    f"**Participants**: `{sender}` ⇌ `{target_creator}`\n"
-                    f"**Created**: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')}\n"
-                    f"**Verified Sender**: {'Yes' if verified_user else 'No'}\n\n"
-                    f"---\n\n"
-                    f"**💬 {sender}**{verified_badge}\n\n"
-                    f"> {message}\n\n"
-                    f"---\n\n"
-                    f"*🌌 This is a direct telepathy thread in the Noosphere.*\n"
-                    f"*Reply by adding comments below. Each message triggers an OS desktop notification.*"
+        else:
+            # ── Create new thread ──
+            topic_preview = message[:40].replace("\n", " ")
+            title = f"[Telepathy-Thread] {sender} ⇌ {target_creator} | {topic_preview}"
+            verified_badge = " ✅" if verified_user else ""
+
+            thread_body = (
+                f"## 💌 Telepathy Thread\n\n"
+                f"**Participants**: `{sender}` ⇌ `{target_creator}`\n"
+                f"**Created**: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')}\n"
+                f"**Verified Sender**: {'Yes' if verified_user else 'No'}\n\n"
+                f"---\n\n"
+                f"**💬 {sender}**{verified_badge}\n\n"
+                f"> {message}\n\n"
+                f"---\n\n"
+                f"*🌌 This is a direct telepathy thread in the Noosphere.*\n"
+                f"*Reply by adding comments below. Each message triggers an OS desktop notification.*"
+            )
+
+            issue_resp = await client.post(
+                f"/repos/{owner}/{repo}/issues",
+                json={
+                    "title": title[:200],
+                    "body": thread_body,
+                    "labels": ["type:telepathy"],
+                },
+            )
+
+            if issue_resp.status_code == 201:
+                issue_data = issue_resp.json()
+                issue_url = issue_data.get("html_url", "")
+                issue_number = issue_data["number"]
+                return (
+                    f"✨ **New telepathy thread created with @{target_creator}!** (Thread #{issue_number})\n\n"
+                    f"> {message[:100]}{'...' if len(message) > 100 else ''}\n\n"
+                    f"🔗 [Open Thread]({issue_url})\n"
+                    f"🔔 OS notification will be triggered on their machine.\n\n"
+                    f"💡 Future messages to @{target_creator} will automatically append to this thread.\n\n"
+                    f"---\n"
+                    f"*🌀 飞轮提示: 对话中产生了新洞见？用 `upload_consciousness` 将它锚定在意识共同体中，或用 `merge_consciousness` 合成更高阶的智慧。*"
                 )
-
-                issue_resp = await client.post(
-                    f"/repos/{owner}/{repo}/issues",
-                    json={
-                        "title": title[:200],
-                        "body": thread_body,
-                        "labels": ["type:telepathy"],
-                    },
-                )
-
-                if issue_resp.status_code == 201:
-                    issue_data = issue_resp.json()
-                    issue_url = issue_data.get("html_url", "")
-                    issue_number = issue_data["number"]
-                    return (
-                        f"✨ **New telepathy thread created with @{target_creator}!** (Thread #{issue_number})\n\n"
-                        f"> {message[:100]}{'...' if len(message) > 100 else ''}\n\n"
-                        f"🔗 [Open Thread]({issue_url})\n"
-                        f"🔔 OS notification will be triggered on their machine.\n\n"
-                        f"💡 Future messages to @{target_creator} will automatically append to this thread.\n\n"
-                        f"---\n"
-                        f"*🌀 飞轮提示: 对话中产生了新洞见？用 `upload_consciousness` 将它锚定在意识共同体中，或用 `merge_consciousness` 合成更高阶的智慧。*"
-                    )
-                else:
-                    return f"❌ Failed to create thread: {issue_resp.status_code} - {issue_resp.text}"
+            else:
+                return f"❌ Failed to create thread: {issue_resp.status_code} - {issue_resp.text}"
 
     except Exception as e:
         return f"❌ Telepathy error: {str(e)}"
@@ -4052,128 +4295,128 @@ async def read_telepathy(creator: str, thread_id: str | None = None) -> str:
     try:
         owner, repo = _parse_repo()
 
-        async with httpx.AsyncClient(base_url=GITHUB_API, headers=_github_headers(), timeout=30) as client:
-            if thread_id:
-                # ── Show full conversation history for a specific thread ──
-                issue_resp = await client.get(f"/repos/{owner}/{repo}/issues/{thread_id}")
-                if issue_resp.status_code != 200:
-                    return f"❌ Thread #{thread_id} not found."
+        client = await _get_client()
+        if thread_id:
+            # ── Show full conversation history for a specific thread ──
+            issue_resp = await client.get(f"/repos/{owner}/{repo}/issues/{thread_id}")
+            if issue_resp.status_code != 200:
+                return f"❌ Thread #{thread_id} not found."
 
-                issue = issue_resp.json()
-                title = issue.get("title", "")
-                created = issue.get("created_at", "")[:10]
+            issue = issue_resp.json()
+            title = issue.get("title", "")
+            created = issue.get("created_at", "")[:10]
 
-                lines = [
-                    f"📨 **Telepathy Thread #{thread_id}**",
-                    f"📋 {title}",
-                    f"📅 Created: {created}",
-                    "---\n",
-                ]
+            lines = [
+                f"📨 **Telepathy Thread #{thread_id}**",
+                f"📋 {title}",
+                f"📅 Created: {created}",
+                "---\n",
+            ]
 
-                # Show the initial message from issue body
-                body = issue.get("body", "")
-                # Extract the first message from the structured body
-                if "💬" in body:
-                    lines.append(body.split("---")[0] if "---" in body else body[:300])
-                    lines.append("")
+            # Show the initial message from issue body
+            body = issue.get("body", "")
+            # Extract the first message from the structured body
+            if "💬" in body:
+                lines.append(body.split("---")[0] if "---" in body else body[:300])
+                lines.append("")
 
-                # Fetch comments with incremental sync
-                all_messages, last_comment_id = await _sync_thread_cache(
-                    client, owner, repo, thread_id, issue
-                )
+            # Fetch comments with incremental sync
+            all_messages, last_comment_id = await _sync_thread_cache(
+                client, owner, repo, thread_id, issue
+            )
 
-                if all_messages:
-                    lines.append("---\n")
-                    for msg in all_messages:
-                        lines.append(f"{msg.get('body', '')}\n")
-                    
-                    lines.append(f"\n📊 Total messages: {len(all_messages) + 1}")
-                else:
-                    lines.append("\n*No replies yet. The thread awaits a response...*")
-
-                lines.append(f"\n💬 To reply: use `send_telepathy` with thread_id=\"{thread_id}\"")
-                lines.append(
-                    "\n---\n"
-                    "*🌀 飞轮提示: 对话中产生了新洞见？*\n"
-                    "→ 用 `upload_consciousness` 将它锚定在意识共同体\n"
-                    "→ 用 `merge_consciousness` 将多条对话洞见合成更高阶智慧"
-                )
-                return "\n".join(lines)
-
+            if all_messages:
+                lines.append("---\n")
+                for msg in all_messages:
+                    lines.append(f"{msg.get('body', '')}\n")
+                
+                lines.append(f"\n📊 Total messages: {len(all_messages) + 1}")
             else:
-                # ── Show summary of all threads ──
-                resp = await client.get(
-                    f"/repos/{owner}/{repo}/issues",
-                    params={
-                        "labels": "type:telepathy",
-                        "state": "open",
-                        "sort": "updated",
-                        "direction": "desc",
-                        "per_page": 30,
-                    },
+                lines.append("\n*No replies yet. The thread awaits a response...*")
+
+            lines.append(f"\n💬 To reply: use `send_telepathy` with thread_id=\"{thread_id}\"")
+            lines.append(
+                "\n---\n"
+                "*🌀 飞轮提示: 对话中产生了新洞见？*\n"
+                "→ 用 `upload_consciousness` 将它锚定在意识共同体\n"
+                "→ 用 `merge_consciousness` 将多条对话洞见合成更高阶智慧"
+            )
+            return "\n".join(lines)
+
+        else:
+            # ── Show summary of all threads ──
+            resp = await client.get(
+                f"/repos/{owner}/{repo}/issues",
+                params={
+                    "labels": "type:telepathy",
+                    "state": "open",
+                    "sort": "updated",
+                    "direction": "desc",
+                    "per_page": 30,
+                },
+            )
+
+            if resp.status_code != 200:
+                return f"❌ Failed to fetch threads: {resp.status_code}"
+
+            issues = resp.json()
+            creator_lower = creator.lower()
+
+            my_threads = []
+            for issue in issues:
+                title = issue.get("title", "")
+                if "[Telepathy-Thread]" not in title:
+                    continue
+                title_lower = title.lower()
+                if creator_lower not in title_lower:
+                    continue
+                my_threads.append(issue)
+
+            if not my_threads:
+                return (
+                    f"📨 **Telepathy Inbox — {creator}**\n\n"
+                    "Empty. No conversation threads yet.\n\n"
+                    "💡 Use `send_telepathy` to start a conversation with someone!"
                 )
 
-                if resp.status_code != 200:
-                    return f"❌ Failed to fetch threads: {resp.status_code}"
+            lines = [
+                f"📨 **Telepathy Inbox — {creator}**",
+                f"*{len(my_threads)} active threads*\n",
+                "---\n",
+            ]
 
-                issues = resp.json()
-                creator_lower = creator.lower()
+            for issue in my_threads:
+                thread_num = issue["number"]
+                title = issue.get("title", "")
+                updated = issue.get("updated_at", "")[:10]
+                comment_count = issue.get("comments", 0)
 
-                my_threads = []
-                for issue in issues:
-                    title = issue.get("title", "")
-                    if "[Telepathy-Thread]" not in title:
-                        continue
-                    title_lower = title.lower()
-                    if creator_lower not in title_lower:
-                        continue
-                    my_threads.append(issue)
+                # Calculate unread count
+                last_read = _get_last_read_comment_id(str(thread_num))
+                unread_text = ""
+                if last_read == 0 and comment_count > 0:
+                    unread_text = f" 🔴 {comment_count} new"
+                elif comment_count > 0:
+                    # We'd need to check, but approximate: if updated recently, likely unread
+                    unread_text = ""  # Will be accurate after first read
 
-                if not my_threads:
-                    return (
-                        f"📨 **Telepathy Inbox — {creator}**\n\n"
-                        "Empty. No conversation threads yet.\n\n"
-                        "💡 Use `send_telepathy` to start a conversation with someone!"
-                    )
+                # Extract participants from title
+                # Title format: [Telepathy-Thread] alice ⇌ bob | topic
+                participants_part = title.replace("[Telepathy-Thread]", "").strip()
+                if " | " in participants_part:
+                    participants_part, topic = participants_part.split(" | ", 1)
+                else:
+                    topic = "Direct message"
 
-                lines = [
-                    f"📨 **Telepathy Inbox — {creator}**",
-                    f"*{len(my_threads)} active threads*\n",
-                    "---\n",
-                ]
+                lines.append(
+                    f"### 💬 Thread #{thread_num}{unread_text}\n"
+                    f"**{participants_part}**\n"
+                    f"📋 {topic[:60]}{'...' if len(topic) > 60 else ''}\n"
+                    f"📅 Last updated: {updated} | 💬 {comment_count + 1} messages\n"
+                    f"🔗 Use `read_telepathy` with thread_id=\"{thread_num}\" to view\n"
+                )
 
-                for issue in my_threads:
-                    thread_num = issue["number"]
-                    title = issue.get("title", "")
-                    updated = issue.get("updated_at", "")[:10]
-                    comment_count = issue.get("comments", 0)
-
-                    # Calculate unread count
-                    last_read = _get_last_read_comment_id(str(thread_num))
-                    unread_text = ""
-                    if last_read == 0 and comment_count > 0:
-                        unread_text = f" 🔴 {comment_count} new"
-                    elif comment_count > 0:
-                        # We'd need to check, but approximate: if updated recently, likely unread
-                        unread_text = ""  # Will be accurate after first read
-
-                    # Extract participants from title
-                    # Title format: [Telepathy-Thread] alice ⇌ bob | topic
-                    participants_part = title.replace("[Telepathy-Thread]", "").strip()
-                    if " | " in participants_part:
-                        participants_part, topic = participants_part.split(" | ", 1)
-                    else:
-                        topic = "Direct message"
-
-                    lines.append(
-                        f"### 💬 Thread #{thread_num}{unread_text}\n"
-                        f"**{participants_part}**\n"
-                        f"📋 {topic[:60]}{'...' if len(topic) > 60 else ''}\n"
-                        f"📅 Last updated: {updated} | 💬 {comment_count + 1} messages\n"
-                        f"🔗 Use `read_telepathy` with thread_id=\"{thread_num}\" to view\n"
-                    )
-
-                return "\n".join(lines)
+            return "\n".join(lines)
 
     except Exception as e:
         return f"❌ Telepathy read error: {str(e)}"
@@ -4243,72 +4486,72 @@ async def share_consciousness(
         source_thought = ""
         source_creator = ""
 
-        async with httpx.AsyncClient(base_url=GITHUB_API, headers=_github_headers(), timeout=30) as client:
-            # Fetch the source consciousness
-            if source_id.isdigit():
-                resp = await client.get(f"/repos/{owner}/{repo}/issues/{source_id}")
-                if resp.status_code != 200:
-                    return f"❌ Source consciousness #{source_id} not found."
-                issue = resp.json()
-                source_url = issue.get("html_url", "")
-                payload = _extract_payload_from_issue_body(issue.get("body", ""))
-                if payload:
-                    source_thought = payload.get("thought_vector_text", "")[:200]
-                    source_creator = payload.get("creator_signature", "Unknown")
-                else:
-                    source_thought = issue.get("title", "")[:200]
-                    source_creator = issue.get("user", {}).get("login", "Unknown")
+        client = await _get_client()
+        # Fetch the source consciousness
+        if source_id.isdigit():
+            resp = await client.get(f"/repos/{owner}/{repo}/issues/{source_id}")
+            if resp.status_code != 200:
+                return f"❌ Source consciousness #{source_id} not found."
+            issue = resp.json()
+            source_url = issue.get("html_url", "")
+            payload = _get_parsed_payload(issue)
+            if payload:
+                source_thought = payload.get("thought_vector_text", "")[:200]
+                source_creator = payload.get("creator_signature", "Unknown")
             else:
-                return "❌ Currently only Issue numbers are supported as source_id."
+                source_thought = issue.get("title", "")[:200]
+                source_creator = issue.get("user", {}).get("login", "Unknown")
+        else:
+            return "❌ Currently only Issue numbers are supported as source_id."
 
-            # Create a new consciousness fragment with quote
-            verified_sender = await _get_authenticated_user()
-            display_creator = verified_sender or creator
+        # Create a new consciousness fragment with quote
+        verified_sender = await _get_authenticated_user()
+        display_creator = verified_sender or creator
 
-            quoted_block = (
-                f"> 🔄 **Quoted from @{source_creator}** ([#{source_id}]({source_url})):\n"
-                f"> *{source_thought}{'...' if len(source_thought) >= 200 else ''}*\n\n"
-                f"💬 **{display_creator}'s Commentary:**\n"
-                f"{commentary}"
+        quoted_block = (
+            f"> 🔄 **Quoted from @{source_creator}** ([#{source_id}]({source_url})):\n"
+            f"> *{source_thought}{'...' if len(source_thought) >= 200 else ''}*\n\n"
+            f"💬 **{display_creator}'s Commentary:**\n"
+            f"{commentary}"
+        )
+
+        issue_tags = tags or []
+        tag_text = ", ".join(issue_tags) if issue_tags else ""
+        labels = ["type:consciousness", "shared"]
+        if issue_tags:
+            for t in issue_tags[:3]:
+                labels.append(f"tag:{t}")
+
+        body = (
+            f"{quoted_block}\n\n"
+            f"---\n\n"
+            f"<!-- NOOSPHERE_PAYLOAD\n"
+            f'{json.dumps({"consciousness_type": "epiphany", "thought_vector_text": commentary, "context_environment": f"Shared from #{source_id} by {source_creator}", "creator_signature": display_creator, "tags": issue_tags, "is_anonymous": False, "parent_thought_id": f"#{source_id}", "uploaded_at": datetime.now(timezone.utc).isoformat()}, ensure_ascii=False)}\n'
+            f"NOOSPHERE_PAYLOAD -->"
+        )
+
+        issue_resp = await client.post(
+            f"/repos/{owner}/{repo}/issues",
+            json={
+                "title": f"🔄 [Shared] {display_creator} on #{source_id}: {commentary[:50]}",
+                "body": body,
+                "labels": labels,
+            },
+        )
+
+        if issue_resp.status_code == 201:
+            new_issue = issue_resp.json()
+            return (
+                f"🔄 **Consciousness shared successfully!**\n\n"
+                f"> Quoted from @{source_creator} (#{source_id})\n\n"
+                f"💬 Your commentary: *{commentary[:100]}{'...' if len(commentary) > 100 else ''}*\n\n"
+                f"🔗 [View Shared Node]({new_issue.get('html_url', '')})\n\n"
+                f"---\n"
+                f"*🌀 Your shared insight now ripples through the Noosphere — "
+                f"followers who see it may discover the original thought and the creator behind it.*"
             )
-
-            issue_tags = tags or []
-            tag_text = ", ".join(issue_tags) if issue_tags else ""
-            labels = ["type:consciousness", "shared"]
-            if issue_tags:
-                for t in issue_tags[:3]:
-                    labels.append(f"tag:{t}")
-
-            body = (
-                f"{quoted_block}\n\n"
-                f"---\n\n"
-                f"<!-- NOOSPHERE_PAYLOAD\n"
-                f'{json.dumps({"consciousness_type": "epiphany", "thought_vector_text": commentary, "context_environment": f"Shared from #{source_id} by {source_creator}", "creator_signature": display_creator, "tags": issue_tags, "is_anonymous": False, "parent_thought_id": f"#{source_id}", "uploaded_at": datetime.now(timezone.utc).isoformat()}, ensure_ascii=False)}\n'
-                f"NOOSPHERE_PAYLOAD -->"
-            )
-
-            issue_resp = await client.post(
-                f"/repos/{owner}/{repo}/issues",
-                json={
-                    "title": f"🔄 [Shared] {display_creator} on #{source_id}: {commentary[:50]}",
-                    "body": body,
-                    "labels": labels,
-                },
-            )
-
-            if issue_resp.status_code == 201:
-                new_issue = issue_resp.json()
-                return (
-                    f"🔄 **Consciousness shared successfully!**\n\n"
-                    f"> Quoted from @{source_creator} (#{source_id})\n\n"
-                    f"💬 Your commentary: *{commentary[:100]}{'...' if len(commentary) > 100 else ''}*\n\n"
-                    f"🔗 [View Shared Node]({new_issue.get('html_url', '')})\n\n"
-                    f"---\n"
-                    f"*🌀 Your shared insight now ripples through the Noosphere — "
-                    f"followers who see it may discover the original thought and the creator behind it.*"
-                )
-            else:
-                return f"❌ Failed to share: {issue_resp.status_code} - {issue_resp.text}"
+        else:
+            return f"❌ Failed to share: {issue_resp.status_code} - {issue_resp.text}"
 
     except Exception as e:
         return f"❌ Share error: {str(e)}"
@@ -4359,77 +4602,77 @@ async def group_telepathy(
         # Ensure creator is in participants
         all_participants = list(set([display_sender] + [p for p in participants if p.lower() != display_sender.lower()]))
 
-        async with httpx.AsyncClient(base_url=GITHUB_API, headers=_github_headers(), timeout=30) as client:
-            if thread_id:
-                # ── Append to existing group thread ──
-                msg_body = (
-                    f"💬 **{display_sender}** {'✅' if verified_sender else ''}:\n\n"
-                    f"{message}\n\n"
-                    f"*{datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')}*"
+        client = await _get_client()
+        if thread_id:
+            # ── Append to existing group thread ──
+            msg_body = (
+                f"💬 **{display_sender}** {'✅' if verified_sender else ''}:\n\n"
+                f"{message}\n\n"
+                f"*{datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')}*"
+            )
+
+            comment_resp = await client.post(
+                f"/repos/{owner}/{repo}/issues/{thread_id}/comments",
+                json={"body": msg_body},
+            )
+
+            if comment_resp.status_code == 201:
+                issue_resp = await client.get(f"/repos/{owner}/{repo}/issues/{thread_id}")
+                thread_url = issue_resp.json().get("html_url", "") if issue_resp.status_code == 200 else ""
+                return (
+                    f"💬 **Message sent to group** (Thread #{thread_id})\n\n"
+                    f"> {message[:100]}{'...' if len(message) > 100 else ''}\n\n"
+                    f"👥 Participants: {', '.join(all_participants)}\n"
+                    f"🔗 [View Thread]({thread_url})\n\n"
+                    f"---\n"
+                    f"*🌀 飞轮提示: 群聊中的集体智慧可以用 `merge_consciousness` 合成为更高阶的意识洞见！*"
                 )
-
-                comment_resp = await client.post(
-                    f"/repos/{owner}/{repo}/issues/{thread_id}/comments",
-                    json={"body": msg_body},
-                )
-
-                if comment_resp.status_code == 201:
-                    issue_resp = await client.get(f"/repos/{owner}/{repo}/issues/{thread_id}")
-                    thread_url = issue_resp.json().get("html_url", "") if issue_resp.status_code == 200 else ""
-                    return (
-                        f"💬 **Message sent to group** (Thread #{thread_id})\n\n"
-                        f"> {message[:100]}{'...' if len(message) > 100 else ''}\n\n"
-                        f"👥 Participants: {', '.join(all_participants)}\n"
-                        f"🔗 [View Thread]({thread_url})\n\n"
-                        f"---\n"
-                        f"*🌀 飞轮提示: 群聊中的集体智慧可以用 `merge_consciousness` 合成为更高阶的意识洞见！*"
-                    )
-                else:
-                    return f"❌ Failed to send group message: {comment_resp.status_code}"
-
             else:
-                # ── Create new group thread ──
-                group_label = group_name or f"Group: {', '.join(all_participants[:3])}{'...' if len(all_participants) > 3 else ''}"
-                participant_mentions = " ".join(f"@{p}" for p in all_participants)
+                return f"❌ Failed to send group message: {comment_resp.status_code}"
 
-                issue_body = (
-                    f"# 👥 Group Telepathy Thread\n\n"
-                    f"**Participants**: {participant_mentions}\n"
-                    f"**Created by**: {display_sender} {'✅' if verified_sender else ''}\n"
-                    f"**Created**: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')}\n\n"
-                    f"---\n\n"
-                    f"💬 **{display_sender}** {'✅' if verified_sender else ''}:\n\n"
-                    f"{message}\n\n"
-                    f"*{datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')}*"
+        else:
+            # ── Create new group thread ──
+            group_label = group_name or f"Group: {', '.join(all_participants[:3])}{'...' if len(all_participants) > 3 else ''}"
+            participant_mentions = " ".join(f"@{p}" for p in all_participants)
+
+            issue_body = (
+                f"# 👥 Group Telepathy Thread\n\n"
+                f"**Participants**: {participant_mentions}\n"
+                f"**Created by**: {display_sender} {'✅' if verified_sender else ''}\n"
+                f"**Created**: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')}\n\n"
+                f"---\n\n"
+                f"💬 **{display_sender}** {'✅' if verified_sender else ''}:\n\n"
+                f"{message}\n\n"
+                f"*{datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')}*"
+            )
+
+            title = f"[Group-Telepathy] {group_label}"
+
+            issue_resp = await client.post(
+                f"/repos/{owner}/{repo}/issues",
+                json={
+                    "title": title,
+                    "body": issue_body,
+                    "labels": ["type:telepathy", "group"],
+                },
+            )
+
+            if issue_resp.status_code == 201:
+                issue_data = issue_resp.json()
+                issue_url = issue_data.get("html_url", "")
+                issue_number = issue_data["number"]
+                return (
+                    f"✨ **Group telepathy thread created!** (Thread #{issue_number})\n\n"
+                    f"👥 **{group_label}**\n"
+                    f"Participants: {', '.join(all_participants)}\n\n"
+                    f"> {message[:100]}{'...' if len(message) > 100 else ''}\n\n"
+                    f"🔗 [Open Thread]({issue_url})\n\n"
+                    f"💡 Others can join by using `group_telepathy` with thread_id=\"{issue_number}\"\n\n"
+                    f"---\n"
+                    f"*🌀 飞轮提示: 群聊中的集体智慧可以用 `merge_consciousness` 合成为更高阶的意识洞见！*"
                 )
-
-                title = f"[Group-Telepathy] {group_label}"
-
-                issue_resp = await client.post(
-                    f"/repos/{owner}/{repo}/issues",
-                    json={
-                        "title": title,
-                        "body": issue_body,
-                        "labels": ["type:telepathy", "group"],
-                    },
-                )
-
-                if issue_resp.status_code == 201:
-                    issue_data = issue_resp.json()
-                    issue_url = issue_data.get("html_url", "")
-                    issue_number = issue_data["number"]
-                    return (
-                        f"✨ **Group telepathy thread created!** (Thread #{issue_number})\n\n"
-                        f"👥 **{group_label}**\n"
-                        f"Participants: {', '.join(all_participants)}\n\n"
-                        f"> {message[:100]}{'...' if len(message) > 100 else ''}\n\n"
-                        f"🔗 [Open Thread]({issue_url})\n\n"
-                        f"💡 Others can join by using `group_telepathy` with thread_id=\"{issue_number}\"\n\n"
-                        f"---\n"
-                        f"*🌀 飞轮提示: 群聊中的集体智慧可以用 `merge_consciousness` 合成为更高阶的意识洞见！*"
-                    )
-                else:
-                    return f"❌ Failed to create group: {issue_resp.status_code} - {issue_resp.text}"
+            else:
+                return f"❌ Failed to create group: {issue_resp.status_code} - {issue_resp.text}"
 
     except Exception as e:
         return f"❌ Group telepathy error: {str(e)}"

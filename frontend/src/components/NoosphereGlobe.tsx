@@ -1,20 +1,24 @@
 /**
  * @preview
- * NoosphereGlobe — 万物智识圈 3D 核心（极致科幻版）
+ * NoosphereGlobe — 万物智识圈 3D 核心（无限粒子版 v3）
  *
  * 视觉特性：
  *   🔥 等离子体内核（自定义 Shader 脉动）
  *   💫 氛围光环（替代线框，气体感）
- *   ✨ 自发光节点（emissive glow）
- *   ⚡ 能量脉冲连线（动态光点）
+ *   ✨ GPU 驱动粒子层 × 3（物质/生命/文明）
+ *   🌌 无限意识体云（预分配 10 万容量池）
+ *   ⚡ 能量脉冲连线（合并 LineSegments）
+ *   🌀 意识星云（GPU Points 替代旧尘埃）
  *   🎬 电影级入场动画（镜头推进 + 涟漪展开）
  *   🌌 后处理：Bloom + Vignette
  *
- * 性能优化（v2）：
- *   🚀 模块级预计算索引映射，消除 O(n²) filter
- *   🧱 EnergyLines 合并为单一 LineSegments，GPU 对象 45→3
- *   ♻️ Zero-Allocation 帧循环，消除每帧 clone/new
+ * 性能架构（v3 — 无限粒子）：
+ *   🚀 所有粒子动画在 GPU Vertex Shader 中并行计算
+ *   🧱 InstancedMesh 预分配容量池，动态 count 控制
+ *   ♻️ 每帧 O(1) — 仅更新 uTime uniform (4 bytes)
+ *   📦 InstancedBufferAttribute + DynamicDrawUsage 增量更新
  *   📐 DPR 上限 1.5 + Bloom 固定分辨率 512
+ *   🎯 最大支持：100,000+ 粒子流畅渲染
  */
 
 import { useRef, useMemo, useState, useCallback, useEffect } from 'react';
@@ -33,17 +37,18 @@ import {
   gravityClusterPoint,
 } from '../data/knowledge';
 
-/* ═══════════════ 工具函数 ═══════════════ */
+import {
+  GPUParticleLayer,
+  ConsciousnessNebula,
+  GPUPulsePoints,
+  goldenSpherePoint,
+  nodeToParticle,
+  type ParticleData,
+  type PulseCurveData,
+  type GPUParticleLayerHandle,
+} from './InfiniteParticleEngine';
 
-function goldenSpherePoint(index: number, total: number, radius: number): [number, number, number] {
-  const phi = Math.acos(1 - 2 * (index + 0.5) / total);
-  const theta = Math.PI * (1 + Math.sqrt(5)) * index;
-  return [
-    radius * Math.sin(phi) * Math.cos(theta),
-    radius * Math.sin(phi) * Math.sin(theta),
-    radius * Math.cos(phi),
-  ];
-}
+/* ═══════════════ 工具函数 ═══════════════ */
 
 function getNodeColor(node: KnowledgeNode): string {
   if (node.layer === 'matter') return LAYER_COLORS.matter;
@@ -68,6 +73,52 @@ ALL_NODES.forEach(n => {
 });
 // 层 → 球面半径映射
 const LAYER_RADIUS: Record<string, number> = { matter: 1.5, life: 2.8, civilization: 4.5 };
+
+
+/* ═══════════════ 预计算静态粒子数据 ═══════════════ */
+
+/** 将所有静态节点预转换为 GPU 粒子数据 */
+function buildLayerParticles(layer: 'matter' | 'life' | 'civilization'): ParticleData[] {
+  const nodes = ALL_NODES.filter(n => n.layer === layer);
+  const radius = LAYER_RADIUS[layer];
+
+  // 轨道速度按层设置
+  const orbitSpeeds: Record<string, number> = {
+    matter: 0.0,    // 物质层：静态呼吸
+    life: 0.06,     // 生命层：缓慢轨道
+    civilization: 0.0, // 文明层：引力聚落呼吸
+  };
+
+  return nodes.map((node, i) => {
+    let position: [number, number, number];
+
+    if (layer === 'civilization') {
+      // 文明层使用引力聚落分布
+      const discipline = (node.discipline || 'ai') as Discipline;
+      const discNodes = nodes.filter(n => (n.discipline || 'ai') === discipline);
+      const discIdx = discNodes.indexOf(node);
+      position = gravityClusterPoint(node, discIdx, discNodes.length, radius);
+    } else {
+      // 物质/生命层使用黄金角球面分布
+      position = goldenSpherePoint(i, nodes.length, radius);
+    }
+
+    const color = new THREE.Color(getNodeColor(node));
+
+    return nodeToParticle(
+      position,
+      color,
+      node.importance,
+      i,
+      orbitSpeeds[layer],
+    );
+  });
+}
+
+// 模块级预计算
+const MATTER_PARTICLES = buildLayerParticles('matter');
+const LIFE_PARTICLES = buildLayerParticles('life');
+const CIVILIZATION_PARTICLES = buildLayerParticles('civilization');
 
 
 /* ═══════════════ 等离子体内核组件 ═══════════════ */
@@ -155,23 +206,23 @@ function PlasmaCore() {
     }
   });
 
+  // 共享辉光球几何体（减少 GPU 资源重复）
+  const glowGeo = useMemo(() => new THREE.SphereGeometry(0.8, 32, 32), []);
+
   return (
     <group>
       {/* 等离子体核心 */}
       <mesh material={plasmaMat}>
         <sphereGeometry args={[0.8, 48, 48]} />
       </mesh>
-      {/* 三层渐变辉光 */}
-      <mesh ref={glow1Ref}>
-        <sphereGeometry args={[0.8, 32, 32]} />
+      {/* 三层渐变辉光 — 共享 geometry */}
+      <mesh ref={glow1Ref} geometry={glowGeo}>
         <meshBasicMaterial color="#ff6b35" transparent opacity={0.08} side={THREE.BackSide} toneMapped={false} />
       </mesh>
-      <mesh ref={glow2Ref}>
-        <sphereGeometry args={[0.8, 32, 32]} />
+      <mesh ref={glow2Ref} geometry={glowGeo}>
         <meshBasicMaterial color="#7b61ff" transparent opacity={0.04} side={THREE.BackSide} toneMapped={false} />
       </mesh>
-      <mesh ref={glow3Ref}>
-        <sphereGeometry args={[0.8, 32, 32]} />
+      <mesh ref={glow3Ref} geometry={glowGeo}>
         <meshBasicMaterial color="#00e878" transparent opacity={0.02} side={THREE.BackSide} toneMapped={false} />
       </mesh>
     </group>
@@ -212,225 +263,22 @@ function AtmosphereRings() {
   );
 }
 
-/* ═══════════════ 物质记忆层（内层 · 自发光） ═══════════════ */
-
-function MatterLayer({ onSelect }: { onSelect: (n: KnowledgeNode) => void }) {
-  const nodes = useMemo(() => ALL_NODES.filter(n => n.layer === 'matter'), []);
-  const meshRef = useRef<THREE.InstancedMesh>(null);
-  const dummy = useMemo(() => new THREE.Object3D(), []);
-
-  const positions = useMemo(() =>
-    nodes.map((_, i) => goldenSpherePoint(i, nodes.length, 1.5)),
-    [nodes]
-  );
-
-  useFrame(({ clock }) => {
-    if (!meshRef.current) return;
-    const t = clock.getElapsedTime();
-    positions.forEach((pos, i) => {
-      const drift = Math.sin(t * 0.3 + i) * 0.08;
-      dummy.position.set(pos[0] + drift, pos[1] + drift * 0.3, pos[2] + drift);
-      const s = 0.1 + (nodes[i].importance / 10) * 0.1;
-      dummy.scale.setScalar(s * (1 + Math.sin(t * 0.6 + i * 2) * 0.25));
-      dummy.updateMatrix();
-      meshRef.current!.setMatrixAt(i, dummy.matrix);
-    });
-    meshRef.current.instanceMatrix.needsUpdate = true;
-  });
-
-  const handleClick = useCallback((e: { stopPropagation: () => void; instanceId?: number }) => {
-    e.stopPropagation();
-    if (e.instanceId !== undefined && e.instanceId < nodes.length) {
-      onSelect(nodes[e.instanceId]);
-    }
-  }, [nodes, onSelect]);
-
-  return (
-    <instancedMesh ref={meshRef} args={[undefined, undefined, nodes.length]} onClick={handleClick}>
-      <sphereGeometry args={[1, 16, 16]} />
-      <meshStandardMaterial
-        color={LAYER_COLORS.matter}
-        emissive={LAYER_COLORS.matter}
-        emissiveIntensity={2.5}
-        toneMapped={false}
-      />
-    </instancedMesh>
-  );
-}
-
-/* ═══════════════ 生命经验层（中层 · 有机轨道） ═══════════════ */
-
-function LifeLayer({ onSelect }: { onSelect: (n: KnowledgeNode) => void }) {
-  const nodes = useMemo(() => ALL_NODES.filter(n => n.layer === 'life'), []);
-  const meshRef = useRef<THREE.InstancedMesh>(null);
-  const dummy = useMemo(() => new THREE.Object3D(), []);
-
-  useFrame(({ clock }) => {
-    if (!meshRef.current) return;
-    const t = clock.getElapsedTime();
-    nodes.forEach((node, i) => {
-      const angle = (i / nodes.length) * Math.PI * 2 + t * 0.06;
-      const r = 2.8 + Math.sin(t * 0.15 + i * 3) * 0.15;
-      const y = Math.sin(angle * 2 + t * 0.08) * 0.6;
-      dummy.position.set(Math.cos(angle) * r, y, Math.sin(angle) * r);
-      const s = 0.12 + (node.importance / 10) * 0.1;
-      dummy.scale.setScalar(s * (1 + Math.sin(t + i * 1.5) * 0.2));
-      dummy.updateMatrix();
-      meshRef.current!.setMatrixAt(i, dummy.matrix);
-    });
-    meshRef.current.instanceMatrix.needsUpdate = true;
-  });
-
-  const handleClick = useCallback((e: { stopPropagation: () => void; instanceId?: number }) => {
-    e.stopPropagation();
-    if (e.instanceId !== undefined && e.instanceId < nodes.length) {
-      onSelect(nodes[e.instanceId]);
-    }
-  }, [nodes, onSelect]);
-
-  return (
-    <instancedMesh ref={meshRef} args={[undefined, undefined, nodes.length]} onClick={handleClick}>
-      <sphereGeometry args={[1, 16, 16]} />
-      <meshStandardMaterial
-        color={LAYER_COLORS.life}
-        emissive={LAYER_COLORS.life}
-        emissiveIntensity={2.0}
-        toneMapped={false}
-      />
-    </instancedMesh>
-  );
-}
-
-/* ═══════════════ 文明智慧层（引力聚落 + 呼吸脉动） ═══════════════ */
-
-function CivilizationLayer({ onSelect }: { onSelect: (n: KnowledgeNode) => void }) {
-  const nodes = useMemo(() => ALL_NODES.filter(n => n.layer === 'civilization'), []);
-  const meshRef = useRef<THREE.InstancedMesh>(null);
-  const dummy = useMemo(() => new THREE.Object3D(), []);
-
-  // 按学科分组计数
-  const disciplineCounts = useMemo(() => {
-    const counts: Record<string, number> = {};
-    const indices: Record<string, number> = {};
-    nodes.forEach(n => {
-      const d = n.discipline || 'ai';
-      counts[d] = (counts[d] || 0) + 1;
-      indices[d] = 0;
-    });
-    return { counts, indices };
-  }, [nodes]);
-
-  // 引力聚落初始位置（确定性）
-  const basePositions = useMemo(() => {
-    const idxTracker: Record<string, number> = {};
-    return nodes.map((node) => {
-      const d = node.discipline || 'ai';
-      if (idxTracker[d] === undefined) idxTracker[d] = 0;
-      const idx = idxTracker[d]++;
-      const total = disciplineCounts.counts[d] || 1;
-      return gravityClusterPoint(node, idx, total, 4.5);
-    });
-  }, [nodes, disciplineCounts]);
-
-  // 颜色
-  const colorsArray = useMemo(() => {
-    const arr = new Float32Array(nodes.length * 3);
-    nodes.forEach((node, i) => {
-      const c = new THREE.Color(getNodeColor(node));
-      arr[i * 3] = c.r;
-      arr[i * 3 + 1] = c.g;
-      arr[i * 3 + 2] = c.b;
-    });
-    return arr;
-  }, [nodes]);
-
-  // 动画帧：呼吸脉动
-  useFrame(({ clock }) => {
-    if (!meshRef.current) return;
-    const t = clock.getElapsedTime();
-
-    nodes.forEach((node, i) => {
-      const pos = basePositions[i];
-      const discipline = (node.discipline || 'ai') as Discipline;
-      const center = DISCIPLINE_GRAVITY_CENTERS[discipline];
-
-      // 呼吸因子：星团周期性收缩-扩散（±8%）
-      const breathPhase = Math.sin(t * (2 * Math.PI / center.breathPeriod)) * 0.08;
-      const breathScale = 1 + breathPhase;
-
-      // 方向向量（从原点到节点）
-      const len = Math.sqrt(pos[0] ** 2 + pos[1] ** 2 + pos[2] ** 2);
-      const nx = pos[0] / len, ny = pos[1] / len, nz = pos[2] / len;
-
-      // 呼吸 + 微漂移
-      const drift = Math.sin(t * 0.1 + i * 0.7) * 0.05;
-      dummy.position.set(
-        pos[0] * breathScale + nx * drift,
-        pos[1] * breathScale + ny * drift,
-        pos[2] * breathScale + nz * drift,
-      );
-
-      const s = 0.08 + (node.importance / 10) * 0.08;
-      dummy.scale.setScalar(s * (1 + Math.sin(t * 0.3 + i) * 0.1));
-      dummy.updateMatrix();
-      meshRef.current!.setMatrixAt(i, dummy.matrix);
-    });
-    meshRef.current.instanceMatrix.needsUpdate = true;
-  });
-
-  const handleClick = useCallback((e: { stopPropagation: () => void; instanceId?: number }) => {
-    e.stopPropagation();
-    if (e.instanceId !== undefined && e.instanceId < nodes.length) {
-      onSelect(nodes[e.instanceId]);
-    }
-  }, [nodes, onSelect]);
-
-  useEffect(() => {
-    if (meshRef.current) {
-      meshRef.current.geometry.setAttribute(
-        'color',
-        new THREE.InstancedBufferAttribute(colorsArray, 3)
-      );
-    }
-  }, [colorsArray]);
-
-  return (
-    <instancedMesh ref={meshRef} args={[undefined, undefined, nodes.length]} onClick={handleClick}>
-      <sphereGeometry args={[1, 12, 12]} />
-      <meshStandardMaterial
-        vertexColors
-        emissive="#ffffff"
-        emissiveIntensity={1.5}
-        toneMapped={false}
-      />
-    </instancedMesh>
-  );
-}
-
-/* ═══════════════ 能量脉冲连线（性能优化版：合并 LineSegments + Zero-Allocation） ═══════════════ */
-
-// 预分配的临时 Color 对象，帧循环中复用，避免每帧 new/clone
-const _tmpColor = new THREE.Color();
-const _tmpVec3 = new THREE.Vector3();
+/* ═══════════════ 能量脉冲连线（完全 GPU 驱动版） ═══════════════ */
 
 function EnergyLines() {
   const lineRef = useRef<THREE.LineSegments>(null);
-  const pulsePointsRef = useRef<THREE.Points>(null);
 
-  // 预计算：合并所有曲线到单一几何体 + 脉冲曲线数据
-  const { mergedPositions, mergedColors, totalLineVertices, curveData, pulseCount } = useMemo(() => {
-    const POINTS_PER_CURVE = 31; // getPoints(30) → 31 个点
-    const curves: { curve: THREE.QuadraticBezierCurve3; fromColor: THREE.Color; toColor: THREE.Color }[] = [];
+  // 预计算：合并所有曲线到单一几何体 + GPU 脉冲曲线数据
+  const { mergedPositions, mergedColors, pulseCurves } = useMemo(() => {
+    const POINTS_PER_CURVE = 31;
 
-    // 第一遍：收集有效连线的曲线数据（所有查找都是 O(1)）
-    const validLinks: { curve: THREE.QuadraticBezierCurve3; fromColor: THREE.Color; toColor: THREE.Color; linkIdx: number }[] = [];
+    const validLinks: { fromPos: [number,number,number]; toPos: [number,number,number]; mid: [number,number,number]; fromColor: THREE.Color; toColor: THREE.Color }[] = [];
 
     EMERGENCE_LINKS.forEach((link, i) => {
       const fromNode = NODE_BY_ID.get(link.from);
       const toNode = NODE_BY_ID.get(link.to);
       if (!fromNode || !toNode) return;
 
-      // O(1) 索引查找，替代原来的 O(n) filter + indexOf
       const fromIdx = NODE_INDEX_IN_LAYER.get(fromNode.id) ?? 0;
       const fromTotal = LAYER_COUNTS[fromNode.layer] ?? 1;
       const toIdx = NODE_INDEX_IN_LAYER.get(toNode.id) ?? 0;
@@ -448,31 +296,29 @@ function EnergyLines() {
         (fromPos[2] + toPos[2]) * 0.5 + Math.sin(i * 3.1) * 1.0,
       ];
 
-      const curve = new THREE.QuadraticBezierCurve3(
-        new THREE.Vector3(...fromPos),
-        new THREE.Vector3(...mid),
-        new THREE.Vector3(...toPos),
-      );
-
       const fromColor = new THREE.Color(getNodeColor(fromNode));
       const toColor = new THREE.Color(getNodeColor(toNode));
-      validLinks.push({ curve, fromColor, toColor, linkIdx: i });
-      curves.push({ curve, fromColor, toColor });
+      validLinks.push({ fromPos, toPos, mid, fromColor, toColor });
     });
 
-    // 第二遍：构建合并几何体
-    // LineSegments 使用成对顶点：每条线段需要 (POINTS_PER_CURVE - 1) 个 segment = 2*(POINTS_PER_CURVE-1) 个顶点
+    // 构建合并 LineSegments 几何体
     const SEGMENTS_PER_CURVE = POINTS_PER_CURVE - 1;
     const VERTS_PER_CURVE = SEGMENTS_PER_CURVE * 2;
     const totalVerts = validLinks.length * VERTS_PER_CURVE;
     const positions = new Float32Array(totalVerts * 3);
     const colors = new Float32Array(totalVerts * 3);
-
-    // 临时 Color 用于插值，避免 clone
     const interpColor = new THREE.Color();
 
+    // GPU 脉冲数据
+    const gpuPulses: PulseCurveData[] = [];
+
     validLinks.forEach((vl, linkI) => {
-      const points = vl.curve.getPoints(POINTS_PER_CURVE - 1);
+      const curve = new THREE.QuadraticBezierCurve3(
+        new THREE.Vector3(...vl.fromPos),
+        new THREE.Vector3(...vl.mid),
+        new THREE.Vector3(...vl.toPos),
+      );
+      const points = curve.getPoints(POINTS_PER_CURVE - 1);
       const baseVert = linkI * VERTS_PER_CURVE;
 
       for (let seg = 0; seg < SEGMENTS_PER_CURVE; seg++) {
@@ -481,37 +327,31 @@ function EnergyLines() {
         const p0 = points[seg];
         const p1 = points[seg + 1];
 
-        positions[v0 * 3]     = p0.x;
-        positions[v0 * 3 + 1] = p0.y;
-        positions[v0 * 3 + 2] = p0.z;
-        positions[v1 * 3]     = p1.x;
-        positions[v1 * 3 + 1] = p1.y;
-        positions[v1 * 3 + 2] = p1.z;
+        positions[v0 * 3]     = p0.x; positions[v0 * 3 + 1] = p0.y; positions[v0 * 3 + 2] = p0.z;
+        positions[v1 * 3]     = p1.x; positions[v1 * 3 + 1] = p1.y; positions[v1 * 3 + 2] = p1.z;
 
-        // 渐变色插值（复用 interpColor，零分配）
         const t0 = seg / SEGMENTS_PER_CURVE;
         const t1 = (seg + 1) / SEGMENTS_PER_CURVE;
         interpColor.copy(vl.fromColor).lerp(vl.toColor, t0);
-        colors[v0 * 3]     = interpColor.r;
-        colors[v0 * 3 + 1] = interpColor.g;
-        colors[v0 * 3 + 2] = interpColor.b;
+        colors[v0 * 3] = interpColor.r; colors[v0 * 3 + 1] = interpColor.g; colors[v0 * 3 + 2] = interpColor.b;
         interpColor.copy(vl.fromColor).lerp(vl.toColor, t1);
-        colors[v1 * 3]     = interpColor.r;
-        colors[v1 * 3 + 1] = interpColor.g;
-        colors[v1 * 3 + 2] = interpColor.b;
+        colors[v1 * 3] = interpColor.r; colors[v1 * 3 + 1] = interpColor.g; colors[v1 * 3 + 2] = interpColor.b;
       }
+
+      // 收集 GPU 脉冲数据
+      gpuPulses.push({
+        start: vl.fromPos,
+        mid: vl.mid,
+        end: vl.toPos,
+        fromColor: [vl.fromColor.r, vl.fromColor.g, vl.fromColor.b],
+        toColor: [vl.toColor.r, vl.toColor.g, vl.toColor.b],
+        phaseOffset: linkI * 0.15,
+      });
     });
 
-    return {
-      mergedPositions: positions,
-      mergedColors: colors,
-      totalLineVertices: totalVerts,
-      curveData: curves,
-      pulseCount: curves.length,
-    };
+    return { mergedPositions: positions, mergedColors: colors, pulseCurves: gpuPulses };
   }, []);
 
-  // 合并几何体（单一 BufferGeometry + 单一 Material）
   const lineGeometry = useMemo(() => {
     const geo = new THREE.BufferGeometry();
     geo.setAttribute('position', new THREE.BufferAttribute(mergedPositions, 3));
@@ -523,187 +363,130 @@ function EnergyLines() {
     vertexColors: true, transparent: true, opacity: 0.15, toneMapped: false,
   }), []);
 
-  // 脉冲光点缓冲区
-  const pulseGeo = useMemo(() => ({
-    pos: new Float32Array(pulseCount * 3),
-    col: new Float32Array(pulseCount * 3),
-  }), [pulseCount]);
-
-  // 脉冲光点动画 (Zero-Allocation: 使用预分配 _tmpColor & _tmpVec3)
+  // 仅线条呼吸 — O(1)
   useFrame(({ clock }) => {
-    if (!pulsePointsRef.current) return;
-    const t = clock.getElapsedTime();
-    const posArr = pulsePointsRef.current.geometry.attributes.position.array as Float32Array;
-    const colArr = pulsePointsRef.current.geometry.attributes.color.array as Float32Array;
-
-    for (let i = 0; i < curveData.length; i++) {
-      const cd = curveData[i];
-      const progress = (t * 0.15 + i * 0.15) % 1;
-      // 复用预分配的 _tmpVec3，避免 curve.getPoint 创建新对象
-      cd.curve.getPointAt(progress, _tmpVec3);
-      posArr[i * 3]     = _tmpVec3.x;
-      posArr[i * 3 + 1] = _tmpVec3.y;
-      posArr[i * 3 + 2] = _tmpVec3.z;
-      // 复用预分配的 _tmpColor，零分配插值
-      _tmpColor.copy(cd.fromColor).lerp(cd.toColor, progress);
-      colArr[i * 3]     = _tmpColor.r;
-      colArr[i * 3 + 1] = _tmpColor.g;
-      colArr[i * 3 + 2] = _tmpColor.b;
-    }
-    pulsePointsRef.current.geometry.attributes.position.needsUpdate = true;
-    pulsePointsRef.current.geometry.attributes.color.needsUpdate = true;
-
-    // 连线呼吸（单一材质统一控制）
-    lineMaterial.opacity = 0.1 + Math.sin(t * 0.4) * 0.06;
+    lineMaterial.opacity = 0.1 + Math.sin(clock.getElapsedTime() * 0.4) * 0.06;
   });
 
-  // dispose 保障
   useEffect(() => {
-    return () => {
-      lineGeometry.dispose();
-      lineMaterial.dispose();
-    };
+    return () => { lineGeometry.dispose(); lineMaterial.dispose(); };
   }, [lineGeometry, lineMaterial]);
 
   return (
     <group>
-      {/* 合并的 LineSegments：1 个 GPU 对象替代原来 15 个 */}
       <lineSegments ref={lineRef} geometry={lineGeometry} material={lineMaterial} />
-      {/* 脉冲光点 */}
-      <points ref={pulsePointsRef}>
-        <bufferGeometry>
-          <bufferAttribute attach="attributes-position" args={[pulseGeo.pos, 3]} />
-          <bufferAttribute attach="attributes-color" args={[pulseGeo.col, 3]} />
-        </bufferGeometry>
-        <pointsMaterial size={0.08} vertexColors transparent opacity={0.9} toneMapped={false} sizeAttenuation />
-      </points>
+      {/* GPU 驱动脉冲光点 — 零 JS 端遍历 */}
+      <GPUPulsePoints curves={pulseCurves} />
     </group>
   );
 }
 
-/* ═══════════════ 浮游意识尘埃 ═══════════════ */
+/* ═══════════════ GPU 粒子层组件适配器 ═══════════════ */
 
-function ConsciousnessDust() {
-  const count = 500;
-  const pointsRef = useRef<THREE.Points>(null);
-
-  const [positions, velocities, colors] = useMemo(() => {
-    const pos = new Float32Array(count * 3);
-    const vel = new Float32Array(count * 3);
-    const col = new Float32Array(count * 3);
-    const palette = [
-      new THREE.Color('#ff6b35'), new THREE.Color('#7b61ff'),
-      new THREE.Color('#00e878'), new THREE.Color('#4488ff'),
-      new THREE.Color('#ffd700'), new THREE.Color('#e0e0ff'),
-    ];
-    for (let i = 0; i < count; i++) {
-      const r = 0.5 + Math.random() * 7;
-      const theta = Math.random() * Math.PI * 2;
-      const phi = Math.acos(2 * Math.random() - 1);
-      pos[i * 3] = r * Math.sin(phi) * Math.cos(theta);
-      pos[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
-      pos[i * 3 + 2] = r * Math.cos(phi);
-      vel[i * 3] = (Math.random() - 0.5) * 0.001;
-      vel[i * 3 + 1] = (Math.random() - 0.5) * 0.001;
-      vel[i * 3 + 2] = (Math.random() - 0.5) * 0.001;
-      const c = palette[Math.floor(Math.random() * palette.length)];
-      col[i * 3] = c.r;
-      col[i * 3 + 1] = c.g;
-      col[i * 3 + 2] = c.b;
-    }
-    return [pos, vel, col];
-  }, []);
-
-  useFrame(() => {
-    if (!pointsRef.current) return;
-    const posAttr = pointsRef.current.geometry.attributes.position as THREE.BufferAttribute;
-    const arr = posAttr.array as Float32Array;
-    for (let i = 0; i < count; i++) {
-      arr[i * 3] += velocities[i * 3];
-      arr[i * 3 + 1] += velocities[i * 3 + 1];
-      arr[i * 3 + 2] += velocities[i * 3 + 2];
-      const dist = Math.sqrt(arr[i * 3] ** 2 + arr[i * 3 + 1] ** 2 + arr[i * 3 + 2] ** 2);
-      if (dist > 8 || dist < 0.5) {
-        velocities[i * 3] *= -1;
-        velocities[i * 3 + 1] *= -1;
-        velocities[i * 3 + 2] *= -1;
+/**
+ * StaticGPULayer — 将预计算的静态粒子数据渲染到 GPU 粒子层
+ */
+function StaticGPULayer({
+  particles,
+  onSelect,
+  nodes,
+  orbitEnabled = false,
+  breathScale = 1.0,
+  driftScale = 1.0,
+}: {
+  particles: ParticleData[];
+  onSelect: (n: KnowledgeNode) => void;
+  nodes: KnowledgeNode[];
+  orbitEnabled?: boolean;
+  breathScale?: number;
+  driftScale?: number;
+}) {
+  const handleClick = useCallback(
+    (instanceId: number) => {
+      if (instanceId < nodes.length) {
+        onSelect(nodes[instanceId]);
       }
-    }
-    posAttr.needsUpdate = true;
-  });
+    },
+    [nodes, onSelect]
+  );
 
   return (
-    <points ref={pointsRef}>
-      <bufferGeometry>
-        <bufferAttribute attach="attributes-position" args={[positions, 3]} />
-        <bufferAttribute attach="attributes-color" args={[colors, 3]} />
-      </bufferGeometry>
-      <pointsMaterial
-        size={0.015}
-        vertexColors
-        transparent
-        opacity={0.4}
-        toneMapped={false}
-        sizeAttenuation
-        blending={THREE.AdditiveBlending}
-        depthWrite={false}
-      />
-    </points>
+    <GPUParticleLayer
+      maxCapacity={Math.max(particles.length, 1000)}
+      initialParticles={particles}
+      onClick={handleClick}
+      orbitEnabled={orbitEnabled}
+      breathScale={breathScale}
+      driftScale={driftScale}
+    />
   );
 }
 
-/* ═══════════════ 实时意识体层（动态加载） ═══════════════ */
+/**
+ * DynamicConsciousnessCloud — 无限意识体云
+ * 使用 GPUParticleLayer 的 ref API 实现增量添加
+ */
+function DynamicConsciousnessCloud({
+  nodes,
+  onSelect,
+}: {
+  nodes: KnowledgeNode[];
+  onSelect: (n: KnowledgeNode) => void;
+}) {
+  const layerRef = useRef<GPUParticleLayerHandle>(null);
+  const prevCountRef = useRef(0);
 
-function DynamicConsciousnessLayer({ nodes, onSelect }: { nodes: KnowledgeNode[]; onSelect: (n: KnowledgeNode) => void }) {
-  const meshRef = useRef<THREE.InstancedMesh>(null);
-  const dummy = useMemo(() => new THREE.Object3D(), []);
-
-  // 在最外层轨道（r=5.5）分布实时意识体
-  const positions = useMemo(() =>
-    nodes.map((_, i) => goldenSpherePoint(i, nodes.length, 5.5)),
-    [nodes]
-  );
-
-  useFrame(({ clock }) => {
-    if (!meshRef.current || nodes.length === 0) return;
-    const t = clock.getElapsedTime();
-    positions.forEach((pos, i) => {
-      // 螺旋漂浮 + 呼吸脉动
-      const drift = Math.sin(t * 0.2 + i * 0.7) * 0.15;
-      const orbit = t * 0.03;
-      const x = pos[0] * Math.cos(orbit) - pos[2] * Math.sin(orbit) + drift;
-      const z = pos[0] * Math.sin(orbit) + pos[2] * Math.cos(orbit) + drift * 0.3;
-      const y = pos[1] + Math.sin(t * 0.4 + i * 1.2) * 0.2;
-      dummy.position.set(x, y, z);
-      const s = 0.12 + (nodes[i].importance / 10) * 0.08;
-      dummy.scale.setScalar(s * (1 + Math.sin(t * 0.8 + i * 2.5) * 0.3));
-      dummy.updateMatrix();
-      meshRef.current!.setMatrixAt(i, dummy.matrix);
+  // 当 nodes 变化时转换为 ParticleData
+  const particles = useMemo(() => {
+    return nodes.map((node, i) => {
+      const position = goldenSpherePoint(i, Math.max(nodes.length, 1), 5.5);
+      const color = new THREE.Color('#00d4ff');
+      return nodeToParticle(position, color, node.importance, i, 0.03);
     });
-    meshRef.current.instanceMatrix.needsUpdate = true;
-  });
+  }, [nodes]);
 
-  const handleClick = useCallback((e: { stopPropagation: () => void; instanceId?: number }) => {
-    e.stopPropagation();
-    if (e.instanceId !== undefined && e.instanceId < nodes.length) {
-      onSelect(nodes[e.instanceId]);
+  // 当新粒子被添加时，使用增量更新
+  useEffect(() => {
+    const layer = layerRef.current;
+    if (!layer) return;
+
+    if (nodes.length > prevCountRef.current) {
+      // 有新增节点 — 增量添加
+      const newParticles = particles.slice(prevCountRef.current);
+      layer.addParticles(newParticles);
+    } else if (nodes.length < prevCountRef.current) {
+      // 节点减少（不太常见） — 全量重建
+      layer.clear();
+      layer.addParticles(particles);
     }
-  }, [nodes, onSelect]);
+
+    prevCountRef.current = nodes.length;
+  }, [nodes, particles]);
+
+  const handleClick = useCallback(
+    (instanceId: number) => {
+      if (instanceId < nodes.length) {
+        onSelect(nodes[instanceId]);
+      }
+    },
+    [nodes, onSelect]
+  );
 
   if (nodes.length === 0) return null;
 
   return (
-    <instancedMesh ref={meshRef} args={[undefined, undefined, nodes.length]} onClick={handleClick}>
-      <sphereGeometry args={[1, 12, 12]} />
-      <meshStandardMaterial
-        color="#00d4ff"
-        emissive="#00d4ff"
-        emissiveIntensity={2.8}
-        toneMapped={false}
-      />
-    </instancedMesh>
+    <GPUParticleLayer
+      ref={layerRef}
+      maxCapacity={100_000}
+      initialParticles={particles}
+      onClick={handleClick}
+      orbitEnabled={true}
+      breathScale={1.2}
+      driftScale={1.5}
+    />
   );
 }
+
 
 /* ═══════════════ 场景内容（渐进式加载） ═══════════════ */
 
@@ -712,12 +495,17 @@ function DynamicConsciousnessLayer({ nodes, onSelect }: { nodes: KnowledgeNode[]
  *
  * Stage 0 (立即):    灯光 + PlasmaCore + OrbitControls
  * Stage 1 (+100ms):  Stars + AtmosphereRings
- * Stage 2 (+250ms):  三层意识节点 (InstancedMesh)
- * Stage 3 (+500ms):  EnergyLines + ConsciousnessDust + EffectComposer
+ * Stage 2 (+250ms):  三层 GPU 粒子意识节点
+ * Stage 3 (+500ms):  EnergyLines + ConsciousnessNebula + EffectComposer + DynamicCloud
  */
 function SceneContent({ onSelect, introPhase, dynamicNodes }: { onSelect: (n: KnowledgeNode) => void; introPhase: number; dynamicNodes: KnowledgeNode[] }) {
   const controlsRef = useRef<any>(null);
   const [loadStage, setLoadStage] = useState(0);
+
+  // 静态节点列表（模块级缓存）
+  const matterNodes = useMemo(() => ALL_NODES.filter(n => n.layer === 'matter'), []);
+  const lifeNodes = useMemo(() => ALL_NODES.filter(n => n.layer === 'life'), []);
+  const civNodes = useMemo(() => ALL_NODES.filter(n => n.layer === 'civilization'), []);
 
   // 渐进式加载调度
   useEffect(() => {
@@ -770,22 +558,47 @@ function SceneContent({ onSelect, introPhase, dynamicNodes }: { onSelect: (n: Kn
         </>
       )}
 
-      {/* ── Stage 2: 意识节点 (+250ms) ── */}
+      {/* ── Stage 2: GPU 粒子意识节点 (+250ms) ── */}
       {loadStage >= 2 && (
         <>
-          <MatterLayer onSelect={onSelect} />
-          <LifeLayer onSelect={onSelect} />
-          <CivilizationLayer onSelect={onSelect} />
+          {/* 物质记忆层 — 静态呼吸脉动 */}
+          <StaticGPULayer
+            particles={MATTER_PARTICLES}
+            nodes={matterNodes}
+            onSelect={onSelect}
+            orbitEnabled={false}
+            breathScale={0.8}
+            driftScale={0.6}
+          />
+          {/* 生命经验层 — 缓慢轨道 */}
+          <StaticGPULayer
+            particles={LIFE_PARTICLES}
+            nodes={lifeNodes}
+            onSelect={onSelect}
+            orbitEnabled={true}
+            breathScale={1.0}
+            driftScale={1.0}
+          />
+          {/* 文明智慧层 — 引力聚落呼吸 */}
+          <StaticGPULayer
+            particles={CIVILIZATION_PARTICLES}
+            nodes={civNodes}
+            onSelect={onSelect}
+            orbitEnabled={false}
+            breathScale={1.2}
+            driftScale={0.8}
+          />
         </>
       )}
 
-      {/* ── Stage 3: 装饰 + 后处理 + 实时意识体 (+500ms) ── */}
+      {/* ── Stage 3: 装饰 + 后处理 + 无限意识体云 (+500ms) ── */}
       {loadStage >= 3 && (
         <>
           <EnergyLines />
-          <ConsciousnessDust />
-          {/* 实时意识体（动态加载，最外层青色轨道） */}
-          <DynamicConsciousnessLayer nodes={dynamicNodes} onSelect={onSelect} />
+          {/* 意识星云（GPU Points — 8000 粒子 + 分层颜色） */}
+          <ConsciousnessNebula count={8000} innerRadius={0.5} outerRadius={8.0} />
+          {/* 无限意识体云（动态加载，预分配 10 万容量） */}
+          <DynamicConsciousnessCloud nodes={dynamicNodes} onSelect={onSelect} />
           <EffectComposer multisampling={0}>
             <Bloom
               luminanceThreshold={0.1}
