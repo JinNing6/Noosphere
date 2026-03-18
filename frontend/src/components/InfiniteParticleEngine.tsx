@@ -25,7 +25,7 @@ import * as THREE from 'three';
 
 const DEFAULT_MAX_CAPACITY = 100_000;
 
-/* ═══════════════ Shader — 粒子 Billboard ═══════════════ */
+/* ═══════════════ Shader — GPU 粒子球体 ═══════════════ */
 
 const PARTICLE_VERTEX_SHADER = /* glsl */ `
   // ── 每实例属性 ──
@@ -43,7 +43,8 @@ const PARTICLE_VERTEX_SHADER = /* glsl */ `
   varying vec3 vColor;
   varying float vGlow;
   varying float vAlpha;
-  varying vec2 vUv;
+  varying vec3 vNormal;
+  varying vec3 vViewPosition;
 
   void main() {
     float importance = aParams.x;
@@ -72,21 +73,21 @@ const PARTICLE_VERTEX_SHADER = /* glsl */ `
       sin(uTime * 0.1 + seed * 7.0) * 0.15 * uDriftScale
     );
 
-    // ── GPU 端粒子缩放 ──
-    float baseScale = 0.18 + importance * 0.15;
+    // ── GPU 端脉动缩放 ──
     float pulse = 1.0 + sin(uTime * 0.8 + seed * 2.5) * 0.25;
-    float finalScale = baseScale * pulse;
 
-    // ── Billboard 对齐（始终面向相机） ──
-    // position 来自 planeGeometry (-0.5~0.5)，在视图空间中偏移
-    vec4 viewCenter = modelViewMatrix * vec4(center, 1.0);
-    vec4 viewPos = viewCenter;
-    viewPos.xy += position.xy * finalScale; // Billboard offset in view space
+    // ── 构造世界坐标 ──
+    // position 是球体顶点（已被 instanceMatrix 中的 scale 缩放）
+    // 我们在 Shader 中加上脉动和位移
+    vec3 scaledVertex = position * pulse;
+    vec3 worldPos = scaledVertex + center;
 
-    gl_Position = projectionMatrix * viewPos;
+    vec4 mvPosition = modelViewMatrix * vec4(worldPos, 1.0);
+    gl_Position = projectionMatrix * mvPosition;
 
-    // ── 传递数据 ──
-    vUv = position.xy + 0.5; // 0~1 UV
+    // ── 传递给 Fragment ──
+    vNormal = normalize(normalMatrix * normal);
+    vViewPosition = -mvPosition.xyz;
     vColor = aColor;
     vGlow = 1.2 + sin(uTime * 0.6 + glowPhase) * 0.4;
     vAlpha = 0.9 + sin(uTime * 0.3 + seed * 4.0) * 0.08;
@@ -97,36 +98,31 @@ const PARTICLE_FRAGMENT_SHADER = /* glsl */ `
   varying vec3 vColor;
   varying float vGlow;
   varying float vAlpha;
-  varying vec2 vUv;
+  varying vec3 vNormal;
+  varying vec3 vViewPosition;
 
   void main() {
-    // ── 径向距离（从中心 0.5,0.5 计算） ──
-    vec2 center = vUv - 0.5;
-    float dist = length(center) * 2.0; // 0~1 range
+    // ── 视线方向 ──
+    vec3 viewDir = normalize(vViewPosition);
+    float NdotV = dot(normalize(vNormal), viewDir);
 
-    // ── 圆形裁切 ──
-    if (dist > 1.0) discard;
-
-    // ── 多层辉光混合 ──
-    // 层1: 核心高亮（指数衰减 → 明亮中心）
-    float core = exp(-dist * 5.0);
-    // 层2: 中间能量场（平滑过渡）
-    float mid = smoothstep(1.0, 0.2, dist);
-    // 层3: 外缘菲涅耳辉光（边缘发光）
-    float fresnel = pow(1.0 - dist, 0.5) * smoothstep(0.3, 0.8, dist) * 0.6;
-    // 层4: 能量场纹理（流动感）
-    float energyRing = smoothstep(0.4, 0.45, dist) * smoothstep(0.55, 0.5, dist) * 0.3;
+    // ── 多层辉光（基于法线的球体表面着色） ──
+    // 层1: 核心自发光（正对相机最亮）
+    float core = pow(max(NdotV, 0.0), 1.5) * 1.5;
+    // 层2: 菲涅耳边缘辉光（边缘发光，模拟大气散射）
+    float fresnel = pow(1.0 - max(NdotV, 0.0), 3.0) * 1.2;
+    // 层3: 能量脉动环（中间带）
+    float midBand = smoothstep(0.3, 0.5, NdotV) * smoothstep(0.7, 0.5, NdotV) * 0.4;
 
     // ── 颜色合成 ──
-    vec3 coreColor = vColor * 3.0 * core;         // 超亮核心
-    vec3 midColor = vColor * vGlow * mid;          // 自发光中间层
-    vec3 fresnelColor = vColor * 1.5 * fresnel;    // 边缘辉光
-    vec3 ringColor = vColor * 2.0 * energyRing;    // 能量环
+    vec3 coreColor = vColor * vGlow * core;
+    vec3 fresnelColor = vColor * 1.8 * fresnel;
+    vec3 midColor = vColor * 2.0 * midBand;
 
-    vec3 finalColor = coreColor + midColor + fresnelColor + ringColor;
+    vec3 finalColor = coreColor + fresnelColor + midColor;
 
-    // ── Alpha 合成（柔和边缘淡出） ──
-    float alpha = (core * 0.6 + mid * 0.3 + fresnel * 0.15 + energyRing * 0.1) * vAlpha;
+    // ── Alpha（边缘半透明淡出） ──
+    float alpha = (core * 0.5 + fresnel * 0.3 + midBand * 0.2 + 0.15) * vAlpha;
     alpha = clamp(alpha, 0.0, 1.0);
 
     gl_FragColor = vec4(finalColor, alpha);
@@ -353,10 +349,10 @@ export const GPUParticleLayer = forwardRef<GPUParticleLayerHandle, GPUParticleLa
           buffers.params[idx * 4 + 2] = p.orbitSpeed;
           buffers.params[idx * 4 + 3] = p.glowPhase;
 
-          // instanceMatrix 设置真实位置（供 Raycast 命中检测使用）
-          // 视觉渲染由 Shader 中的 aBasePosition 驱动
+          // instanceMatrix 设置真实位置和缩放（供 Raycast 命中检测）
+          // 视觉渲染由 Shader 中的 aBasePosition + position*pulse 驱动
           dummy.position.set(p.position[0], p.position[1], p.position[2]);
-          dummy.scale.setScalar(0.18 + p.importance / 10 * 0.15); // 匹配 Shader 中的 baseScale
+          dummy.scale.setScalar(0.08 + p.importance * 0.012);
           dummy.updateMatrix();
           mesh.setMatrixAt(idx, dummy.matrix);
         }
@@ -480,8 +476,8 @@ export const GPUParticleLayer = forwardRef<GPUParticleLayerHandle, GPUParticleLa
         onClick={handleClick}
         frustumCulled={false}
       >
-        {/* Billboard 四边形：4 顶点 vs 球体 81 顶点 → 减少 95% 顶点处理 */}
-        <planeGeometry args={[1, 1]} />
+        {/* 低面数球体：49 顶点（兼容 Raycast 全角度命中检测） */}
+        <sphereGeometry args={[1, 6, 6]} />
       </instancedMesh>
     );
   }
