@@ -73,7 +73,7 @@ const PARTICLE_VERTEX_SHADER = /* glsl */ `
     );
 
     // ── GPU 端粒子缩放 ──
-    float baseScale = 0.06 + importance * 0.08;
+    float baseScale = 0.18 + importance * 0.15;
     float pulse = 1.0 + sin(uTime * 0.8 + seed * 2.5) * 0.25;
     float finalScale = baseScale * pulse;
 
@@ -298,8 +298,8 @@ export const GPUParticleLayer = forwardRef<GPUParticleLayerHandle, GPUParticleLa
       params: new Float32Array(maxCapacity * 4),
     }), [maxCapacity]);
 
-    // ── 单位矩阵（所有变换在 Shader 中完成） ──
-    const identityMatrix = useMemo(() => new THREE.Matrix4(), []);
+    // ── 用于 Raycast 命中检测的 dummy（instanceMatrix 必须包含真实位置） ──
+    const dummy = useMemo(() => new THREE.Object3D(), []);
 
     // ── 自定义 Shader Material ──
     const material = useMemo(
@@ -353,8 +353,12 @@ export const GPUParticleLayer = forwardRef<GPUParticleLayerHandle, GPUParticleLa
           buffers.params[idx * 4 + 2] = p.orbitSpeed;
           buffers.params[idx * 4 + 3] = p.glowPhase;
 
-          // 单位矩阵 — 所有变换在 Shader 中
-          mesh.setMatrixAt(idx, identityMatrix);
+          // instanceMatrix 设置真实位置（供 Raycast 命中检测使用）
+          // 视觉渲染由 Shader 中的 aBasePosition 驱动
+          dummy.position.set(p.position[0], p.position[1], p.position[2]);
+          dummy.scale.setScalar(0.18 + p.importance / 10 * 0.15); // 匹配 Shader 中的 baseScale
+          dummy.updateMatrix();
+          mesh.setMatrixAt(idx, dummy.matrix);
         }
 
         // 标记更新（Three.js v0.183+ updateRanges）
@@ -377,7 +381,7 @@ export const GPUParticleLayer = forwardRef<GPUParticleLayerHandle, GPUParticleLa
         }
         mesh.instanceMatrix.needsUpdate = true;
       },
-      [maxCapacity, buffers, identityMatrix]
+      [maxCapacity, buffers, dummy]
     );
 
     // ── 初始化 ──
