@@ -120,15 +120,25 @@ export default function DetailPanel({ node, onClose }: DetailPanelProps) {
     }}>
       {/* 关闭按钮 */}
       <button onClick={onClose} title={t('experience.closePanel')} style={{
-        position: 'sticky', top: 16, float: 'right',
-        marginRight: 16,
-        background: 'rgba(255,255,255,0.06)',
-        border: '1px solid rgba(255,255,255,0.1)',
-        borderRadius: 8, width: 36, height: 36,
-        color: '#aaa', fontSize: 18, cursor: 'pointer',
+        position: 'absolute', top: 16, right: 16,
+        background: 'rgba(0,0,0,0.6)',
+        border: '1px solid rgba(255,255,255,0.2)',
+        borderRadius: '50%', width: 36, height: 36,
+        color: '#fff', fontSize: 16, cursor: 'pointer',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        zIndex: 10,
-      }}>✕</button>
+        zIndex: 100,
+        backdropFilter: 'blur(10px)',
+        transition: 'all 0.2s ease',
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.background = 'rgba(255,255,255,0.2)';
+        e.currentTarget.style.transform = 'scale(1.1)';
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.background = 'rgba(0,0,0,0.6)';
+        e.currentTarget.style.transform = 'scale(1)';
+      }}
+      >✕</button>
 
       {/* 缩略图 */}
       {node.thumbnail && (
