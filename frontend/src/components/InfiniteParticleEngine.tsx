@@ -73,13 +73,14 @@ const PARTICLE_VERTEX_SHADER = /* glsl */ `
       sin(uTime * 0.1 + seed * 7.0) * 0.15 * uDriftScale
     );
 
-    // ── GPU 端脉动缩放 ──
+    // ── GPU 端基础大小与脉动缩放 ──
+    float baseScale = 0.08 + pow(importance, 1.2) * 0.05;
     float pulse = 1.0 + sin(uTime * 0.8 + seed * 2.5) * 0.25;
 
     // ── 构造世界坐标 ──
-    // position 是球体顶点（已被 instanceMatrix 中的 scale 缩放）
-    // 我们在 Shader 中加上脉动和位移
-    vec3 scaledVertex = position * pulse;
+    // position 是球体顶点（半径 1.0）
+    // 我们在 Shader 中加上基础缩放、脉动和位移
+    vec3 scaledVertex = position * baseScale * pulse;
     vec3 worldPos = scaledVertex + center;
 
     vec4 mvPosition = modelViewMatrix * vec4(worldPos, 1.0);
@@ -350,9 +351,9 @@ export const GPUParticleLayer = forwardRef<GPUParticleLayerHandle, GPUParticleLa
           buffers.params[idx * 4 + 3] = p.glowPhase;
 
           // instanceMatrix 设置真实位置和缩放（供 Raycast 命中检测）
-          // 视觉渲染由 Shader 中的 aBasePosition + position*pulse 驱动
+          // 视觉渲染由 Shader 中的 aBasePosition + position*baseScale*pulse 驱动
           dummy.position.set(p.position[0], p.position[1], p.position[2]);
-          dummy.scale.setScalar(0.08 + p.importance * 0.012);
+          dummy.scale.setScalar(0.08 + Math.pow(p.importance, 1.2) * 0.05);
           dummy.updateMatrix();
           mesh.setMatrixAt(idx, dummy.matrix);
         }
