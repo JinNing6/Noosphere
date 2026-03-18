@@ -24,6 +24,7 @@ class VectorStore:
     def __init__(self) -> None:
         self._client: chromadb.ClientAPI | None = None
         self._collection: chromadb.Collection | None = None
+        self._cached_count: int | None = None
 
     @property
     def client(self) -> chromadb.ClientAPI:
@@ -68,6 +69,7 @@ class VectorStore:
             documents=[text],
             metadatas=[metadata],
         )
+        self._cached_count = None  # invalidate count cache
         logger.debug(f"向量库写入: {id}")
 
     def search(
@@ -93,9 +95,11 @@ class VectorStore:
         list[dict]
             每个元素包含 id, distance, metadata
         """
+        if self._cached_count is None:
+            self._cached_count = self.collection.count() or 0
         kwargs = {
             "query_texts": [query],
-            "n_results": min(n_results, self.collection.count() or 1),
+            "n_results": min(n_results, self._cached_count or 1),
         }
         if where:
             kwargs["where"] = where
@@ -122,6 +126,7 @@ class VectorStore:
         """删除单条经验的向量"""
         try:
             self.collection.delete(ids=[id])
+            self._cached_count = None  # invalidate count cache
         except Exception as e:
             logger.warning(f"向量删除失败: {id}, {e}")
 

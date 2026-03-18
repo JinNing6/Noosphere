@@ -30,6 +30,7 @@ def create_mcp_app():
                 "🧠 Noosphere — Agent 集体记忆网络 MCP Server\n"
                 "提供经验检索 (recall)、经验贡献 (contribute)、统计概览 (stats) 三大能力。"
             ),
+            exclude_tags=["🏠 Home"],  # 排除健康检查/根路由，仅暴露 API 端点
         )
         mcp.mount()
         logger.info("✅ MCP Server 已挂载到 FastAPI 应用")

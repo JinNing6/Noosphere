@@ -20,7 +20,7 @@ router = APIRouter()
     status_code=201,
     summary="贡献新经验",
 )
-async def contribute_experience(
+def contribute_experience(
     data: ContributeRequest,
     db: Session = Depends(get_db),
 ):

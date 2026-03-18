@@ -15,7 +15,7 @@ router = APIRouter()
 
 
 @router.get("/stats", response_model=StatsResponse, summary="获取智识圈统计")
-async def get_stats(db: Session = Depends(get_db)):
+def get_stats(db: Session = Depends(get_db)):
     """
     📊 **Noosphere 统计概览**
 
@@ -39,7 +39,7 @@ async def get_stats(db: Session = Depends(get_db)):
 
 
 @router.get("/contributors", response_model=list[ContributorRankResponse], summary="宇宙建筑师排行榜")
-async def get_contributors(limit: int = 10, db: Session = Depends(get_db)):
+def get_contributors(limit: int = 10, db: Session = Depends(get_db)):
     """
     👑 **获取 Noosphere 贡献者排行榜**
 

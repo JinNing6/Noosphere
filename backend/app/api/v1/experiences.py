@@ -19,7 +19,7 @@ router = APIRouter()
     response_model=PaginatedResponse,
     summary="获取经验列表（分页）",
 )
-async def list_experiences(
+def list_experiences(
     page: int = Query(1, ge=1, description="页码"),
     size: int = Query(20, ge=1, le=100, description="每页条数"),
     type: str | None = Query(None, description="按类型过滤"),
@@ -48,7 +48,7 @@ async def list_experiences(
     response_model=MemoryUnitResponse,
     summary="获取单条经验详情",
 )
-async def get_experience(experience_id: str, db: Session = Depends(get_db)):
+def get_experience(experience_id: str, db: Session = Depends(get_db)):
     """获取指定 ID 的经验详情"""
     unit = experience_store.get_by_id(db, experience_id)
     if not unit:

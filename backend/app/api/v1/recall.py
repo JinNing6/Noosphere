@@ -15,7 +15,7 @@ router = APIRouter()
 
 
 @router.get("/recall", response_model=RecallResponse, summary="检索集体经验")
-async def recall_experiences(
+def recall_experiences(
     q: str = Query(..., description="自然语言查询", min_length=1),
     framework: str | None = Query(None, description="按框架过滤"),
     limit: int = Query(10, ge=1, le=50, description="返回条数"),

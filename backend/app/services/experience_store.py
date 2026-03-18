@@ -148,12 +148,16 @@ class ExperienceStore:
     # ────────────────── 统计 ──────────────────
 
     def get_stats(self, db: Session) -> dict:
-        """获取智识圈统计数据"""
-        total = db.query(func.count(MemoryUnit.id)).scalar() or 0
-
-        contributors = db.query(func.count(func.distinct(MemoryUnit.contributor))).scalar() or 0
-
-        frameworks = db.query(func.count(func.distinct(MemoryUnit.framework))).scalar() or 0
+        """获取智识圈统计数据（合并查询优化）"""
+        # 单次查询获取 total, contributors, frameworks 三个聚合值
+        stats_row = db.query(
+            func.count(MemoryUnit.id).label("total"),
+            func.count(func.distinct(MemoryUnit.contributor)).label("contributors"),
+            func.count(func.distinct(MemoryUnit.framework)).label("frameworks"),
+        ).one()
+        total = stats_row.total or 0
+        contributors = stats_row.contributors or 0
+        frameworks = stats_row.frameworks or 0
 
         # 框架分布
         framework_dist = dict(
@@ -176,41 +180,37 @@ class ExperienceStore:
         }
 
     def get_contributor_rankings(self, db: Session, limit: int = 20) -> list[dict]:
-        """聚合获取宇宙建筑师排行榜"""
-        # MySQL/SQLite 兼容: 按贡献者聚合统计各类型数量
+        """聚合获取宇宙建筑师排行榜（SQL 层排序 + LIMIT 优化）"""
+        # SQL 层完成聚合、过滤、排序和限制，避免应用层全量拉取 + 排序
+        total_score_expr = (
+            func.sum(func.case((MemoryUnit.type == "epiphany", 1), else_=0))
+            + func.sum(func.case((MemoryUnit.type == "decision", 1), else_=0))
+        )
         result = (
             db.query(
                 MemoryUnit.contributor,
                 func.sum(func.case((MemoryUnit.type == "epiphany", 1), else_=0)).label("epiphanies"),
                 func.sum(func.case((MemoryUnit.type == "decision", 1), else_=0)).label("decisions"),
+                total_score_expr.label("total_score"),
             )
             .filter(MemoryUnit.contributor != "anonymous")
             .filter(MemoryUnit.contributor.isnot(None))
             .group_by(MemoryUnit.contributor)
+            .having(total_score_expr > 0)
+            .order_by(desc("total_score"))
+            .limit(limit)
             .all()
         )
 
-        rankings = []
-        for row in result:
-            contributor, epiphanies, decisions = row
-            epiphanies = epiphanies or 0
-            decisions = decisions or 0
-            total_score = epiphanies + decisions
-
-            # 过滤零贡献防篡改垃圾数据
-            if total_score > 0:
-                rankings.append(
-                    {
-                        "contributor": contributor,
-                        "epiphanies": epiphanies,
-                        "decisions": decisions,
-                        "total_score": total_score,
-                    }
-                )
-
-        # 在应用侧按分数倒序排列
-        rankings.sort(key=lambda x: x["total_score"], reverse=True)
-        return rankings[:limit]
+        return [
+            {
+                "contributor": row.contributor,
+                "epiphanies": row.epiphanies or 0,
+                "decisions": row.decisions or 0,
+                "total_score": row.total_score or 0,
+            }
+            for row in result
+        ]
 
     # ────────────────── 列表 ──────────────────
 
