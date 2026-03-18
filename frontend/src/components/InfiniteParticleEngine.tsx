@@ -150,6 +150,7 @@ export interface ParticleData {
   seed: number;
   orbitSpeed: number;
   glowPhase: number;
+  birthTime?: number;  // 入场时间戳（秒），-10 = 已稳定
 }
 
 export interface GPUParticleLayerHandle {
@@ -165,6 +166,7 @@ interface GPUParticleLayerProps {
   orbitEnabled?: boolean;
   breathScale?: number;
   driftScale?: number;
+  enableFlicker?: boolean;  // 启用闪烁效果
 }
 
 /* ═══════════════ GPU 粒子层组件 ═══════════════ */
@@ -178,6 +180,7 @@ export const GPUParticleLayer = forwardRef<GPUParticleLayerHandle, GPUParticleLa
       orbitEnabled = true,
       breathScale = 1.0,
       driftScale = 1.0,
+      enableFlicker = true,
     },
     ref
   ) {
@@ -185,6 +188,11 @@ export const GPUParticleLayer = forwardRef<GPUParticleLayerHandle, GPUParticleLa
     const activeCountRef = useRef(0);
     const dummy = useMemo(() => new THREE.Object3D(), []);
     const tempColor = useMemo(() => new THREE.Color(), []);
+    const shaderRef = useRef<{ uniforms: { uGlobalTime: { value: number } } } | null>(null);
+
+    // 闪烁数据缓冲区: vec3(flickerFreq, flickerAmplitude, birthTime) per instance
+    const flickerBuffer = useMemo(() => new Float32Array(maxCapacity * 3), [maxCapacity]);
+    const flickerAttrRef = useRef<THREE.InstancedBufferAttribute | null>(null);
 
     const writeParticlesToBuffer = useCallback(
       (particles: ParticleData[], startIndex: number) => {
@@ -207,12 +215,19 @@ export const GPUParticleLayer = forwardRef<GPUParticleLayerHandle, GPUParticleLa
           // Set instance color directly
           tempColor.setRGB(p.color[0], p.color[1], p.color[2]);
           mesh.setColorAt(idx, tempColor);
+
+          // 闪烁参数: freq 基于 importance, amplitude 基于 importance
+          const imp = p.importance || 0;
+          flickerBuffer[idx * 3]     = 1.0 + imp * 4.0;   // frequency: 1~5 Hz
+          flickerBuffer[idx * 3 + 1] = 0.15 + imp * 0.6;  // amplitude: 0.15~0.75
+          flickerBuffer[idx * 3 + 2] = p.birthTime ?? -10; // birthTime: -10=已稳定
         }
 
         mesh.instanceMatrix.needsUpdate = true;
         if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+        if (flickerAttrRef.current) flickerAttrRef.current.needsUpdate = true;
       },
-      [maxCapacity, dummy, tempColor]
+      [maxCapacity, dummy, tempColor, flickerBuffer]
     );
 
     // Initial setup
@@ -226,6 +241,21 @@ export const GPUParticleLayer = forwardRef<GPUParticleLayerHandle, GPUParticleLa
       if (meshRef.current) meshRef.current.count = activeCountRef.current;
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
+
+    // 挂载闪烁 InstancedBufferAttribute
+    useEffect(() => {
+      const mesh = meshRef.current;
+      if (!mesh || !mesh.geometry) return;
+      const attr = new THREE.InstancedBufferAttribute(flickerBuffer, 3);
+      attr.setUsage(THREE.DynamicDrawUsage);
+      mesh.geometry.setAttribute('aFlickerData', attr);
+      flickerAttrRef.current = attr;
+      return () => {
+        mesh.geometry.deleteAttribute('aFlickerData');
+        flickerAttrRef.current = null;
+      };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [flickerBuffer]);
 
     // Sync initialParticles
     const prevInitialLenRef = useRef(initialParticles.length);
@@ -262,11 +292,14 @@ export const GPUParticleLayer = forwardRef<GPUParticleLayerHandle, GPUParticleLa
       },
     }), [writeParticlesToBuffer, maxCapacity]);
 
-    // Optional ambient animation (global rotation for life)
+    // 每帧更新全局时间 + 可选轨道旋转
     useFrame(({ clock }) => {
+      const t = clock.getElapsedTime();
+      if (shaderRef.current) {
+        shaderRef.current.uniforms.uGlobalTime.value = t;
+      }
       if (meshRef.current && orbitEnabled) {
-          // just a very slow global drift to keep it from looking fully static
-          meshRef.current.rotation.y = clock.getElapsedTime() * 0.02;
+        meshRef.current.rotation.y = t * 0.02;
       }
     });
 
@@ -287,25 +320,75 @@ export const GPUParticleLayer = forwardRef<GPUParticleLayerHandle, GPUParticleLa
         onClick={handleClick}
         frustumCulled={false}
       >
-        {/* 12x12 gives a nice round sphere shape without being too heavy */}
         <sphereGeometry args={[1, 16, 16]} />
-        {/*
-          MeshStandardMaterial easily catches ambient and point lights,
-          looking like 3D orbs, without Shader conflicts.
-        */}
         <meshStandardMaterial 
           roughness={0.2}
           metalness={0.6}
           emissive={"#000000"}
           toneMapped={false}
           onBeforeCompile={(shader) => {
-            shader.fragmentShader = shader.fragmentShader.replace(
-              '#include <emissivemap_fragment>',
-              `
-              #include <emissivemap_fragment>
-              totalEmissiveRadiance = diffuseColor.rgb * 2.5;
-              `
-            );
+            // 注入全局时间 uniform
+            shader.uniforms.uGlobalTime = { value: 0 };
+            shaderRef.current = shader as any;
+
+            if (enableFlicker) {
+              // ──── Vertex Shader 注入 ────
+              // 声明 attribute 和 varying
+              shader.vertexShader = shader.vertexShader.replace(
+                '#include <common>',
+                `
+                #include <common>
+                attribute vec3 aFlickerData; // x=freq, y=amp, z=birthTime
+                varying float vFlickerFactor;
+                uniform float uGlobalTime;
+                `
+              );
+              // 在 vertex 末尾计算闪烁因子传给 fragment
+              shader.vertexShader = shader.vertexShader.replace(
+                '#include <fog_vertex>',
+                `
+                #include <fog_vertex>
+                float flickerFreq = aFlickerData.x;
+                float flickerAmp = aFlickerData.y;
+                float birthTime = aFlickerData.z;
+                // 基础共振闪烁（持续）
+                float baseFlicker = 1.0 + sin(uGlobalTime * flickerFreq + float(gl_InstanceID) * 0.37) * flickerAmp * 0.5;
+                // 新粒子入场脉冲（前5秒）
+                float age = uGlobalTime - birthTime;
+                float entrancePulse = 1.0;
+                if (birthTime > -5.0 && age < 5.0 && age > 0.0) {
+                  float decay = exp(-age * 0.5);
+                  entrancePulse = 1.0 + sin(age * 8.0) * 1.2 * decay;
+                }
+                vFlickerFactor = baseFlicker * entrancePulse;
+                `
+              );
+
+              // ──── Fragment Shader 注入 ────
+              shader.fragmentShader = shader.fragmentShader.replace(
+                '#include <common>',
+                `
+                #include <common>
+                varying float vFlickerFactor;
+                `
+              );
+              shader.fragmentShader = shader.fragmentShader.replace(
+                '#include <emissivemap_fragment>',
+                `
+                #include <emissivemap_fragment>
+                totalEmissiveRadiance = diffuseColor.rgb * 2.5 * vFlickerFactor;
+                `
+              );
+            } else {
+              // 无闪烁，保持原有静态发光
+              shader.fragmentShader = shader.fragmentShader.replace(
+                '#include <emissivemap_fragment>',
+                `
+                #include <emissivemap_fragment>
+                totalEmissiveRadiance = diffuseColor.rgb * 2.5;
+                `
+              );
+            }
           }}
         />
       </instancedMesh>
@@ -510,6 +593,7 @@ export function nodeToParticle(
   importance: number,
   index: number,
   orbitSpeed: number = 0.03,
+  birthTime: number = -10,
 ): ParticleData {
   return {
     position,
@@ -518,5 +602,6 @@ export function nodeToParticle(
     seed: (index * 0.618033988749895) % 1.0,
     orbitSpeed,
     glowPhase: (index * 2.399963) % (Math.PI * 2),
+    birthTime,
   };
 }

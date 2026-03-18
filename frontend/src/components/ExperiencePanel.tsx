@@ -120,7 +120,7 @@ export default function DetailPanel({ node, onClose }: DetailPanelProps) {
     }}>
       {/* 关闭按钮 */}
       <button onClick={onClose} title={t('experience.closePanel')} style={{
-        position: 'absolute', top: 16, right: 16,
+        position: 'absolute', top: 16, left: 16,
         background: 'rgba(0,0,0,0.6)',
         border: '1px solid rgba(255,255,255,0.2)',
         borderRadius: '50%', width: 36, height: 36,

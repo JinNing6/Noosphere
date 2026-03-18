@@ -423,8 +423,68 @@ function StaticGPULayer({
 }
 
 /**
+ * DynamicFlowLines — 动态意识体间的 GPU 流光连线
+ * 对每个动态粒子选择最近的 3 个邻居生成贝塞尔流光
+ */
+function DynamicFlowLines({ particles }: { particles: ParticleData[] }) {
+  const MAX_NEIGHBORS = 3;
+
+  const pulseCurves = useMemo(() => {
+    if (particles.length < 2) return [];
+
+    const curves: PulseCurveData[] = [];
+    const used = new Set<string>();
+
+    for (let i = 0; i < particles.length; i++) {
+      const pi = particles[i];
+      // 计算与其他所有粒子的距离
+      const distances: { idx: number; dist: number }[] = [];
+      for (let j = 0; j < particles.length; j++) {
+        if (j === i) continue;
+        const pj = particles[j];
+        const dx = pi.position[0] - pj.position[0];
+        const dy = pi.position[1] - pj.position[1];
+        const dz = pi.position[2] - pj.position[2];
+        distances.push({ idx: j, dist: Math.sqrt(dx * dx + dy * dy + dz * dz) });
+      }
+      distances.sort((a, b) => a.dist - b.dist);
+
+      // 取最近的 MAX_NEIGHBORS 个邻居
+      for (let k = 0; k < Math.min(MAX_NEIGHBORS, distances.length); k++) {
+        const j = distances[k].idx;
+        const key = `${Math.min(i, j)}-${Math.max(i, j)}`;
+        if (used.has(key)) continue;
+        used.add(key);
+
+        const pj = particles[j];
+        const mid: [number, number, number] = [
+          (pi.position[0] + pj.position[0]) * 0.5 + (Math.sin(i * 2.7 + j * 1.3) * 0.8),
+          (pi.position[1] + pj.position[1]) * 0.5 + (Math.cos(i * 1.3 + j * 2.7) * 0.8),
+          (pi.position[2] + pj.position[2]) * 0.5 + (Math.sin(i * 3.1 + j * 0.7) * 0.8),
+        ];
+
+        curves.push({
+          start: pi.position,
+          mid,
+          end: pj.position,
+          fromColor: pi.color,
+          toColor: pj.color,
+          phaseOffset: (i * 0.618 + j * 0.382) % 1.0,
+        });
+      }
+    }
+
+    return curves;
+  }, [particles]);
+
+  if (pulseCurves.length === 0) return null;
+  return <GPUPulsePoints curves={pulseCurves} />;
+}
+
+/**
  * DynamicConsciousnessCloud — 无限意识体云
  * 使用 GPUParticleLayer 的 ref API 实现增量添加
+ * ✨ 新增：birthTime 标记新入场粒子 + 流光连线
  */
 function DynamicConsciousnessCloud({
   nodes,
@@ -435,14 +495,23 @@ function DynamicConsciousnessCloud({
 }) {
   const layerRef = useRef<GPUParticleLayerHandle>(null);
   const prevCountRef = useRef(0);
+  const birthTimeRef = useRef<number>(0);
+
+  // 记录组件挂载时间作为初始 birthTime 基线
+  useFrame(({ clock }) => {
+    birthTimeRef.current = clock.getElapsedTime();
+  });
 
   // 当 nodes 变化时转换为 ParticleData
   const particles = useMemo(() => {
     return nodes.map((node, i) => {
       const position = goldenSpherePoint(i, Math.max(nodes.length, 1), 5.5);
       const color = new THREE.Color('#00d4ff');
-      return nodeToParticle(position, color, node.importance, i, 0.03);
+      // 新粒子标记当前时间用于闪烁入场效果
+      const bt = i >= prevCountRef.current ? birthTimeRef.current : -10;
+      return nodeToParticle(position, color, node.importance, i, 0.03, bt);
     });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [nodes]);
 
   // 当新粒子被添加时，使用增量更新
@@ -475,15 +544,20 @@ function DynamicConsciousnessCloud({
   if (nodes.length === 0) return null;
 
   return (
-    <GPUParticleLayer
-      ref={layerRef}
-      maxCapacity={100_000}
-      initialParticles={particles}
-      onClick={handleClick}
-      orbitEnabled={true}
-      breathScale={1.2}
-      driftScale={1.5}
-    />
+    <group>
+      <GPUParticleLayer
+        ref={layerRef}
+        maxCapacity={100_000}
+        initialParticles={particles}
+        onClick={handleClick}
+        orbitEnabled={true}
+        breathScale={1.2}
+        driftScale={1.5}
+        enableFlicker={true}
+      />
+      {/* 动态意识体间的流光连线 */}
+      <DynamicFlowLines particles={particles} />
+    </group>
   );
 }
 
@@ -684,11 +758,12 @@ function CinematicIntro({ phase, onComplete }: { phase: number; onComplete: () =
 
 interface NoosphereGlobeProps {
   onSelectNode: (node: KnowledgeNode) => void;
+  onBackgroundClick?: () => void;
   searchQuery?: string;
   dynamicNodes?: KnowledgeNode[];
 }
 
-export default function NoosphereGlobe({ onSelectNode, dynamicNodes = [] }: NoosphereGlobeProps) {
+export default function NoosphereGlobe({ onSelectNode, onBackgroundClick, dynamicNodes = [] }: NoosphereGlobeProps) {
   const [introPhase, setIntroPhase] = useState(0);
 
   const handleIntroComplete = useCallback(() => {
@@ -704,6 +779,7 @@ export default function NoosphereGlobe({ onSelectNode, dynamicNodes = [] }: Noos
         camera={{ position: [0, 5, 25], fov: 50 }}
         style={{ background: '#050510' }}
         dpr={[1, 1.5]}
+        onPointerMissed={onBackgroundClick}
         gl={{
           antialias: true,
           alpha: false,

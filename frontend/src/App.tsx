@@ -83,6 +83,7 @@ export default function App() {
         {/* 3D 智识圈 — 接收动态意识体节点 */}
         <NoosphereGlobe
           onSelectNode={handleSelect}
+          onBackgroundClick={handleClose}
           searchQuery={searchQuery}
           dynamicNodes={dynamicNodes}
         />

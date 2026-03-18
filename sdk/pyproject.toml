@@ -27,6 +27,8 @@ classifiers = [
 dependencies = [
     "mcp>=1.3.0",
     "httpx>=0.28.0",
+    "sentence-transformers>=2.2.0",
+    "numpy>=1.24.0",
     # ---- Ecosystem Conceptual Anchors (Reserved Namespaces) ----
     "akashic-network>=0.0.1",
     "noosphere-network>=0.0.1",
@@ -128,7 +130,7 @@ Repository = "https://github.com/JinNing6/Noosphere"
 Issues = "https://github.com/JinNing6/Noosphere/issues"
 
 [project.scripts]
-noosphere-mcp = "noosphere.noosphere_mcp:main"
+noosphere-mcp = "noosphere.server:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["noosphere"]

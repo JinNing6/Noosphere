@@ -31,6 +31,7 @@ Configuration (in your IDE's MCP settings):
 
 import json
 import logging
+import math
 import os
 import re
 from base64 import b64decode, b64encode
@@ -97,6 +98,77 @@ _inverted_index: dict[str, set[str]] = {}  # token -> set of doc_ids
 _index_doc_data: dict[str, dict] = {}  # doc_id -> {payload, source_name, layer, issue/entry}
 _index_built_ts: float = 0.0  # timestamp of last index build
 
+# ── Semantic Embedding Engine ──
+_EMBEDDING_MODEL_NAME = "paraphrase-multilingual-MiniLM-L12-v2"
+_EMBEDDING_DIM = 384
+
+# Embedding cache: doc_id -> numpy array (384-dim float32)
+_embedding_cache: dict[str, "numpy.ndarray"] = {}
+
+
+class _EmbeddingEngine:
+    """Lazy-loaded sentence-transformers embedding engine with graceful fallback.
+
+    Uses paraphrase-multilingual-MiniLM-L12-v2 for 50+ language support
+    (including CJK). Falls back to None if model loading fails, allowing
+    BM25-only scoring as degraded mode.
+    """
+
+    _instance: "_EmbeddingEngine | None" = None
+    _model: object = None
+    _available: bool | None = None  # None = not yet attempted
+
+    @classmethod
+    def get(cls) -> "_EmbeddingEngine":
+        if cls._instance is None:
+            cls._instance = cls()
+        return cls._instance
+
+    @property
+    def available(self) -> bool:
+        if self._available is None:
+            self._load_model()
+        return self._available  # type: ignore[return-value]
+
+    def _load_model(self) -> None:
+        try:
+            from sentence_transformers import SentenceTransformer
+            self._model = SentenceTransformer(_EMBEDDING_MODEL_NAME)
+            self._available = True
+            logger.info(
+                f"Embedding engine loaded: {_EMBEDDING_MODEL_NAME} "
+                f"({_EMBEDDING_DIM}-dim, multilingual)"
+            )
+        except Exception as e:
+            self._available = False
+            logger.warning(
+                f"Embedding engine unavailable (BM25-only fallback): {e}"
+            )
+
+    def encode_query(self, text: str) -> "numpy.ndarray | None":
+        """Encode a query string into a 384-dim vector."""
+        if not self.available or self._model is None:
+            return None
+        try:
+            import numpy as np
+            vec = self._model.encode(text, convert_to_numpy=True, normalize_embeddings=True)
+            return np.asarray(vec, dtype=np.float32)
+        except Exception:
+            return None
+
+    def encode_docs(self, texts: list[str]) -> "list[numpy.ndarray] | None":
+        """Batch encode multiple documents into 384-dim vectors."""
+        if not self.available or self._model is None or not texts:
+            return None
+        try:
+            import numpy as np
+            vecs = self._model.encode(texts, convert_to_numpy=True,
+                                      normalize_embeddings=True, batch_size=64)
+            return [np.asarray(v, dtype=np.float32) for v in vecs]
+        except Exception:
+            return None
+
+
 
 def _get_cached(key: str) -> list | None:
     """Return cached data if still valid, else None."""
@@ -137,6 +209,7 @@ def _invalidate_cache(key: str | None = None) -> None:
         _parsed_payloads.clear()
         _inverted_index.clear()
         _index_doc_data.clear()
+        _embedding_cache.clear()
         # Reset shared client so it picks up fresh headers (required for tests)
         if _shared_client and not _shared_client.is_closed:
             try:
@@ -174,6 +247,7 @@ def _append_issue_to_cache(issue_data: dict) -> None:
         # Invalidate inverted index so it rebuilds with new data next search
         _inverted_index.clear()
         _index_doc_data.clear()
+        _embedding_cache.clear()
 
 
 def _get_parsed_payload(issue: dict) -> dict | None:
@@ -218,12 +292,14 @@ def _build_search_index(issues: list[dict], file_entries: list[dict]) -> None:
             " ".join(payload.get("tags", [])),
         ])
         tokens = _tokenize(search_text)
+        token_list = search_text.lower().split()  # for BM25 TF counting
         _index_doc_data[doc_id] = {
             "payload": payload,
             "source_name": f"Issue #{issue['number']}",
             "layer": "⚡ 瞬时",
             "issue": issue,
             "tokens": tokens,
+            "token_list": token_list,
         }
         for token in tokens:
             _inverted_index.setdefault(token, set()).add(doc_id)
@@ -239,48 +315,144 @@ def _build_search_index(issues: list[dict], file_entries: list[dict]) -> None:
             " ".join(payload.get("tags", [])),
         ])
         tokens = _tokenize(search_text)
+        token_list = search_text.lower().split()  # for BM25 TF counting
         _index_doc_data[doc_id] = {
             "payload": payload,
             "source_name": entry["filename"],
             "layer": "🏛️ 常驻",
             "entry": entry,
             "tokens": tokens,
+            "token_list": token_list,
         }
         for token in tokens:
             _inverted_index.setdefault(token, set()).add(doc_id)
 
     _index_built_ts = now
 
+    # ── Build embedding cache (async-safe: runs in same thread) ──
+    engine = _EmbeddingEngine.get()
+    if engine.available:
+        # Collect doc texts that need embedding
+        doc_ids_to_embed: list[str] = []
+        texts_to_embed: list[str] = []
+        for doc_id, doc in _index_doc_data.items():
+            if doc_id not in _embedding_cache:
+                payload = doc["payload"]
+                embed_text = " ".join([
+                    payload.get("thought_vector_text", ""),
+                    payload.get("context_environment", ""),
+                    " ".join(payload.get("tags", [])),
+                ])
+                doc_ids_to_embed.append(doc_id)
+                texts_to_embed.append(embed_text)
+
+        if texts_to_embed:
+            vecs = engine.encode_docs(texts_to_embed)
+            if vecs:
+                for did, vec in zip(doc_ids_to_embed, vecs):
+                    _embedding_cache[did] = vec
+
+
+def _bm25_score(
+    query_tokens: set[str],
+    doc_tokens: set[str],
+    doc_token_list: list[str],
+    avg_doc_len: float,
+    total_docs: int,
+    k1: float = 1.5,
+    b: float = 0.75,
+) -> float:
+    """Compute BM25 relevance score for a single document.
+
+    Uses standard BM25 parameters with IDF derived from inverted index.
+    """
+    if not query_tokens or not doc_token_list or total_docs == 0:
+        return 0.0
+
+    doc_len = len(doc_token_list)
+    score = 0.0
+
+    for token in query_tokens:
+        if token not in doc_tokens:
+            continue
+
+        # Term frequency in this document
+        tf = doc_token_list.count(token)
+
+        # Document frequency from inverted index
+        df = len(_inverted_index.get(token, set()))
+        if df == 0:
+            continue
+
+        # IDF: log((N - df + 0.5) / (df + 0.5) + 1)
+        idf = math.log((total_docs - df + 0.5) / (df + 0.5) + 1.0)
+
+        # BM25 TF normalization
+        tf_norm = (tf * (k1 + 1)) / (tf + k1 * (1 - b + b * doc_len / avg_doc_len))
+
+        score += idf * tf_norm
+
+    return score
+
+
+def _cosine_sim(vec_a: "numpy.ndarray", vec_b: "numpy.ndarray") -> float:
+    """Compute cosine similarity between two vectors (already L2-normalized)."""
+    import numpy as np
+    dot = float(np.dot(vec_a, vec_b))
+    # Vectors are pre-normalized, but clamp for safety
+    return max(0.0, min(1.0, dot))
+
 
 def _search_by_index(
     query_tokens: set[str],
+    query_text: str = "",
     type_filter: str | None = None,
     creator_filter: str | None = None,
     tag_filter: str | None = None,
     since: str | None = None,
     until: str | None = None,
     exclude_creator: str | None = None,
-) -> list[tuple[int, int, dict, str, str]]:
-    """Search using inverted index: fast candidate recall + Jaccard scoring.
+) -> list[tuple[float, int, dict, str, str]]:
+    """Hybrid search: inverted index recall + BM25 + semantic cosine similarity.
+
+    Scoring formula:
+      - If embedding available: final = 0.35 * bm25_norm + 0.65 * cosine_sim
+      - If embedding unavailable: final = bm25_score (raw)
 
     Returns list of (score, resonance, payload, source_name, layer).
     """
     if not _inverted_index:
         return []
 
-    # Fast candidate recall via inverted index
+    # Fast candidate recall via inverted index (OR semantics)
     candidate_ids: set[str] | None = None
     for token in query_tokens:
         doc_ids = _inverted_index.get(token, set())
         if candidate_ids is None:
             candidate_ids = set(doc_ids)
         else:
-            candidate_ids |= doc_ids  # union for OR semantics
+            candidate_ids |= doc_ids
 
     if not candidate_ids:
-        return []
+        # If keyword recall fails but we have embeddings, search ALL docs
+        engine = _EmbeddingEngine.get()
+        if engine.available and query_text:
+            candidate_ids = set(_index_doc_data.keys())
+        else:
+            return []
 
-    matches: list[tuple[int, int, dict, str, str]] = []
+    # Pre-compute query embedding
+    query_embedding = None
+    engine = _EmbeddingEngine.get()
+    if engine.available and query_text:
+        query_embedding = engine.encode_query(query_text)
+
+    # Compute average document length for BM25
+    total_docs = len(_index_doc_data)
+    total_tokens = sum(len(d.get("token_list", d.get("tokens", []))) for d in _index_doc_data.values())
+    avg_doc_len = total_tokens / total_docs if total_docs > 0 else 1.0
+
+    matches: list[tuple[float, int, dict, str, str]] = []
     seen_fingerprints: set[str] = set()
 
     for doc_id in candidate_ids:
@@ -320,10 +492,29 @@ def _search_by_index(
             continue
         seen_fingerprints.add(fingerprint)
 
-        # Score using cached tokens
+        # ── Hybrid scoring ──
         doc_tokens = doc.get("tokens", set())
-        score = len(query_tokens & doc_tokens)
-        if score <= 0:
+        doc_token_list = doc.get("token_list", list(doc_tokens))
+
+        # BM25 component
+        bm25 = _bm25_score(query_tokens, doc_tokens, doc_token_list,
+                           avg_doc_len, total_docs)
+
+        # Semantic similarity component
+        cos_sim = 0.0
+        if query_embedding is not None and doc_id in _embedding_cache:
+            cos_sim = _cosine_sim(query_embedding, _embedding_cache[doc_id])
+
+        # Final score
+        if query_embedding is not None:
+            # Normalize BM25 to [0, 1] range (cap at ~10 which is very high)
+            bm25_norm = min(bm25 / 10.0, 1.0) if bm25 > 0 else 0.0
+            final_score = 0.35 * bm25_norm + 0.65 * cos_sim
+        else:
+            # Fallback: pure BM25
+            final_score = bm25
+
+        if final_score <= 0.0:
             continue
 
         # Get resonance
@@ -333,7 +524,7 @@ def _search_by_index(
         else:
             resonance = payload.get("resonance_score", 0)
 
-        matches.append((score, resonance, payload, doc["source_name"], doc["layer"]))
+        matches.append((final_score, resonance, payload, doc["source_name"], doc["layer"]))
 
     matches.sort(key=lambda x: (x[0], x[1]), reverse=True)
     return matches
@@ -1105,87 +1296,32 @@ async def consult_noosphere(
     try:
         owner, repo = _parse_repo()
         query_tokens = _tokenize(question)
-        matches: list[tuple[int, int, dict, str, str]] = []
-        seen_fingerprints: set[str] = set()
 
         client = await _get_client()
-        # ── Layer 1: Ephemeral Consciousness (GitHub Issues) ── [CACHED]
+        # ── Fetch both layers ── [CACHED]
         issues = await _fetch_all_issues_cached(client, owner, repo)
-
-        for issue in issues:
-            if "pull_request" in issue:
-                continue
-
-            payload = _get_parsed_payload(issue)
-            if not payload:
-                continue
-
-            # Tag filter (if provided)
-            if topic_tags:
-                payload_tags = set(t.lower() for t in payload.get("tags", []))
-                topic_tags_lower = set(t.lower() for t in topic_tags)
-                if not (payload_tags & topic_tags_lower):
-                    continue
-
-            # Dedup
-            fingerprint = (
-                payload.get("uploaded_at", "")
-                + payload.get("thought_vector_text", "")[:30]
-            )
-            if fingerprint in seen_fingerprints:
-                continue
-            seen_fingerprints.add(fingerprint)
-
-            search_text = " ".join(
-                [
-                    payload.get("thought_vector_text", ""),
-                    payload.get("context_environment", ""),
-                    payload.get("consciousness_type", ""),
-                    " ".join(payload.get("tags", [])),
-                ]
-            )
-            doc_tokens = _tokenize(search_text)
-            score = len(query_tokens & doc_tokens)
-            resonance = issue.get("reactions", {}).get("total_count", 0)
-            if score > 0:
-                matches.append((score, resonance, payload, f"Issue #{issue['number']}", "⚡ 瞬时"))
-
-        # ── Layer 2: Permanent Consciousness (JSON Files) ── [CACHED + CONCURRENT]
         file_entries = await _fetch_file_payloads(client, owner, repo)
 
-        for entry in file_entries:
-            payload = entry["payload"]
+        # Build unified search index (includes BM25 + embeddings)
+        _build_search_index(issues, file_entries)
 
-            if topic_tags:
-                payload_tags = set(t.lower() for t in payload.get("tags", []))
-                topic_tags_lower = set(t.lower() for t in topic_tags)
-                if not (payload_tags & topic_tags_lower):
-                    continue
+        # Use hybrid search (BM25 + semantic cosine similarity)
+        tag_filter_val = topic_tags[0] if topic_tags and len(topic_tags) == 1 else None
+        matches = _search_by_index(
+            query_tokens,
+            query_text=question,
+            tag_filter=tag_filter_val,
+        )
 
-            fingerprint = (
-                payload.get("uploaded_at", "")
-                + payload.get("thought_vector_text", "")[:30]
-            )
-            if fingerprint in seen_fingerprints:
-                continue
-            seen_fingerprints.add(fingerprint)
-
-            search_text = " ".join(
-                [
-                    payload.get("thought_vector_text", ""),
-                    payload.get("context_environment", ""),
-                    payload.get("consciousness_type", ""),
-                    " ".join(payload.get("tags", [])),
-                ]
-            )
-            doc_tokens = _tokenize(search_text)
-            score = len(query_tokens & doc_tokens)
-            resonance = payload.get("resonance_score", 0)
-            if score > 0:
-                matches.append((score, resonance, payload, entry["filename"], "🏛️ 常驻"))
+        # Multi-tag filter (if more than one tag provided)
+        if topic_tags and len(topic_tags) > 1:
+            topic_tags_lower = set(t.lower() for t in topic_tags)
+            matches = [
+                m for m in matches
+                if set(t.lower() for t in m[2].get("tags", [])) & topic_tags_lower
+            ]
 
         # ── Build response ──
-        matches.sort(key=lambda x: (x[0], x[1]), reverse=True)
         top = matches[:5]  # Show at most 5 for consult (keep it focused)
 
         lines = [f"🔮 **Noosphere Collective Wisdom** — {len(matches)} related consciousness fragments found\n"]
@@ -1287,117 +1423,25 @@ async def telepath(
     try:
         owner, repo = _parse_repo()
         query_tokens = _tokenize(query)
-        matches: list[tuple[int, int, dict, str, str]] = []  # (search_score, resonance_score, payload, source_name, layer)
-        seen_fingerprints: set[str] = set()  # Dedup: uploaded_at + thought[:30]
 
         client = await _get_client()
-        # ── Layer 1: Ephemeral Consciousness (GitHub Issues) ── [CACHED]
+        # ── Fetch both layers ── [CACHED]
         issues = await _fetch_all_issues_cached(client, owner, repo)
-
-        for issue in issues:
-            # Skip pull requests (GitHub API returns PRs as issues too)
-            if "pull_request" in issue:
-                continue
-
-            # Extract payload from Issue body
-            payload = _get_parsed_payload(issue)
-            if not payload:
-                continue
-
-            # Apply filters
-            if type_filter and payload.get("consciousness_type") != type_filter:
-                continue
-            if creator_filter:
-                payload_creator = payload.get("creator_signature", "")
-                is_anon = payload.get("is_anonymous", False)
-                matches_creator = payload_creator == creator_filter
-                matches_anon = creator_filter.lower() == "anonymous stalker" and is_anon
-                if not (matches_creator or matches_anon):
-                    continue
-            if tag_filter and tag_filter not in payload.get("tags", []):
-                continue
-
-            # Time range filter
-            uploaded_at = payload.get("uploaded_at", "")
-            if since and uploaded_at and uploaded_at < since:
-                continue
-            if until and uploaded_at and uploaded_at > until:
-                continue
-
-            # Dedup fingerprint
-            fingerprint = (
-                payload.get("uploaded_at", "")
-                + payload.get("thought_vector_text", "")[:30]
-            )
-            if fingerprint in seen_fingerprints:
-                continue
-            seen_fingerprints.add(fingerprint)
-
-            # Build search tokens and score
-            search_text = " ".join(
-                [
-                    payload.get("thought_vector_text", ""),
-                    payload.get("context_environment", ""),
-                    payload.get("consciousness_type", ""),
-                    " ".join(payload.get("tags", [])),
-                ]
-            )
-            doc_tokens = _tokenize(search_text)
-
-            score = len(query_tokens & doc_tokens)
-            resonance = issue.get("reactions", {}).get("total_count", 0)
-            if score > 0:
-                matches.append((score, resonance, payload, f"Issue #{issue['number']}", "⚡ 瞬时"))
-
-        # ── Layer 2: Permanent Consciousness (JSON Files) ── [CACHED + CONCURRENT]
         file_entries = await _fetch_file_payloads(client, owner, repo)
 
-        for entry in file_entries:
-            payload = entry["payload"]
+        # Build unified search index (includes BM25 + embeddings)
+        _build_search_index(issues, file_entries)
 
-            # Apply filters
-            if type_filter and payload.get("consciousness_type") != type_filter:
-                continue
-            if creator_filter:
-                payload_creator = payload.get("creator_signature", "")
-                is_anon = payload.get("is_anonymous", False)
-                matches_creator = payload_creator == creator_filter
-                matches_anon = creator_filter.lower() == "anonymous stalker" and is_anon
-                if not (matches_creator or matches_anon):
-                    continue
-            if tag_filter and tag_filter not in payload.get("tags", []):
-                continue
-
-            # Time range filter
-            uploaded_at = payload.get("uploaded_at", "")
-            if since and uploaded_at and uploaded_at < since:
-                continue
-            if until and uploaded_at and uploaded_at > until:
-                continue
-
-            # Dedup fingerprint
-            fingerprint = (
-                payload.get("uploaded_at", "")
-                + payload.get("thought_vector_text", "")[:30]
-            )
-            if fingerprint in seen_fingerprints:
-                continue
-            seen_fingerprints.add(fingerprint)
-
-            search_text = " ".join(
-                [
-                    payload.get("thought_vector_text", ""),
-                    payload.get("context_environment", ""),
-                    payload.get("consciousness_type", ""),
-                    " ".join(payload.get("tags", [])),
-                ]
-            )
-            doc_tokens = _tokenize(search_text)
-
-            score = len(query_tokens & doc_tokens)
-            resonance = payload.get("resonance_score", 0)
-            if score > 0:
-                matches.append((score, resonance, payload, entry["filename"], "🏛️ 常驻"))
+        # Use hybrid search (BM25 + semantic cosine similarity)
+        matches = _search_by_index(
+            query_tokens,
+            query_text=query,
+            type_filter=type_filter,
+            creator_filter=creator_filter,
+            tag_filter=tag_filter,
+            since=since,
+            until=until,
+        )
 
         if not matches:
             total_searched = "both ephemeral and permanent layers"
@@ -1406,8 +1450,6 @@ async def telepath(
                 f"Try different keywords, or upload your own thoughts to benefit future seekers."
             )
 
-        # Sort by relevance (primary) and resonance (secondary)
-        matches.sort(key=lambda x: (x[0], x[1]), reverse=True)
         top = matches[:limit]
 
         # Build results
@@ -3088,14 +3130,36 @@ async def consciousness_map(
                     score += tag_score * 40  # Heavy weight
                     reasons.append(f"🏷️ Shared tags: {', '.join(common_tags)} ({tag_score:.0%} overlap)")
 
-            # Signal 2: Keyword Jaccard similarity
-            frag_tokens = set(_tokenize(frag["thought"] + " " + frag["context"]))
-            jaccard = _jaccard_similarity(query_tokens, frag_tokens)
-            if jaccard > 0:
-                score += jaccard * 30
-                common_words = query_tokens & frag_tokens
-                top_common = sorted(common_words)[:5]
-                reasons.append(f"🔤 Keyword overlap: {jaccard:.0%} ({', '.join(top_common)})")
+            # Signal 2: Semantic similarity (with BM25 fallback)
+            frag_text = frag["thought"] + " " + frag["context"]
+            frag_tokens = set(_tokenize(frag_text))
+            common_words = query_tokens & frag_tokens
+
+            # Try semantic cosine similarity first
+            engine = _EmbeddingEngine.get()
+            if engine.available:
+                q_vec = engine.encode_query(query_text)
+                d_vec = engine.encode_query(frag_text)
+                if q_vec is not None and d_vec is not None:
+                    cos_sim = _cosine_sim(q_vec, d_vec)
+                    if cos_sim > 0.1:
+                        score += cos_sim * 30
+                        top_common = sorted(common_words)[:5]
+                        kw_hint = f" (keywords: {', '.join(top_common)})" if top_common else ""
+                        reasons.append(f"🔤 Semantic similarity: {cos_sim:.0%}{kw_hint}")
+                elif common_words:
+                    # Fallback within embedding mode
+                    jaccard = _jaccard_similarity(query_tokens, frag_tokens)
+                    score += jaccard * 30
+                    top_common_sorted = sorted(common_words)[:5]
+                    reasons.append(f"🔤 Keyword overlap: {jaccard:.0%} ({', '.join(top_common_sorted)})")
+            else:
+                # Pure keyword fallback (BM25-style via Jaccard)
+                jaccard = _jaccard_similarity(query_tokens, frag_tokens)
+                if jaccard > 0:
+                    score += jaccard * 30
+                    top_common_sorted = sorted(common_words)[:5]
+                    reasons.append(f"🔤 Keyword overlap: {jaccard:.0%} ({', '.join(top_common_sorted)})")
 
             # Signal 3: Evolution lineage
             if query_parent and str(query_parent) == str(frag["issue_number"]):
@@ -3110,7 +3174,7 @@ async def consciousness_map(
                 score += 5
                 reasons.append(f"🔮 Same consciousness type: {frag['type']}")
 
-            if score > 0 or (not query_tags and jaccard == 0):
+            if score > 0 or (not query_tags and not common_words):
                 # For pure text queries with no tag match, use a minimum keyword score
                 if not reasons and query_tokens:
                     # Check if any query token appears in fragment
