@@ -28,7 +28,8 @@ const LAYER_ICONS: Record<string, string> = {
 };
 
 export default function DetailPanel({ node, onClose }: DetailPanelProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const isEn = i18n.language === 'en';
   const [mediaLoading, setMediaLoading] = useState(false);
   const [mediaItems, setMediaItems] = useState<MediaItem[]>([]);
 
@@ -118,7 +119,7 @@ export default function DetailPanel({ node, onClose }: DetailPanelProps) {
       fontFamily: "'Inter', sans-serif",
     }}>
       {/* 关闭按钮 */}
-      <button onClick={onClose} style={{
+      <button onClick={onClose} title={t('experience.closePanel')} style={{
         position: 'sticky', top: 16, float: 'right',
         marginRight: 16,
         background: 'rgba(255,255,255,0.06)',
@@ -167,13 +168,13 @@ export default function DetailPanel({ node, onClose }: DetailPanelProps) {
           margin: '0 0 4px', fontSize: 22, fontWeight: 700,
           color: '#f0f0ff', lineHeight: 1.3,
         }}>
-          {node.title_zh}
+          {isEn ? node.title_en : node.title_zh}
         </h2>
         <p style={{
           margin: '0 0 20px', fontSize: 14,
           color: 'rgba(255,255,255,0.4)', fontStyle: 'italic',
         }}>
-          {node.title_en}
+          {isEn ? node.title_zh : node.title_en}
         </p>
 
         {/* 重要度指示器 */}
@@ -227,7 +228,7 @@ export default function DetailPanel({ node, onClose }: DetailPanelProps) {
               animation: 'spin 1s linear infinite'
             }} />
             <span style={{ fontSize: 12, color: accentColor, letterSpacing: 2 }}>
-              ESTABLISHING WIKI UPLINK...
+              {t('experience.establishingUplink')}
             </span>
             <style>{`
               @keyframes spin { 100% { transform: rotate(360deg); } }
@@ -236,7 +237,7 @@ export default function DetailPanel({ node, onClose }: DetailPanelProps) {
         ) : mediaItems.length > 0 ? (
           <div style={{ marginBottom: 20 }}>
             <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>
-              Data Archives ({mediaItems.length})
+              {t('experience.dataArchives')} ({mediaItems.length})
             </div>
             <div style={{
               display: 'flex', gap: 12, overflowX: 'auto', paddingBottom: 8,
@@ -275,7 +276,7 @@ export default function DetailPanel({ node, onClose }: DetailPanelProps) {
                       background: 'rgba(0,0,0,0.7)', color: '#fff',
                       fontSize: 10, padding: '2px 6px', borderRadius: 4,
                       border: '1px solid rgba(255,255,255,0.2)'
-                    }}>▶ VIDEO</div>
+                    }}>{t('experience.video')}</div>
                   )}
                 </div>
               ))}
@@ -338,8 +339,8 @@ export default function DetailPanel({ node, onClose }: DetailPanelProps) {
               boxShadow: `0 0 8px ${accentColor}`
             }} />
             <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)', letterSpacing: 1 }}>UPLINK PORTAL</span>
-              <span style={{ letterSpacing: 0.5 }}>ACCESS WIKIPEDIA CORE ↗</span>
+              <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)', letterSpacing: 1 }}>{t('experience.uplinkPortal')}</span>
+              <span style={{ letterSpacing: 0.5 }}>{t('experience.accessWikiCore')}</span>
             </div>
           </a>
         )}

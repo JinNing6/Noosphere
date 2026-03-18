@@ -51,6 +51,11 @@ const ko = {
     media: '미디어',
     noMedia: '미디어 없음',
     closePanel: '패널 닫기',
+    establishingUplink: '위키 업링크 구축 중...',
+    dataArchives: '// 데이터 보관소',
+    uplinkPortal: '업링크 포털',
+    accessWikiCore: '위키백과 코어 접속 ↗',
+    video: '▶ 비디오',
   },
 
   contribution: {

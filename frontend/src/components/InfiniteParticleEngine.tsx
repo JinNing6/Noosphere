@@ -296,9 +296,17 @@ export const GPUParticleLayer = forwardRef<GPUParticleLayerHandle, GPUParticleLa
         <meshStandardMaterial 
           roughness={0.2}
           metalness={0.6}
-          emissive={"#111111"}
-          emissiveIntensity={0.5}
+          emissive={"#000000"}
           toneMapped={false}
+          onBeforeCompile={(shader) => {
+            shader.fragmentShader = shader.fragmentShader.replace(
+              '#include <emissivemap_fragment>',
+              `
+              #include <emissivemap_fragment>
+              totalEmissiveRadiance = diffuseColor.rgb * 2.5;
+              `
+            );
+          }}
         />
       </instancedMesh>
     );

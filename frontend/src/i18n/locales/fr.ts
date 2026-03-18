@@ -51,6 +51,11 @@ const fr = {
     media: 'Médias',
     noMedia: 'Aucun média disponible',
     closePanel: 'Fermer le Panneau',
+    establishingUplink: 'ÉTABLISSEMENT DE LA LIAISON WIKI...',
+    dataArchives: '// ARCHIVES DE DONNÉES',
+    uplinkPortal: 'PORTAIL DE LIAISON',
+    accessWikiCore: 'ACCÉDER AU CŒUR WIKIPEDIA ↗',
+    video: '▶ VIDÉO',
   },
 
   contribution: {

@@ -51,6 +51,11 @@ const ja = {
     media: 'メディア',
     noMedia: 'メディアなし',
     closePanel: 'パネルを閉じる',
+    establishingUplink: 'Wikiアップリンクを確立中...',
+    dataArchives: '// データアーカイブ',
+    uplinkPortal: 'アップリンクポータル',
+    accessWikiCore: 'ウィキペディアコアにアクセス ↗',
+    video: '▶ ビデオ',
   },
 
   contribution: {

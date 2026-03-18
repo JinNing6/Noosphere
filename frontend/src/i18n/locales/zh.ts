@@ -57,6 +57,11 @@ const zh = {
     media: '媒体',
     noMedia: '暂无媒体',
     closePanel: '关闭面板',
+    establishingUplink: '正在建立知识链接...',
+    dataArchives: '// 数据归档',
+    uplinkPortal: '知识上行链路',
+    accessWikiCore: '访问维基核心 ↗',
+    video: '▶ 视频',
   },
 
   // ─── 贡献图谱 ───

@@ -51,6 +51,11 @@ const en = {
     media: 'Media',
     noMedia: 'No media available',
     closePanel: 'Close Panel',
+    establishingUplink: 'ESTABLISHING WIKI UPLINK...',
+    dataArchives: '// DATA ARCHIVES',
+    uplinkPortal: 'UPLINK PORTAL',
+    accessWikiCore: 'ACCESS WIKIPEDIA CORE ↗',
+    video: '▶ VIDEO',
   },
 
   contribution: {
