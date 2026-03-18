@@ -125,13 +125,33 @@ def _set_tool_cached(key: str, data: str) -> None:
 
 
 def _invalidate_cache(key: str | None = None) -> None:
-    """Invalidate a specific cache key, or all caches if key is None."""
+    """Invalidate a specific cache key, or all caches if key is None.
+
+    When key is None (full reset), also resets the shared HTTP client
+    so it gets re-created with current headers on next use.
+    """
+    global _shared_client
     if key is None:
         _cache.clear()
         _tool_cache.clear()
         _parsed_payloads.clear()
         _inverted_index.clear()
         _index_doc_data.clear()
+        # Reset shared client so it picks up fresh headers (required for tests)
+        if _shared_client and not _shared_client.is_closed:
+            try:
+                import asyncio
+                loop = asyncio.get_event_loop()
+                if loop.is_running():
+                    # Can't await in sync context; just mark for recreation
+                    _shared_client = None
+                else:
+                    loop.run_until_complete(_shared_client.aclose())
+                    _shared_client = None
+            except Exception:
+                _shared_client = None
+        else:
+            _shared_client = None
     else:
         _cache.pop(key, None)
 
@@ -164,7 +184,7 @@ def _get_parsed_payload(issue: dict) -> dict | None:
     issue_number = issue.get("number")
     if issue_number is not None and issue_number in _parsed_payloads:
         return _parsed_payloads[issue_number]
-    payload = _get_parsed_payload(issue)
+    payload = _extract_payload_from_issue_body(issue.get("body", ""))
     if issue_number is not None:
         _parsed_payloads[issue_number] = payload
     return payload
