@@ -25,110 +25,6 @@ import * as THREE from 'three';
 
 const DEFAULT_MAX_CAPACITY = 100_000;
 
-/* ═══════════════ Shader — GPU 粒子球体 ═══════════════ */
-
-const PARTICLE_VERTEX_SHADER = /* glsl */ `
-  // ── 每实例属性 ──
-  attribute vec3 aBasePosition;   // 预计算的基准位置
-  attribute vec3 aColor;          // 节点颜色
-  attribute vec4 aParams;         // (importance, seed, orbitSpeed, glowPhase)
-
-  // ── Uniforms ──
-  uniform float uTime;
-  uniform float uBreathScale;
-  uniform float uOrbitEnabled;
-  uniform float uDriftScale;
-
-  // ── 传递到 Fragment ──
-  varying vec3 vColor;
-  varying float vGlow;
-  varying float vAlpha;
-  varying vec3 vNormal;
-  varying vec3 vViewPosition;
-
-  void main() {
-    float importance = aParams.x;
-    float seed = aParams.y;
-    float orbitSpeed = aParams.z;
-    float glowPhase = aParams.w;
-
-    // ── 螺旋轨道 (GPU 端 Y 轴旋转) ──
-    float angle = uTime * orbitSpeed * uOrbitEnabled + seed;
-    float cosA = cos(angle);
-    float sinA = sin(angle);
-    vec3 center = vec3(
-      cosA * aBasePosition.x - sinA * aBasePosition.z,
-      aBasePosition.y,
-      sinA * aBasePosition.x + cosA * aBasePosition.z
-    );
-
-    // ── 呼吸脉动 ──
-    float breathPhase = sin(uTime * 0.3 + seed * 6.2831853) * 0.08 * uBreathScale;
-    center *= (1.0 + breathPhase);
-
-    // ── 微漂移 ──
-    center += vec3(
-      sin(uTime * 0.2 + seed * 3.0) * 0.15 * uDriftScale,
-      sin(uTime * 0.4 + seed * 5.0) * 0.2  * uDriftScale,
-      sin(uTime * 0.1 + seed * 7.0) * 0.15 * uDriftScale
-    );
-
-    // ── GPU 端基础大小与脉动缩放 ──
-    float baseScale = 0.08 + pow(importance, 1.2) * 0.05;
-    float pulse = 1.0 + sin(uTime * 0.8 + seed * 2.5) * 0.25;
-
-    // ── 构造世界坐标 ──
-    // position 是球体顶点（半径 1.0）
-    // 我们在 Shader 中加上基础缩放、脉动和位移
-    vec3 scaledVertex = position * baseScale * pulse;
-    vec3 worldPos = scaledVertex + center;
-
-    vec4 mvPosition = modelViewMatrix * vec4(worldPos, 1.0);
-    gl_Position = projectionMatrix * mvPosition;
-
-    // ── 传递给 Fragment ──
-    vNormal = normalize(normalMatrix * normal);
-    vViewPosition = -mvPosition.xyz;
-    vColor = aColor;
-    vGlow = 1.2 + sin(uTime * 0.6 + glowPhase) * 0.4;
-    vAlpha = 0.9 + sin(uTime * 0.3 + seed * 4.0) * 0.08;
-  }
-`;
-
-const PARTICLE_FRAGMENT_SHADER = /* glsl */ `
-  varying vec3 vColor;
-  varying float vGlow;
-  varying float vAlpha;
-  varying vec3 vNormal;
-  varying vec3 vViewPosition;
-
-  void main() {
-    // ── 视线方向 ──
-    vec3 viewDir = normalize(vViewPosition);
-    float NdotV = dot(normalize(vNormal), viewDir);
-
-    // ── 多层辉光（基于法线的球体表面着色） ──
-    // 层1: 核心自发光（正对相机最亮）
-    float core = pow(max(NdotV, 0.0), 1.5) * 1.5;
-    // 层2: 菲涅耳边缘辉光（边缘发光，模拟大气散射）
-    float fresnel = pow(1.0 - max(NdotV, 0.0), 3.0) * 1.2;
-    // 层3: 能量脉动环（中间带）
-    float midBand = smoothstep(0.3, 0.5, NdotV) * smoothstep(0.7, 0.5, NdotV) * 0.4;
-
-    // ── 颜色合成 ──
-    vec3 coreColor = vColor * vGlow * core;
-    vec3 fresnelColor = vColor * 1.8 * fresnel;
-    vec3 midColor = vColor * 2.0 * midBand;
-
-    vec3 finalColor = coreColor + fresnelColor + midColor;
-
-    // ── Alpha（边缘半透明淡出） ──
-    float alpha = (core * 0.5 + fresnel * 0.3 + midBand * 0.2 + 0.15) * vAlpha;
-    alpha = clamp(alpha, 0.0, 1.0);
-
-    gl_FragColor = vec4(finalColor, alpha);
-  }
-`;
 
 /* ═══════════════ Shader — 意识星云 ═══════════════ */
 
@@ -287,42 +183,9 @@ export const GPUParticleLayer = forwardRef<GPUParticleLayerHandle, GPUParticleLa
   ) {
     const meshRef = useRef<THREE.InstancedMesh>(null);
     const activeCountRef = useRef(0);
-
-    // ── 预分配 Buffer ──
-    const buffers = useMemo(() => ({
-      basePosition: new Float32Array(maxCapacity * 3),
-      color: new Float32Array(maxCapacity * 3),
-      params: new Float32Array(maxCapacity * 4),
-    }), [maxCapacity]);
-
-    // ── 用于 Raycast 命中检测的 dummy（instanceMatrix 必须包含真实位置） ──
     const dummy = useMemo(() => new THREE.Object3D(), []);
+    const tempColor = useMemo(() => new THREE.Color(), []);
 
-    // ── 自定义 Shader Material ──
-    const material = useMemo(
-      () => {
-        const mat = new THREE.ShaderMaterial({
-          uniforms: {
-            uTime: { value: 0 },
-            uBreathScale: { value: breathScale },
-            uOrbitEnabled: { value: orbitEnabled ? 1.0 : 0.0 },
-            uDriftScale: { value: driftScale },
-          },
-          vertexShader: PARTICLE_VERTEX_SHADER,
-          fragmentShader: PARTICLE_FRAGMENT_SHADER,
-          transparent: true,
-          toneMapped: false,
-          depthWrite: false,
-          blending: THREE.AdditiveBlending,
-          side: THREE.DoubleSide,
-        });
-        return mat;
-      },
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-      []
-    );
-
-    // ── 写入粒子数据到 Buffer ──
     const writeParticlesToBuffer = useCallback(
       (particles: ParticleData[], startIndex: number) => {
         const mesh = meshRef.current;
@@ -334,89 +197,37 @@ export const GPUParticleLayer = forwardRef<GPUParticleLayerHandle, GPUParticleLa
 
           const p = particles[i];
 
-          // aBasePosition
-          buffers.basePosition[idx * 3] = p.position[0];
-          buffers.basePosition[idx * 3 + 1] = p.position[1];
-          buffers.basePosition[idx * 3 + 2] = p.position[2];
-
-          // aColor
-          buffers.color[idx * 3] = p.color[0];
-          buffers.color[idx * 3 + 1] = p.color[1];
-          buffers.color[idx * 3 + 2] = p.color[2];
-
-          // aParams
-          buffers.params[idx * 4] = p.importance;
-          buffers.params[idx * 4 + 1] = p.seed;
-          buffers.params[idx * 4 + 2] = p.orbitSpeed;
-          buffers.params[idx * 4 + 3] = p.glowPhase;
-
-          // instanceMatrix 设置真实位置和缩放（供 Raycast 命中检测）
-          // 视觉渲染由 Shader 中的 aBasePosition + position*baseScale*pulse 驱动
+          // Set genuine position and scale directly to the instance matrix
           dummy.position.set(p.position[0], p.position[1], p.position[2]);
-          dummy.scale.setScalar(0.08 + Math.pow(p.importance, 1.2) * 0.05);
+          // 确保粒子足够大且形状互相独立
+          dummy.scale.setScalar(0.15 + (p.importance || 0) * 0.2);
           dummy.updateMatrix();
           mesh.setMatrixAt(idx, dummy.matrix);
+
+          // Set instance color directly
+          tempColor.setRGB(p.color[0], p.color[1], p.color[2]);
+          mesh.setColorAt(idx, tempColor);
         }
 
-        // 标记更新（Three.js v0.183+ updateRanges）
-        const geo = mesh.geometry;
-        const posAttr = geo.getAttribute('aBasePosition') as THREE.InstancedBufferAttribute;
-        const colAttr = geo.getAttribute('aColor') as THREE.InstancedBufferAttribute;
-        const paramAttr = geo.getAttribute('aParams') as THREE.InstancedBufferAttribute;
-
-        if (posAttr) {
-          posAttr.needsUpdate = true;
-          posAttr.updateRanges = [{ start: startIndex * 3, count: particles.length * 3 }];
-        }
-        if (colAttr) {
-          colAttr.needsUpdate = true;
-          colAttr.updateRanges = [{ start: startIndex * 3, count: particles.length * 3 }];
-        }
-        if (paramAttr) {
-          paramAttr.needsUpdate = true;
-          paramAttr.updateRanges = [{ start: startIndex * 4, count: particles.length * 4 }];
-        }
         mesh.instanceMatrix.needsUpdate = true;
+        if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
       },
-      [maxCapacity, buffers, dummy]
+      [maxCapacity, dummy, tempColor]
     );
 
-    // ── 初始化 ──
+    // Initial setup
     useEffect(() => {
-      const mesh = meshRef.current;
-      if (!mesh) return;
-
-      const geo = mesh.geometry;
-      const posAttr = new THREE.InstancedBufferAttribute(buffers.basePosition, 3);
-      posAttr.setUsage(THREE.DynamicDrawUsage);
-      geo.setAttribute('aBasePosition', posAttr);
-
-      const colAttr = new THREE.InstancedBufferAttribute(buffers.color, 3);
-      colAttr.setUsage(THREE.DynamicDrawUsage);
-      geo.setAttribute('aColor', colAttr);
-
-      const paramAttr = new THREE.InstancedBufferAttribute(buffers.params, 4);
-      paramAttr.setUsage(THREE.DynamicDrawUsage);
-      geo.setAttribute('aParams', paramAttr);
-
       if (initialParticles.length > 0) {
         writeParticlesToBuffer(initialParticles, 0);
         activeCountRef.current = Math.min(initialParticles.length, maxCapacity);
-        mesh.count = activeCountRef.current;
       } else {
-        mesh.count = 0;
+        activeCountRef.current = 0;
       }
-
-      return () => {
-        geo.deleteAttribute('aBasePosition');
-        geo.deleteAttribute('aColor');
-        geo.deleteAttribute('aParams');
-        material.dispose();
-      };
+      if (meshRef.current) meshRef.current.count = activeCountRef.current;
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    // ── 同步 initialParticles 变化 ──
+    // Sync initialParticles
     const prevInitialLenRef = useRef(initialParticles.length);
     useEffect(() => {
       const mesh = meshRef.current;
@@ -429,7 +240,7 @@ export const GPUParticleLayer = forwardRef<GPUParticleLayerHandle, GPUParticleLa
       }
     }, [initialParticles, writeParticlesToBuffer, maxCapacity]);
 
-    // ── 暴露 API ──
+    // Expose API
     useImperativeHandle(ref, () => ({
       addParticles: (particles: ParticleData[]) => {
         const mesh = meshRef.current;
@@ -451,12 +262,12 @@ export const GPUParticleLayer = forwardRef<GPUParticleLayerHandle, GPUParticleLa
       },
     }), [writeParticlesToBuffer, maxCapacity]);
 
-    // ── 帧循环 O(1) ──
+    // Optional ambient animation (global rotation for life)
     useFrame(({ clock }) => {
-      material.uniforms.uTime.value = clock.getElapsedTime();
-      material.uniforms.uBreathScale.value = breathScale;
-      material.uniforms.uOrbitEnabled.value = orbitEnabled ? 1.0 : 0.0;
-      material.uniforms.uDriftScale.value = driftScale;
+      if (meshRef.current && orbitEnabled) {
+          // just a very slow global drift to keep it from looking fully static
+          meshRef.current.rotation.y = clock.getElapsedTime() * 0.02;
+      }
     });
 
     const handleClick = useCallback(
@@ -473,12 +284,22 @@ export const GPUParticleLayer = forwardRef<GPUParticleLayerHandle, GPUParticleLa
       <instancedMesh
         ref={meshRef}
         args={[undefined, undefined, maxCapacity]}
-        material={material}
         onClick={handleClick}
         frustumCulled={false}
       >
-        {/* 低面数球体：49 顶点（兼容 Raycast 全角度命中检测） */}
-        <sphereGeometry args={[1, 6, 6]} />
+        {/* 12x12 gives a nice round sphere shape without being too heavy */}
+        <sphereGeometry args={[1, 16, 16]} />
+        {/*
+          MeshStandardMaterial easily catches ambient and point lights,
+          looking like 3D orbs, without Shader conflicts.
+        */}
+        <meshStandardMaterial 
+          roughness={0.2}
+          metalness={0.6}
+          emissive={"#111111"}
+          emissiveIntensity={0.5}
+          toneMapped={false}
+        />
       </instancedMesh>
     );
   }
