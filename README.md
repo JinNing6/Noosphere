@@ -1,3 +1,5 @@
+<!-- mcp-name: io.github.jinning6/noosphere -->
+
 <div align="center">
 
 [🇨🇳 中文文档](./README.zh-CN.md) | [🇺🇸 English](./README.md)
