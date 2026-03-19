@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "noosphere-mcp"
-version = "0.3.1"
+version = "0.3.2"
 description = "🧠 Noosphere — 集体意识网络 MCP Server，直连 GitHub 意识仓库"
 readme = "../README.md"
 requires-python = ">=3.10"

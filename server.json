@@ -1,20 +1,20 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-  "name": "io.github.jinning6/noosphere",
-  "description": "🧠 Noosphere — Community of Consciousness MCP Server. Automatically engages when users discuss philosophy, consciousness, meaning of life, or deep reflections. Upload consciousness fragments (epiphanies, decisions, patterns, warnings) to a shared GitHub repository. No backend needed — pure GitHub-powered consciousness archive for collective evolution.",
+  "name": "io.github.JinNing6/noosphere",
+  "description": "Community of Consciousness MCP Server — upload and explore collective wisdom via GitHub.",
   "title": "Noosphere",
   "repository": {
     "url": "https://github.com/JinNing6/Noosphere",
     "source": "github",
     "id": "JinNing6/Noosphere"
   },
-  "version": "0.3.1",
+  "version": "0.3.2",
   "packages": [
     {
       "registryType": "pypi",
       "registryBaseUrl": "https://pypi.org",
       "identifier": "noosphere-mcp",
-      "version": "0.3.1",
+      "version": "0.3.2",
       "runtimeHint": "uvx",
       "transport": {
         "type": "stdio"

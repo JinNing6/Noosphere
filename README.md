@@ -1,4 +1,4 @@
-<!-- mcp-name: io.github.jinning6/noosphere -->
+<!-- mcp-name: io.github.JinNing6/noosphere -->
 
 <div align="center">
 
