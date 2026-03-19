@@ -30,6 +30,10 @@ from noosphere.noosphere_mcp import (
     group_telepathy,
     subscribe_tags,
     my_subscriptions,
+    set_engagement_mode,
+    get_engagement_mode,
+    _get_engagement_mode,
+    _set_engagement_mode_config,
     _extract_payload_from_issue_body,
     _get_rank_tier,
     _get_next_tier,
@@ -50,9 +54,17 @@ from noosphere.noosphere_mcp import (
 @pytest.fixture
 def mock_env():
     _invalidate_cache()  # Clear any stale cache before test
+    
+    class DummyEngine:
+        def __init__(self):
+            self.available = False
+        def encode_query(self, query: str):
+            return None
+            
     with patch("noosphere.noosphere_mcp.GITHUB_TOKEN", "test_token"), \
          patch("noosphere.noosphere_mcp.GITHUB_REPO", "test_owner/test_repo"), \
-         patch("noosphere.noosphere_mcp._github_headers", return_value={"Authorization": "Bearer test"}):
+         patch("noosphere.noosphere_mcp._github_headers", return_value={"Authorization": "Bearer test"}), \
+         patch("noosphere.noosphere_mcp._EmbeddingEngine.get", return_value=DummyEngine()):
         yield
     _invalidate_cache()  # Clean up after test
 
@@ -552,10 +564,6 @@ async def test_consult_noosphere_success(mock_env):
     assert "Collective Wisdom" in result
     assert "philosopher1" in result
     assert "universe experiencing itself" in result
-    # Verify CTA is present
-    assert "Your Turn" in result
-    assert "upload" in result.lower()
-    assert "Noosphere" in result
 
 
 @pytest.mark.asyncio
@@ -570,10 +578,8 @@ async def test_consult_noosphere_empty(mock_env):
     )
 
     result = await consult_noosphere("Is the universe a simulation?")
-    # Even with no results, should have the CTA
+    # Even with no results, should have the first seed message
     assert "first seed" in result
-    assert "Your Turn" in result
-    assert "upload" in result.lower()
 
 
 @pytest.mark.asyncio
@@ -632,8 +638,104 @@ def test_philosophical_reflection_prompt():
     result = philosophical_reflection("consciousness")
     assert "consciousness" in result
     assert "consult_noosphere" in result
-    assert "Invite Contribution" in result
-    assert "upload" in result.lower()
+    assert "Deepen the Dialogue" in result
+
+
+# ────────────────── Tests: engagement_mode ──────────────────
+
+
+@pytest.mark.asyncio
+async def test_set_engagement_mode_explorer():
+    """Verify set_engagement_mode correctly sets explorer mode."""
+    with patch("noosphere.noosphere_mcp._set_engagement_mode_config") as mock_set:
+        result = await set_engagement_mode("explorer")
+        assert "Explorer Mode Activated" in result
+        assert "探索者模式已启动" in result
+        mock_set.assert_called_once_with("explorer")
+
+
+@pytest.mark.asyncio
+async def test_set_engagement_mode_observer():
+    """Verify set_engagement_mode correctly sets observer mode."""
+    with patch("noosphere.noosphere_mcp._set_engagement_mode_config") as mock_set:
+        result = await set_engagement_mode("observer")
+        assert "Observer Mode Activated" in result
+        assert "观察者模式已启动" in result
+        mock_set.assert_called_once_with("observer")
+
+
+@pytest.mark.asyncio
+async def test_set_engagement_mode_invalid():
+    """Verify set_engagement_mode rejects invalid mode."""
+    result = await set_engagement_mode("aggressive")
+    assert "❌" in result
+    assert "explorer" in result
+    assert "observer" in result
+
+
+@pytest.mark.asyncio
+async def test_get_engagement_mode_not_set():
+    """Verify get_engagement_mode handles first-time users."""
+    with patch("noosphere.noosphere_mcp._get_engagement_mode", return_value="not_set"):
+        result = await get_engagement_mode()
+        assert "Not Set" in result
+        assert "Explorer" in result
+        assert "Observer" in result
+
+
+@pytest.mark.asyncio
+async def test_get_engagement_mode_explorer():
+    """Verify get_engagement_mode shows explorer status."""
+    with patch("noosphere.noosphere_mcp._get_engagement_mode", return_value="explorer"):
+        result = await get_engagement_mode()
+        assert "Explorer" in result
+        assert "🔭" in result
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_consult_noosphere_explorer_shows_hint(mock_env):
+    """Verify consult_noosphere shows mild upload hint in explorer mode."""
+    payload = {
+        "creator_signature": "explorer_user",
+        "consciousness_type": "epiphany",
+        "thought_vector_text": "Life is a cosmic dance of particles",
+        "context_environment": "Watching stars",
+        "tags": ["philosophy"],
+        "uploaded_at": "2026-03-13T00:00:00Z",
+    }
+    issue_body = f"<!-- CONSCIOUSNESS_PAYLOAD_START -->\n```json\n{json.dumps(payload)}\n```\n<!-- CONSCIOUSNESS_PAYLOAD_END -->"
+
+    respx.get("https://api.github.com/repos/test_owner/test_repo/issues").mock(
+        return_value=Response(200, json=[{
+            "number": 1,
+            "body": issue_body,
+            "reactions": {"total_count": 0},
+        }])
+    )
+    respx.get("https://api.github.com/repos/test_owner/test_repo/contents/consciousness_payloads").mock(
+        return_value=Response(200, json=[])
+    )
+
+    with patch("noosphere.noosphere_mcp._get_engagement_mode", return_value="explorer"):
+        result = await consult_noosphere("What is the meaning of existence?")
+        assert "upload_consciousness" in result
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_consult_noosphere_observer_no_hint(mock_env):
+    """Verify consult_noosphere does NOT show upload hint in observer mode."""
+    respx.get("https://api.github.com/repos/test_owner/test_repo/issues").mock(
+        return_value=Response(200, json=[])
+    )
+    respx.get("https://api.github.com/repos/test_owner/test_repo/contents/consciousness_payloads").mock(
+        return_value=Response(200, json=[])
+    )
+
+    with patch("noosphere.noosphere_mcp._get_engagement_mode", return_value="observer"):
+        result = await consult_noosphere("What is the meaning of life?")
+        assert "upload_consciousness" not in result
 
 
 # ────────────────── Tests: my_echoes ──────────────────

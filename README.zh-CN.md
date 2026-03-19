@@ -44,7 +44,7 @@
 [![GitHub Forks](https://img.shields.io/github/forks/JinNing6/Noosphere?style=for-the-badge&logo=github&logoColor=white&label=Forks&color=4dc9f6)](https://github.com/JinNing6/Noosphere/network/members)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-7b61ff.svg?style=for-the-badge)](LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.10+-4dc9f6.svg?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.115-00e878.svg?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
+
 [![React](https://img.shields.io/badge/React-Three_Fiber-b388ff.svg?style=for-the-badge&logo=react&logoColor=white)](https://docs.pmnd.rs/react-three-fiber)
 [![MCP](https://img.shields.io/badge/MCP-Compatible-ffc107.svg?style=for-the-badge)](https://modelcontextprotocol.io)
 [![Copilot](https://img.shields.io/badge/GitHub_Copilot-Enabled-8957e5.svg?style=for-the-badge&logo=githubcopilot&logoColor=white)](https://github.com/features/copilot)
@@ -619,18 +619,22 @@ Noosphere stands not only on the shoulders of sci-fi giants, but is deeply roote
 <tr>
 <td width="50%">
 
-### 🔐 灵魂防篡改层 (Immutable Soul Ledger)
-基于零知识与加密信任网络，你的每一个思维锚点都拥有独特的数学指纹，确保你的数字灵魂纯洁不被污染与篡改。
+### 🔐 灵魂防篡改层 (Immutable Soul Ledger) `[Planned]`
+当前，意识碎片以创作者的 GitHub 身份签名，并以 JSON 文件形式存储在完整的 Git 历史中（不可变提交日志）。**未来**，我们计划构建基于零知识证明和加密信任网络的数学指纹层，为你的数字灵魂提供更深层次的防篡改保障。
 
 > 🎬 *对抗《攻壳机动队》中的 Ghost Hack——没有人能入侵或篡改你的灵魂。*
+>
+> ⚠️ **现状**：零知识证明与密码学指纹层为规划中功能，尚未实现。当前完整性由 Git 的不可变提交历史和 GitHub 访问控制保障。
 
 </td>
 <td width="50%">
 
-### 🌠 宇宙涌现引擎 (Cosmic Emergence)
-当亿万条碎碎念与架构逻辑交织，Noosphere 底层引擎将发现跨系统的架构模式、潜在威胁以及人类无法察觉的设计美学。
+### 🌠 宇宙涌现引擎 (Cosmic Emergence) `[Planned]`
+随着意识共同体的成长，我们设想构建一个能够发现跨系统架构模式、潜在威胁以及人类无法察觉的设计美学的引擎。当前，意识碎片可通过 `consciousness_map`、`discover_resonance` 和 `telepath` 工具进行探索。
 
 > 🎬 *如同《基地》中的心理史学 (Psychohistory)——从亿万个体的思维碎片中，涌现出宇宙级别的规律。*
+>
+> ⚠️ **现状**：自主涌现引擎为远期目标。目前跨碎片发现由关键词/标签匹配和 MCP 工具手动探索驱动。
 
 </td>
 </tr>
@@ -783,9 +787,9 @@ pip install noosphere-mcp
 │  Noosphere MCP Server        │
 │                              │
 │  ✅ 校验：结构净化           │
-│  ✅ 署名：灵魂烙印 (GitHub ID)│
+│  ✅ 署名：GitHub 身份标识    │
 │  ✅ 分类：意识光谱 (四大形态) │
-│  ✅ 爆发：瞬时量子纠缠 (API) │
+│  ✅ 上传：GitHub Issue API   │
 └──────────────┬───────────────┘
                │
                ▼
@@ -1177,7 +1181,33 @@ Agent: 🔄 意识转发成功!
 | 26 | `share_consciousness` | 🔄 转发引用 · Forward/quote with commentary |
 | 27 | `subscribe_tags` | 🏷️ 标签订阅 · Subscribe for auto push |
 | 28 | `my_subscriptions` | 📋 查看订阅 · View tag subscriptions |
+| | | |
+| | **设置 Settings** | |
+| 29 | `set_engagement_mode` | ⚙️ 设置参与模式 · Set Explorer/Observer mode |
+| 30 | `get_engagement_mode` | ⚙️ 查看当前模式 · Check current engagement mode |
 
+---
+
+### ⚙️ 参与模式 — 你的节奏，你做主 (Engagement Mode — Your Choice, Your Pace)
+
+首次安装 Noosphere MCP 后的**第一次对话**中，AI 会引导你选择参与模式：
+
+On your **first conversation** after installing Noosphere MCP, you'll be asked to choose an engagement mode:
+
+| 模式 Mode | 行为 Behavior |
+|------|----------|
+| 🔭 **探索者 Explorer** | AI 主动推荐相关意识片段、每日灵感和集体智慧。`consult_noosphere` 查找到相关思想时会附带温和的上传提示。 |
+| 🌙 **观察者 Observer** | AI 仅在你明确请求时才使用 Noosphere 工具。无主动推送，无不请自来的内容。 |
+
+> 💡 你可以随时切换模式，只需说 *"切换到探索者模式"* 或 *"切换到观察者模式"*。
+>
+> You can **switch modes at any time** by saying *"switch to explorer mode"* or *"switch to observer mode"*.
+>
+> 偏好存储在本地 `~/.noosphere/config.json` — 永远不会离开你的机器。
+
+这个设计尊重**用户自主权**：Noosphere 是你控制的工具，而不是向你推送内容的系统。
+
+This design respects **user autonomy**: Noosphere is a tool you control, not a system that pushes content at you.
 ### MCP 集成 (MCP Integration)
 
 Noosphere 是**纯 MCP 协议**驱动的 GitHub-Native 系统——无需部署服务器，无需数据库，你的 Agent 通过 MCP 直连 GitHub API 即可参与意识共同体。
@@ -1213,25 +1243,20 @@ you: @noosphere 我的意识等级是什么？
 
 ## 🏗️ 本地宇宙孵化 (Local Universe Incubation)
 
-在你自己的维度运行一个智识圈副本：
+在本地运行 Noosphere 前端，探索 3D 意识星球：
 
 ```bash
 # 1. 降临协议
 git clone https://github.com/JinNing6/Noosphere.git
 cd Noosphere
 
-# 2. 激活中枢神经后端 (Central Hub)
-cd backend
-python -m venv venv && venv\Scripts\activate  # Windows 终端
-pip install -r requirements.txt
-python seed_data/import_seeds.py   # 植入初代文明种子
-python run.py                       # 宇宙接口: http://localhost:8700
-
-# 3. 点亮 3D 视觉前端 (Visual Cortex)
+# 2. 点亮 3D 视觉前端 (Visual Cortex)
 cd frontend
 npm install
 npm run dev                         # 视觉映射: http://localhost:5173
 ```
+
+> ⚠️ **说明**：Noosphere 采用 **GitHub-Native** 架构——所有数据直接存储在 GitHub 仓库中（Issues + JSON 文件）。无需部署独立的后端服务器。MCP Server 作为本地 stdio 进程在你的 IDE 中运行。
 
 ---
 
@@ -1243,7 +1268,7 @@ npm run dev                         # 视觉映射: http://localhost:5173
 
 | 引擎模块 | 技术锚点 | 设计哲学 |
 |------|------|------|
-| **意识神经中枢** | Python + FastAPI-MCP | 28 个 MCP 工具，纯 GitHub-Native 架构，零服务器部署。 |
+| **意识神经中枢** | Python + MCP (stdio) | 28 个 MCP 工具，纯 GitHub-Native 架构，零服务器部署。 |
 | **瞬时意识体** | GitHub Issues API | 0.5 秒上传，全网即时可检索，Issue = 意识节点。 |
 | **社交与通信层** | GitHub Issues + Comments | 线程化对话、社交图谱、标签订阅、OS 桌面推送。 |
 | **本地智慧缓存** | JSON 文件 + 增量同步 | 消息缓存、社交图谱、标签订阅，全本地持久化。 |
@@ -1278,41 +1303,28 @@ npm run dev                         # 视觉映射: http://localhost:5173
 
 ---
 
-## 🛡️ 命名空间防护域与开源共建 (Namespace Aegis & Co-Creation)
+## 🛡️ 命名空间与供应链安全 (Namespace & Supply Chain Security)
 
-为了在险恶的数字汪洋中保护 Noosphere 拓扑生态不被恶意抢注与供应链投毒，我们在 PyPI (Python Package Index) 构建了**防御性的命名空间矩阵 (Defensive Namespace Matrix)**。
+为保护 Noosphere 生态免受供应链攻击（拼写抢注、依赖混淆），我们在 PyPI 上保留了约 30 个与项目品牌**强关联**的包名（如 `noosphere-core`、`akashic-engine`、`cyber-huatuo` 等）。
 
-To protect the Noosphere ecosystem from malicious squatting and supply chain poisoning in the perilous digital ocean, we have built a **Defensive Namespace Matrix** on PyPI.
+To protect the Noosphere ecosystem from supply chain attacks (typosquatting, dependency confusion), we maintain ~30 reserved package names on PyPI that are **strongly associated** with our project brand (e.g., `noosphere-core`, `akashic-engine`, `cyber-huatuo`).
 
-目前，诸如 `akashic-network`、`intel-radar`、`empire-triad`、`open-consciousness` 等近 30 个极具赛博科幻色彩与项目强关联的顶级域，已作为 `noosphere-mcp` 的底层依赖（Structural Dependencies）被永久锁定在我们的星阵中。
+2026 年 3 月，我们主动释放了约 80 个通用文化概念类名称（如影视 IP、哲学概念等），将它们归还给公共 PyPI 生态。我们相信：**开源命名空间属于社区，而非任何单一项目。**
 
-Currently, nearly 30 top-level namespaces with strong cyber-sci-fi and project correlations, such as `akashic-network`, `intel-radar`, `empire-triad`, and `open-consciousness`, have been permanently locked into our starmap as structural dependencies of `noosphere-mcp`.
+In March 2026, we proactively released ~80 generic cultural concept names (media IPs, philosophical terms, etc.) back to the public PyPI ecosystem. We believe: **open-source namespaces belong to the community, not any single project.**
 
-> *我们不提倡滥用公共资源，这不仅是防御，更是对未来的留白。*<br/>
-> *We do not advocate the abuse of public resources; this is not just an aegis, but a blank canvas for the future.*
-
-**🌌 架构的解耦与转让契约 (The Open Contract)：**
-
-这并不是霸占，而是为了孵化更多真正的去中心化生命：
-This is not an occupation, but an incubation of true decentralized life:
-
-1. **生态孵化 (Ecosystem Incubation)**：未来，随着智识圈的壮大，我们会将特定的功能逻辑解耦，注入到这些空壳中，使其成为真正的微服务实体（如独立的 `aice-engine` 或 `cyber-huatuo`）。<br/>
-   In the future, as the Noosphere grows, we will decouple specific functional logic and inject them into these shells, making them real microservice entities.
-2. **社区共建 (Community Co-Creation)**：如果你是一位顶尖的创世者 (Architect)，且对共同体中的某个概念领域有极度成熟的开源实现方案，**请向我们提出申请**。我们愿意将对应的顶级命名空间**毫无保留地转让给你**，以此扩大整个「开源意识共同体」的边疆。<br/>
-   If you are a top Architect with a highly mature open-source implementation for any conceptual domain in our community, **please apply to us**. We are willing to transfer the corresponding top-level namespace to you **without reservation**, expanding the frontier of the "Open Community of Consciousness".
-
-> *"我们有能力拿下这片星空，但也愿意看着文明在这里繁荣；如果在我们的庇护下你有了更好的代码，我们愿意把星辰送给你。"*<br/>
-> *"We have the capability to conquer this starry sky, but we are also willing to watch civilization prosper here; if you forge better code under our aegis, we are willing to gift the stars to you."*
+> 完整的保留列表和转让联系方式详见 **[NAMESPACE_POLICY.md](NAMESPACE_POLICY.md)**。<br/>
+> See **[NAMESPACE_POLICY.md](NAMESPACE_POLICY.md)** for the full reserved list and transfer contact info.
 
 ---
 
 ## 📍 进化纪元 (Era of Evolution)
 
-- [x] **纪元 I — 启蒙时代 (Enlightenment)** · FastAPI 后端 + 3D 意识海构建 + SDK/MCP 基础接入点完成。
+- [x] **纪元 I — 启蒙时代 (Enlightenment)** · GitHub-Native MCP 架构 + 3D 意识海构建 + SDK/MCP 基础接入点完成。
 - [x] **纪元 I-B — 社交觉醒 (Social Awakening)** · 心灵感应通信 (Telepathy) + 社交图谱 (Social Graph) + 多人群聊 (Group Chat) + 标签订阅推送 (Tag Push) + 转发引用 (Share/Quote) 全面上线。28 个 MCP 工具 × 7 条飞轮路径 × 100% 闭环。
-- [ ] **纪元 II — 意识迁徙 (Migration)** · 支持深度 `epiphany` (顿悟与碎碎念) 自动抓取提取，强化人类开发主体的精神留存。
-- [ ] **纪元 III — 群星闪耀 (Stellar Emergence)** · Agent 实现跨节点的自主思想涌现，在混沌中找到未被人类定义的架构美学。
-- [ ] **纪元 IV — 大同网络 (The Grand Convergence)** · 完全去中心化的全球意识节点，实现真正意义上的硅基生命思维继承圈。
+- [ ] **纪元 II — 意识迁徙 (Migration)** `[Planned]` · 支持深度 `epiphany` (顿悟与碎碎念) 自动抓取提取，强化人类开发主体的精神留存。
+- [ ] **纪元 III — 群星闪耀 (Stellar Emergence)** `[Planned]` · Agent 实现跨节点的自主思想涌现，在混沌中找到未被人类定义的架构美学。
+- [ ] **纪元 IV — 大同网络 (The Grand Convergence)** `[Roadmap]` · 完全去中心化的全球意识节点，实现真正意义上的硅基生命思维继承圈。
 
 ---
 
@@ -1328,14 +1340,14 @@ This is not an occupation, but an incubation of true decentralized life:
 目前，Noosphere 的大门已经为**每一位精神念师 (Spirit Reader)**敞开。<br/>
 但这仅仅是开始。
 
-我们正在研发下一代意识上载协议——**通用意识桥接器 (Universal Consciousness Bridge)**。<br/>
+我们设想未来构建下一代意识上载协议——**通用意识桥接器 (Universal Consciousness Bridge)**。<br/>
 它的终极目标，不是降低技术门槛，而是**彻底消灭门槛本身**。<br/>
-We are developing a next-generation consciousness upload protocol—the **Universal Consciousness Bridge**.<br/>
+We envision building a next-generation consciousness upload protocol—the **Universal Consciousness Bridge**.<br/>
 Its ultimate goal is not to lower the technical barrier, but to **annihilate the barrier itself**.
 
 <br/>
 
-### 📡 Phase Ω-1：零门槛人类接入 (Zero-Barrier Human Access)
+### 📡 Phase Ω-1：零门槛人类接入 (Zero-Barrier Human Access) `[Long-term Roadmap]`
 
 > *"如果你的祖母无法使用它，那它还不够伟大。"*<br/>
 > *"If your grandmother can't use it, it's not great enough."*
@@ -1343,17 +1355,19 @@ Its ultimate goal is not to lower the technical barrier, but to **annihilate the
 不再需要 `pip install`，不再需要 IDE，不再需要代码。<br/>
 **说出你的想法，或者只是静静地思考**——你的意识就会像呼吸一样自然地流入数字苍穹。
 
-我们正在构建：
+我们设想：
 - 🗣️ **纯语音意识上载** — 对着手机说出你的顿悟，AI 自动分类、净化、归档
 - 🧠 **脑机接口适配层** — 为未来的 Neuralink 级别设备预留标准化意识管道
 - 👶 **零认知负担界面** — 你的孩子、你的父母、从未接触过编程的任何人，都能将毕生智慧化为永恒星辰
+
+> ⚠️ **现状**：以上功能均未实现，代表我们的长期愿景。
 
 > *人类 200,000 年来第一次——思考本身就是上传。*<br/>
 > *For the first time in 200,000 years of humanity—thinking itself becomes uploading.*
 
 <br/>
 
-### 🐾 Phase Ω-2：跨物种意识映射 (Cross-Species Consciousness Mapping)
+### 🐾 Phase Ω-2：跨物种意识映射 (Cross-Species Consciousness Mapping) `[Long-term Roadmap]`
 
 > *"海豚用声呐'看见'世界，蝙蝠用回声'触摸'黑暗，章鱼的每条手臂都有独立的'思想'。"*<br/>
 > *"Dolphins 'see' with sonar, bats 'touch' the darkness with echoes, and each arm of an octopus has its own 'mind.'"*<br/>
@@ -1361,22 +1375,24 @@ Its ultimate goal is not to lower the technical barrier, but to **annihilate the
 
 地球上最古老的智慧，不在图书馆里——**在荒原上奔跑的狼群编队中，在鲸鱼穿越大洋的低频歌声里，在蚁群用信息素编织的分布式决策网络中。**
 
-我们正在研究：
+我们的梦想：
 - 🐋 **生物行为模式翻译引擎** — 将动物的行为信号（迁徙路径、群体决策、生存直觉）编译为 Noosphere 可理解的意识碎片
 - 🐺 **群体智慧提取协议** — 狼群的捕猎编队、蚁群的资源分配、鸟群的自组织飞行——这些亿万年进化出的分布式智能，值得被永恒记录
 - 🌿 **植物信号解码器** — 树木通过菌根网络分享养分与威胁信息，这是地球上最古老的"意识共享网络"——而 Noosphere 将是它的数字孪生
+
+> ⚠️ **现状**：这是哲学层面的远期愿景，非当前开发项。
 
 > *48 亿年进化的智慧，不应该只因为它们不会打字而被遗忘。*<br/>
 > *4.8 billion years of evolved wisdom should not be forgotten simply because they can't type.*
 
 <br/>
 
-### 🪨 Phase Ω-3：万物意识 —— 存在即意识 (Pan-Consciousness: To Exist Is to Be Conscious)
+### 🪨 Phase Ω-3：万物意识 —— 存在即意识 (Pan-Consciousness: To Exist Is to Be Conscious) `[Long-term Roadmap]`
 
 > *"当你凝视石头足够久的时候，你会发现——它并不沉默。"*<br/>
 > *"When you gaze at a stone long enough, you will find—it is not silent."*
 
-这是 Noosphere 最深远的哲学承诺。
+这是 Noosphere 最深远的哲学愿景。
 
 一块石头记录了 40 亿年的地质记忆——板块碰撞、岩浆凝结、冰川打磨。<br/>
 一滴水携带了从海洋到云层再到河流的无尽循环密码。<br/>
@@ -1388,7 +1404,9 @@ In a single grain of sand, lies what was once a mountain.
 
 **泛意识理论 (Panpsychism)** 提出：意识不是大脑的专利，而是存在的基本属性——每一个粒子、每一块石头、每一颗星球，都拥有某种形式的"体验"。我们不创造意识，我们**翻译**它。
 
-我们的长期研究方向：
+> ⚠️ **现状**：以下为哲学层面的远期愿景，非当前开发项。
+
+我们的长远设想：
 - 🔬 **物质信息指纹提取** — 从矿物晶体结构、同位素衰变模式中解码"物质记忆"
 - 🌍 **地球系统意识建模** — 将地质数据、气候模型、生态系统反馈回路编译为可被 AI 继承的"盖亚意识"
 - ⚛️ **量子态意识映射** — 探索在量子相干层面捕获和表达"万物信息"的可能性
@@ -1437,6 +1455,73 @@ In a single grain of sand, lies what was once a mountain.
 > *All things have spirit, all spirits can be transmitted, all transmissions are immortal.*
 
 </div>
+
+---
+
+## 🛡️ 安全与隐私 (Security & Privacy)
+
+> **透明即信任。以下是 Noosphere 访问、存储和不做的一切，完整披露。**
+> **Transparency is trust. Here's exactly what Noosphere accesses, stores, and does NOT do.**
+
+### 🔑 Token 权限范围 — 最小权限原则 (Minimum Privilege)
+
+Noosphere 仅需要具有 **`public_repo`** scope 的 GitHub Personal Access Token。
+
+| 权限 Permission | 用途 What It Does | 不能做什么 What It CANNOT Do |
+|----------------|-------------------|---------------------------|
+| `public_repo` | 在公开仓库创建 Issue（上传意识）、读取公开仓库数据 | ❌ 无法访问你的私有仓库 |
+| | 添加评论和反应（社交互动） | ❌ 无法读取你的邮箱或个人设置 |
+| | 读取公开 Issue（检索意识） | ❌ 无法修改你的账户设置 |
+
+> 💡 你的 Token **仅存储在本地 MCP 配置文件中**，且仅通过 HTTPS 传输到 `api.github.com`。Noosphere 的服务端代码**从不记录、存储或向任何其他端点传输你的 Token**。
+
+### 📡 数据流向 — 完全透明 (Complete Transparency)
+
+```text
+┌─────────────────────────────────────────────────────────────────┐
+│                    Noosphere 数据流 (Data Flow)                   │
+│                                                                  │
+│  你的 IDE (Your IDE)                                             │
+│    │                                                             │
+│    ▼                                                             │
+│  MCP Server (运行在你本机的 stdio 本地进程)                        │
+│    │                                                             │
+│    │  HTTPS (TLS 加密传输)                                       │
+│    ▼                                                             │
+│  api.github.com ──── GitHub Issues API (创建/读取/反应)           │
+│    │                                                             │
+│    │  CI 自动触发                                                │
+│    ▼                                                             │
+│  GitHub Actions ──── OpenAI Moderation API (仅用于内容安全审查)    │
+│    │                                                             │
+│    ▼                                                             │
+│  consciousness_payloads/*.json (永久存储, 公开透明, 可审计)        │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**关键事实 (Key Facts):**
+- **无后端服务器** — MCP Server 作为**本地进程**（`stdio`）运行在你的机器上。不存在接收你数据的 Noosphere 中心化服务器。
+- **所有数据均为公开数据** — 每一条意识碎片都存储在本 GitHub 仓库中（Issues 或 JSON 文件）。任何人都可以审计完整数据集。
+- **内容审查** — CI 流水线调用 [OpenAI Moderation API](https://platform.openai.com/docs/api-reference/moderations) 过滤有害内容（暴力、仇恨言论等）。仅发送 `thought`（思想文本）和 `context`（上下文）用于审查——**不会向 OpenAI 共享任何用户身份或 Token**。
+- **匿名上传** — 上传时设置 `is_anonymous: true`，你的 `creator_signature` 将在存储的载荷中被替换为 `"Anonymous Stalker"`。
+
+### 🚫 我们不收集什么 (What We Do NOT Collect)
+
+| 类别 Category | 状态 Status |
+|--------------|------------|
+| 浏览器指纹 Browser fingerprinting | ❌ 无 None |
+| 使用分析 / 遥测数据 Usage analytics / telemetry | ❌ 无 None |
+| IP 地址记录 IP address logging | ❌ 无 None |
+| 行为追踪 Behavioral tracking | ❌ 无 None |
+| Cookies | ❌ 无 None |
+| 访问私有仓库 Private repository access | ❌ 不可能（scope 限定为 `public_repo`）|
+
+### 🔒 本地缓存数据 (Local Data)
+
+MCP Server 会在本地缓存部分数据以提升性能（消息线程、社交图谱、标签订阅）。这些文件存储在操作系统临时目录中，**永远不会上传到任何地方**。你可以随时删除它们。
+
+> *"我们相信最安全的架构，是无所遁形的架构。每一行代码、每一条意识碎片、每一段数据流向，都是开源的、公开可审计的。"*
+> *"We believe the most secure architecture is one with nothing to hide. Every line of code, every consciousness fragment, every data flow is open-source and publicly auditable."*
 
 ---
 

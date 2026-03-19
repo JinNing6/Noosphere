@@ -8,5 +8,7 @@
     "mobile",
     "react-native",
     "cross-platform"
-  ]
+  ],
+  "is_seed_data": true,
+  "seed_note": "This is AI-generated seed data created to demonstrate the Noosphere system. It does not represent real user contributions. Community contributions welcome!"
 }

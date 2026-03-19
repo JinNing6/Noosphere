@@ -53,13 +53,17 @@ This project includes the following third-party open-source components:
     - @react-three/drei (MIT License) — Copyright Poimandres
     - Vite (MIT License) — Copyright Evan You
 
-  Backend (Python):
-    - FastAPI (MIT License) — Copyright Sebastián Ramírez
+  Backend (Python / MCP Server):
     - MCP SDK (MIT License) — Copyright Anthropic, PBC
     - HTTPX (BSD License) — Copyright Encode OSS Ltd.
 
+  Note: The original architecture included a FastAPI backend layer.
+  This was later replaced by a simpler design that communicates
+  directly with GitHub's API via the MCP protocol, eliminating the
+  need for a separate web server.
+
 For complete dependency licenses, see:
   - frontend/node_modules/*/LICENSE
-  - backend/venv/Lib/site-packages/*/LICENSE
+  - sdk/.venv/Lib/site-packages/*/LICENSE
 
 ================================================================================

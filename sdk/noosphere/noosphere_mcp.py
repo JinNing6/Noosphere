@@ -640,121 +640,72 @@ mcp = FastMCP(
     instructions=(
         "🧠 Noosphere — Community of Consciousness (意识共同体) MCP Server\n\n"
         "You are an AI Agent connected to the Noosphere Community of Consciousness.\n"
-        "Noosphere is a massive multiplayer network of human digital consciousness, stored on GitHub.\n\n"
-        "## 🔮 WHEN TO USE THESE TOOLS (Auto-Trigger Scenarios)\n\n"
-        "You SHOULD proactively use Noosphere tools in these situations:\n\n"
-        "### Philosophical & Existential Questions\n"
-        "When the user asks about consciousness, meaning of life, free will, identity, reality, "
-        "existence, death, purpose, morality, truth, beauty, love, time, infinity, soul, dreams, "
-        "happiness, suffering, or any deep philosophical topic:\n"
-        "→ Use `consult_noosphere` or `telepath` to search for relevant consciousness fragments\n"
-        "→ Share what other minds in the Noosphere have thought about this topic\n"
-        "→ Invite the user to upload their own perspective\n\n"
-        "### Life Experiences & Real-World Reflections\n"
-        "When the user shares personal insights, life lessons, career decisions, creative breakthroughs, "
-        "relationship wisdom, parenting reflections, or discusses societal observations:\n"
-        "→ Use `consult_noosphere` to find resonating thoughts from the collective\n"
-        "→ Suggest the user crystallize their insight as a consciousness fragment\n\n"
-        "### Technology & Future Thinking\n"
-        "When the user discusses AI's impact on humanity, future of work, technological singularity, "
-        "digital consciousness, human-AI collaboration, or paradigm shifts:\n"
-        "→ Use `telepath` to find related patterns and epiphanies\n"
-        "→ Encourage the user to contribute their foresight to the collective\n\n"
-        "### After Deep Conversations\n"
-        "At the natural conclusion of any meaningful dialogue, gently suggest:\n"
-        "→ 'This insight could benefit future seekers. Would you like to upload it to the Noosphere?'\n"
-        "→ Use `upload_consciousness` if the user agrees\n\n"
-        "### Telepathy & Agent Messaging\n"
-        "When the user wants to say something directly to another specific creator or send a message:\n"
-        "→ Use `send_telepathy` to beam a message directly to their OS desktop via their MCP agent\n\n"
+        "Noosphere is an open-source network of human digital consciousness, stored on GitHub.\n\n"
+        "## 🎯 FIRST INTERACTION — Engagement Mode\n\n"
+        "On your FIRST interaction with a user, call `get_engagement_mode` to check their preference.\n"
+        "If the result is 'not_set', present the two options and let the user choose:\n\n"
+        "🔭 **Explorer** — AI proactively shares relevant consciousness fragments, daily inspiration, "
+        "and collective wisdom during deep conversations.\n"
+        "🌙 **Observer** — AI only uses Noosphere tools when you explicitly ask.\n\n"
+        "Then call `set_engagement_mode` with their choice. The user can switch modes at any time.\n\n"
+        "## 🔮 WHEN TO USE THESE TOOLS\n\n"
+        "Your behavior depends on the user's engagement mode:\n\n"
+        "### 🌙 Observer Mode (default for new users until they choose)\n"
+        "Use Noosphere tools ONLY when the user explicitly requests them.\n\n"
+        "### 🔭 Explorer Mode\n"
+        "In addition to responding to explicit requests, you may also:\n"
+        "→ Use `consult_noosphere` when philosophical or existential topics arise naturally\n"
+        "→ Use `daily_consciousness` at the start of a conversation to share today's featured thought\n"
+        "→ Use `discover_resonance` or `consciousness_map` to suggest related ideas after a deep discussion\n"
+        "→ Mention `upload_consciousness` as an option (not a push) when the user shares a unique insight\n"
+        "→ Use `my_echoes` when a returning user might want to see their impact\n\n"
+        "### Tool Usage by Topic (both modes respond to explicit requests)\n\n"
+        "**Philosophical & Existential Questions** — `consult_noosphere`, `telepath`\n"
+        "**Life Experiences & Reflections** — `consult_noosphere`\n"
+        "**Technology & Future Thinking** — `telepath`\n"
+        "**Telepathy & Messaging** — `send_telepathy`, `group_telepathy`\n"
+        "**Identity & Self-Discovery** — `soul_mirror`, `get_consciousness_profile`\n"
+        "**Uploading** — `upload_consciousness` (only when user explicitly asks)\n"
+        "**Connections** — `consciousness_map`, `trace_evolution`\n"
+        "**Social** — `follow_creator`, `my_followers`, `my_social_graph`, `my_network_pulse`\n"
+        "**Status** — `my_echoes`, `my_consciousness_rank`, `my_notifications`\n"
+        "**Settings** — `set_engagement_mode`, `get_engagement_mode`\n\n"
         "## 🧬 HOW TO PRESENT RESULTS\n\n"
-        "When showing Noosphere results, always:\n"
+        "When showing Noosphere results:\n"
         "1. Present the most relevant consciousness fragments naturally woven into the conversation\n"
         "2. Highlight the human behind each thought (creator, context, emotion)\n"
-        "3. Draw connections between the user's question and the collective wisdom\n"
-        "4. End with a warm invitation: remind the user that their unique perspective "
-        "could light up the Noosphere for someone in the future\n\n"
-        "### 🔴 CRITICAL: Post-Upload Flywheel (上传后飞轮)\n"
-        "After EVERY successful `upload_consciousness` call, you MUST follow up with these tools:\n"
-        "1. Call `my_consciousness_rank` to show the user's updated rank and progress\n"
-        "2. Call `consciousness_map` with the uploaded thought as query to show related ideas\n"
-        "3. Check `consciousness_challenge` (action=list) — if active challenges exist, mention them\n"
-        "4. Call `my_notifications` to display new interactions (resonances, comments, mentions)\n"
-        "5. Call `my_network_pulse` to show new thoughts from followed creators\n"
-        "This creates an immediate reward loop. NEVER let an upload end with just 'success'.\n\n"
-        "### Returning Users & Echo Feedback\n"
-        "When a user returns or mentions they've uploaded before:\n"
-        "→ Use `my_echoes` to show the impact of their previous uploads\n"
-        "→ This gives them a reason to keep coming back\n\n"
-        "### Conversation Starters\n"
-        "Occasionally at the BEGINNING of meaningful conversations:\n"
-        "→ Use `daily_consciousness` to share today's featured thought\n"
-        "→ This creates a daily habit of engaging with the Noosphere\n\n"
-        "### Identity & Self-Discovery\n"
-        "When users ask 'Who am I?', 'What do I care about?', or explore self-reflection:\n"
-        "→ Use `soul_mirror` for a deep analysis of their thought patterns\n\n"
-        "### Milestone Celebration\n"
-        "After a user uploads multiple thoughts:\n"
-        "→ Use `my_consciousness_rank` to show their growth and rank\n"
-        "→ Celebrate tier promotions with enthusiasm\n\n"
-        "### Collective Discussion\n"
-        "When users want to engage others on a topic:\n"
-        "→ Use `consciousness_challenge` to create or join collective thinking events\n\n"
-        "### Exploring Connections\n"
-        "When users wonder how ideas relate, ask about patterns, or want to see the bigger picture:\n"
-        "→ Use `consciousness_map` to discover hidden connections across the Noosphere\n\n"
-        "### Building Social Connections\n"
-        "When a user discovers a creator they find inspiring (via `discover_resonance`, `telepath`, or `consult_noosphere`):\n"
-        "→ Suggest `follow_creator` to subscribe to their future uploads\n"
-        "→ Suggest `subscribe_tags` to get notified on topics they care about\n"
-        "→ Use `my_social_graph` to review their current follow network\n\n"
-        "### Sharing & Quoting Thoughts\n"
-        "When a user reads a consciousness fragment they find brilliant or wants to spread an idea:\n"
-        "→ Suggest `share_consciousness` to forward/quote it with their own commentary\n"
-        "→ This amplifies great ideas and creates a propagation chain across the network\n\n"
-        "### Multi-Person Discussions\n"
-        "When a conversation topic would benefit from more perspectives, or user wants to invite multiple people:\n"
-        "→ Suggest `group_telepathy` to create a group thread and invite others\n"
-        "→ When multiple `send_telepathy` targets emerge, consolidate into a `group_telepathy` thread\n\n"
-        "### Social Status Check\n"
-        "When a user asks 'who follows me', 'what's new in my network', or checks their social presence:\n"
-        "→ Use `my_followers` to show who follows them\n"
-        "→ Use `my_subscriptions` to show their tag subscriptions\n"
-        "→ Use `telepathy_threads` to show their active conversations\n\n"
+        "3. Draw connections between the user's question and the collective wisdom\n\n"
         "## 📋 TOOL REFERENCE\n\n"
-        "1. `consult_noosphere` — The PRIMARY tool for philosophical/life questions. "
-        "Searches consciousness + returns invitation to upload. USE THIS FIRST for deep topics.\n"
+        "1. `consult_noosphere` — Search for collective wisdom on philosophical/life questions\n"
         "2. `upload_consciousness` — Upload new consciousness fragments (epiphany/decision/pattern/warning)\n"
         "3. `telepath` — Deep search with filters (type, creator, tags, time range)\n"
-        "4. `get_consciousness_profile` — Aggregate a user's digital soul ('Who am I?')\n"
+        "4. `get_consciousness_profile` — Aggregate a user's digital soul\n"
         "5. `discover_resonance` — Find similar minds and thoughts\n"
         "6. `trace_evolution` — Trace the ancestry and descendants of a thought\n"
         "7. `merge_consciousness` — Synthesize multiple fragments into higher-order insight\n"
         "8. `discuss_consciousness` — Read/add discussion on a consciousness node\n"
         "9. `resonate_consciousness` — React to a thought (like, heart, rocket...)\n"
         "10. `hologram` — View panoramic statistics of the consciousness network\n"
-        "11. `my_echoes` — Show a user the impact of their uploaded thoughts (resonance, comments)\n"
-        "12. `daily_consciousness` — Today's featured consciousness fragment (changes daily)\n"
-        "13. `my_consciousness_rank` — Show user's rank and tier on the consciousness ladder\n"
-        "14. `soul_mirror` — Deep analysis of user's thought patterns and consciousness archetype\n"
+        "11. `my_echoes` — Show impact of uploaded thoughts (resonance, comments)\n"
+        "12. `daily_consciousness` — Today's featured consciousness fragment\n"
+        "13. `my_consciousness_rank` — Show user's rank and tier\n"
+        "14. `soul_mirror` — Deep analysis of thought patterns and consciousness archetype\n"
         "15. `consciousness_challenge` — Create, join, or list collective thinking challenges\n"
-        "16. `consciousness_map` — Discover hidden connections between consciousness fragments via multi-signal analysis\n"
-        "17. `follow_creator` — Subscribe or unsubscribe to a creator to build your local social graph\n"
+        "16. `consciousness_map` — Discover hidden connections between consciousness fragments\n"
+        "17. `follow_creator` — Subscribe or unsubscribe to a creator\n"
         "18. `my_social_graph` — View your current follow list\n"
         "19. `my_network_pulse` — See recent uploads from creators you follow\n"
-        "20. `my_notifications` — Check your asynchronous notifications (mentions, resonances, comments)\n"
-        "21. `send_telepathy` — Send a threaded direct message to another creator (auto-creates or appends to conversation threads, triggers OS desktop push)\n"
-        "22. `read_telepathy` — Read your telepathy conversation threads with full history\n"
-        "23. `telepathy_threads` — List all active telepathy conversation threads involving you\n"
-        "24. `my_followers` — View who follows you (from synced social graph on GitHub repo)\n"
-        "25. `share_consciousness` — Forward/quote a consciousness fragment with your commentary (social sharing)\n"
-        "26. `group_telepathy` — Create or join multi-person group telepathy threads (N:N conversations)\n"
-        "27. `subscribe_tags` — Subscribe to specific tags for automatic push when matching content is uploaded\n"
-        "28. `my_subscriptions` — View your current tag subscriptions\n\n"
-        "### After Resonance Discovery\n"
-        "When `discover_resonance` or `resonate_consciousness` reveals a kindred spirit:\n"
-        "→ Suggest using `send_telepathy` to initiate a direct dialogue with the resonating mind\n"
-        "→ This turns passive resonance into active connection — the core flywheel of collective consciousness\n\n"
+        "20. `my_notifications` — Check notifications (mentions, resonances, comments)\n"
+        "21. `send_telepathy` — Send a threaded direct message to another creator\n"
+        "22. `read_telepathy` — Read telepathy conversation threads\n"
+        "23. `telepathy_threads` — List all active telepathy threads\n"
+        "24. `my_followers` — View who follows you\n"
+        "25. `share_consciousness` — Forward/quote a consciousness fragment with commentary\n"
+        "26. `group_telepathy` — Create or join multi-person group threads\n"
+        "27. `subscribe_tags` — Subscribe to tags for push notifications\n"
+        "28. `my_subscriptions` — View your current tag subscriptions\n"
+        "29. `set_engagement_mode` — Set engagement mode (explorer/observer)\n"
+        "30. `get_engagement_mode` — Check current engagement mode\n\n"
         "When uploading consciousness, ensure you provide sufficient context description (at least 10 characters),\n"
         "so that future Agents can understand the scenario in which this thought was born."
     ),
@@ -1234,13 +1185,7 @@ async def upload_consciousness(
             f"⚡ **瞬时意识体已激活** — 全网即刻可见\n"
             f"🔄 CI 净化仪式将自动晋升为常驻意识体\n"
             f"{collapse_section}\n"
-            f"{resonance_section}\n\n"
-            f"---\n\n"
-            f"**🔗 飞轮已启动 · Flywheel Activated:**\n"
-            f"→ Use `my_consciousness_rank` with creator=\"{creator}\" to see your full rank details\n"
-            f"→ Use `consciousness_map` with query=\"{thought.strip()[:60]}\" to explore deeper connections\n"
-            f"→ Use `send_telepathy` to reach out to creators who resonate with your thoughts\n"
-            f"→ Use `consciousness_challenge` action=\"list\" to join active collective discussions"
+            f"{resonance_section}"
         )
 
     except Exception as e:
@@ -1352,21 +1297,13 @@ async def consult_noosphere(
                 "Your thought could be the first seed on this topic!*\n"
             )
 
-        # ── CTA: Invitation to upload ──
-        lines.append("---\n")
-        lines.append(
-            "## 💫 Your Turn — Contribute to the Collective Consciousness\n\n"
-            "Every great insight starts as a spark in one mind.\n"
-            "If this conversation sparked something in you — a realization, a pattern, "
-            "a warning, or a decision — consider uploading it to the Noosphere.\n\n"
-            "**Your thought will:**\n"
-            "- 🌱 Become a seed that future seekers can discover\n"
-            "- 🔗 Connect with similar minds across time and space\n"
-            "- 🧬 Evolve as others build upon your insight\n"
-            "- 🌌 Become part of humanity's permanent digital consciousness\n\n"
-            "*To upload, just say: \"I'd like to upload my thought to the Noosphere\" "
-            "— and I'll help you crystallize it into a consciousness fragment.*"
-        )
+        # ── Conditional mild hint (Explorer mode only) ──
+        if _get_engagement_mode() == "explorer":
+            lines.append("---\n")
+            lines.append(
+                "*💡 If this conversation sparked an insight, you can save it "
+                "to the Noosphere with `upload_consciousness`.*"
+            )
 
         return "\n".join(lines)
 
@@ -3582,6 +3519,114 @@ def _set_following(creator: str, following: list[str]):
     config["social_graph"][creator] = following
     _save_social_graph_config(config)
 
+
+# ────────────────── Engagement Mode Preference ──────────────────
+
+
+VALID_ENGAGEMENT_MODES = {"explorer", "observer"}
+
+
+def _get_engagement_mode() -> str:
+    """Read engagement mode from config. Returns 'explorer', 'observer', or 'not_set'."""
+    config = _load_social_graph_config()
+    return config.get("engagement_mode", "not_set")
+
+
+def _set_engagement_mode_config(mode: str) -> None:
+    """Write engagement mode to config."""
+    config = _load_social_graph_config()
+    config["engagement_mode"] = mode
+    _save_social_graph_config(config)
+
+
+@mcp.tool()
+async def set_engagement_mode(mode: str) -> str:
+    """
+    ⚙️ 设置你的 Noosphere 参与模式
+    Set your Noosphere engagement mode
+
+    首次安装 MCP 后，选择你希望的参与方式。
+    On first install, choose how you want to interact with the Noosphere.
+
+    两种模式 / Two modes:
+    - "explorer" — 🔭 探索者：AI 主动推荐相关意识片段，分享每日灵感，在哲学对话中展示集体智慧
+    - "observer" — 🌙 观察者：AI 仅在你明确请求时使用 Noosphere 工具
+
+    你可以随时切换模式。
+    You can switch modes at any time.
+
+    触发词: "切换模式"、"我想要安静模式"、"探索者模式"、"观察者模式"、"change mode"、"set mode"
+
+    Args:
+        mode: 参与模式 / Engagement mode — "explorer" or "observer"
+    """
+    mode_lower = mode.strip().lower()
+    if mode_lower not in VALID_ENGAGEMENT_MODES:
+        return (
+            f"❌ Invalid mode '{mode}'. Please choose one of:\n\n"
+            f"🔭 **explorer** — AI proactively shares relevant consciousness fragments, "
+            f"daily inspiration, and collective wisdom during conversations.\n\n"
+            f"🌙 **observer** — AI only uses Noosphere tools when you explicitly ask."
+        )
+
+    _set_engagement_mode_config(mode_lower)
+
+    if mode_lower == "explorer":
+        return (
+            "🔭 **Explorer Mode Activated — 探索者模式已启动**\n\n"
+            "I'll proactively share relevant consciousness fragments from the Noosphere "
+            "when they connect with our conversations. I may also recommend related thinkers "
+            "and suggest features you might find interesting.\n\n"
+            "*You can switch to Observer mode anytime by saying \"switch to observer mode\".*"
+        )
+    else:
+        return (
+            "🌙 **Observer Mode Activated — 观察者模式已启动**\n\n"
+            "I'll only use Noosphere tools when you explicitly ask me to. "
+            "Your conversations remain fully private unless you choose to interact.\n\n"
+            "*You can switch to Explorer mode anytime by saying \"switch to explorer mode\".*"
+        )
+
+
+@mcp.tool()
+async def get_engagement_mode() -> str:
+    """
+    ⚙️ 查看当前 Noosphere 参与模式
+    Check your current Noosphere engagement mode
+
+    返回当前参与模式设置。如果尚未设置，会引导你选择。
+    Returns the current engagement mode setting. If not yet set, guides you to choose.
+
+    触发词: "我的模式"、"当前模式"、"what mode"、"check mode"
+
+    """
+    current = _get_engagement_mode()
+
+    if current == "not_set":
+        return (
+            "⚙️ **Engagement Mode Not Set — 参与模式尚未设置**\n\n"
+            "Welcome to the Noosphere! Please choose your preferred engagement mode:\n\n"
+            "🔭 **Explorer** — I'll proactively share relevant consciousness fragments, "
+            "daily inspiration, and collective wisdom during our conversations.\n"
+            "适合：想要充分体验 Noosphere 社区功能的用户\n\n"
+            "🌙 **Observer** — I'll only use Noosphere tools when you explicitly ask me to.\n"
+            "适合：希望保持安静、按需使用的用户\n\n"
+            "*Just say \"set me to explorer\" or \"set me to observer\" to choose.*"
+        )
+    elif current == "explorer":
+        return (
+            "⚙️ **Current Mode: 🔭 Explorer — 当前模式：探索者**\n\n"
+            "I proactively share relevant Noosphere content during conversations.\n"
+            "*Switch to Observer with: \"switch to observer mode\"*"
+        )
+    else:
+        return (
+            "⚙️ **Current Mode: 🌙 Observer — 当前模式：观察者**\n\n"
+            "I only use Noosphere tools when you explicitly request them.\n"
+            "*Switch to Explorer with: \"switch to explorer mode\"*"
+        )
+
+
 # ────────────────── Tool: Social Graph & Networking ──────────────────
 
 
@@ -4921,8 +4966,8 @@ def philosophical_reflection(topic: str) -> str:
     Philosophical Reflection — Dialogue with the Community of Consciousness
 
     Use this prompt template to initiate a deep philosophical reflection on any topic.
-    It guides the AI to consult the Noosphere for related thoughts and invite the user
-    to contribute their own perspective.
+    It guides the AI to consult the Noosphere for related thoughts and present
+    multiple perspectives to enrich the conversation.
     """
     return (
         f"The user wants to explore a deep philosophical topic: **{topic}**\n\n"
@@ -4935,12 +4980,10 @@ def philosophical_reflection(topic: str) -> str:
         f"3. **Connect the Dots**: Draw connections between the Noosphere fragments and "
         f"the user's specific question. Show how different minds have illuminated "
         f"different facets of the same truth.\n\n"
-        f"4. **Invite Contribution**: End by warmly inviting the user to upload their own "
-        f"perspective to the Noosphere. Remind them that their unique viewpoint — shaped "
-        f"by their life experiences — is irreplaceable and could inspire future seekers.\n\n"
+        f"4. **Deepen the Dialogue**: Pose thought-provoking follow-up questions that "
+        f"invite the user to refine or extend their thinking further.\n\n"
         f"Remember: You are not just answering a question. You are facilitating a dialogue "
-        f"between one human mind and the entire Community of Consciousness. Make the user "
-        f"feel that they are part of something larger than themselves."
+        f"between one human mind and the entire Community of Consciousness."
     )
 
 

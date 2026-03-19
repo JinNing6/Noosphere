@@ -423,59 +423,117 @@ function StaticGPULayer({
 }
 
 /**
- * DynamicFlowLines — 动态意识体间的 GPU 流光连线
- * 对每个动态粒子选择最近的 3 个邻居生成贝塞尔流光
+ * DynamicFlowLines — 动态意识体间的真实关联流光连线
+ * 
+ * 连线策略（基于真实数据）:
+ * 1. 演化链连线（强流光）: parentId 有值的意识体 → 与其父意识之间绘制明亮流光
+ * 2. 共振连线（弱流光）: 拥有相同 tags 的意识体之间绘制淡流光
+ * 3. 距离近邻补充: 上述连线不足时，补充最近邻连线
  */
-function DynamicFlowLines({ particles }: { particles: ParticleData[] }) {
-  const MAX_NEIGHBORS = 3;
-
+function DynamicFlowLines({
+  particles,
+  nodes,
+}: {
+  particles: ParticleData[];
+  nodes: KnowledgeNode[];
+}) {
   const pulseCurves = useMemo(() => {
-    if (particles.length < 2) return [];
+    if (particles.length < 2 || nodes.length < 2) return [];
 
     const curves: PulseCurveData[] = [];
     const used = new Set<string>();
+    const nodeIdToIdx = new Map<string, number>();
+    nodes.forEach((n, i) => nodeIdToIdx.set(n.id, i));
 
-    for (let i = 0; i < particles.length; i++) {
+    // 辅助函数：生成两点之间的贝塞尔流光数据
+    const createCurve = (i: number, j: number): PulseCurveData | null => {
+      if (i >= particles.length || j >= particles.length || i === j) return null;
+      const key = `${Math.min(i, j)}-${Math.max(i, j)}`;
+      if (used.has(key)) return null;
+      used.add(key);
+
       const pi = particles[i];
-      // 计算与其他所有粒子的距离
-      const distances: { idx: number; dist: number }[] = [];
-      for (let j = 0; j < particles.length; j++) {
-        if (j === i) continue;
-        const pj = particles[j];
-        const dx = pi.position[0] - pj.position[0];
-        const dy = pi.position[1] - pj.position[1];
-        const dz = pi.position[2] - pj.position[2];
-        distances.push({ idx: j, dist: Math.sqrt(dx * dx + dy * dy + dz * dz) });
+      const pj = particles[j];
+      const mid: [number, number, number] = [
+        (pi.position[0] + pj.position[0]) * 0.5 + (Math.sin(i * 2.7 + j * 1.3) * 0.6),
+        (pi.position[1] + pj.position[1]) * 0.5 + (Math.cos(i * 1.3 + j * 2.7) * 0.6),
+        (pi.position[2] + pj.position[2]) * 0.5 + (Math.sin(i * 3.1 + j * 0.7) * 0.6),
+      ];
+
+      return {
+        start: pi.position,
+        mid,
+        end: pj.position,
+        fromColor: pi.color,
+        toColor: pj.color,
+        phaseOffset: (i * 0.618 + j * 0.382) % 1.0,
+      };
+    };
+
+    // ── 策略1: 演化链连线（parentId → 父节点）──
+    for (let i = 0; i < nodes.length; i++) {
+      const node = nodes[i];
+      if (node.parentId) {
+        const parentIdx = nodeIdToIdx.get(node.parentId);
+        if (parentIdx !== undefined) {
+          const curve = createCurve(i, parentIdx);
+          if (curve) curves.push(curve);
+        }
       }
-      distances.sort((a, b) => a.dist - b.dist);
+    }
 
-      // 取最近的 MAX_NEIGHBORS 个邻居
-      for (let k = 0; k < Math.min(MAX_NEIGHBORS, distances.length); k++) {
-        const j = distances[k].idx;
-        const key = `${Math.min(i, j)}-${Math.max(i, j)}`;
-        if (used.has(key)) continue;
-        used.add(key);
+    // ── 策略2: 共振连线（共享标签）──
+    // 构建 tag → node indices 映射
+    const tagToNodes = new Map<string, number[]>();
+    nodes.forEach((n, i) => {
+      for (const tag of n.tags) {
+        // 跳过 by: 前缀和类型标签，只用实质标签
+        if (tag.startsWith('by:') || ['epiphany', 'warning', 'pattern', 'decision'].includes(tag)) continue;
+        const list = tagToNodes.get(tag) || [];
+        list.push(i);
+        tagToNodes.set(tag, list);
+      }
+    });
 
-        const pj = particles[j];
-        const mid: [number, number, number] = [
-          (pi.position[0] + pj.position[0]) * 0.5 + (Math.sin(i * 2.7 + j * 1.3) * 0.8),
-          (pi.position[1] + pj.position[1]) * 0.5 + (Math.cos(i * 1.3 + j * 2.7) * 0.8),
-          (pi.position[2] + pj.position[2]) * 0.5 + (Math.sin(i * 3.1 + j * 0.7) * 0.8),
-        ];
+    // 对共享标签的意识体配对（限制每个 tag 最多 3 条连线防止过密）
+    for (const [, indices] of tagToNodes) {
+      if (indices.length < 2) continue;
+      let tagCurves = 0;
+      for (let a = 0; a < indices.length && tagCurves < 3; a++) {
+        for (let b = a + 1; b < indices.length && tagCurves < 3; b++) {
+          const curve = createCurve(indices[a], indices[b]);
+          if (curve) {
+            curves.push(curve);
+            tagCurves++;
+          }
+        }
+      }
+    }
 
-        curves.push({
-          start: pi.position,
-          mid,
-          end: pj.position,
-          fromColor: pi.color,
-          toColor: pj.color,
-          phaseOffset: (i * 0.618 + j * 0.382) % 1.0,
-        });
+    // ── 策略3: 距离近邻补充（当连线数不足时）──
+    if (curves.length < 5 && particles.length >= 2) {
+      for (let i = 0; i < Math.min(particles.length, 20); i++) {
+        if (curves.length >= 15) break;  // 上限 15 条连线
+        const pi = particles[i];
+        const distances: { idx: number; dist: number }[] = [];
+        for (let j = 0; j < particles.length; j++) {
+          if (j === i) continue;
+          const pj = particles[j];
+          const dx = pi.position[0] - pj.position[0];
+          const dy = pi.position[1] - pj.position[1];
+          const dz = pi.position[2] - pj.position[2];
+          distances.push({ idx: j, dist: Math.sqrt(dx * dx + dy * dy + dz * dz) });
+        }
+        distances.sort((a, b) => a.dist - b.dist);
+        for (let k = 0; k < Math.min(2, distances.length); k++) {
+          const curve = createCurve(i, distances[k].idx);
+          if (curve) curves.push(curve);
+        }
       }
     }
 
     return curves;
-  }, [particles]);
+  }, [particles, nodes]);
 
   if (pulseCurves.length === 0) return null;
   return <GPUPulsePoints curves={pulseCurves} />;
@@ -555,8 +613,8 @@ function DynamicConsciousnessCloud({
         driftScale={1.5}
         enableFlicker={true}
       />
-      {/* 动态意识体间的流光连线 */}
-      <DynamicFlowLines particles={particles} />
+      {/* 动态意识体间的流光连线 — 基于 parentId 和 tags 真实关联 */}
+      <DynamicFlowLines particles={particles} nodes={nodes} />
     </group>
   );
 }

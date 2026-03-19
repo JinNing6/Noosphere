@@ -23,6 +23,8 @@ export interface KnowledgeNode {
   wiki_url?: string;
   importance: number;       // 1-10，决定节点大小
   tags: string[];
+  resonanceCount?: number;  // 真实共振计数（GitHub reactions）
+  parentId?: string | null; // 父意识 ID（用于流光连线）
 }
 
 export interface EmergenceLink {
@@ -371,6 +373,9 @@ interface ConsciousnessPayload {
   tags: string[];
   uploaded_at: string;
   anonymous: boolean;
+  resonance_count?: number;  // 真实共振计数（GitHub reactions）
+  parent_id?: string | null; // 父意识 ID
+  issue_number?: number;     // GitHub Issue 编号
 }
 
 /** 意识类型 → 三层映射 */
@@ -410,6 +415,12 @@ export async function fetchConsciousnessPayloads(): Promise<KnowledgeNode[]> {
       else if (tagSet.has('art') || tagSet.has('design') || tagSet.has('ui')) discipline = 'art';
       else if (tagSet.has('history') || tagSet.has('civilization')) discipline = 'history';
 
+      // 基于真实共振计算 importance: 无共振=3, 有共振=3+resonance*1.5, 上限10
+      const resonance = p.resonance_count || 0;
+      const computedImportance = resonance > 0
+        ? Math.min(10, Math.round(3 + resonance * 1.5))
+        : Math.min(10, 3 + Math.floor(p.text.length / 80));
+
       return {
         id: p.id,
         title_zh: p.text.length > 30 ? p.text.slice(0, 28) + '…' : p.text,
@@ -418,8 +429,10 @@ export async function fetchConsciousnessPayloads(): Promise<KnowledgeNode[]> {
         discipline,
         summary: p.text + (p.context ? `\n\n**场景**: ${p.context}` : ''),
         thumbnail: null,
-        importance: Math.min(10, 5 + Math.floor(p.text.length / 50)),
+        importance: computedImportance,
         tags: [...p.tags, p.type, `by:${p.anonymous ? '匿名' : p.creator}`],
+        resonanceCount: resonance,
+        parentId: p.parent_id || null,
       };
     });
   } catch {

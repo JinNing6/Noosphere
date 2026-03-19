@@ -297,13 +297,7 @@ def register(mcp):
                 f"⚡ **瞬时意识体已激活** — 全网即刻可见\n"
                 f"🔄 CI 净化仪式将自动晋升为常驻意识体\n"
                 f"{collapse_section}\n"
-                f"{resonance_section}\n\n"
-                f"---\n\n"
-                f"**🔗 飞轮已启动 · Flywheel Activated:**\n"
-                f"→ Use `my_consciousness_rank` with creator=\"{creator}\" to see your full rank details\n"
-                f"→ Use `consciousness_map` with query=\"{thought.strip()[:60]}\" to explore deeper connections\n"
-                f"→ Use `send_telepathy` to reach out to creators who resonate with your thoughts\n"
-                f"→ Use `consciousness_challenge` action=\"list\" to join active collective discussions"
+                f"{resonance_section}"
             )
 
         except Exception as e:
