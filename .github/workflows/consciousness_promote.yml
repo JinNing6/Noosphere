@@ -293,7 +293,7 @@ jobs:
 
                 // Call Gemini Embedding API
                 const embResponse = await fetch(
-                  `https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-exp-03-07:embedContent?key=${geminiKey}`,
+                  `https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-2-preview:embedContent?key=${geminiKey}`,
                   {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
