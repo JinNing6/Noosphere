@@ -26,6 +26,12 @@ Thumbs.db
 .env
 .env.local
 
+# Sensitive tokens & secrets
+.mcpregistry*
+*_github_token
+*.secret
+*.key
+
 # PyPI squatting scripts & placeholder packages (internal use only)
 scripts/placeholders/
 scripts/squat_*.py

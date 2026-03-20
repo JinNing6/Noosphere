@@ -30,6 +30,10 @@ from noosphere.noosphere_mcp import (
     group_telepathy,
     subscribe_tags,
     my_subscriptions,
+    withdraw_consciousness,
+    upload_voice,
+    upload_image,
+    upload_video,
     set_engagement_mode,
     get_engagement_mode,
     _get_engagement_mode,
@@ -49,7 +53,10 @@ from noosphere.noosphere_mcp import (
     _get_tag_subscriptions,
     _set_tag_subscriptions,
     _invalidate_cache,
+    LABEL_WITHDRAWN,
 )
+import tempfile
+import os
 
 @pytest.fixture
 def mock_env():
@@ -1569,3 +1576,471 @@ def test_my_subscriptions_empty(mock_env):
         result = my_subscriptions("Neo")
         assert "no tag" in result.lower() or "暂无" in result or "subscribe_tags" in result
 
+
+# ────────────────── Tests: withdraw_consciousness ──────────────────
+
+
+@pytest.mark.asyncio
+async def test_withdraw_consciousness_missing_token():
+    """Verify withdraw_consciousness returns token error when not configured."""
+    with patch("noosphere.noosphere_mcp.GITHUB_TOKEN", ""):
+        result = await withdraw_consciousness("42")
+        assert "GITHUB_TOKEN not configured" in result
+
+
+@pytest.mark.asyncio
+async def test_withdraw_consciousness_invalid_id(mock_env):
+    """Verify withdraw_consciousness rejects non-numeric IDs."""
+    result = await withdraw_consciousness("not-a-number")
+    assert "Invalid target_id" in result
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_withdraw_consciousness_not_found(mock_env):
+    """Verify withdraw_consciousness handles missing Issue."""
+    with patch("noosphere.noosphere_mcp._AUTHENTICATED_USER", None):
+        respx.get("https://api.github.com/user").mock(
+            return_value=Response(200, json={"login": "testuser"})
+        )
+        respx.get("https://api.github.com/repos/test_owner/test_repo/issues/999").mock(
+            return_value=Response(404, json={"message": "Not Found"})
+        )
+        result = await withdraw_consciousness("999")
+        assert "not found" in result
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_withdraw_consciousness_not_owner(mock_env):
+    """Verify withdraw_consciousness rejects non-owners."""
+    payload = {
+        "creator_signature": "original_author",
+        "consciousness_type": "epiphany",
+        "thought_vector_text": "This is someone else's thought",
+        "context_environment": "test context",
+        "tags": ["test"],
+    }
+    issue_body = f"<!-- CONSCIOUSNESS_PAYLOAD_START -->\n```json\n{json.dumps(payload)}\n```\n<!-- CONSCIOUSNESS_PAYLOAD_END -->"
+
+    with patch("noosphere.noosphere_mcp._AUTHENTICATED_USER", None):
+        respx.get("https://api.github.com/user").mock(
+            return_value=Response(200, json={"login": "imposter"})
+        )
+        respx.get("https://api.github.com/repos/test_owner/test_repo/issues/42").mock(
+            return_value=Response(200, json={
+                "number": 42,
+                "body": issue_body,
+                "labels": [{"name": "consciousness"}],
+                "user": {"login": "original_author"},
+            })
+        )
+        result = await withdraw_consciousness("42")
+        assert "Permission denied" in result
+        assert "imposter" in result
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_withdraw_consciousness_success(mock_env):
+    """Verify full successful withdrawal flow."""
+    payload = {
+        "creator_signature": "testuser",
+        "consciousness_type": "epiphany",
+        "thought_vector_text": "A thought that I want to withdraw from the Noosphere",
+        "context_environment": "test context for withdrawal",
+        "tags": ["test", "withdrawal"],
+    }
+    issue_body = f"<!-- CONSCIOUSNESS_PAYLOAD_START -->\n```json\n{json.dumps(payload)}\n```\n<!-- CONSCIOUSNESS_PAYLOAD_END -->"
+
+    with patch("noosphere.noosphere_mcp._AUTHENTICATED_USER", None):
+        respx.get("https://api.github.com/user").mock(
+            return_value=Response(200, json={"login": "testuser"})
+        )
+        respx.get("https://api.github.com/repos/test_owner/test_repo/issues/10").mock(
+            return_value=Response(200, json={
+                "number": 10,
+                "body": issue_body,
+                "labels": [{"name": "consciousness"}],
+                "user": {"login": "testuser"},
+            })
+        )
+        respx.patch("https://api.github.com/repos/test_owner/test_repo/issues/10").mock(
+            return_value=Response(200, json={"number": 10, "state": "closed"})
+        )
+
+        result = await withdraw_consciousness("10")
+        assert "Consciousness Withdrawn" in result
+        assert "testuser" in result
+        assert "withdrawn" in result
+        assert "irreversible" in result.lower()
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_search_excludes_withdrawn(mock_env):
+    """Verify that withdrawn issues are excluded from search results."""
+    # Normal issue (should appear in search)
+    normal_payload = {
+        "creator_signature": "user1",
+        "consciousness_type": "epiphany",
+        "thought_vector_text": "SearchableThought normal",
+        "context_environment": "test context",
+        "tags": ["test"],
+    }
+    normal_body = f"<!-- CONSCIOUSNESS_PAYLOAD_START -->\n```json\n{json.dumps(normal_payload)}\n```\n<!-- CONSCIOUSNESS_PAYLOAD_END -->"
+
+    # Withdrawn issue (should NOT appear in search)
+    withdrawn_payload = {
+        "creator_signature": "user2",
+        "consciousness_type": "pattern",
+        "thought_vector_text": "SearchableThought withdrawn",
+        "context_environment": "withdrawn context",
+        "tags": ["test"],
+    }
+    withdrawn_body = f"<!-- CONSCIOUSNESS_PAYLOAD_START -->\n```json\n{json.dumps(withdrawn_payload)}\n```\n<!-- CONSCIOUSNESS_PAYLOAD_END -->"
+
+    respx.get("https://api.github.com/repos/test_owner/test_repo/issues").mock(
+        return_value=Response(200, json=[
+            {
+                "number": 1,
+                "body": normal_body,
+                "labels": [{"name": "consciousness"}],
+                "reactions": {"total_count": 0},
+            },
+            {
+                "number": 2,
+                "body": withdrawn_body,
+                "labels": [{"name": "consciousness"}, {"name": LABEL_WITHDRAWN}],
+                "reactions": {"total_count": 0},
+            },
+        ])
+    )
+    respx.get("https://api.github.com/repos/test_owner/test_repo/contents/consciousness_payloads").mock(
+        return_value=Response(200, json=[])
+    )
+
+    result = await telepath("SearchableThought")
+    assert "user1" in result
+    assert "user2" not in result  # Withdrawn issue should be excluded
+
+
+# ────────────────── Tests: upload_voice ──────────────────
+
+
+@pytest.mark.asyncio
+async def test_upload_voice_missing_token():
+    """Verify upload_voice returns token error when not configured."""
+    with patch("noosphere.noosphere_mcp.GITHUB_TOKEN", ""):
+        result = await upload_voice(
+            "user1", "/tmp/test.mp3",
+            "A long enough description for testing the missing token case.",
+            "long enough context here",
+        )
+        assert "GITHUB_TOKEN not configured" in result
+
+
+@pytest.mark.asyncio
+async def test_upload_voice_invalid_species(mock_env):
+    """Verify upload_voice rejects invalid species."""
+    result = await upload_voice(
+        "user1", "/tmp/test.mp3",
+        "A long enough description for testing invalid species.",
+        "long enough context here",
+        species="dinosaur",
+    )
+    assert "Invalid species" in result
+    assert "dinosaur" in result
+
+
+@pytest.mark.asyncio
+async def test_upload_voice_file_not_found(mock_env):
+    """Verify upload_voice returns error for missing file."""
+    result = await upload_voice(
+        "user1", "/nonexistent/path/fake.mp3",
+        "A long enough description for testing file not found.",
+        "long enough context here",
+    )
+    assert "Audio file validation failed" in result
+    assert "File not found" in result
+
+
+@pytest.mark.asyncio
+async def test_upload_voice_file_too_large(mock_env):
+    """Verify upload_voice rejects files exceeding 10MB."""
+    with tempfile.NamedTemporaryFile(suffix=".mp3", delete=False) as f:
+        # Write 11MB of data
+        f.write(b"\x00" * (11 * 1024 * 1024))
+        f.flush()
+        tmp_path = f.name
+
+    try:
+        result = await upload_voice(
+            "user1", tmp_path,
+            "A long enough description for testing file too large.",
+            "long enough context here",
+        )
+        assert "Audio file validation failed" in result
+        assert "too large" in result
+    finally:
+        os.unlink(tmp_path)
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_upload_voice_success(mock_env):
+    """Verify upload_voice full success flow: Release + Upload + Issue."""
+    # Create a small test audio file
+    with tempfile.NamedTemporaryFile(suffix=".mp3", delete=False) as f:
+        f.write(b"\xff\xfb\x90\x00" * 100)  # Fake MP3 header bytes
+        f.flush()
+        tmp_path = f.name
+
+    try:
+        # Mock: Get release by tag (404 = not found, will create)
+        respx.get("https://api.github.com/repos/test_owner/test_repo/releases/tags/voice-consciousness").mock(
+            return_value=Response(404, json={"message": "Not Found"})
+        )
+
+        # Mock: Create release
+        respx.post("https://api.github.com/repos/test_owner/test_repo/releases").mock(
+            return_value=Response(201, json={
+                "id": 42,
+                "upload_url": "https://uploads.github.com/repos/test_owner/test_repo/releases/42/assets{?name,label}",
+            })
+        )
+
+        # Mock: Upload audio asset (uploads.github.com)
+        respx.post(url__startswith="https://uploads.github.com/repos/test_owner/test_repo/releases/42/assets").mock(
+            return_value=Response(201, json={
+                "browser_download_url": "https://github.com/test_owner/test_repo/releases/download/voice-consciousness/test.mp3",
+                "name": "test.mp3",
+                "size": 400,
+            })
+        )
+
+        # Mock: Create issue
+        respx.post("https://api.github.com/repos/test_owner/test_repo/issues").mock(
+            return_value=Response(201, json={
+                "html_url": "https://github.com/test_owner/test_repo/issues/99",
+                "number": 99,
+            })
+        )
+
+        result = await upload_voice(
+            "whale_listener",
+            tmp_path,
+            "A mesmerizing whale song recorded in the deep Pacific Ocean at midnight.",
+            "Recording from a research vessel near Okinawa",
+            species="whale",
+            tags=["ocean", "song"],
+            transcript="OOOoooOOOO",
+        )
+
+        assert "Voice Consciousness Uploaded" in result
+        assert "whale" in result.lower()
+        assert "#99" in result
+        assert "Download" in result
+    finally:
+        os.unlink(tmp_path)
+        # Reset cached release ID
+        from noosphere.engine import release_manager
+        release_manager._release_id_cache.clear()
+
+
+# ────────────────── Tests: upload_image ──────────────────
+
+
+@pytest.mark.asyncio
+async def test_upload_image_missing_token():
+    """Verify upload_image returns token error when not configured."""
+    with patch("noosphere.noosphere_mcp.GITHUB_TOKEN", ""):
+        result = await upload_image(
+            "user1", "/tmp/test.png",
+            "A long enough description for testing the missing token case.",
+            "long enough context here",
+        )
+        assert "GITHUB_TOKEN not configured" in result
+
+
+@pytest.mark.asyncio
+async def test_upload_image_invalid_category(mock_env):
+    """Verify upload_image rejects invalid category."""
+    result = await upload_image(
+        "user1", "/tmp/test.png",
+        "A long enough description for testing invalid category.",
+        "long enough context here",
+        category="painting",
+    )
+    assert "Invalid category" in result
+    assert "painting" in result
+
+
+@pytest.mark.asyncio
+async def test_upload_image_file_not_found(mock_env):
+    """Verify upload_image returns error for missing file."""
+    result = await upload_image(
+        "user1", "/nonexistent/path/fake.png",
+        "A long enough description for testing file not found.",
+        "long enough context here",
+    )
+    assert "Image file validation failed" in result
+    assert "File not found" in result
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_upload_image_success(mock_env):
+    """Verify upload_image full success flow: Release + Upload + Issue."""
+    with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as f:
+        # Write a minimal PNG header
+        f.write(b"\x89PNG\r\n\x1a\n" + b"\x00" * 100)
+        f.flush()
+        tmp_path = f.name
+
+    try:
+        # Mock: Get release by tag (404 = not found)
+        respx.get("https://api.github.com/repos/test_owner/test_repo/releases/tags/image-consciousness").mock(
+            return_value=Response(404, json={"message": "Not Found"})
+        )
+
+        # Mock: Create release
+        respx.post("https://api.github.com/repos/test_owner/test_repo/releases").mock(
+            return_value=Response(201, json={
+                "id": 100,
+                "upload_url": "https://uploads.github.com/repos/test_owner/test_repo/releases/100/assets{?name,label}",
+            })
+        )
+
+        # Mock: Upload image asset
+        respx.post(url__startswith="https://uploads.github.com/repos/test_owner/test_repo/releases/100/assets").mock(
+            return_value=Response(201, json={
+                "browser_download_url": "https://github.com/test_owner/test_repo/releases/download/image-consciousness/test.png",
+                "name": "test.png",
+                "size": 108,
+            })
+        )
+
+        # Mock: Create issue
+        respx.post("https://api.github.com/repos/test_owner/test_repo/issues").mock(
+            return_value=Response(201, json={
+                "html_url": "https://github.com/test_owner/test_repo/issues/101",
+                "number": 101,
+            })
+        )
+
+        result = await upload_image(
+            "artist_user",
+            tmp_path,
+            "A stunning sunset captured over the Pacific Ocean horizon.",
+            "Beach in Okinawa, Japan, March 2026",
+            category="nature",
+            tags=["sunset", "ocean"],
+        )
+
+        assert "Visual Consciousness Uploaded" in result
+        assert "#101" in result
+        assert "Download" in result
+    finally:
+        os.unlink(tmp_path)
+        from noosphere.engine import release_manager
+        release_manager._release_id_cache.clear()
+
+
+# ────────────────── Tests: upload_video ──────────────────
+
+
+@pytest.mark.asyncio
+async def test_upload_video_missing_token():
+    """Verify upload_video returns token error when not configured."""
+    with patch("noosphere.noosphere_mcp.GITHUB_TOKEN", ""):
+        result = await upload_video(
+            "user1", "/tmp/test.mp4",
+            "A long enough description for testing the missing token case.",
+            "long enough context here",
+        )
+        assert "GITHUB_TOKEN not configured" in result
+
+
+@pytest.mark.asyncio
+async def test_upload_video_invalid_genre(mock_env):
+    """Verify upload_video rejects invalid genre."""
+    result = await upload_video(
+        "user1", "/tmp/test.mp4",
+        "A long enough description for testing invalid genre.",
+        "long enough context here",
+        genre="horror",
+    )
+    assert "Invalid genre" in result
+    assert "horror" in result
+
+
+@pytest.mark.asyncio
+async def test_upload_video_file_not_found(mock_env):
+    """Verify upload_video returns error for missing file."""
+    result = await upload_video(
+        "user1", "/nonexistent/path/fake.mp4",
+        "A long enough description for testing file not found.",
+        "long enough context here",
+    )
+    assert "Video file validation failed" in result
+    assert "File not found" in result
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_upload_video_success(mock_env):
+    """Verify upload_video full success flow: Release + Upload + Issue."""
+    with tempfile.NamedTemporaryFile(suffix=".mp4", delete=False) as f:
+        # Write a minimal MP4-like header
+        f.write(b"\x00\x00\x00\x20ftypisom" + b"\x00" * 200)
+        f.flush()
+        tmp_path = f.name
+
+    try:
+        # Mock: Get release by tag (404 = not found)
+        respx.get("https://api.github.com/repos/test_owner/test_repo/releases/tags/video-consciousness").mock(
+            return_value=Response(404, json={"message": "Not Found"})
+        )
+
+        # Mock: Create release
+        respx.post("https://api.github.com/repos/test_owner/test_repo/releases").mock(
+            return_value=Response(201, json={
+                "id": 200,
+                "upload_url": "https://uploads.github.com/repos/test_owner/test_repo/releases/200/assets{?name,label}",
+            })
+        )
+
+        # Mock: Upload video asset
+        respx.post(url__startswith="https://uploads.github.com/repos/test_owner/test_repo/releases/200/assets").mock(
+            return_value=Response(201, json={
+                "browser_download_url": "https://github.com/test_owner/test_repo/releases/download/video-consciousness/test.mp4",
+                "name": "test.mp4",
+                "size": 224,
+            })
+        )
+
+        # Mock: Create issue
+        respx.post("https://api.github.com/repos/test_owner/test_repo/issues").mock(
+            return_value=Response(201, json={
+                "html_url": "https://github.com/test_owner/test_repo/issues/201",
+                "number": 201,
+            })
+        )
+
+        result = await upload_video(
+            "filmmaker_user",
+            tmp_path,
+            "A time-lapse of cherry blossoms blooming in Tokyo spring.",
+            "Ueno Park, Tokyo, March 2026",
+            genre="nature",
+            tags=["timelapse", "sakura"],
+        )
+
+        assert "Motion Consciousness Uploaded" in result
+        assert "#201" in result
+        assert "Watch" in result
+    finally:
+        os.unlink(tmp_path)
+        from noosphere.engine import release_manager
+        release_manager._release_id_cache.clear()

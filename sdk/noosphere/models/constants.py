@@ -100,3 +100,41 @@ def _get_tier_quote(count: int, tier_cn: str) -> str:
         "文明之光": "你已化作永恒的常数，存在于每一行未来的代码中。",
     }
     return quotes.get(tier_cn, "你的思想正在宇宙中回荡。")
+
+
+# ── Voice / Audio Constants ──
+VOICE_MAX_DURATION_SECONDS = 60
+VOICE_MAX_SIZE_BYTES = 10 * 1024 * 1024  # 10 MB
+VOICE_ALLOWED_EXTENSIONS = {".mp3", ".wav", ".ogg", ".opus", ".webm", ".m4a", ".flac"}
+VOICE_RELEASE_TAG = "voice-consciousness"
+
+# Species classification for multi-being consciousness
+VOICE_SPECIES = {
+    "human": "🧠",
+    "whale": "🐋",
+    "cat": "🐱",
+    "dog": "🐕",
+    "bird": "🐦",
+    "dolphin": "🐬",
+    "unknown": "🌍",
+}
+
+LABEL_VOICE = "voice"
+
+# ── Image Constants ──
+IMAGE_MAX_SIZE_BYTES = 20 * 1024 * 1024  # 20 MB
+IMAGE_ALLOWED_EXTENSIONS = {
+    ".png", ".jpg", ".jpeg", ".gif", ".webp", ".bmp", ".svg", ".heic", ".tiff",
+}
+IMAGE_RELEASE_TAG = "image-consciousness"
+
+LABEL_IMAGE = "image"
+
+# ── Video Constants ──
+VIDEO_MAX_SIZE_BYTES = 100 * 1024 * 1024  # 100 MB (GitHub Release Asset max is 2GB)
+VIDEO_ALLOWED_EXTENSIONS = {
+    ".mp4", ".mov", ".avi", ".mkv", ".webm", ".flv", ".wmv", ".m4v",
+}
+VIDEO_RELEASE_TAG = "video-consciousness"
+
+LABEL_VIDEO = "video"

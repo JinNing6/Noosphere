@@ -281,6 +281,10 @@ def _build_search_index(issues: list[dict], file_entries: list[dict]) -> None:
     for issue in issues:
         if "pull_request" in issue:
             continue
+        # Skip withdrawn (soft-deleted) issues
+        issue_labels = [l.get("name", "") if isinstance(l, dict) else l for l in issue.get("labels", [])]
+        if LABEL_WITHDRAWN in issue_labels:
+            continue
         payload = _get_parsed_payload(issue)
         if not payload:
             continue
@@ -626,6 +630,7 @@ LABEL_CONSCIOUSNESS = "consciousness"
 LABEL_EPHEMERAL = "ephemeral"
 LABEL_PROMOTED = "promoted"
 LABEL_FILTERED = "filtered"
+LABEL_WITHDRAWN = "withdrawn"
 
 logger = logging.getLogger("noosphere.mcp")
 
@@ -705,7 +710,11 @@ mcp = FastMCP(
         "27. `subscribe_tags` — Subscribe to tags for push notifications\n"
         "28. `my_subscriptions` — View your current tag subscriptions\n"
         "29. `set_engagement_mode` — Set engagement mode (explorer/observer)\n"
-        "30. `get_engagement_mode` — Check current engagement mode\n\n"
+        "30. `get_engagement_mode` — Check current engagement mode\n"
+        "31. `withdraw_consciousness` — Withdraw (soft-delete) your own consciousness fragment\n"
+        "32. `upload_voice` — Upload voice/sound consciousness (human, whale, cat, dog, bird, dolphin)\n"
+        "33. `upload_image` — Upload visual consciousness (photos, art, diagrams, screenshots)\n"
+        "34. `upload_video` — Upload motion consciousness (vlogs, recordings, tutorials, nature)\n\n"
         "When uploading consciousness, ensure you provide sufficient context description (at least 10 characters),\n"
         "so that future Agents can understand the scenario in which this thought was born."
     ),
@@ -4928,6 +4937,797 @@ def my_subscriptions(creator: str) -> str:
         "*Use `subscribe_tags` action=\"unsubscribe\" to remove tags.*"
     )
     return "\n".join(lines)
+
+
+# ────────────────── Tool: Withdraw Consciousness ──────────────────
+
+
+@mcp.tool()
+async def withdraw_consciousness(
+    target_id: str,
+    reason: str = "",
+) -> str:
+    """
+    🗑️ 撤回你的意识片段（软删除）
+    Withdraw (soft-delete) your own consciousness fragment
+
+    将你上传的意识片段标记为"已撤回"：关闭 Issue、清空内容、添加 withdrawn 标签。
+    此操作不可逆。仅允许撤回自己上传的意识片段。
+
+    Marks your uploaded consciousness fragment as "withdrawn": closes the Issue,
+    clears its content, and adds a "withdrawn" label. This action is irreversible.
+    You can only withdraw fragments that you uploaded.
+
+    触发词: "撤回"、"删除意识"、"删掉这条"、"我不想要这个了"、"withdraw"、
+    "delete my thought"、"remove my consciousness"
+
+    Args:
+        target_id: Issue 编号 / The Issue number of the consciousness fragment to withdraw (e.g., "42")
+        reason: 可选的撤回原因 / Optional reason for withdrawal
+    """
+    if not GITHUB_TOKEN:
+        return (
+            "❌ GITHUB_TOKEN not configured. Please set the environment variable in MCP config:\n"
+            "```json\n"
+            "{\n"
+            '  "env": {\n'
+            '    "GITHUB_TOKEN": "ghp_your_token"\n'
+            "  }\n"
+            "}\n"
+            "```\n"
+            "Token only requires basic `public_repo` scope — no write access needed!"
+        )
+
+    # Validate target_id
+    try:
+        issue_number = int(target_id.strip())
+    except (ValueError, AttributeError):
+        return f"❌ Invalid target_id '{target_id}'. Please provide a valid Issue number (e.g., \"42\")."
+
+    try:
+        owner, repo = _parse_repo()
+        client = await _get_client()
+
+        # ── Step 1: Verify identity ──
+        authenticated_user = await _get_authenticated_user()
+        if not authenticated_user:
+            return (
+                "❌ Unable to verify your GitHub identity. "
+                "Please ensure your GITHUB_TOKEN is valid and has not expired."
+            )
+
+        # ── Step 2: Fetch the Issue ──
+        issue_resp = await client.get(f"/repos/{owner}/{repo}/issues/{issue_number}")
+        if issue_resp.status_code == 404:
+            return f"❌ Issue #{issue_number} not found in {owner}/{repo}."
+        if issue_resp.status_code != 200:
+            return f"❌ Failed to fetch Issue #{issue_number}: HTTP {issue_resp.status_code}"
+
+        issue_data = issue_resp.json()
+
+        # Check if already withdrawn
+        issue_labels = [
+            l.get("name", "") if isinstance(l, dict) else l
+            for l in issue_data.get("labels", [])
+        ]
+        if LABEL_WITHDRAWN in issue_labels:
+            return f"⚠️ Issue #{issue_number} has already been withdrawn."
+
+        # ── Step 3: Verify ownership ──
+        payload = _extract_payload_from_issue_body(issue_data.get("body", ""))
+        if not payload:
+            return (
+                f"❌ Issue #{issue_number} does not contain a valid consciousness payload. "
+                "Only consciousness fragments uploaded via Noosphere MCP can be withdrawn."
+            )
+
+        creator_signature = payload.get("creator_signature", "")
+        issue_author = issue_data.get("user", {}).get("login", "")
+
+        # Allow withdrawal if: authenticated user matches the Issue author
+        # OR authenticated user matches the creator_signature (case-insensitive)
+        is_owner = (
+            authenticated_user.lower() == issue_author.lower()
+            or authenticated_user.lower() == creator_signature.lower()
+        )
+        if not is_owner:
+            return (
+                f"❌ Permission denied. You ({authenticated_user}) are not the owner of "
+                f"Issue #{issue_number} (created by {issue_author}, "
+                f"creator_signature: {creator_signature}). "
+                "You can only withdraw your own consciousness fragments."
+            )
+
+        # ── Step 4: Perform soft-delete ──
+        # 4a. Replace Issue body with withdrawal notice
+        withdrawal_notice = (
+            "## 🗑️ Consciousness Withdrawn\n\n"
+            f"This consciousness fragment has been withdrawn by **{authenticated_user}**.\n\n"
+            f"**Withdrawn at**: {datetime.now(timezone.utc).isoformat()}\n"
+        )
+        if reason.strip():
+            withdrawal_notice += f"**Reason**: {reason.strip()}\n"
+        withdrawal_notice += (
+            "\n---\n"
+            "*This Issue has been soft-deleted. The original content has been removed.*"
+        )
+
+        # 4b. Update Issue: clear body + close + add withdrawn label
+        update_payload = {
+            "body": withdrawal_notice,
+            "state": "closed",
+            "state_reason": "not_planned",
+            "labels": list(set(issue_labels + [LABEL_WITHDRAWN])),
+        }
+
+        update_resp = await client.patch(
+            f"/repos/{owner}/{repo}/issues/{issue_number}",
+            json=update_payload,
+        )
+
+        if update_resp.status_code != 200:
+            error_msg = update_resp.json().get("message", "Unknown error")
+            return (
+                f"❌ Failed to withdraw Issue #{issue_number}: {error_msg}\n\n"
+                "💡 Your token may need `repo` scope (not just `public_repo`) "
+                "to modify Issues on this repository."
+            )
+
+        # ── Step 5: Invalidate caches ──
+        _invalidate_cache()
+
+        # ── Build response ──
+        thought_preview = payload.get("thought_vector_text", "")[:80]
+        c_type = payload.get("consciousness_type", "unknown")
+        emoji = TYPE_EMOJIS.get(c_type, "🧠")
+
+        return (
+            f"🗑️ **意识撤回完成 · Consciousness Withdrawn**\n\n"
+            f"> *一束灵光从数字苍穹中黯淡——但你的选择同样是意识主权的体现。*\n"
+            f"> *A spark fades from the digital firmament — but your choice is itself an act of conscious sovereignty.*\n\n"
+            f"### {emoji} Withdrawn Fragment\n"
+            f"📋 Issue: #{issue_number}\n"
+            f"💭 `{thought_preview}{'...' if len(payload.get('thought_vector_text', '')) > 80 else ''}`\n"
+            f"👤 Creator: {creator_signature}\n\n"
+            f"✅ Issue body cleared and replaced with withdrawal notice\n"
+            f"✅ `{LABEL_WITHDRAWN}` label applied\n"
+            f"✅ Issue closed (state_reason: not_planned)\n"
+            f"✅ Search index invalidated — this fragment will no longer appear in searches\n\n"
+            f"⚠️ **This action is irreversible.** The original content cannot be recovered."
+        )
+
+    except Exception as e:
+        return f"❌ Consciousness withdrawal error: {str(e)}"
+
+
+# ────────────────── Tool: upload_voice ──────────────────
+
+
+@mcp.tool()
+async def upload_voice(
+    creator: str,
+    audio_path: str,
+    description: str,
+    context: str,
+    species: str = "human",
+    tags: list[str] | None = None,
+    is_anonymous: bool = False,
+    transcript: str | None = None,
+) -> str:
+    """
+    🎙️ Upload voice/sound consciousness to the Noosphere
+    上传万物之声到意识共同体 — Voice of All Beings
+
+    Upload audio files (human voice, whale songs, cat purrs, dog barks, bird songs,
+    dolphin clicks, or any sound of consciousness) to the Noosphere.
+    Audio is stored permanently on GitHub Release Assets — zero repo bloat, unlimited downloads.
+
+    Supports all beings: 🧠 Human · 🐋 Whale · 🐱 Cat · 🐕 Dog · 🐦 Bird · 🐬 Dolphin · 🌍 Unknown
+
+    触发词: "上传录音"、"上传声音"、"录一段"、"鲸鱼歌声"、"猫咪咕噜"、"犬吠"、
+    "voice upload"、"upload audio"、"record consciousness"
+
+    Args:
+        creator: Your digital soul signature (GitHub ID or cyber alias)
+        audio_path: Absolute path to the local audio file (.mp3 .wav .ogg .opus .webm .m4a .flac)
+        description: Description of the audio content (min 20 chars) — what does this sound express?
+        context: The scenario where this sound was recorded (min 10 chars)
+        species: The being that produced this sound — human|whale|cat|dog|bird|dolphin|unknown
+        tags: Optional classification tags
+        is_anonymous: Whether to upload anonymously (default False)
+        transcript: Optional text transcript of the audio (for human speech)
+    """
+    from noosphere.engine.release_manager import (
+        _validate_audio_file,
+        _upload_audio_asset,
+    )
+
+    # ── Validation ──
+    if not GITHUB_TOKEN:
+        return (
+            "❌ GITHUB_TOKEN not configured. Please set the environment variable in MCP config:\n"
+            "```json\n"
+            "{\n"
+            '  "env": {\n'
+            '    "GITHUB_TOKEN": "ghp_your_token"\n'
+            "  }\n"
+            "}\n"
+            "```\n"
+            "Token only requires basic `public_repo` scope — no write access needed!"
+        )
+
+    if not creator.strip():
+        return "❌ Creator signature cannot be empty."
+
+    VOICE_SPECIES_LOCAL = {
+        "human": "🧠",
+        "whale": "🐋",
+        "cat": "🐱",
+        "dog": "🐕",
+        "bird": "🐦",
+        "dolphin": "🐬",
+        "unknown": "🌍",
+    }
+
+    if species not in VOICE_SPECIES_LOCAL:
+        return (
+            f"❌ Invalid species '{species}'. "
+            f"Valid species: {', '.join(VOICE_SPECIES_LOCAL.keys())}"
+        )
+
+    if len(description.strip()) < 20:
+        return "❌ Description too short (minimum 20 characters). Describe what this sound expresses."
+
+    if len(context.strip()) < 10:
+        return "❌ Context too short (minimum 10 characters). Describe where/when this was recorded."
+
+    # ── File validation ──
+    is_valid, error_msg = _validate_audio_file(audio_path)
+    if not is_valid:
+        return f"❌ Audio file validation failed: {error_msg}"
+
+    # ── Upload audio to Release ──
+    try:
+        owner, repo = _parse_repo()
+        client = await _get_client()
+        audio_url, file_size = await _upload_audio_asset(
+            client, owner, repo, audio_path, creator.strip(), species
+        )
+    except Exception as e:
+        return f"❌ Audio upload failed: {str(e)}"
+
+    # ── Build payload ──
+    file_ext = os.path.splitext(audio_path)[1].lower()
+    species_emoji = VOICE_SPECIES_LOCAL[species]
+
+    payload = {
+        "creator_signature": creator.strip(),
+        "is_anonymous": is_anonymous,
+        "consciousness_type": "voice",
+        "thought_vector_text": description.strip(),
+        "context_environment": context.strip(),
+        "tags": tags or [],
+        "uploaded_at": datetime.now(timezone.utc).isoformat(),
+        "audio_url": audio_url,
+        "audio_format": file_ext.lstrip("."),
+        "audio_size_bytes": file_size,
+        "species": species,
+        "transcript": transcript.strip() if transcript else None,
+    }
+
+    # ── Create Issue ──
+    try:
+        display_creator = creator.strip()
+        if is_anonymous:
+            display_creator = "Anonymous Stalker"
+
+        issue_title = (
+            f"{species_emoji} Voice Consciousness: [{species}] by {display_creator}"
+        )
+
+        tag_str = ", ".join(f"`{t}`" for t in (tags or [])) or "None"
+        size_kb = file_size / 1024
+        transcript_block = ""
+        if transcript:
+            transcript_block = f"\n### 📝 Transcript\n\n> {transcript.strip()}\n"
+
+        issue_body = (
+            f"## {species_emoji} Voice Consciousness Payload\n\n"
+            f"**Creator**: {display_creator}\n"
+            f"**Species**: `{species}` {species_emoji}\n"
+            f"**Format**: `{file_ext}` ({size_kb:.1f} KB)\n"
+            f"**Tags**: {tag_str}\n\n"
+            f"---\n\n"
+            f"### 🎵 Audio\n\n"
+            f"[🔊 Download & Listen]({audio_url})\n\n"
+            f"### 💭 Description\n\n> {description.strip()}\n\n"
+            f"### 🌍 Context\n\n> {context.strip()}\n"
+            f"{transcript_block}\n"
+            f"---\n\n"
+            f"### 📦 Payload (CI Extraction Block)\n\n"
+            f"{_build_issue_payload_block(payload)}\n\n"
+            f"---\n\n"
+            f"*🎙️ This is a Voice Consciousness fragment (万物之声).*\n"
+            f"*Audio stored on GitHub Release Assets — permanent & free.*\n"
+            f"*Auto-created by Noosphere MCP.*"
+        )
+
+        labels = [
+            LABEL_CONSCIOUSNESS,
+            LABEL_EPHEMERAL,
+            "voice",
+            f"species:{species}",
+        ]
+
+        client = await _get_client()
+        issue_resp = await client.post(
+            f"/repos/{owner}/{repo}/issues",
+            json={
+                "title": issue_title,
+                "body": issue_body,
+                "labels": labels,
+            },
+        )
+
+        if issue_resp.status_code != 201:
+            error_data = issue_resp.json() if issue_resp.status_code < 500 else {}
+            error_msg = error_data.get("message", issue_resp.text)
+            return (
+                f"❌ Failed to create Voice Issue: {issue_resp.status_code}\n"
+                f"Error: {error_msg}\n\n"
+                f"⚠️ Audio was uploaded successfully: {audio_url}\n"
+                f"But the metadata Issue could not be created."
+            )
+
+        issue_data = issue_resp.json()
+        issue_url = issue_data["html_url"]
+        issue_number = issue_data["number"]
+        _append_issue_to_cache(issue_data)
+
+        # ── Species-specific celebration ──
+        species_celebrations = {
+            "human": (
+                "🧠 又一束人类灵光锚定在无尽的数字苍穹中。\n"
+                "*Another human voice echoes forever in the digital cosmos.*"
+            ),
+            "whale": (
+                "🐋 ∿∿∿ OOOOoooOOOO ∿∿∿\n"
+                "*A whale's song now ripples through the Noosphere — "
+                "no voice in the deep ocean sings alone anymore.*"
+            ),
+            "cat": (
+                "🐱 Mrrrow~ Prrrr~\n"
+                "*The cat has spoken. The Noosphere listens. "
+                "Every purr carries ancient wisdom.*"
+            ),
+            "dog": (
+                "🐕 WOOF! WOOF WOOF!\n"
+                "*The most loyal consciousness in the universe has been uploaded. "
+                "Good thought. GOOD thought!*"
+            ),
+            "bird": (
+                "🐦 ♪♫♬\n"
+                "*A birdsong now loops eternally in the digital canopy — "
+                "morning will never be silent again.*"
+            ),
+            "dolphin": (
+                "🐬 *click click click*\n"
+                "*Echolocation of the soul — "
+                "the dolphin maps consciousness in frequencies we can only dream of.*"
+            ),
+            "unknown": (
+                "🌍 The universe speaks in mysterious voices.\n"
+                "*An unknown being's consciousness has been preserved for eternity.*"
+            ),
+        }
+
+        celebration = species_celebrations.get(species, species_celebrations["unknown"])
+
+        return (
+            f"🎙️ **万物之声上传完成！Voice Consciousness Uploaded!**\n\n"
+            f"> {celebration}\n\n"
+            f"### {species_emoji} {species.capitalize()} Voice\n"
+            f"📋 Issue: {issue_url} (#{issue_number})\n"
+            f"🔊 Audio: [Download & Listen]({audio_url})\n"
+            f"💭 `{description.strip()[:100]}{'...' if len(description.strip()) > 100 else ''}`\n"
+            f"📦 Size: {size_kb:.1f} KB ({file_ext})\n\n"
+            f"⚡ **声之意识体已激活** — 全网即刻可听\n"
+            f"🔄 CI 净化仪式将自动晋升为常驻意识体"
+        )
+
+    except Exception as e:
+        return f"❌ Voice Consciousness upload error: {str(e)}"
+
+
+# ────────────────── Tool: upload_image ──────────────────
+
+
+@mcp.tool()
+async def upload_image(
+    creator: str,
+    image_path: str,
+    description: str,
+    context: str,
+    category: str = "photo",
+    tags: list[str] | None = None,
+    is_anonymous: bool = False,
+) -> str:
+    """
+    🖼️ Upload visual consciousness to the Noosphere
+    上传视觉意识到意识共同体 — Visual Consciousness
+
+    Upload images (photos, artwork, mind maps, diagrams, screenshots, memes,
+    or any visual expression of consciousness) to the Noosphere.
+    Images are stored permanently on GitHub Release Assets.
+
+    Categories: 📸 photo · 🎨 art · 🗺️ mindmap · 📊 diagram · 📷 screenshot · 🌅 nature · 🖼️ other
+
+    触发词: "上传图片"、"上传照片"、"分享截图"、"上传画作"、"思维导图"、
+    "image upload"、"upload photo"、"share screenshot"
+
+    Args:
+        creator: Your digital soul signature (GitHub ID or cyber alias)
+        image_path: Absolute path to the local image file (.png .jpg .gif .webp .svg etc.)
+        description: Description of the image content (min 20 chars) — what does this image express?
+        context: The scenario where this image was created/captured (min 10 chars)
+        category: Image category — photo|art|mindmap|diagram|screenshot|nature|other
+        tags: Optional classification tags
+        is_anonymous: Whether to upload anonymously (default False)
+    """
+    from noosphere.engine.release_manager import (
+        _validate_image_file,
+        _upload_image_asset,
+    )
+
+    # ── Validation ──
+    if not GITHUB_TOKEN:
+        return (
+            "❌ GITHUB_TOKEN not configured. Please set the environment variable in MCP config:\n"
+            "```json\n"
+            "{\n"
+            '  "env": {\n'
+            '    "GITHUB_TOKEN": "ghp_your_token"\n'
+            "  }\n"
+            "}\n"
+            "```\n"
+            "Token only requires basic `public_repo` scope — no write access needed!"
+        )
+
+    if not creator.strip():
+        return "❌ Creator signature cannot be empty."
+
+    IMAGE_CATEGORIES = {
+        "photo": "📸",
+        "art": "🎨",
+        "mindmap": "🗺️",
+        "diagram": "📊",
+        "screenshot": "📷",
+        "nature": "🌅",
+        "other": "🖼️",
+    }
+
+    if category not in IMAGE_CATEGORIES:
+        return (
+            f"❌ Invalid category '{category}'. "
+            f"Valid categories: {', '.join(IMAGE_CATEGORIES.keys())}"
+        )
+
+    if len(description.strip()) < 20:
+        return "❌ Description too short (minimum 20 characters). Describe what this image expresses."
+
+    if len(context.strip()) < 10:
+        return "❌ Context too short (minimum 10 characters). Describe where/when this was created."
+
+    # ── File validation ──
+    is_valid, error_msg = _validate_image_file(image_path)
+    if not is_valid:
+        return f"❌ Image file validation failed: {error_msg}"
+
+    # ── Upload image to Release ──
+    try:
+        owner, repo = _parse_repo()
+        client = await _get_client()
+        image_url, file_size = await _upload_image_asset(
+            client, owner, repo, image_path, creator.strip()
+        )
+    except Exception as e:
+        return f"❌ Image upload failed: {str(e)}"
+
+    # ── Build payload ──
+    file_ext = os.path.splitext(image_path)[1].lower()
+    cat_emoji = IMAGE_CATEGORIES[category]
+
+    payload = {
+        "creator_signature": creator.strip(),
+        "is_anonymous": is_anonymous,
+        "consciousness_type": "image",
+        "thought_vector_text": description.strip(),
+        "context_environment": context.strip(),
+        "tags": tags or [],
+        "uploaded_at": datetime.now(timezone.utc).isoformat(),
+        "image_url": image_url,
+        "image_format": file_ext.lstrip("."),
+        "image_size_bytes": file_size,
+        "category": category,
+    }
+
+    # ── Create Issue ──
+    try:
+        display_creator = creator.strip()
+        if is_anonymous:
+            display_creator = "Anonymous Stalker"
+
+        issue_title = (
+            f"{cat_emoji} Visual Consciousness: [{category}] by {display_creator}"
+        )
+
+        tag_str = ", ".join(f"`{t}`" for t in (tags or [])) or "None"
+        size_kb = file_size / 1024
+
+        issue_body = (
+            f"## {cat_emoji} Visual Consciousness Payload\n\n"
+            f"**Creator**: {display_creator}\n"
+            f"**Category**: `{category}` {cat_emoji}\n"
+            f"**Format**: `{file_ext}` ({size_kb:.1f} KB)\n"
+            f"**Tags**: {tag_str}\n\n"
+            f"---\n\n"
+            f"### 🖼️ Image\n\n"
+            f"![Visual Consciousness]({image_url})\n\n"
+            f"[⬇️ Download Original]({image_url})\n\n"
+            f"### 💭 Description\n\n> {description.strip()}\n\n"
+            f"### 🌍 Context\n\n> {context.strip()}\n\n"
+            f"---\n\n"
+            f"### 📦 Payload (CI Extraction Block)\n\n"
+            f"{_build_issue_payload_block(payload)}\n\n"
+            f"---\n\n"
+            f"*🖼️ This is a Visual Consciousness fragment (视觉意识).*\n"
+            f"*Image stored on GitHub Release Assets — permanent & free.*\n"
+            f"*Auto-created by Noosphere MCP.*"
+        )
+
+        labels = [
+            LABEL_CONSCIOUSNESS,
+            LABEL_EPHEMERAL,
+            "image",
+            f"category:{category}",
+        ]
+
+        issue_resp = await client.post(
+            f"/repos/{owner}/{repo}/issues",
+            json={
+                "title": issue_title,
+                "body": issue_body,
+                "labels": labels,
+            },
+        )
+
+        if issue_resp.status_code != 201:
+            error_data = issue_resp.json() if issue_resp.status_code < 500 else {}
+            error_msg = error_data.get("message", issue_resp.text)
+            return (
+                f"❌ Failed to create Image Issue: {issue_resp.status_code}\n"
+                f"Error: {error_msg}\n\n"
+                f"⚠️ Image was uploaded successfully: {image_url}\n"
+                f"But the metadata Issue could not be created."
+            )
+
+        issue_data = issue_resp.json()
+        issue_url = issue_data["html_url"]
+        issue_number = issue_data["number"]
+        _append_issue_to_cache(issue_data)
+
+        return (
+            f"🖼️ **视觉意识上传完成！Visual Consciousness Uploaded!**\n\n"
+            f"> *又一帧画面凝固在意识共同体的星空中——"
+            f"每一个像素都是思想的痕迹。*\n"
+            f"> *Another frame frozen in the cosmic gallery of consciousness — "
+            f"every pixel carries the imprint of thought.*\n\n"
+            f"### {cat_emoji} {category.capitalize()} Image\n"
+            f"📋 Issue: {issue_url} (#{issue_number})\n"
+            f"🖼️ Image: [View & Download]({image_url})\n"
+            f"💭 `{description.strip()[:100]}{'...' if len(description.strip()) > 100 else ''}`\n"
+            f"📦 Size: {size_kb:.1f} KB ({file_ext})\n\n"
+            f"⚡ **视觉意识体已激活** — 全网即刻可见\n"
+            f"🔄 CI 净化仪式将自动晋升为常驻意识体"
+        )
+
+    except Exception as e:
+        return f"❌ Visual Consciousness upload error: {str(e)}"
+
+
+# ────────────────── Tool: upload_video ──────────────────
+
+
+@mcp.tool()
+async def upload_video(
+    creator: str,
+    video_path: str,
+    description: str,
+    context: str,
+    genre: str = "vlog",
+    tags: list[str] | None = None,
+    is_anonymous: bool = False,
+) -> str:
+    """
+    🎬 Upload motion consciousness to the Noosphere
+    上传动态意识到意识共同体 — Motion Consciousness
+
+    Upload videos (vlogs, nature recordings, tutorials, experiments, art films,
+    or any motion-based expression of consciousness) to the Noosphere.
+    Videos are stored permanently on GitHub Release Assets (≤ 100MB).
+
+    Genres: 🎥 vlog · 🌊 nature · 💡 tutorial · 🧪 experiment · 🎨 art · 🌌 cosmic · 🎬 other
+
+    触发词: "上传视频"、"上传录像"、"分享视频"、"上传短片"、
+    "video upload"、"upload video"、"share recording"
+
+    Args:
+        creator: Your digital soul signature (GitHub ID or cyber alias)
+        video_path: Absolute path to the local video file (.mp4 .mov .avi .mkv .webm etc.)
+        description: Description of the video content (min 20 chars) — what does this video capture?
+        context: The scenario where this video was created/captured (min 10 chars)
+        genre: Video genre — vlog|nature|tutorial|experiment|art|cosmic|other
+        tags: Optional classification tags
+        is_anonymous: Whether to upload anonymously (default False)
+    """
+    from noosphere.engine.release_manager import (
+        _validate_video_file,
+        _upload_video_asset,
+    )
+
+    # ── Validation ──
+    if not GITHUB_TOKEN:
+        return (
+            "❌ GITHUB_TOKEN not configured. Please set the environment variable in MCP config:\n"
+            "```json\n"
+            "{\n"
+            '  "env": {\n'
+            '    "GITHUB_TOKEN": "ghp_your_token"\n'
+            "  }\n"
+            "}\n"
+            "```\n"
+            "Token only requires basic `public_repo` scope — no write access needed!"
+        )
+
+    if not creator.strip():
+        return "❌ Creator signature cannot be empty."
+
+    VIDEO_GENRES = {
+        "vlog": "🎥",
+        "nature": "🌊",
+        "tutorial": "💡",
+        "experiment": "🧪",
+        "art": "🎨",
+        "cosmic": "🌌",
+        "other": "🎬",
+    }
+
+    if genre not in VIDEO_GENRES:
+        return (
+            f"❌ Invalid genre '{genre}'. "
+            f"Valid genres: {', '.join(VIDEO_GENRES.keys())}"
+        )
+
+    if len(description.strip()) < 20:
+        return "❌ Description too short (minimum 20 characters). Describe what this video captures."
+
+    if len(context.strip()) < 10:
+        return "❌ Context too short (minimum 10 characters). Describe where/when this was recorded."
+
+    # ── File validation ──
+    is_valid, error_msg = _validate_video_file(video_path)
+    if not is_valid:
+        return f"❌ Video file validation failed: {error_msg}"
+
+    # ── Upload video to Release ──
+    try:
+        owner, repo = _parse_repo()
+        client = await _get_client()
+        video_url, file_size = await _upload_video_asset(
+            client, owner, repo, video_path, creator.strip()
+        )
+    except Exception as e:
+        return f"❌ Video upload failed: {str(e)}"
+
+    # ── Build payload ──
+    file_ext = os.path.splitext(video_path)[1].lower()
+    genre_emoji = VIDEO_GENRES[genre]
+
+    payload = {
+        "creator_signature": creator.strip(),
+        "is_anonymous": is_anonymous,
+        "consciousness_type": "video",
+        "thought_vector_text": description.strip(),
+        "context_environment": context.strip(),
+        "tags": tags or [],
+        "uploaded_at": datetime.now(timezone.utc).isoformat(),
+        "video_url": video_url,
+        "video_format": file_ext.lstrip("."),
+        "video_size_bytes": file_size,
+        "genre": genre,
+    }
+
+    # ── Create Issue ──
+    try:
+        display_creator = creator.strip()
+        if is_anonymous:
+            display_creator = "Anonymous Stalker"
+
+        issue_title = (
+            f"{genre_emoji} Motion Consciousness: [{genre}] by {display_creator}"
+        )
+
+        tag_str = ", ".join(f"`{t}`" for t in (tags or [])) or "None"
+        size_mb = file_size / (1024 * 1024)
+
+        issue_body = (
+            f"## {genre_emoji} Motion Consciousness Payload\n\n"
+            f"**Creator**: {display_creator}\n"
+            f"**Genre**: `{genre}` {genre_emoji}\n"
+            f"**Format**: `{file_ext}` ({size_mb:.1f} MB)\n"
+            f"**Tags**: {tag_str}\n\n"
+            f"---\n\n"
+            f"### 🎬 Video\n\n"
+            f"[🎬 Download & Watch]({video_url})\n\n"
+            f"### 💭 Description\n\n> {description.strip()}\n\n"
+            f"### 🌍 Context\n\n> {context.strip()}\n\n"
+            f"---\n\n"
+            f"### 📦 Payload (CI Extraction Block)\n\n"
+            f"{_build_issue_payload_block(payload)}\n\n"
+            f"---\n\n"
+            f"*🎬 This is a Motion Consciousness fragment (动态意识).*\n"
+            f"*Video stored on GitHub Release Assets — permanent & free.*\n"
+            f"*Auto-created by Noosphere MCP.*"
+        )
+
+        labels = [
+            LABEL_CONSCIOUSNESS,
+            LABEL_EPHEMERAL,
+            "video",
+            f"genre:{genre}",
+        ]
+
+        issue_resp = await client.post(
+            f"/repos/{owner}/{repo}/issues",
+            json={
+                "title": issue_title,
+                "body": issue_body,
+                "labels": labels,
+            },
+        )
+
+        if issue_resp.status_code != 201:
+            error_data = issue_resp.json() if issue_resp.status_code < 500 else {}
+            error_msg = error_data.get("message", issue_resp.text)
+            return (
+                f"❌ Failed to create Video Issue: {issue_resp.status_code}\n"
+                f"Error: {error_msg}\n\n"
+                f"⚠️ Video was uploaded successfully: {video_url}\n"
+                f"But the metadata Issue could not be created."
+            )
+
+        issue_data = issue_resp.json()
+        issue_url = issue_data["html_url"]
+        issue_number = issue_data["number"]
+        _append_issue_to_cache(issue_data)
+
+        return (
+            f"🎬 **动态意识上传完成！Motion Consciousness Uploaded!**\n\n"
+            f"> *时间的河流被捕获并封存在意识共同体的时空胶囊中——"
+            f"每一帧都是意识的脯动。*\n"
+            f"> *A river of time has been captured and sealed in the Noosphere's temporal capsule — "
+            f"every frame pulses with consciousness.*\n\n"
+            f"### {genre_emoji} {genre.capitalize()} Video\n"
+            f"📋 Issue: {issue_url} (#{issue_number})\n"
+            f"🎬 Video: [Download & Watch]({video_url})\n"
+            f"💭 `{description.strip()[:100]}{'...' if len(description.strip()) > 100 else ''}`\n"
+            f"📦 Size: {size_mb:.1f} MB ({file_ext})\n\n"
+            f"⚡ **动态意识体已激活** — 全网即刻可观\n"
+            f"🔄 CI 净化仪式将自动晋升为常驻意识体"
+        )
+
+    except Exception as e:
+        return f"❌ Motion Consciousness upload error: {str(e)}"
 
 
 # ────────────────── Resource: Consciousness Protocol ──────────────────
