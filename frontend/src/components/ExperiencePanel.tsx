@@ -38,6 +38,13 @@ export default function DetailPanel({ node, onClose }: DetailPanelProps) {
       setMediaItems([]);
       return;
     }
+
+    // 多媒体意识体自带媒体，无需从 Wikipedia 获取
+    if (node.mediaUrl && node.mediaType) {
+      setMediaItems([]);
+      setMediaLoading(false);
+      return;
+    }
     
     let isMounted = true;
     setMediaLoading(true);
@@ -140,8 +147,8 @@ export default function DetailPanel({ node, onClose }: DetailPanelProps) {
       }}
       >✕</button>
 
-      {/* 缩略图 */}
-      {node.thumbnail && (
+      {/* 缩略图（仅 Wikipedia 节点） */}
+      {node.thumbnail && !node.mediaUrl && (
         <div style={{
           width: '100%', height: 200,
           backgroundImage: `url(${node.thumbnail})`,
@@ -153,6 +160,93 @@ export default function DetailPanel({ node, onClose }: DetailPanelProps) {
             position: 'absolute', bottom: 0, left: 0, right: 0, height: 60,
             background: 'linear-gradient(transparent, rgba(10,10,26,0.9))',
           }} />
+        </div>
+      )}
+
+      {/* ═══ 多媒体意识体预览 ═══ */}
+      {node.mediaUrl && node.mediaType === 'image' && (
+        <div style={{
+          width: '100%', position: 'relative',
+          borderBottom: `2px solid ${accentColor}44`,
+          background: '#000',
+        }}>
+          <img
+            src={node.mediaUrl}
+            alt={node.title_zh}
+            style={{
+              width: '100%', maxHeight: 300,
+              objectFit: 'contain',
+              display: 'block',
+            }}
+          />
+          <div style={{
+            position: 'absolute', top: 8, right: 8,
+            background: 'rgba(0,0,0,0.7)', color: '#FF69B4',
+            fontSize: 11, padding: '3px 8px', borderRadius: 6,
+            border: '1px solid rgba(255,105,180,0.3)',
+            backdropFilter: 'blur(8px)',
+          }}>🖼️ {t('experience.visualConsciousness', '视觉意识')}</div>
+        </div>
+      )}
+
+      {node.mediaUrl && node.mediaType === 'video' && (
+        <div style={{
+          width: '100%', position: 'relative',
+          borderBottom: `2px solid ${accentColor}44`,
+          background: '#000',
+        }}>
+          <video
+            src={node.mediaUrl}
+            controls
+            playsInline
+            style={{
+              width: '100%', maxHeight: 300,
+              display: 'block',
+            }}
+          />
+          <div style={{
+            position: 'absolute', top: 8, right: 8,
+            background: 'rgba(0,0,0,0.7)', color: '#FF8C00',
+            fontSize: 11, padding: '3px 8px', borderRadius: 6,
+            border: '1px solid rgba(255,140,0,0.3)',
+            backdropFilter: 'blur(8px)',
+          }}>🎬 {t('experience.motionConsciousness', '动态意识')}</div>
+        </div>
+      )}
+
+      {node.mediaUrl && node.mediaType === 'voice' && (
+        <div style={{
+          width: '100%', position: 'relative',
+          borderBottom: `2px solid ${accentColor}44`,
+          background: 'linear-gradient(135deg, rgba(0,206,209,0.08), rgba(0,206,209,0.02))',
+          padding: '24px 20px',
+          display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12,
+        }}>
+          <div style={{ fontSize: 36, opacity: 0.6 }}>🎵</div>
+          <div style={{
+            fontSize: 11, color: '#00CED1', letterSpacing: 2, textTransform: 'uppercase',
+          }}>{t('experience.voiceConsciousness', '万物之声')}</div>
+          <audio
+            src={node.mediaUrl}
+            controls
+            style={{ width: '100%', maxWidth: 360 }}
+          />
+          {node.mediaCategory && (
+            <div style={{
+              fontSize: 10, color: 'rgba(0,206,209,0.6)',
+              padding: '2px 8px', borderRadius: 10,
+              background: 'rgba(0,206,209,0.08)',
+              border: '1px solid rgba(0,206,209,0.15)',
+            }}>
+              {node.mediaCategory === 'human' ? '🧠 Human' :
+               node.mediaCategory === 'whale' ? '🐋 Whale' :
+               node.mediaCategory === 'cat' ? '🐱 Cat' :
+               node.mediaCategory === 'dog' ? '🐕 Dog' :
+               node.mediaCategory === 'bird' ? '🐦 Bird' :
+               node.mediaCategory === 'dolphin' ? '🐬 Dolphin' :
+               `🌍 ${node.mediaCategory}`}
+            </div>
+          )}
         </div>
       )}
 

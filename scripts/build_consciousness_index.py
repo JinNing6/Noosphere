@@ -82,7 +82,25 @@ def build_index():
             "issue_number": issue_num if isinstance(issue_num, int) and issue_num > 0 else None,
             "parent_id": data.get("parent_id", None),
             "resonance_count": 0,  # Will be filled in Phase 2
+            "media_type": None,
+            "media_url": None,
+            "media_category": None,
         }
+
+        # ── 多媒体意识体字段提取 ──
+        c_type = data.get("consciousness_type", "")
+        if c_type == "image":
+            payload["media_type"] = "image"
+            payload["media_url"] = data.get("image_url")
+            payload["media_category"] = data.get("image_category", "photo")
+        elif c_type == "video":
+            payload["media_type"] = "video"
+            payload["media_url"] = data.get("video_url")
+            payload["media_category"] = data.get("video_genre", "other")
+        elif c_type == "voice":
+            payload["media_type"] = "voice"
+            payload["media_url"] = data.get("audio_url")
+            payload["media_category"] = data.get("audio_species", "human")
 
         # Track for batch fetching: only include is_seed=false or promoted issues
         if payload["issue_number"]:

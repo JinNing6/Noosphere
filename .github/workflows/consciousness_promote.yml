@@ -344,7 +344,7 @@ jobs:
             ).toString('base64');
 
             const creator = payload.is_anonymous ? 'Anonymous Stalker' : payload.creator_signature;
-            const typeEmojis = { epiphany: '💠', decision: '⚖️', pattern: '🌌', warning: '👁️' };
+            const typeEmojis = { epiphany: '💠', decision: '⚖️', pattern: '🌌', warning: '👁️', image: '🖼️', video: '🎬', voice: '🎵' };
             const emoji = typeEmojis[payload.consciousness_type] || '🧠';
 
             await github.rest.repos.createOrUpdateFileContents({

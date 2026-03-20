@@ -10,7 +10,7 @@
  * 合并到 3D Globe 与静态节点一起展示。
  */
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import NoosphereGlobe from './components/NoosphereGlobe';
 import DetailPanel from './components/ExperiencePanel';
 import SearchBar from './components/SearchBar';
@@ -21,6 +21,8 @@ import LanguageSwitcher from './components/LanguageSwitcher';
 import type { KnowledgeNode } from './data/knowledge';
 import { fetchConsciousnessPayloads } from './data/knowledge';
 import SplashScreen from './components/SplashScreen';
+import { useResonancePolling } from './utils/useResonancePolling';
+import type { ResonanceRippleHandle } from './components/ResonanceRipple';
 
 export default function App() {
   const [selectedNode, setSelectedNode] = useState<KnowledgeNode | null>(null);
@@ -61,6 +63,13 @@ export default function App() {
     setSplashDone(true);
   }, []);
 
+  // ── 实时共振涟漪系统 ──
+  const rippleRef = useRef<ResonanceRippleHandle | null>(null);
+  const onRipple = useCallback((event: import('./components/ResonanceRipple').RippleEvent) => {
+    rippleRef.current?.triggerRipple(event);
+  }, []);
+  useResonancePolling(dynamicNodes, onRipple);
+
   return (
     <div style={{
       width: '100vw', height: '100vh',
@@ -80,12 +89,13 @@ export default function App() {
         // 未完成 splash 时隐藏但仍然渲染（预热 WebGL）
         pointerEvents: splashDone ? 'auto' : 'none',
       }}>
-        {/* 3D 智识圈 — 接收动态意识体节点 */}
+        {/* 3D 智识圈 — 接收动态意识体节点 + 共振涟漪 */}
         <NoosphereGlobe
           onSelectNode={handleSelect}
           onBackgroundClick={handleClose}
           searchQuery={searchQuery}
           dynamicNodes={dynamicNodes}
+          rippleRef={rippleRef}
         />
 
         {/* 搜索栏 */}

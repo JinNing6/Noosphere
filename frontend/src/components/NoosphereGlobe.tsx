@@ -11,6 +11,7 @@
  *   🌀 意识星云（GPU Points 替代旧尘埃）
  *   🎬 电影级入场动画（镜头推进 + 涟漪展开）
  *   🌌 后处理：Bloom + Vignette
+ *   🌊 实时共振涟漪（GPU 扩散光环 + 爆发粒子）
  *
  * 性能架构（v3 — 无限粒子）：
  *   🚀 所有粒子动画在 GPU Vertex Shader 中并行计算
@@ -49,6 +50,9 @@ import {
   type PulseCurveData,
   type GPUParticleLayerHandle,
 } from './InfiniteParticleEngine';
+
+import { ResonanceRipple, type ResonanceRippleHandle } from './ResonanceRipple';
+import type { RippleEvent } from './ResonanceRipple';
 
 /* ═══════════════ 工具函数 ═══════════════ */
 
@@ -663,7 +667,7 @@ function DynamicConsciousnessCloud({
  * Stage 2 (+250ms):  三层 GPU 粒子意识节点
  * Stage 3 (+500ms):  EnergyLines + ConsciousnessNebula + EffectComposer + DynamicCloud
  */
-function SceneContent({ onSelect, introPhase, dynamicNodes }: { onSelect: (n: KnowledgeNode) => void; introPhase: number; dynamicNodes: KnowledgeNode[] }) {
+function SceneContent({ onSelect, introPhase, dynamicNodes, rippleRef }: { onSelect: (n: KnowledgeNode) => void; introPhase: number; dynamicNodes: KnowledgeNode[]; rippleRef: React.RefObject<ResonanceRippleHandle | null> }) {
   const controlsRef = useRef<any>(null);
   const [loadStage, setLoadStage] = useState(0);
 
@@ -762,6 +766,8 @@ function SceneContent({ onSelect, introPhase, dynamicNodes }: { onSelect: (n: Kn
           <EnergyLines />
           {/* 意识星云（GPU Points — 8000 粒子 + 分层颜色） */}
           <ConsciousnessNebula count={8000} innerRadius={0.5} outerRadius={8.0} />
+          {/* 实时共振涟漪 — GPU 扩散光环 + 爆发粒子 */}
+          <ResonanceRipple ref={rippleRef} />
           {/* 无限意识体云（动态加载，预分配 10 万容量） */}
           <DynamicConsciousnessCloud nodes={dynamicNodes} onSelect={onSelect} />
           <EffectComposer multisampling={0}>
@@ -852,10 +858,13 @@ interface NoosphereGlobeProps {
   onBackgroundClick?: () => void;
   searchQuery?: string;
   dynamicNodes?: KnowledgeNode[];
+  rippleRef?: React.RefObject<ResonanceRippleHandle | null>;
 }
 
-export default function NoosphereGlobe({ onSelectNode, onBackgroundClick, dynamicNodes = [] }: NoosphereGlobeProps) {
+export default function NoosphereGlobe({ onSelectNode, onBackgroundClick, dynamicNodes = [], rippleRef }: NoosphereGlobeProps) {
   const [introPhase, setIntroPhase] = useState(0);
+  const internalRippleRef = useRef<ResonanceRippleHandle | null>(null);
+  const effectiveRippleRef = rippleRef || internalRippleRef;
 
   const handleIntroComplete = useCallback(() => {
     setIntroPhase(1);
@@ -879,7 +888,7 @@ export default function NoosphereGlobe({ onSelectNode, onBackgroundClick, dynami
           toneMappingExposure: 1.0,
         }}
       >
-        <SceneContent onSelect={onSelectNode} introPhase={introPhase} dynamicNodes={dynamicNodes} />
+        <SceneContent onSelect={onSelectNode} introPhase={introPhase} dynamicNodes={dynamicNodes} rippleRef={effectiveRippleRef} />
       </Canvas>
     </div>
   );

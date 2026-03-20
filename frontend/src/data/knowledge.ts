@@ -25,8 +25,11 @@ export interface KnowledgeNode {
   tags: string[];
   resonanceCount?: number;  // 真实共振计数（GitHub reactions）
   parentId?: string | null; // 父意识 ID（用于流光连线）
-  consciousnessType?: string; // 意识类型（epiphany/warning/pattern/decision）
+  consciousnessType?: string; // 意识类型（epiphany/warning/pattern/decision/image/video/voice）
   computedColor?: string;     // 预计算的独一无二颜色（HSL 格式）
+  mediaUrl?: string | null;       // 多媒体文件 URL（GitHub Release Assets）
+  mediaType?: 'image' | 'video' | 'voice' | null;  // 多媒体类型
+  mediaCategory?: string | null;  // 分类（photo/art/vlog/human 等）
 }
 
 export interface EmergenceLink {
@@ -300,6 +303,9 @@ export const CONSCIOUSNESS_TYPE_COLORS: Record<string, string> = {
   warning:  '#FF4D6A',   // ⚠️ 赤焰色 — 危险信号
   pattern:  '#4488FF',   // 🔄 星蓝色 — 理性秩序
   decision: '#00E878',   // 🎯 翠光色 — 果断行动
+  image:    '#FF69B4',   // 🖼️ 品红色 — 视觉意识
+  video:    '#FF8C00',   // 🎬 橙色 — 动态意识
+  voice:    '#00CED1',   // 🎵 青色 — 声波意识
 };
 
 /**
@@ -311,6 +317,9 @@ export const CONSCIOUSNESS_TYPE_FLICKER: Record<string, { freq: number; amp: num
   warning:  { freq: 6.0, amp: 0.5 },   // 急促闪动 — 像警报灯
   pattern:  { freq: 1.2, amp: 0.3 },   // 稳定呼吸 — 像脉搏
   decision: { freq: 0.5, amp: 0.15 },  // 坚定明亮 — 几乎不闪
+  image:    { freq: 0.8, amp: 0.25 },  // 柔和呼吸 — 像凝视的目光
+  video:    { freq: 2.0, amp: 0.6 },   // 动感脉冲 — 像帧率跃动
+  voice:    { freq: 4.0, amp: 0.35 },  // 波动震颤 — 像声波振动
 };
 
 /**
@@ -388,7 +397,7 @@ export function getDisciplineGroups(): Record<string, number[]> {
 interface ConsciousnessPayload {
   id: string;
   creator: string;
-  type: string;         // 'warning' | 'epiphany' | 'pattern' | 'decision'
+  type: string;         // 'warning' | 'epiphany' | 'pattern' | 'decision' | 'image' | 'video' | 'voice'
   text: string;
   context: string;
   tags: string[];
@@ -397,6 +406,9 @@ interface ConsciousnessPayload {
   resonance_count?: number;  // 真实共振计数（GitHub reactions）
   parent_id?: string | null; // 父意识 ID
   issue_number?: number;     // GitHub Issue 编号
+  media_type?: 'image' | 'video' | 'voice' | null;  // 多媒体类型
+  media_url?: string | null;     // 多媒体文件 URL
+  media_category?: string | null; // 多媒体分类
 }
 
 /** 意识类型 → 三层映射 */
@@ -405,6 +417,9 @@ const TYPE_TO_LAYER: Record<string, Layer> = {
   pattern:  'matter',        // 规律 → 物质记忆层
   decision: 'matter',        // 决策 → 物质记忆层
   epiphany: 'civilization',  // 顿悟 → 文明智慧层
+  image:    'civilization',  // 视觉意识 → 文明智慧层
+  video:    'civilization',  // 动态意识 → 文明智慧层
+  voice:    'life',          // 万物之声 → 生命经验层
 };
 
 /** 意识类型 → 学科推断 */
@@ -413,6 +428,9 @@ const TYPE_TO_DISCIPLINE: Record<string, Discipline> = {
   pattern:  'physics',
   decision: 'ai',
   epiphany: 'philosophy',
+  image:    'art',           // 视觉意识 → 艺术学科
+  video:    'art',           // 动态意识 → 艺术学科
+  voice:    'biology',       // 万物之声 → 生命学科
 };
 
 /**
@@ -460,6 +478,9 @@ export async function fetchConsciousnessPayloads(): Promise<KnowledgeNode[]> {
         parentId: p.parent_id || null,
         consciousnessType: p.type,  // 传递意识类型供渲染层使用
         computedColor,              // 预计算的独一无二颜色
+        mediaUrl: p.media_url || null,         // 多媒体文件 URL
+        mediaType: p.media_type || null,       // 多媒体类型
+        mediaCategory: p.media_category || null, // 多媒体分类
       };
     });
   } catch {
