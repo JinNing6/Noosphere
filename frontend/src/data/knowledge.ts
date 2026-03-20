@@ -25,6 +25,8 @@ export interface KnowledgeNode {
   tags: string[];
   resonanceCount?: number;  // 真实共振计数（GitHub reactions）
   parentId?: string | null; // 父意识 ID（用于流光连线）
+  consciousnessType?: string; // 意识类型（epiphany/warning/pattern/decision）
+  computedColor?: string;     // 预计算的独一无二颜色（HSL 格式）
 }
 
 export interface EmergenceLink {
@@ -292,6 +294,25 @@ export const LAYER_COLORS: Record<Layer, string> = {
   civilization: '#7b61ff',// 智识紫 — 文明的光芒
 };
 
+/** 意识类型配色 — 多维语义编码 */
+export const CONSCIOUSNESS_TYPE_COLORS: Record<string, string> = {
+  epiphany: '#FFD700',   // 💡 金耀色 — 灵光乍现
+  warning:  '#FF4D6A',   // ⚠️ 赤焰色 — 危险信号
+  pattern:  '#4488FF',   // 🔄 星蓝色 — 理性秩序
+  decision: '#00E878',   // 🎯 翠光色 — 果断行动
+};
+
+/**
+ * 意识类型闪烁参数 — 每种类型有独特的动态行为
+ * freq: 闪烁频率（Hz），amp: 振幅
+ */
+export const CONSCIOUSNESS_TYPE_FLICKER: Record<string, { freq: number; amp: number }> = {
+  epiphany: { freq: 3.0, amp: 0.7 },   // 脉冲闪烁 — 像恒星爆发
+  warning:  { freq: 6.0, amp: 0.5 },   // 急促闪动 — 像警报灯
+  pattern:  { freq: 1.2, amp: 0.3 },   // 稳定呼吸 — 像脉搏
+  decision: { freq: 0.5, amp: 0.15 },  // 坚定明亮 — 几乎不闪
+};
+
 /**
  * 🧲 学科引力中心
  *
@@ -404,7 +425,7 @@ export async function fetchConsciousnessPayloads(): Promise<KnowledgeNode[]> {
     if (!resp.ok) return [];
     const payloads: ConsciousnessPayload[] = await resp.json();
 
-    return payloads.map(p => {
+    return payloads.map((p, idx) => {
       // 从 tags 推断更精确的学科
       const tagSet = new Set(p.tags.map(t => t.toLowerCase()));
       let discipline: Discipline = TYPE_TO_DISCIPLINE[p.type] || 'ai';
@@ -421,6 +442,10 @@ export async function fetchConsciousnessPayloads(): Promise<KnowledgeNode[]> {
         ? Math.min(10, Math.round(3 + resonance * 1.5))
         : Math.min(10, 3 + Math.floor(p.text.length / 80));
 
+      // ── 意识类型主导色 + 个体 HSL 偏移 + 共振亮度 ──
+      const typeColor = CONSCIOUSNESS_TYPE_COLORS[p.type] || '#e0e0ff';
+      const computedColor = computeConsciousnessColor(typeColor, idx, resonance);
+
       return {
         id: p.id,
         title_zh: p.text.length > 30 ? p.text.slice(0, 28) + '…' : p.text,
@@ -433,11 +458,52 @@ export async function fetchConsciousnessPayloads(): Promise<KnowledgeNode[]> {
         tags: [...p.tags, p.type, `by:${p.anonymous ? '匿名' : p.creator}`],
         resonanceCount: resonance,
         parentId: p.parent_id || null,
+        consciousnessType: p.type,  // 传递意识类型供渲染层使用
+        computedColor,              // 预计算的独一无二颜色
       };
     });
   } catch {
     console.warn('[Noosphere] Failed to fetch consciousness payloads');
     return [];
   }
+}
+
+/**
+ * 为每个意识体计算独一无二的颜色
+ * 基色由意识类型决定 → HSL 色调偏移 ±15° → 共振数影响亮度
+ */
+function computeConsciousnessColor(baseHex: string, index: number, resonance: number): string {
+  // Hex → RGB → HSL
+  const r = parseInt(baseHex.slice(1, 3), 16) / 255;
+  const g = parseInt(baseHex.slice(3, 5), 16) / 255;
+  const b = parseInt(baseHex.slice(5, 7), 16) / 255;
+
+  const max = Math.max(r, g, b), min = Math.min(r, g, b);
+  let h = 0, s = 0;
+  const l = (max + min) / 2;
+
+  if (max !== min) {
+    const d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    if (max === r) h = ((g - b) / d + (g < b ? 6 : 0)) / 6;
+    else if (max === g) h = ((b - r) / d + 2) / 6;
+    else h = ((r - g) / d + 4) / 6;
+  }
+
+  // 伪随机色调偏移 ±15°（±0.042 in 0~1 range）
+  const seed = Math.sin(index * 127.1 + 311.7) * 43758.5453;
+  const hueShift = ((seed - Math.floor(seed)) * 2 - 1) * 0.042;
+  const newH = ((h + hueShift) % 1 + 1) % 1;
+
+  // 共振数影响亮度：0共振=基础，每个共振+2%亮度，上限+20%
+  const brightnessBoost = Math.min(0.2, resonance * 0.02);
+  const newL = Math.min(0.85, l + brightnessBoost);
+
+  // 共振数影响饱和度：高共振更鲜艳
+  const satBoost = Math.min(0.15, resonance * 0.015);
+  const newS = Math.min(1.0, s + satBoost);
+
+  // HSL → CSS hsl string
+  return `hsl(${Math.round(newH * 360)}, ${Math.round(newS * 100)}%, ${Math.round(newL * 100)}%)`;
 }
 

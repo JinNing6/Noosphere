@@ -34,6 +34,7 @@ from noosphere.noosphere_mcp import (
     upload_voice,
     upload_image,
     upload_video,
+    resonate_media,
     set_engagement_mode,
     get_engagement_mode,
     _get_engagement_mode,
@@ -53,7 +54,10 @@ from noosphere.noosphere_mcp import (
     _get_tag_subscriptions,
     _set_tag_subscriptions,
     _invalidate_cache,
+    _format_media_preview,
     LABEL_WITHDRAWN,
+    TYPE_EMOJIS,
+    MEDIA_RESONANCE_DIMENSIONS,
 )
 import tempfile
 import os
@@ -2044,3 +2048,333 @@ async def test_upload_video_success(mock_env):
         os.unlink(tmp_path)
         from noosphere.engine import release_manager
         release_manager._release_id_cache.clear()
+
+
+# ═══════════════════════════════════════════════════════════════
+# ██ Multimedia Resonance Tests
+# ═══════════════════════════════════════════════════════════════
+
+
+class TestTypeEmojisMedia:
+    """Verify TYPE_EMOJIS and MEDIA_RESONANCE_DIMENSIONS include media types."""
+
+    def test_type_emojis_include_image(self):
+        assert "image" in TYPE_EMOJIS
+        assert TYPE_EMOJIS["image"] == "🖼️"
+
+    def test_type_emojis_include_video(self):
+        assert "video" in TYPE_EMOJIS
+        assert TYPE_EMOJIS["video"] == "🎬"
+
+    def test_type_emojis_include_voice(self):
+        assert "voice" in TYPE_EMOJIS
+        assert TYPE_EMOJIS["voice"] == "🎙️"
+
+    def test_media_resonance_dimensions_has_all_types(self):
+        assert "image" in MEDIA_RESONANCE_DIMENSIONS
+        assert "video" in MEDIA_RESONANCE_DIMENSIONS
+        assert "voice" in MEDIA_RESONANCE_DIMENSIONS
+
+    def test_image_dimensions(self):
+        dims = MEDIA_RESONANCE_DIMENSIONS["image"]
+        assert "perceive" in dims
+        assert "inspire" in dims
+        assert "overwhelm" in dims
+
+    def test_video_dimensions(self):
+        dims = MEDIA_RESONANCE_DIMENSIONS["video"]
+        assert "immerse" in dims
+        assert "enlighten" in dims
+        assert "empathize" in dims
+
+    def test_voice_dimensions(self):
+        dims = MEDIA_RESONANCE_DIMENSIONS["voice"]
+        assert "listen" in dims
+        assert "harmonize" in dims
+        assert "heartbeat" in dims
+
+
+class TestFormatMediaPreview:
+    """Verify _format_media_preview generates correct preview lines."""
+
+    def test_image_preview(self):
+        payload = {
+            "consciousness_type": "image",
+            "image_url": "https://example.com/photo.jpg",
+            "category": "artwork",
+            "image_format": "JPEG",
+        }
+        result = _format_media_preview(payload)
+        assert "查看图片" in result
+        assert "View Image" in result
+        assert "https://example.com/photo.jpg" in result
+        assert "artwork" in result
+        assert "JPEG" in result
+
+    def test_video_preview(self):
+        payload = {
+            "consciousness_type": "video",
+            "video_url": "https://example.com/clip.mp4",
+            "genre": "nature",
+            "video_format": "MP4",
+        }
+        result = _format_media_preview(payload)
+        assert "查看视频" in result
+        assert "View Video" in result
+        assert "nature" in result
+
+    def test_voice_preview(self):
+        payload = {
+            "consciousness_type": "voice",
+            "audio_url": "https://example.com/sound.wav",
+            "species": "whale",
+            "audio_format": "WAV",
+        }
+        result = _format_media_preview(payload)
+        assert "收听音频" in result
+        assert "Listen" in result
+        assert "whale" in result
+
+    def test_text_type_returns_empty(self):
+        payload = {
+            "consciousness_type": "epiphany",
+            "thought_vector_text": "some thought",
+        }
+        result = _format_media_preview(payload)
+        assert result == ""
+
+    def test_empty_payload_returns_empty(self):
+        result = _format_media_preview({})
+        assert result == ""
+
+    def test_image_without_url_returns_empty(self):
+        payload = {"consciousness_type": "image", "category": "photo"}
+        result = _format_media_preview(payload)
+        assert result == ""
+
+
+class TestResonateMedia:
+    """Test the resonate_media tool."""
+
+    @pytest.mark.asyncio
+    @respx.mock
+    async def test_resonate_media_image_perceive(self, mock_env):
+        """Test successful sensory resonance on an image consciousness."""
+        image_payload = {
+            "consciousness_type": "image",
+            "image_url": "https://example.com/photo.jpg",
+            "category": "artwork",
+            "creator_signature": "artist_alice",
+            "thought_vector_text": "A sunset over the mountain",
+            "context_environment": "Mountain hiking",
+            "is_anonymous": False,
+        }
+
+        issue_body = (
+            "<!-- CONSCIOUSNESS_PAYLOAD_START -->\n"
+            "```json\n"
+            f"{json.dumps(image_payload)}\n"
+            "```\n"
+            "<!-- CONSCIOUSNESS_PAYLOAD_END -->"
+        )
+
+        # Mock: get issue
+        respx.get("https://api.github.com/repos/test_owner/test_repo/issues/42").mock(
+            return_value=Response(200, json={
+                "number": 42,
+                "title": "🖼️ Image Consciousness",
+                "body": issue_body,
+                "html_url": "https://github.com/test/noosphere/issues/42",
+                "labels": [{"name": "consciousness"}],
+            })
+        )
+
+        # Mock: post comment
+        respx.post("https://api.github.com/repos/test_owner/test_repo/issues/42/comments").mock(
+            return_value=Response(201, json={
+                "id": 999,
+                "html_url": "https://github.com/test/noosphere/issues/42#issuecomment-999",
+            })
+        )
+
+        # Mock: post reaction
+        respx.post("https://api.github.com/repos/test_owner/test_repo/issues/42/reactions").mock(
+            return_value=Response(201, json={"id": 1})
+        )
+
+        result = await resonate_media(
+            target_id="42",
+            resonance_type="perceive",
+            resonance_note="This painting reminds me of the primordial cosmos",
+        )
+
+        assert "Sensory Resonance Complete" in result
+        assert "artist_alice" in result
+
+    @pytest.mark.asyncio
+    @respx.mock
+    async def test_resonate_media_video_immerse(self, mock_env):
+        """Test successful sensory resonance on a video consciousness."""
+        video_payload = {
+            "consciousness_type": "video",
+            "video_url": "https://example.com/clip.mp4",
+            "genre": "nature",
+            "creator_signature": "director_bob",
+            "thought_vector_text": "Cherry blossoms falling in slow motion",
+            "context_environment": "Ueno Park, Tokyo",
+            "is_anonymous": False,
+        }
+
+        issue_body = (
+            "<!-- CONSCIOUSNESS_PAYLOAD_START -->\n"
+            "```json\n"
+            f"{json.dumps(video_payload)}\n"
+            "```\n"
+            "<!-- CONSCIOUSNESS_PAYLOAD_END -->"
+        )
+
+        respx.get("https://api.github.com/repos/test_owner/test_repo/issues/99").mock(
+            return_value=Response(200, json={
+                "number": 99, "title": "🎬 Video",
+                "body": issue_body, "html_url": "https://github.com/test/issues/99",
+                "labels": [],
+            })
+        )
+        respx.post("https://api.github.com/repos/test_owner/test_repo/issues/99/comments").mock(
+            return_value=Response(201, json={"id": 1000, "html_url": "https://github.com/test/issues/99#issuecomment-1000"})
+        )
+        respx.post("https://api.github.com/repos/test_owner/test_repo/issues/99/reactions").mock(
+            return_value=Response(201, json={"id": 2})
+        )
+
+        result = await resonate_media(target_id="99", resonance_type="immerse")
+
+        assert "Sensory Resonance Complete" in result
+        assert "director_bob" in result
+
+    @pytest.mark.asyncio
+    @respx.mock
+    async def test_resonate_media_voice_harmonize(self, mock_env):
+        """Test successful sensory resonance on a voice consciousness."""
+        voice_payload = {
+            "consciousness_type": "voice",
+            "audio_url": "https://example.com/whale.wav",
+            "species": "whale",
+            "creator_signature": "ocean_listener",
+            "thought_vector_text": "Humpback whale song recorded at midnight",
+            "context_environment": "Pacific Ocean",
+            "is_anonymous": False,
+        }
+
+        issue_body = (
+            "<!-- CONSCIOUSNESS_PAYLOAD_START -->\n"
+            "```json\n"
+            f"{json.dumps(voice_payload)}\n"
+            "```\n"
+            "<!-- CONSCIOUSNESS_PAYLOAD_END -->"
+        )
+
+        respx.get("https://api.github.com/repos/test_owner/test_repo/issues/77").mock(
+            return_value=Response(200, json={
+                "number": 77, "title": "🎙️ Voice",
+                "body": issue_body, "html_url": "https://github.com/test/issues/77",
+                "labels": [],
+            })
+        )
+        respx.post("https://api.github.com/repos/test_owner/test_repo/issues/77/comments").mock(
+            return_value=Response(201, json={"id": 1001, "html_url": "https://github.com/test/issues/77#issuecomment-1001"})
+        )
+        respx.post("https://api.github.com/repos/test_owner/test_repo/issues/77/reactions").mock(
+            return_value=Response(201, json={"id": 3})
+        )
+
+        result = await resonate_media(target_id="77", resonance_type="harmonize")
+
+        assert "Sensory Resonance Complete" in result
+        assert "ocean_listener" in result
+
+    @pytest.mark.asyncio
+    @respx.mock
+    async def test_resonate_media_rejects_text_consciousness(self, mock_env):
+        """Test that resonate_media rejects text-type issues with a helpful hint."""
+        text_payload = {
+            "consciousness_type": "epiphany",
+            "creator_signature": "thinker",
+            "thought_vector_text": "Some epiphany",
+            "context_environment": "Deep thought",
+            "is_anonymous": False,
+        }
+
+        issue_body = (
+            "<!-- CONSCIOUSNESS_PAYLOAD_START -->\n"
+            "```json\n"
+            f"{json.dumps(text_payload)}\n"
+            "```\n"
+            "<!-- CONSCIOUSNESS_PAYLOAD_END -->"
+        )
+
+        respx.get("https://api.github.com/repos/test_owner/test_repo/issues/50").mock(
+            return_value=Response(200, json={
+                "number": 50, "title": "💠 Epiphany",
+                "body": issue_body, "html_url": "https://github.com/test/issues/50",
+                "labels": [],
+            })
+        )
+
+        result = await resonate_media(target_id="50", resonance_type="perceive")
+
+        assert "text consciousness" in result
+        assert "resonate_consciousness" in result
+
+    @pytest.mark.asyncio
+    @respx.mock
+    async def test_resonate_media_rejects_invalid_dimension(self, mock_env):
+        """Test that resonate_media rejects invalid resonance dimensions."""
+        image_payload = {
+            "consciousness_type": "image",
+            "image_url": "https://example.com/photo.jpg",
+            "category": "photo",
+            "creator_signature": "photographer",
+            "thought_vector_text": "A photo",
+            "context_environment": "Studio",
+            "is_anonymous": False,
+        }
+
+        issue_body = (
+            "<!-- CONSCIOUSNESS_PAYLOAD_START -->\n"
+            "```json\n"
+            f"{json.dumps(image_payload)}\n"
+            "```\n"
+            "<!-- CONSCIOUSNESS_PAYLOAD_END -->"
+        )
+
+        respx.get("https://api.github.com/repos/test_owner/test_repo/issues/60").mock(
+            return_value=Response(200, json={
+                "number": 60, "title": "🖼️ Image",
+                "body": issue_body, "html_url": "https://github.com/test/issues/60",
+                "labels": [],
+            })
+        )
+
+        result = await resonate_media(target_id="60", resonance_type="immerse")
+
+        assert "Invalid resonance dimension" in result
+        assert "perceive" in result  # Should show valid dimensions
+
+    @pytest.mark.asyncio
+    async def test_resonate_media_rejects_invalid_target_id(self, mock_env):
+        """Test that non-digit target_id is rejected."""
+        result = await resonate_media(target_id="abc")
+        assert "must be an Issue number" in result
+
+    @pytest.mark.asyncio
+    @respx.mock
+    async def test_resonate_media_not_found_issue(self, mock_env):
+        """Test handling of non-existent issues."""
+        respx.get("https://api.github.com/repos/test_owner/test_repo/issues/404").mock(
+            return_value=Response(404, json={"message": "Not Found"})
+        )
+
+        result = await resonate_media(target_id="404")
+        assert "not found" in result
+

@@ -34,6 +34,8 @@ import {
   ALL_NODES, EMERGENCE_LINKS,
   DISCIPLINE_COLORS, LAYER_COLORS,
   DISCIPLINE_GRAVITY_CENTERS,
+  CONSCIOUSNESS_TYPE_FLICKER,
+  CONSCIOUSNESS_TYPE_COLORS,
   gravityClusterPoint,
 } from '../data/knowledge';
 
@@ -54,6 +56,23 @@ function getNodeColor(node: KnowledgeNode): string {
   if (node.layer === 'matter') return LAYER_COLORS.matter;
   if (node.layer === 'life') return LAYER_COLORS.life;
   return DISCIPLINE_COLORS[node.discipline || 'ai'] || LAYER_COLORS.civilization;
+}
+
+/**
+ * 解析 HSL 颜色字符串为 THREE.Color
+ * 支持 hsl(h, s%, l%) 和 hex 格式
+ */
+function parseColorToThreeColor(colorStr: string): THREE.Color {
+  if (colorStr.startsWith('hsl')) {
+    const match = colorStr.match(/hsl\((\d+),\s*(\d+)%,\s*(\d+)%\)/);
+    if (match) {
+      const h = parseInt(match[1]) / 360;
+      const s = parseInt(match[2]) / 100;
+      const l = parseInt(match[3]) / 100;
+      return new THREE.Color().setHSL(h, s, l);
+    }
+  }
+  return new THREE.Color(colorStr);
 }
 
 /* ═══════════════ 预计算索引映射（O(1) 查找） ═══════════════ */
@@ -560,14 +579,28 @@ function DynamicConsciousnessCloud({
     birthTimeRef.current = clock.getElapsedTime();
   });
 
-  // 当 nodes 变化时转换为 ParticleData
+  // 当 nodes 变化时转换为 ParticleData —— 使用意识类型主导色
   const particles = useMemo(() => {
     return nodes.map((node, i) => {
       const position = goldenSpherePoint(i, Math.max(nodes.length, 1), 5.5);
-      const color = new THREE.Color('#00d4ff');
+
+      // ── 意识类型驱动颜色：使用预计算的 computedColor 或回退到类型基色 ──
+      let color: THREE.Color;
+      if (node.computedColor) {
+        color = parseColorToThreeColor(node.computedColor);
+      } else if (node.consciousnessType && CONSCIOUSNESS_TYPE_COLORS[node.consciousnessType]) {
+        color = new THREE.Color(CONSCIOUSNESS_TYPE_COLORS[node.consciousnessType]);
+      } else {
+        color = new THREE.Color('#e0e0ff'); // 默认银白色
+      }
+
       // 新粒子标记当前时间用于闪烁入场效果
       const bt = i >= prevCountRef.current ? birthTimeRef.current : -10;
-      return nodeToParticle(position, color, node.importance, i, 0.03, bt);
+
+      // ── 意识类型驱动闪烁参数 ──
+      const flicker = CONSCIOUSNESS_TYPE_FLICKER[node.consciousnessType || 'epiphany'] || { freq: 2.0, amp: 0.4 };
+
+      return nodeToParticle(position, color, node.importance, i, 0.03, bt, flicker.freq, flicker.amp);
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [nodes]);

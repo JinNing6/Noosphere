@@ -25,12 +25,20 @@ TYPE_EMOJIS = {
     "decision": "⚖️",
     "pattern": "🌌",
     "warning": "👁️",
+    # 多媒体意识类型
+    "image": "🖼️",
+    "video": "🎬",
+    "voice": "🎙️",
 }
 TYPE_NAMES = {
     "epiphany": "Epiphany / 顿悟",
     "decision": "Decision / 决策",
     "pattern": "Pattern / 规律",
     "warning": "Warning / 警示",
+    # 多媒体意识类型
+    "image": "Image / 视觉意识",
+    "video": "Video / 动态意识",
+    "voice": "Voice / 万物之声",
 }
 
 # ── Consciousness Labels ──

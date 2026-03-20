@@ -150,7 +150,9 @@ export interface ParticleData {
   seed: number;
   orbitSpeed: number;
   glowPhase: number;
-  birthTime?: number;  // 入场时间戳（秒），-10 = 已稳定
+  birthTime?: number;      // 入场时间戳（秒），-10 = 已稳定
+  flickerFreq?: number;    // 自定义闪烁频率（Hz）
+  flickerAmp?: number;     // 自定义闪烁振幅
 }
 
 export interface GPUParticleLayerHandle {
@@ -216,10 +218,10 @@ export const GPUParticleLayer = forwardRef<GPUParticleLayerHandle, GPUParticleLa
           tempColor.setRGB(p.color[0], p.color[1], p.color[2]);
           mesh.setColorAt(idx, tempColor);
 
-          // 闪烁参数: freq 基于 importance, amplitude 基于 importance
+          // 闪烁参数: 优先使用粒子自带参数，否则基于 importance 计算
           const imp = p.importance || 0;
-          flickerBuffer[idx * 3]     = 1.0 + imp * 4.0;   // frequency: 1~5 Hz
-          flickerBuffer[idx * 3 + 1] = 0.15 + imp * 0.6;  // amplitude: 0.15~0.75
+          flickerBuffer[idx * 3]     = p.flickerFreq ?? (1.0 + imp * 4.0);   // frequency
+          flickerBuffer[idx * 3 + 1] = p.flickerAmp  ?? (0.15 + imp * 0.6);  // amplitude
           flickerBuffer[idx * 3 + 2] = p.birthTime ?? -10; // birthTime: -10=已稳定
         }
 
@@ -594,6 +596,8 @@ export function nodeToParticle(
   index: number,
   orbitSpeed: number = 0.03,
   birthTime: number = -10,
+  flickerFreq?: number,
+  flickerAmp?: number,
 ): ParticleData {
   return {
     position,
@@ -603,5 +607,7 @@ export function nodeToParticle(
     orbitSpeed,
     glowPhase: (index * 2.399963) % (Math.PI * 2),
     birthTime,
+    flickerFreq,
+    flickerAmp,
   };
 }
