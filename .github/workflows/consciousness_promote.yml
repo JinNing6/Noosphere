@@ -31,6 +31,7 @@ jobs:
         uses: actions/github-script@v7
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
@@ -109,7 +110,7 @@ jobs:
             }
 
             // ── Step 2: Validate payload fields ──
-            const VALID_TYPES = ['epiphany', 'decision', 'pattern', 'warning'];
+            const VALID_TYPES = ['epiphany', 'decision', 'pattern', 'warning', 'image', 'video', 'voice'];
             const REQUIRED_FIELDS = ['creator_signature', 'consciousness_type', 'thought_vector_text', 'context_environment'];
 
             const missingFields = REQUIRED_FIELDS.filter(f => !payload[f]);
@@ -238,6 +239,92 @@ jobs:
               }
             } else {
               console.log('ℹ️ OPENAI_API_KEY not configured, skipping content safety check');
+            }
+
+            // ── Step 3.5: Cross-Modal Embedding Generation (Gemini API) ──
+            const geminiKey = process.env.GEMINI_API_KEY;
+            if (geminiKey) {
+              try {
+                const MEDIA_TYPES = ['image', 'video', 'voice'];
+                const cType = payload.consciousness_type;
+                const isMedia = MEDIA_TYPES.includes(cType);
+
+                // Build the content parts for embedding
+                let embeddingParts = [];
+
+                // Always include text content
+                const textContent = `${payload.thought_vector_text} ${payload.context_environment}`;
+                embeddingParts.push({ text: textContent });
+
+                // For media types, try to fetch and include the media file
+                if (isMedia) {
+                  const mediaUrlKey = cType === 'voice' ? 'audio_url' : `${cType}_url`;
+                  const mediaUrl = payload[mediaUrlKey];
+                  if (mediaUrl) {
+                    try {
+                      const mediaResp = await fetch(mediaUrl);
+                      if (mediaResp.ok) {
+                        const mediaBuffer = await mediaResp.arrayBuffer();
+                        const mediaBase64 = Buffer.from(mediaBuffer).toString('base64');
+
+                        // Determine MIME type
+                        const mimeMap = {
+                          'image': 'image/jpeg',
+                          'video': 'video/mp4',
+                          'voice': 'audio/wav'
+                        };
+                        const mimeType = mimeMap[cType] || 'application/octet-stream';
+
+                        embeddingParts.push({
+                          inline_data: {
+                            mime_type: mimeType,
+                            data: mediaBase64
+                          }
+                        });
+                        console.log(`📦 Media file loaded for embedding: ${cType} (${mediaBuffer.byteLength} bytes)`);
+                      } else {
+                        console.log(`⚠️ Could not fetch media file (${mediaResp.status}), using text-only embedding`);
+                      }
+                    } catch (mediaErr) {
+                      console.log(`⚠️ Media fetch error: ${mediaErr.message}, using text-only embedding`);
+                    }
+                  }
+                }
+
+                // Call Gemini Embedding API
+                const embResponse = await fetch(
+                  `https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-exp-03-07:embedContent?key=${geminiKey}`,
+                  {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      content: { parts: embeddingParts }
+                    })
+                  }
+                );
+
+                if (embResponse.ok) {
+                  const embData = await embResponse.json();
+                  const embedding = embData?.embedding?.values;
+                  if (embedding && Array.isArray(embedding)) {
+                    payload.embedding = embedding;
+                    console.log(`🧬 Embedding generated: ${embedding.length} dimensions (${isMedia ? 'multimodal' : 'text-only'})`);
+                  } else {
+                    console.log('⚠️ Unexpected embedding response format, skipping');
+                    payload.embedding = null;
+                  }
+                } else {
+                  const errText = await embResponse.text();
+                  console.log(`⚠️ Gemini Embedding API error (${embResponse.status}): ${errText.substring(0, 200)}`);
+                  payload.embedding = null;
+                }
+              } catch (embErr) {
+                console.log(`⚠️ Embedding generation error: ${embErr.message}, proceeding without embedding`);
+                payload.embedding = null;
+              }
+            } else {
+              console.log('ℹ️ GEMINI_API_KEY not configured, skipping embedding generation');
+              payload.embedding = null;
             }
 
             // ── Step 4: Promote — commit file to main branch ──

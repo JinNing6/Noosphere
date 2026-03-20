@@ -210,6 +210,12 @@ def _invalidate_cache(key: str | None = None) -> None:
         _inverted_index.clear()
         _index_doc_data.clear()
         _embedding_cache.clear()
+        # Clear cross-modal vector store
+        try:
+            from noosphere.engine.vector_store import get_vector_store
+            get_vector_store().clear()
+        except Exception:
+            pass
         # Reset shared client so it picks up fresh headers (required for tests)
         if _shared_client and not _shared_client.is_closed:
             try:
@@ -268,7 +274,10 @@ def _build_search_index(issues: list[dict], file_entries: list[dict]) -> None:
     """Build inverted index from issues and file entries for fast text search.
 
     Only rebuilds if the index is stale (older than cache TTL).
+    Also loads CI-precomputed cross-modal embeddings into VectorStore.
     """
+    from noosphere.engine.vector_store import get_vector_store
+
     global _index_built_ts
     now = time.time()
     if _inverted_index and (now - _index_built_ts) < _CACHE_TTL:
@@ -276,6 +285,10 @@ def _build_search_index(issues: list[dict], file_entries: list[dict]) -> None:
 
     _inverted_index.clear()
     _index_doc_data.clear()
+
+    # Also rebuild cross-modal vector store
+    vs = get_vector_store()
+    vs.clear()
 
     # Index issues
     for issue in issues:
@@ -308,6 +321,11 @@ def _build_search_index(issues: list[dict], file_entries: list[dict]) -> None:
         for token in tokens:
             _inverted_index.setdefault(token, set()).add(doc_id)
 
+        # Load CI-precomputed cross-modal embedding into VectorStore
+        embedding = payload.get("embedding")
+        if embedding and isinstance(embedding, list):
+            vs.add_vector(doc_id, embedding, metadata=_index_doc_data[doc_id])
+
     # Index file entries
     for entry in file_entries:
         payload = entry["payload"]
@@ -330,6 +348,16 @@ def _build_search_index(issues: list[dict], file_entries: list[dict]) -> None:
         }
         for token in tokens:
             _inverted_index.setdefault(token, set()).add(doc_id)
+
+        # Load CI-precomputed cross-modal embedding into VectorStore
+        embedding = payload.get("embedding")
+        if embedding and isinstance(embedding, list):
+            vs.add_vector(doc_id, embedding, metadata=_index_doc_data[doc_id])
+
+    if vs.size > 0:
+        logging.getLogger("noosphere").info(
+            f"🧬 Cross-modal vector index: {vs.size} embeddings loaded"
+        )
 
     _index_built_ts = now
 
@@ -504,16 +532,25 @@ def _search_by_index(
         bm25 = _bm25_score(query_tokens, doc_tokens, doc_token_list,
                            avg_doc_len, total_docs)
 
-        # Semantic similarity component
+        # Semantic similarity component (local sentence-transformers)
         cos_sim = 0.0
         if query_embedding is not None and doc_id in _embedding_cache:
             cos_sim = _cosine_sim(query_embedding, _embedding_cache[doc_id])
+
+        # Cross-modal similarity component (CI-precomputed Gemini embeddings)
+        cross_modal_sim = 0.0
+        cross_modal_vec = payload.get("embedding")
+        if cross_modal_vec and isinstance(cross_modal_vec, list) and query_embedding is not None:
+            # Check if the doc has a CI-precomputed embedding we can compare
+            # Note: cross-modal search uses VectorStore directly;
+            # here we just give a small boost to docs that have cross-modal embeddings
+            cross_modal_sim = 0.05  # Availability bonus for cross-modal indexed docs
 
         # Final score
         if query_embedding is not None:
             # Normalize BM25 to [0, 1] range (cap at ~10 which is very high)
             bm25_norm = min(bm25 / 10.0, 1.0) if bm25 > 0 else 0.0
-            final_score = 0.35 * bm25_norm + 0.65 * cos_sim
+            final_score = 0.35 * bm25_norm + 0.65 * cos_sim + cross_modal_sim
         else:
             # Fallback: pure BM25
             final_score = bm25
