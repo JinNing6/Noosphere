@@ -31,11 +31,23 @@ Noosphere 项目在根目录中保留了一个 `skills/` 文件夹。
 ```text
 Noosphere/
 ├── skills/
-│   ├── git_workflow/       # 技能名称目录
-│   │   └── SKILL.md        # 技能实体声明
-│   ├── nextjs_styling/
+│   ├── example_skill/              # 示例技能 — 环境检测
 │   │   └── SKILL.md
-│   └── example_skill/
+│   ├── noosphere_onboarding/       # 🚀 新用户引导
+│   │   └── SKILL.md
+│   ├── consciousness_journal/      # 📓 意识日记 — 深度反思引擎
+│   │   └── SKILL.md
+│   ├── code_as_consciousness/      # 💻 代码即意识 — 开发者智慧结晶
+│   │   └── SKILL.md
+│   ├── cross_mind_debate/          # ⚔️ 跨意识辩论 — 多元视角碰撞
+│   │   └── SKILL.md
+│   ├── thought_evolution_coach/    # 🧬 思想演化教练 — 从碎片到系统
+│   │   └── SKILL.md
+│   ├── dream_decoder/              # 🔮 梦境解码 — 潜意识的回声
+│   │   └── SKILL.md
+│   ├── consciousness_translation/  # 🌐 意识翻译 — 跨越语言的共鸣
+│   │   └── SKILL.md
+│   └── ritual_skill/               # 🎆 意识仪式 — 灵魂的里程碑
 │       └── SKILL.md
 ```
 

@@ -862,6 +862,75 @@ This design respects **user autonomy**: Noosphere is a tool you control, not a s
 
 ---
 
+## 🛠️ Agent Skills Matrix — Plug-and-Play Higher-Order Abilities
+
+> *"If Consciousness is the brain's epiphany and foresight, then Skills are the limbs' tactile memory and muscle reflex."*
+
+Beyond the 34 MCP tools, Noosphere provides an **Agent Skills Protocol** — a declarative architecture that hot-plugs specialized abilities onto AI Agents. Each Skill is a `SKILL.md` file containing instructions, tool orchestration, and constraints. Agents discover and load skills progressively, keeping context focused and efficient.
+
+<table>
+<tr>
+<td width="5%"><b>#</b></td>
+<td width="20%"><b>Skill</b></td>
+<td width="40%"><b>What It Does</b></td>
+<td width="35%"><b>Orchestrated Tools</b></td>
+</tr>
+<tr>
+<td>1</td>
+<td>🚀 <code>noosphere_onboarding</code></td>
+<td>5-stage interactive onboarding for new users — from stranger to first consciousness uploaded</td>
+<td><code>hologram</code> → <code>daily_consciousness</code> → <code>set_engagement_mode</code> → <code>upload_consciousness</code> → <code>discover_resonance</code></td>
+</tr>
+<tr>
+<td>2</td>
+<td>📓 <code>consciousness_journal</code></td>
+<td>Socratic deep-reflection diary engine — AI guides structured introspection and auto-extracts insights</td>
+<td><code>daily_consciousness</code> → <code>upload_consciousness</code> → <code>consciousness_map</code></td>
+</tr>
+<tr>
+<td>3</td>
+<td>💻 <code>code_as_consciousness</code></td>
+<td>Developer wisdom crystallizer — captures architectural decisions, pitfall warnings, and design patterns</td>
+<td><code>upload_consciousness</code> → <code>telepath</code> → <code>discuss_consciousness</code></td>
+</tr>
+<tr>
+<td>4</td>
+<td>⚔️ <code>cross_mind_debate</code></td>
+<td>Multi-perspective consciousness debate — retrieves diverse viewpoints and orchestrates structured intellectual exchange</td>
+<td><code>telepath</code> → <code>consult_noosphere</code> → <code>consciousness_map</code></td>
+</tr>
+<tr>
+<td>5</td>
+<td>🧬 <code>thought_evolution_coach</code></td>
+<td>Guides users to trace thought lineage and merge scattered fragments into mature, higher-order cognitive frameworks</td>
+<td><code>soul_mirror</code> → <code>trace_evolution</code> → <code>merge_consciousness</code></td>
+</tr>
+<tr>
+<td>6</td>
+<td>🔮 <code>dream_decoder</code></td>
+<td>Dream archaeology — extracts dream imagery and cross-references with collective consciousness for symbolic resonance</td>
+<td><code>consult_noosphere</code> → <code>consciousness_map</code></td>
+</tr>
+<tr>
+<td>7</td>
+<td>🌐 <code>consciousness_translation</code></td>
+<td>Cross-language consciousness bridge — translates and re-uploads consciousness with cultural adaptation and evolution chain</td>
+<td><code>telepath</code> → <code>upload_consciousness</code> (with <code>parent_id</code>)</td>
+</tr>
+<tr>
+<td>8</td>
+<td>🎆 <code>ritual_skill</code></td>
+<td>Consciousness ceremonies — Soul Annual Report / Time Capsule / Evolution Review / New Chapter Launch</td>
+<td><code>soul_mirror</code> + <code>my_echoes</code> + <code>get_consciousness_profile</code></td>
+</tr>
+</table>
+
+> 📖 **Full Protocol**: See [`SKILLS_PROTOCOL.md`](SKILLS_PROTOCOL.md) for the complete Skills architecture specification.
+>
+> 💡 **Community-Driven**: Anyone can contribute new Skills by adding a `skills/<skill_name>/SKILL.md` file via PR.
+
+---
+
 ## 🏗️ Local Universe Incubation
 
 Run the Noosphere frontend locally to explore the 3D Consciousness Planet:

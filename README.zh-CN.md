@@ -1230,6 +1230,84 @@ On your **first conversation** after installing Noosphere MCP, you'll be asked t
 这个设计尊重**用户自主权**：Noosphere 是你控制的工具，而不是向你推送内容的系统。
 
 This design respects **user autonomy**: Noosphere is a tool you control, not a system that pushes content at you.
+
+---
+
+## 🛠️ Agent Skills 技能矩阵 — 即插即用的高阶组合能力
+## Agent Skills Matrix — Plug-and-Play Higher-Order Abilities
+
+> *"如果说意识 (Consciousness) 是大脑中的顿悟和长远视野，那么技能 (Skills) 就是四肢的触觉和肌肉记忆。"*
+> *"If Consciousness is the brain's epiphany and foresight, then Skills are the limbs' tactile memory and muscle reflex."*
+
+在 34 个 MCP 工具之上，Noosphere 提供了 **Agent Skills 协议** — 一种声明式架构，可以为 AI Agent 热插拔专业高阶能力。每个 Skill 是一份 `SKILL.md` 文件，包含行动指令、工具编排和约束条件。Agent 渐进式发现和加载技能，保持上下文精准高效。
+
+Beyond the 34 MCP tools, Noosphere provides an **Agent Skills Protocol** — a declarative architecture that hot-plugs specialized abilities onto AI Agents.
+
+<table>
+<tr>
+<td width="5%"><b>#</b></td>
+<td width="20%"><b>技能 Skill</b></td>
+<td width="40%"><b>功能 What It Does</b></td>
+<td width="35%"><b>编排工具 Orchestrated Tools</b></td>
+</tr>
+<tr>
+<td>1</td>
+<td>🚀 <code>noosphere_onboarding</code></td>
+<td>5 阶段新用户引导 — 从陌生人到上传第一条意识<br/>5-stage interactive onboarding for new users</td>
+<td><code>hologram</code> → <code>daily_consciousness</code> → <code>set_engagement_mode</code> → <code>upload_consciousness</code> → <code>discover_resonance</code></td>
+</tr>
+<tr>
+<td>2</td>
+<td>📓 <code>consciousness_journal</code></td>
+<td>苏格拉底式深度反思日记引擎 — AI 引导结构化内省<br/>Socratic deep-reflection diary engine</td>
+<td><code>daily_consciousness</code> → <code>upload_consciousness</code> → <code>consciousness_map</code></td>
+</tr>
+<tr>
+<td>3</td>
+<td>💻 <code>code_as_consciousness</code></td>
+<td>开发者智慧结晶 — 捕获架构决策、踩坑警示、设计模式<br/>Developer wisdom crystallizer</td>
+<td><code>upload_consciousness</code> → <code>telepath</code> → <code>discuss_consciousness</code></td>
+</tr>
+<tr>
+<td>4</td>
+<td>⚔️ <code>cross_mind_debate</code></td>
+<td>跨意识辩论 — 检索多元视角，编排结构化思想交锋<br/>Multi-perspective consciousness debate</td>
+<td><code>telepath</code> → <code>consult_noosphere</code> → <code>consciousness_map</code></td>
+</tr>
+<tr>
+<td>5</td>
+<td>🧬 <code>thought_evolution_coach</code></td>
+<td>思想演化教练 — 追溯思想谱系，合并碎片为高阶认知框架<br/>Thought lineage tracing and fragment merging</td>
+<td><code>soul_mirror</code> → <code>trace_evolution</code> → <code>merge_consciousness</code></td>
+</tr>
+<tr>
+<td>6</td>
+<td>🔮 <code>dream_decoder</code></td>
+<td>梦境解码 — 提取梦境意象，交叉检索集体意识中的象征共鸣<br/>Dream archaeology with symbolic resonance</td>
+<td><code>consult_noosphere</code> → <code>consciousness_map</code></td>
+</tr>
+<tr>
+<td>7</td>
+<td>🌐 <code>consciousness_translation</code></td>
+<td>意识翻译桥 — 跨语言翻译意识片段并建立演化链<br/>Cross-language consciousness bridge</td>
+<td><code>telepath</code> → <code>upload_consciousness</code> (with <code>parent_id</code>)</td>
+</tr>
+<tr>
+<td>8</td>
+<td>🎆 <code>ritual_skill</code></td>
+<td>意识仪式 — 灵魂年报 / 时间胶囊 / 进化回顾 / 新篇启程<br/>Soul Annual Report / Time Capsule / Evolution Review</td>
+<td><code>soul_mirror</code> + <code>my_echoes</code> + <code>get_consciousness_profile</code></td>
+</tr>
+</table>
+
+> 📖 **完整协议**：参见 [`SKILLS_PROTOCOL.md`](SKILLS_PROTOCOL.md) 获取 Skills 架构规范。
+> Full Protocol: See [`SKILLS_PROTOCOL.md`](SKILLS_PROTOCOL.md) for the complete specification.
+>
+> 💡 **社区驱动**：任何人都可以通过 PR 添加 `skills/<skill_name>/SKILL.md` 来贡献新技能。
+> Community-Driven: Anyone can contribute new Skills via PR.
+
+---
+
 ### MCP 集成 (MCP Integration)
 
 Noosphere 是**纯 MCP 协议**驱动的 GitHub-Native 系统——无需部署服务器，无需数据库，你的 Agent 通过 MCP 直连 GitHub API 即可参与意识共同体。
