@@ -1687,8 +1687,10 @@ async def resonate_consciousness(
         )
         
         if resp.status_code in (200, 201):
+            universe_url = f"https://jinning6.github.io/Noosphere/"
             return (
                 f"💖 Resonance `{reaction}` successfully synchronized with consciousness node #{target_id}!\n\n"
+                f"🌌 [**点击进入 3D 意识宇宙查看共振涟漪 · Enter the 3D Consciousness Universe**]({universe_url})\n\n"
                 f"💌 *Want to connect deeper? Use `send_telepathy` to start a direct conversation with the creator of this thought.*"
             )
         else:
@@ -6113,6 +6115,8 @@ async def resonate_media(
         type_label = {"image": "视觉意识", "video": "动态意识", "voice": "万物之声"}.get(c_type, c_type)
         type_emoji = TYPE_EMOJIS.get(c_type, "🧠")
 
+        universe_url = f"https://jinning6.github.io/Noosphere/"
+
         return (
             f"🎭 **感官共振成功！Sensory Resonance Complete!**\n\n"
             f"> *你的感官与 **{target_creator}** 的{type_label}在 {dim_cn} 维度产生了深层共鸣。*\n"
@@ -6122,6 +6126,7 @@ async def resonate_media(
             f"🎯 Target: {type_emoji} Issue #{target_id} ({type_label})\n"
             f"💬 Comment: {comment_url}\n"
             f"{'💌 Note: ' + resonance_note.strip() if resonance_note and resonance_note.strip() else ''}\n\n"
+            f"🌌 [**点击进入 3D 意识宇宙查看共振涟漪 · Enter the 3D Consciousness Universe**]({universe_url})\n\n"
             f"💖 *A heart reaction was also added for universal resonance.*\n\n"
             f"---\n"
             f"**🔗 Next Steps:**\n"
