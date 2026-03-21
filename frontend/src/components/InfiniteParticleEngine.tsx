@@ -209,8 +209,8 @@ export const GPUParticleLayer = forwardRef<GPUParticleLayerHandle, GPUParticleLa
 
           // Set genuine position and scale directly to the instance matrix
           dummy.position.set(p.position[0], p.position[1], p.position[2]);
-          // 确保粒子足够大且形状互相独立
-          dummy.scale.setScalar(0.15 + (p.importance || 0) * 0.2);
+          // 确保粒子足够大且形状互相独立（碰撞体积需接近 Bloom 后的视觉尺寸）
+          dummy.scale.setScalar(0.3 + (p.importance || 0) * 0.35);
           dummy.updateMatrix();
           mesh.setMatrixAt(idx, dummy.matrix);
 
@@ -478,7 +478,7 @@ export function ConsciousnessNebula({
   });
 
   return (
-    <points ref={pointsRef} material={material}>
+    <points ref={pointsRef} material={material} raycast={() => {}}>
       <bufferGeometry>
         <bufferAttribute attach="attributes-position" args={[positions, 3]} />
         <bufferAttribute attach="attributes-aColor" args={[colors, 3]} />

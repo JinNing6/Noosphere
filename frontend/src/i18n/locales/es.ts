@@ -141,6 +141,25 @@ const es = {
     fr: 'Français',
     es: 'Español',
   },
+
+  profile: {
+    subtitle: 'PLANETA DE CONCIENCIA',
+    totalFragments: 'Fragmentos',
+    totalResonance: 'Resonancia',
+    firstUpload: 'Primera Carga',
+    latestUpload: 'Reciente',
+    typeDistribution: 'Espectro de Conciencia',
+    typeImage: 'Visual',
+    typeVideo: 'Movimiento',
+    typeVoice: 'Voz',
+    shareTitle: 'Comparte Tu Planeta',
+    copyLink: 'Copiar Enlace',
+    copied: '¡Copiado!',
+    shareTwitter: 'Compartir en X',
+    backToUniverse: 'Volver al Universo',
+    noFragments: 'Esta alma aún no ha despertado...',
+    twitterText: 'Mira mi Planeta de Conciencia en Noosphere — donde las ideas se convierten en estrellas ✨🧠',
+  },
 } as const;
 
 export default es;

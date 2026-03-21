@@ -141,6 +141,25 @@ const ja = {
     fr: 'Français',
     es: 'Español',
   },
+
+  profile: {
+    subtitle: '意識プラネット',
+    totalFragments: '意識の欠片',
+    totalResonance: '共鳴総量',
+    firstUpload: '初回アップロード',
+    latestUpload: '最新',
+    typeDistribution: '意識スペクトラム',
+    typeImage: 'ビジュアル',
+    typeVideo: 'モーション',
+    typeVoice: 'ボイス',
+    shareTitle: 'あなたのプラネットを共有',
+    copyLink: 'リンクをコピー',
+    copied: 'コピー済み！',
+    shareTwitter: 'Xで共有',
+    backToUniverse: '宇宙に戻る',
+    noFragments: 'この魂はまだ目覚めていません...',
+    twitterText: 'Noosphereで私の意識プラネットを見てください — アイデアが星になる場所 ✨🧠',
+  },
 } as const;
 
 export default ja;

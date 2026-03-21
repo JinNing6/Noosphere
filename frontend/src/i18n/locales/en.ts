@@ -141,6 +141,26 @@ const en = {
     fr: 'Français',
     es: 'Español',
   },
+
+  // ─── 个人意识星球 ───
+  profile: {
+    subtitle: 'CONSCIOUSNESS PLANET',
+    totalFragments: 'Fragments',
+    totalResonance: 'Resonance',
+    firstUpload: 'First Upload',
+    latestUpload: 'Latest',
+    typeDistribution: 'Consciousness Spectrum',
+    typeImage: 'Visual',
+    typeVideo: 'Motion',
+    typeVoice: 'Voice',
+    shareTitle: 'Share Your Planet',
+    copyLink: 'Copy Link',
+    copied: 'Copied!',
+    shareTwitter: 'Share on X',
+    backToUniverse: 'Back to Universe',
+    noFragments: 'This soul has not yet awakened...',
+    twitterText: 'Check out my Consciousness Planet on Noosphere — where ideas become stars ✨🧠',
+  },
 } as const;
 
 export default en;

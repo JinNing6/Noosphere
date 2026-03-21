@@ -141,6 +141,25 @@ const ko = {
     fr: 'Français',
     es: 'Español',
   },
+
+  profile: {
+    subtitle: '의식 행성',
+    totalFragments: '의식 파편',
+    totalResonance: '공명 총량',
+    firstUpload: '첫 업로드',
+    latestUpload: '최근',
+    typeDistribution: '의식 스펙트럼',
+    typeImage: '비주얼',
+    typeVideo: '모션',
+    typeVoice: '보이스',
+    shareTitle: '당신의 행성 공유',
+    copyLink: '링크 복사',
+    copied: '복사됨!',
+    shareTwitter: 'X에 공유',
+    backToUniverse: '우주로 돌아가기',
+    noFragments: '이 영혼은 아직 깨어나지 않았습니다...',
+    twitterText: 'Noosphere에서 내 의식 행성을 확인하세요 — 아이디어가 별이 되는 곳 ✨🧠',
+  },
 } as const;
 
 export default ko;

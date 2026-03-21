@@ -151,6 +151,26 @@ const zh = {
     fr: 'Français',
     es: 'Español',
   },
+
+  // ─── 个人意识星球 ───
+  profile: {
+    subtitle: '意识星球',
+    totalFragments: '意识碎片',
+    totalResonance: '共振总量',
+    firstUpload: '首次上传',
+    latestUpload: '最近',
+    typeDistribution: '意识光谱',
+    typeImage: '视觉',
+    typeVideo: '动态',
+    typeVoice: '声波',
+    shareTitle: '分享你的星球',
+    copyLink: '复制链接',
+    copied: '已复制！',
+    shareTwitter: '分享到 X',
+    backToUniverse: '返回宇宙全景',
+    noFragments: '这个灵魂尚未觉醒...',
+    twitterText: '来看看我在意识共同体 Noosphere 的意识星球 — 在这里，想法化为星辰 ✨🧠',
+  },
 } as const;
 
 export default zh;

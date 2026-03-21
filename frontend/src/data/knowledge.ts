@@ -528,3 +528,109 @@ function computeConsciousnessColor(baseHex: string, index: number, resonance: nu
   return `hsl(${Math.round(newH * 360)}, ${Math.round(newS * 100)}%, ${Math.round(newL * 100)}%)`;
 }
 
+/* ══════════════════════ 个人星球：按创建者过滤 ══════════════════════ */
+
+/** 创建者统计信息 */
+export interface CreatorStats {
+  totalFragments: number;
+  totalResonance: number;
+  typeCounts: Record<string, number>;
+  firstUpload: string;
+  latestUpload: string;
+}
+
+/**
+ * 从 consciousness_index.json 加载指定创建者的意识碎片
+ * 返回 { nodes, stats } — 节点列表 + 统计信息
+ */
+export async function fetchConsciousnessPayloadsByCreator(
+  creator: string,
+): Promise<{ nodes: KnowledgeNode[]; stats: CreatorStats }> {
+  const emptyStats: CreatorStats = {
+    totalFragments: 0,
+    totalResonance: 0,
+    typeCounts: {},
+    firstUpload: '',
+    latestUpload: '',
+  };
+
+  try {
+    const resp = await fetch(`${import.meta.env.BASE_URL}consciousness_index.json`);
+    if (!resp.ok) return { nodes: [], stats: emptyStats };
+    const payloads: ConsciousnessPayload[] = await resp.json();
+
+    // 按创建者过滤（大小写不敏感）
+    const creatorLower = creator.toLowerCase();
+    const filtered = payloads.filter(
+      (p) => !p.anonymous && p.creator.toLowerCase() === creatorLower,
+    );
+
+    if (filtered.length === 0) return { nodes: [], stats: emptyStats };
+
+    // 计算统计信息
+    const typeCounts: Record<string, number> = {};
+    let totalResonance = 0;
+    let firstUpload = filtered[0].uploaded_at;
+    let latestUpload = filtered[0].uploaded_at;
+
+    filtered.forEach((p) => {
+      typeCounts[p.type] = (typeCounts[p.type] || 0) + 1;
+      totalResonance += p.resonance_count || 0;
+      if (p.uploaded_at < firstUpload) firstUpload = p.uploaded_at;
+      if (p.uploaded_at > latestUpload) latestUpload = p.uploaded_at;
+    });
+
+    const stats: CreatorStats = {
+      totalFragments: filtered.length,
+      totalResonance,
+      typeCounts,
+      firstUpload,
+      latestUpload,
+    };
+
+    // 转换为 KnowledgeNode（复用主流程逻辑）
+    const nodes = filtered.map((p, idx) => {
+      const tagSet = new Set(p.tags.map((t) => t.toLowerCase()));
+      let discipline: Discipline = TYPE_TO_DISCIPLINE[p.type] || 'ai';
+      if (tagSet.has('math') || tagSet.has('algorithm')) discipline = 'math';
+      else if (tagSet.has('physics') || tagSet.has('quantum')) discipline = 'physics';
+      else if (tagSet.has('biology') || tagSet.has('genetics')) discipline = 'biology';
+      else if (tagSet.has('philosophy') || tagSet.has('consciousness')) discipline = 'philosophy';
+      else if (tagSet.has('art') || tagSet.has('design') || tagSet.has('ui')) discipline = 'art';
+      else if (tagSet.has('history') || tagSet.has('civilization')) discipline = 'history';
+
+      const resonance = p.resonance_count || 0;
+      const computedImportance = resonance > 0
+        ? Math.min(10, Math.round(3 + resonance * 1.5))
+        : Math.min(10, 3 + Math.floor(p.text.length / 80));
+
+      const typeColor = CONSCIOUSNESS_TYPE_COLORS[p.type] || '#e0e0ff';
+      const computedColor = computeConsciousnessColor(typeColor, idx, resonance);
+
+      return {
+        id: p.id,
+        title_zh: p.text.length > 30 ? p.text.slice(0, 28) + '…' : p.text,
+        title_en: p.creator,
+        layer: TYPE_TO_LAYER[p.type] || ('civilization' as Layer),
+        discipline,
+        summary: p.text + (p.context ? `\n\n**场景**: ${p.context}` : ''),
+        thumbnail: null,
+        importance: computedImportance,
+        tags: [...p.tags, p.type, `by:${p.creator}`],
+        resonanceCount: resonance,
+        parentId: p.parent_id || null,
+        consciousnessType: p.type,
+        computedColor,
+        mediaUrl: p.media_url || null,
+        mediaType: p.media_type || null,
+        mediaCategory: p.media_category || null,
+      } as KnowledgeNode;
+    });
+
+    return { nodes, stats };
+  } catch {
+    console.warn('[Noosphere] Failed to fetch creator consciousness payloads');
+    return { nodes: [], stats: emptyStats };
+  }
+}
+

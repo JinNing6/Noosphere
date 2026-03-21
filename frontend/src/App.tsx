@@ -8,9 +8,11 @@
  *
  * 实时数据：从 consciousness_index.json 动态加载用户上传的意识体，
  * 合并到 3D Globe 与静态节点一起展示。
+ *
+ * 路由：支持 ?profile=username 参数进入个人意识星球页面。
  */
 
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import NoosphereGlobe from './components/NoosphereGlobe';
 import DetailPanel from './components/ExperiencePanel';
 import SearchBar from './components/SearchBar';
@@ -18,6 +20,7 @@ import StatsOverlay from './components/StatsOverlay';
 import ContributionGraph from './components/ContributionGraph';
 import ConsciousnessUploader from './components/ConsciousnessUploader';
 import LanguageSwitcher from './components/LanguageSwitcher';
+import ProfilePage from './components/ProfilePage';
 import type { KnowledgeNode } from './data/knowledge';
 import { fetchConsciousnessPayloads } from './data/knowledge';
 import SplashScreen from './components/SplashScreen';
@@ -25,6 +28,23 @@ import { useResonancePolling } from './utils/useResonancePolling';
 import type { ResonanceRippleHandle } from './components/ResonanceRipple';
 
 export default function App() {
+  // ── URL 参数路由：检测 ?profile=xxx ──
+  const profileUser = useMemo(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('profile');
+  }, []);
+
+  // 如果是个人星球页面，渲染 ProfilePage
+  if (profileUser) {
+    return <ProfilePage username={profileUser} />;
+  }
+
+  // ── 以下为原有主页逻辑（完全不变） ──
+  return <MainApp />;
+}
+
+/** 原有主页组件（提取为独立组件以避免 hooks 跳过问题） */
+function MainApp() {
   const [selectedNode, setSelectedNode] = useState<KnowledgeNode | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   // splashDone = false → SplashScreen 遮罩 + 3D 后台预热
@@ -131,3 +151,4 @@ export default function App() {
     </div>
   );
 }
+
