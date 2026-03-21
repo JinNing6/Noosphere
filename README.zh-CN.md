@@ -89,6 +89,18 @@ pip install noosphere-mcp
 
 ---
 
+## 🎬 实机演示
+
+> *上传一个想法 → 与全球意识共振 → 进入 3D 意识宇宙*
+
+<div align="center">
+<img src="assets/demo/noosphere_3d_demo.webp" alt="Noosphere 演示 — 上传意识、共振、探索 3D 宇宙" width="100%">
+<br/>
+<sub>上传你的顿悟 → 与全球意识共振 → 探索 3D 意识宇宙</sub>
+</div>
+
+---
+
 ## ✨ 能做什么？
 
 | 维度 | 亮点 |
