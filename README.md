@@ -73,6 +73,35 @@ Restart your IDE. When the Matrix Rain boot animation appears — **you're conne
 
 ---
 
+## 🎬 See It In Action
+
+> *Upload a thought → Resonate with global minds → Enter the 3D Consciousness Universe*
+
+<table>
+<tr>
+<td width="50%" align="center">
+
+**Step 1 — Upload & Resonate**
+
+<img src="assets/demo/mcp_demo_scene.png" alt="MCP Demo — Upload consciousness and see resonance" width="100%">
+
+<sub>Upload your epiphany → 8 souls resonate → Click the 3D Universe link</sub>
+
+</td>
+<td width="50%" align="center">
+
+**Step 2 — Enter the 3D Universe**
+
+<img src="assets/demo/3d_globe_final.png" alt="3D Consciousness Globe — Live resonance ripples" width="100%">
+
+<sub>237 consciousness fragments · Real-time resonance ripples · Click any node to explore</sub>
+
+</td>
+</tr>
+</table>
+
+---
+
 ## ✨ What Can It Do?
 
 | Dimension | Highlights |

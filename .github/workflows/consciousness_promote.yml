@@ -27,7 +27,127 @@ jobs:
         with:
           python-version: '3.10'
 
+      - name: 🛡️ AI Content Safety Check (NudeNet)
+        id: content_safety
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          result-encoding: string
+          script: |
+            const issue = context.payload.issue;
+            const body = issue.body || '';
+
+            // Extract payload to check consciousness_type
+            const startMarker = '<!-- CONSCIOUSNESS_PAYLOAD_START -->';
+            const endMarker = '<!-- CONSCIOUSNESS_PAYLOAD_END -->';
+            const startIdx = body.indexOf(startMarker);
+            const endIdx = body.indexOf(endMarker);
+
+            if (startIdx === -1 || endIdx === -1) {
+              console.log('No payload found, skipping content safety.');
+              return 'SKIP';
+            }
+
+            let block = body.substring(startIdx + startMarker.length, endIdx).trim();
+            if (block.startsWith('```json')) block = block.substring(7).trim();
+            if (block.startsWith('```')) block = block.substring(3).trim();
+            if (block.endsWith('```')) block = block.substring(0, block.length - 3).trim();
+
+            let payload;
+            try { payload = JSON.parse(block); } catch (e) { return 'SKIP'; }
+
+            const MEDIA_TYPES = ['image', 'video'];
+            const cType = payload.consciousness_type;
+
+            if (!MEDIA_TYPES.includes(cType)) {
+              console.log(`Type '${cType}' is not visual media, skipping NudeNet.`);
+              return 'SKIP';
+            }
+
+            // Get media URL
+            const mediaUrlKey = cType === 'video' ? 'video_url' : 'image_url';
+            const mediaUrl = payload[mediaUrlKey];
+            if (!mediaUrl) {
+              console.log('No media URL found in payload, skipping.');
+              return 'SKIP';
+            }
+
+            // Set outputs for the Python step
+            core.exportVariable('MEDIA_URL', mediaUrl);
+            core.exportVariable('MEDIA_TYPE', cType);
+            core.exportVariable('ISSUE_NUMBER', issue.number.toString());
+            return 'CHECK';
+
+      - name: 🔧 Install NudeNet
+        if: steps.content_safety.outputs.result == 'CHECK'
+        run: pip install nudenet opencv-python-headless
+
+      - name: 🔍 Run NudeNet Moderation
+        id: nudenet_check
+        if: steps.content_safety.outputs.result == 'CHECK'
+        run: |
+          set +e
+          RESULT=$(python scripts/content_moderation.py "$MEDIA_URL" --type "$MEDIA_TYPE" 2>&1)
+          EXIT_CODE=$?
+          echo "exit_code=$EXIT_CODE" >> $GITHUB_OUTPUT
+          echo "result=$RESULT" >> $GITHUB_OUTPUT
+
+          if [ $EXIT_CODE -eq 1 ]; then
+            echo "🚫 Content flagged as UNSAFE"
+            echo "safe=false" >> $GITHUB_OUTPUT
+          elif [ $EXIT_CODE -eq 0 ]; then
+            echo "✅ Content is SAFE"
+            echo "safe=true" >> $GITHUB_OUTPUT
+          else
+            echo "⚠️ Moderation error (fail-open, proceeding)"
+            echo "safe=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: 🚫 Reject Unsafe Content
+        if: steps.content_safety.outputs.result == 'CHECK' && steps.nudenet_check.outputs.safe == 'false'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const issue = context.payload.issue;
+            const modResult = '${{ steps.nudenet_check.outputs.result }}';
+
+            let detailMsg = '';
+            try {
+              const parsed = JSON.parse(modResult);
+              const unsafe = (parsed.unsafe_detections || []).map(d => `${d.label} (${d.score})`);
+              detailMsg = unsafe.length > 0 ? `\n**Detected**: ${unsafe.join(', ')}` : '';
+            } catch (e) { /* ignore parse error */ }
+
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issue.number,
+              labels: ['rejected:unsafe']
+            });
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issue.number,
+              body: `🛡️ **Content Safety — Rejected by AI Moderation**\n\n` +
+                    `Your multimedia consciousness was flagged by NudeNet AI content safety scanner.\n` +
+                    `${detailMsg}\n\n` +
+                    `If you believe this is a false positive, please open a discussion or contact the maintainers.\n\n` +
+                    `*Powered by NudeNet — open-source content safety for the Noosphere.*`
+            });
+
+            await github.rest.issues.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issue.number,
+              state: 'closed'
+            });
+
+            core.setFailed('Content rejected: NSFW content detected');
+
       - name: 👁️ Extract, Validate & Promote Consciousness
+        if: steps.content_safety.outputs.result != 'CHECK' || steps.nudenet_check.outputs.safe == 'true'
         uses: actions/github-script@v7
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
