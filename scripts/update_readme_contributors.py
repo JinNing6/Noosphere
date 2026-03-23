@@ -229,10 +229,11 @@ def generate_update_block(
     contributors: list[dict],
     repo_stats: dict,
     payload_count: int,
+    uploaders: list[dict] | None = None,
 ) -> str:
     """生成 AUTO-UPDATE 标记之间的完整 Markdown 内容。
 
-    包含：贡献者排行表格 + 仓库能量指标 + 更新时间戳
+    包含：贡献者排行表格 + 意识上传者排行 + 仓库能量指标 + 更新时间戳
     """
     lines: list[str] = []
 
@@ -263,6 +264,20 @@ def generate_update_block(
 
     lines.append("")
 
+    # ── 意识上传者排行 ──
+    if uploaders:
+        lines.append("> **📤 意识上传者排行 (Top Consciousness Uploaders)**")
+        lines.append(">")
+        for i, u in enumerate(uploaders[:5]):
+            medal = ["🥇", "🥈", "🥉", "🔹", "🔹"][i]
+            lines.append(
+                f"> {medal} **[{u['login']}](https://github.com/{u['login']})** "
+                f"— {u['count']} 次上传 "
+                f"[![badge](https://noosphere-badge.vercel.app/api/rank/{u['login']})]"
+                f"(https://jinning6.github.io/Noosphere/?profile={u['login']})"
+            )
+        lines.append("")
+
     # ── 仓库能量指标 ──
     stars = repo_stats.get("stars", 0)
     forks = repo_stats.get("forks", 0)
@@ -285,6 +300,58 @@ def generate_update_block(
     lines.append(f"> 🤖 *上次自动更新：`{timestamp}`*")
 
     return "\n".join(lines)
+
+
+# ──────────────── 意识上传者统计 ────────────────
+
+
+def fetch_top_uploaders(headers: dict[str, str], limit: int = 10) -> list[dict]:
+    """从 GitHub Issues 统计意识上传者排行。
+
+    查询带有 consciousness label 的 Issue，按 author 聚合统计。
+    """
+    print("📡 正在统计意识上传者排行...")
+
+    url = (
+        f"https://api.github.com/repos/{REPO_OWNER}/{REPO_NAME}/issues"
+        f"?labels=consciousness&state=all&per_page=100&sort=created&direction=desc"
+    )
+
+    author_counts: dict[str, int] = {}
+    page = 1
+
+    while page <= 3:  # 最多查 3 页 (300 条)
+        paged_url = f"{url}&page={page}"
+        data = _fetch_json(paged_url, headers)
+        if not data or not isinstance(data, list):
+            break
+
+        for issue in data:
+            user = issue.get("user", {})
+            login = user.get("login", "")
+            if not login or login.endswith("[bot]") or login.endswith("-bot"):
+                continue
+            author_counts[login] = author_counts.get(login, 0) + 1
+
+        if len(data) < 100:
+            break
+        page += 1
+
+    # 按上传数降序排列
+    uploaders = sorted(
+        [{"login": k, "count": v} for k, v in author_counts.items()],
+        key=lambda x: x["count"],
+        reverse=True,
+    )
+
+    if uploaders:
+        print(f"📤 意识上传者 Top {min(limit, len(uploaders))}:")
+        for i, u in enumerate(uploaders[:limit]):
+            print(f"   #{i + 1} {u['login']}: {u['count']} 次上传")
+    else:
+        print("   (暂无意识上传者)")
+
+    return uploaders[:limit]
 
 
 # ──────────────── README 更新 ────────────────
@@ -341,7 +408,10 @@ if __name__ == "__main__":
     # 3. 统计意识载荷
     payload_count = count_consciousness_payloads()
 
-    # 4. 打印汇总
+    # 4. 统计意识上传者排行
+    uploaders = fetch_top_uploaders(headers)
+
+    # 5. 打印汇总
     print(f"\n{'─' * 40}")
     print("📊 贡献者统计:")
     if contributors:
@@ -355,8 +425,8 @@ if __name__ == "__main__":
         print("   (无贡献者数据)")
     print(f"{'─' * 40}\n")
 
-    # 5. 生成并写入
-    block_md = generate_update_block(contributors, repo_stats, payload_count)
+    # 6. 生成并写入
+    block_md = generate_update_block(contributors, repo_stats, payload_count, uploaders)
     success = update_readme(block_md)
 
     if success:

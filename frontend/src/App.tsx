@@ -21,6 +21,7 @@ import ContributionGraph from './components/ContributionGraph';
 import ConsciousnessUploader from './components/ConsciousnessUploader';
 import LanguageSwitcher from './components/LanguageSwitcher';
 import ProfilePage from './components/ProfilePage';
+import OnboardingGuide from './components/OnboardingGuide';
 import type { KnowledgeNode } from './data/knowledge';
 import { fetchConsciousnessPayloads } from './data/knowledge';
 import SplashScreen from './components/SplashScreen';
@@ -34,17 +35,23 @@ export default function App() {
     return params.get('profile');
   }, []);
 
+  // 检测 playground 模式
+  const isPlayground = useMemo(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('playground') === 'true';
+  }, []);
+
   // 如果是个人星球页面，渲染 ProfilePage
   if (profileUser) {
     return <ProfilePage username={profileUser} />;
   }
 
   // ── 以下为原有主页逻辑（完全不变） ──
-  return <MainApp />;
+  return <MainApp isPlayground={isPlayground} />;
 }
 
 /** 原有主页组件（提取为独立组件以避免 hooks 跳过问题） */
-function MainApp() {
+function MainApp({ isPlayground = false }: { isPlayground?: boolean }) {
   const [selectedNode, setSelectedNode] = useState<KnowledgeNode | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   // splashDone = false → SplashScreen 遮罩 + 3D 后台预热
@@ -137,7 +144,37 @@ function MainApp() {
         <ContributionGraph />
 
         {/* 在线意识上传面板 — 零门槛体验核心 */}
-        <ConsciousnessUploader onUploadSuccess={addDynamicNode} />
+        <ConsciousnessUploader onUploadSuccess={addDynamicNode} playgroundMode={isPlayground} />
+
+        {/* 首次访问 Onboarding 引导 */}
+        {splashDone && <OnboardingGuide />}
+
+        {/* Playground 模式顶部横幅 */}
+        {isPlayground && (
+          <div style={{
+            position: 'absolute',
+            top: 16,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 60,
+            padding: '8px 24px',
+            borderRadius: 30,
+            background: 'rgba(123, 97, 255, 0.15)',
+            backdropFilter: 'blur(20px)',
+            border: '1px solid rgba(123, 97, 255, 0.25)',
+            color: '#b8a9ff',
+            fontSize: 12,
+            fontFamily: "'Inter', sans-serif",
+            letterSpacing: '0.05em',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            animation: 'fadeIn 1s ease',
+          }}>
+            <span style={{ fontSize: 16 }}>🎮</span>
+            Playground Mode — No login required · Experience the Noosphere
+          </div>
+        )}
       </div>
 
       {/* 沉浸式跨维度闪屏遮罩（在 3D 层之上） */}

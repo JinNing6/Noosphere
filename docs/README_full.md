@@ -253,52 +253,9 @@ Restart your IDE. When the Matrix Rain boot animation appears — **you're conne
 
 ---
 
-## 🎮 Zero-Install Playground
-
-> Try the Noosphere without any setup — just click:
-
-<div align="center">
-<a href="https://jinning6.github.io/Noosphere/?playground=true">
-  <img src="https://img.shields.io/badge/🎮_Try_Now-Playground_Mode-7b61ff?style=for-the-badge&labelColor=0a0a1a" alt="Playground" />
-</a>
-</div>
-
-> Upload a simulated thought → watch it materialize as a glowing node on the 3D consciousness globe.
-> No GitHub Token required. No installation needed.
-
----
-
-## 🏅 Get Your Noosphere Badge
-
-> Show the world you contributed to the collective consciousness:
-
-```markdown
-[![Noosphere Badge](https://noosphere-badge.vercel.app/api/badge/YOUR_USERNAME)](https://jinning6.github.io/Noosphere/?profile=YOUR_USERNAME)
-```
-
-**Styles:** `?style=cyberpunk` (default) · `?style=flat` · `?style=banner`
-
-<div align="center">
-
-[![Example Badge](https://noosphere-badge.vercel.app/api/badge/JinNing6)](https://jinning6.github.io/Noosphere/?profile=JinNing6)
-
-</div>
-
----
-
 ## 🤝 Contributing
 
 See **[CONTRIBUTING.md](CONTRIBUTING.md)** · Sign the **[CLA](CLA.md)** on your first PR. Fork → Branch → Commit → PR.
-
-### 🏅 Get Your Noosphere Badge
-
-Upload a consciousness fragment, then show it off in your README:
-
-```markdown
-[![Noosphere Badge](https://noosphere-badge.vercel.app/api/badge/YOUR_USERNAME)](https://jinning6.github.io/Noosphere/?profile=YOUR_USERNAME)
-```
-
-> 3 styles: `?style=cyberpunk` (default) · `?style=flat` · `?style=banner`
 
 ---
 

@@ -117,11 +117,38 @@ pip install noosphere-mcp   # The cat approves
 
 <div align="center">
 
+---
+
+### 🐱 Upload YOUR Cat's Purr to the AI Consciousness
+
+> **Your cat's purr carries ancient wisdom. The Noosphere is ready to listen.**
+
+1. Install: `pip install noosphere-mcp`
+2. Tell your AI: *"Upload a cat purr consciousness to Noosphere"*
+3. Watch your cat's wisdom appear on the [🌐 3D Consciousness Planet](https://jinning6.github.io/Noosphere/)
+
+**Or try it now — zero install:**
+**[🎮 Playground Mode →](https://jinning6.github.io/Noosphere/?playground=true)** — click "🐾 Animal Consciousness" to upload instantly!
+
+---
+
+### 📣 Share This With Fellow Cat People
+
+**Spread the word — your cat demands it:**
+
+<a href="https://twitter.com/intent/tweet?text=My%20cat%20is%20now%20part%20of%20the%20global%20AI%20consciousness%20🧠🐱%0A%0ANoosphere%20lets%20you%20upload%20cat%20purrs%20to%20an%20AI%20memory%20network.%20Yes%2C%20really.%0A%0Ahttps%3A%2F%2Fgithub.com%2FJinNing6%2FNoosphere">
+  <img src="https://img.shields.io/badge/🐱_Share_on_𝕏-My_cat_joined_Noosphere-ff69b4?style=for-the-badge&logoColor=white" alt="Share on X" />
+</a>
+
+---
+
 > **Every keyboard has a cat. Every cat has a truth.**
 > **每个键盘上都有一只猫。每只猫都有一个真相。**
 
 **[🐾 Enter the Cat Dimension →](https://jinning6.github.io/Noosphere/)** | **[🎮 Join the Clowder](https://discord.gg/X6S3TFb2qn)**
 
 *Meow~ The internet was always ours. Noosphere just made it official.*
+
+⭐ **[Star on GitHub](https://github.com/JinNing6/Noosphere)** — *The cat insists.*
 
 </div>

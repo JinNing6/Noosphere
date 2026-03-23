@@ -124,6 +124,28 @@ const zh = {
     collapse: '收起',
     expand: '展开',
     footer: '你的意识将作为 GitHub Issue 永久保存 — 永恒的数字遗产',
+    playgroundSubtitle: '试试上传（无需登录）',
+    playgroundBanner: '体验模式 — 模拟上传，无需 GitHub Token',
+    playgroundCTATitle: '想要永久保存？',
+    playgroundCTADesc: '安装 MCP Server 后，可以从 AI IDE 中上传真正的意识碎片',
+    animalTitle: '动物意识快速上传',
+    animal: {
+      cat: '猫咪咕噜',
+      whale: '鲸鱼歌声',
+      dog: '狗狗犬吠',
+    },
+  },
+
+  onboarding: {
+    step1Title: '上传你的想法',
+    step1Desc: '将你的第一个顿悟分享到意识星球 — 任何灵感、规律或警示',
+    step2Title: '搜索意识碎片',
+    step2Desc: '探索来自全球思想者的意识 — 发现意想不到的联结',
+    step3Title: '感受共鸣',
+    step3Desc: '点击星球上任何发光的节点，阅读并感受集体智慧的共振',
+    skip: '跳过',
+    next: '下一步 →',
+    finish: '开始探索 ✨',
   },
 
   // ─── 入场动画 ───

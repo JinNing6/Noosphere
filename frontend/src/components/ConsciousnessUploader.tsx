@@ -131,13 +131,22 @@ ${context || 'N/A'}
   }
 }
 
+/* ═══════════════ 动物意识快速上传预设 ═══════════════ */
+
+const ANIMAL_PRESETS = [
+  { key: 'cat',     icon: '🐱', labelKey: 'uploader.animal.cat',     defaultThought: 'Prrrr~ *slow blink* — I see the truth in this codebase.',     tags: ['cat', 'purr', 'feline-consciousness'] },
+  { key: 'whale',   icon: '🐋', labelKey: 'uploader.animal.whale',   defaultThought: '∿∿∿ OOOoooOOO ∿∿∿ — A melody echoing across the digital ocean.',   tags: ['whale', 'song', 'deep-ocean'] },
+  { key: 'dog',     icon: '🐕', labelKey: 'uploader.animal.dog',     defaultThought: 'WOOF! *tail wagging intensifies* — Pure joy is the highest consciousness!', tags: ['dog', 'bark', 'loyalty'] },
+] as const;
+
 /* ═══════════════ 主组件 ═══════════════ */
 
 interface Props {
   onUploadSuccess: (node: KnowledgeNode) => void;
+  playgroundMode?: boolean;
 }
 
-export default function ConsciousnessUploader({ onUploadSuccess }: Props) {
+export default function ConsciousnessUploader({ onUploadSuccess, playgroundMode = false }: Props) {
   const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [showTokenInput, setShowTokenInput] = useState(false);
@@ -155,6 +164,8 @@ export default function ConsciousnessUploader({ onUploadSuccess }: Props) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitResult, setSubmitResult] = useState<{ success: boolean; message: string } | null>(null);
   const [showSuccessAnimation, setShowSuccessAnimation] = useState(false);
+  const [showPlaygroundCTA, setShowPlaygroundCTA] = useState(false);
+  const [showAnimalPresets, setShowAnimalPresets] = useState(false);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -165,12 +176,72 @@ export default function ConsciousnessUploader({ onUploadSuccess }: Props) {
     }
   }, [isOpen]);
 
+  /* ═══════════════ 动物预设快速填充 ═══════════════ */
+  const applyAnimalPreset = useCallback((presetKey: string) => {
+    const preset = ANIMAL_PRESETS.find(p => p.key === presetKey);
+    if (!preset) return;
+    setType('epiphany');
+    setThought(preset.defaultThought);
+    setContext('Uploaded via Noosphere 3D Globe — Animal Consciousness');
+    setTagInput(preset.tags.join(', '));
+    setCreator('');
+    setShowAnimalPresets(false);
+  }, []);
+
   const handleSubmit = useCallback(async () => {
     // 验证
     if (thought.trim().length < 20) {
       setSubmitResult({ success: false, message: t('uploader.minChars') });
       return;
     }
+
+    // ── Playground 模式：模拟上传，不调用 GitHub API ──
+    if (playgroundMode) {
+      setIsSubmitting(true);
+      setSubmitResult(null);
+
+      // 模拟网络延迟
+      await new Promise(resolve => setTimeout(resolve, 800));
+
+      const tags = tagInput.split(/[,，\s]+/).filter(Boolean);
+
+      // 成功动画
+      setShowSuccessAnimation(true);
+      setSubmitResult({ success: true, message: '✨ ' + t('uploader.success') });
+
+      // 构造模拟节点
+      const newNode: KnowledgeNode = {
+        id: `playground-${Date.now()}`,
+        title_zh: thought.length > 30 ? thought.slice(0, 28) + '…' : thought,
+        title_en: creator || 'Playground Visitor',
+        layer: TYPE_TO_LAYER[type],
+        discipline: TYPE_TO_DISCIPLINE[type],
+        summary: thought + (context ? `\n\n**${t('uploader.context')}**: ${context}` : ''),
+        thumbnail: null,
+        importance: Math.min(10, 5 + Math.floor(thought.length / 50)),
+        tags: [...tags, type, 'playground'],
+      };
+
+      onUploadSuccess(newNode);
+
+      // 显示 CTA 引导安装
+      setTimeout(() => {
+        setShowSuccessAnimation(false);
+        setShowPlaygroundCTA(true);
+      }, 3000);
+
+      setTimeout(() => {
+        setThought('');
+        setContext('');
+        setTagInput('');
+        setSubmitResult(null);
+      }, 3500);
+
+      setIsSubmitting(false);
+      return;
+    }
+
+    // ── 正常模式：需要 Token ──
     if (!token.trim()) {
       setShowTokenInput(true);
       setSubmitResult({ success: false, message: t('uploader.tokenRequired') });
@@ -220,7 +291,7 @@ export default function ConsciousnessUploader({ onUploadSuccess }: Props) {
     }
 
     setIsSubmitting(false);
-  }, [thought, context, creator, tagInput, isAnonymous, token, type, onUploadSuccess, t]);
+  }, [thought, context, creator, tagInput, isAnonymous, token, type, onUploadSuccess, t, playgroundMode]);
 
   const charCount = thought.trim().length;
   const isValid = charCount >= 20;
@@ -268,7 +339,7 @@ export default function ConsciousnessUploader({ onUploadSuccess }: Props) {
         }}
       >
         <span style={{ fontSize: 20 }}>✨</span>
-        <span>{t('uploader.subtitle')}</span>
+        <span>{playgroundMode ? t('uploader.playgroundSubtitle') : t('uploader.subtitle')}</span>
       </button>
     );
   }
@@ -374,6 +445,125 @@ export default function ConsciousnessUploader({ onUploadSuccess }: Props) {
         >
           ✕
         </button>
+      </div>
+
+      {/* Playground 模式横幅 */}
+      {playgroundMode && (
+        <div style={{
+          marginBottom: 14,
+          padding: '10px 14px',
+          borderRadius: 10,
+          fontSize: 12,
+          background: 'rgba(123, 97, 255, 0.08)',
+          border: '1px solid rgba(123, 97, 255, 0.2)',
+          color: '#b8a9ff',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+        }}>
+          <span style={{ fontSize: 16 }}>🎮</span>
+          <span>{t('uploader.playgroundBanner')}</span>
+        </div>
+      )}
+
+      {/* Playground CTA — 上传成功后引导安装 */}
+      {showPlaygroundCTA && (
+        <div style={{
+          marginBottom: 14,
+          padding: '16px',
+          borderRadius: 14,
+          background: 'linear-gradient(135deg, rgba(0, 232, 120, 0.08), rgba(123, 97, 255, 0.08))',
+          border: '1px solid rgba(0, 232, 120, 0.2)',
+          textAlign: 'center',
+          animation: 'fadeIn 0.4s ease',
+        }}>
+          <div style={{ fontSize: 14, fontWeight: 600, color: '#00e878', marginBottom: 8 }}>
+            {t('uploader.playgroundCTATitle')}
+          </div>
+          <div style={{ fontSize: 11, opacity: 0.6, marginBottom: 12, lineHeight: 1.6 }}>
+            {t('uploader.playgroundCTADesc')}
+          </div>
+          <code style={{
+            display: 'inline-block',
+            padding: '8px 16px',
+            borderRadius: 8,
+            background: 'rgba(0, 0, 0, 0.3)',
+            fontFamily: "'Fira Code', 'Consolas', monospace",
+            fontSize: 12,
+            color: '#00e878',
+            letterSpacing: '0.03em',
+          }}>
+            pip install noosphere-mcp
+          </code>
+          <button
+            onClick={() => setShowPlaygroundCTA(false)}
+            style={{
+              display: 'block',
+              margin: '12px auto 0',
+              fontSize: 11,
+              color: 'rgba(255,255,255,0.3)',
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              fontFamily: "'Inter', sans-serif",
+            }}
+          >
+            ✕ {t('common.close')}
+          </button>
+        </div>
+      )}
+
+      {/* 🐾 动物意识快速上传 */}
+      <div style={{ marginBottom: 14 }}>
+        <button
+          onClick={() => setShowAnimalPresets(!showAnimalPresets)}
+          style={{
+            fontSize: 12,
+            color: showAnimalPresets ? '#ff69b4' : 'rgba(255,255,255,0.4)',
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            fontFamily: "'Inter', sans-serif",
+            padding: 0,
+            transition: 'color 0.2s',
+          }}
+        >
+          🐾 {t('uploader.animalTitle')} {showAnimalPresets ? '▲' : '▼'}
+        </button>
+        {showAnimalPresets && (
+          <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
+            {ANIMAL_PRESETS.map(preset => (
+              <button
+                key={preset.key}
+                onClick={() => applyAnimalPreset(preset.key)}
+                style={{
+                  flex: 1,
+                  padding: '10px 6px',
+                  border: '1px solid rgba(255, 105, 180, 0.15)',
+                  borderRadius: 10,
+                  background: 'rgba(255, 105, 180, 0.05)',
+                  color: '#ff69b4',
+                  fontSize: 12,
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                  fontFamily: "'Inter', sans-serif",
+                  textAlign: 'center',
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.background = 'rgba(255, 105, 180, 0.12)';
+                  e.currentTarget.style.borderColor = 'rgba(255, 105, 180, 0.3)';
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.background = 'rgba(255, 105, 180, 0.05)';
+                  e.currentTarget.style.borderColor = 'rgba(255, 105, 180, 0.15)';
+                }}
+              >
+                {preset.icon}<br />
+                <span style={{ fontSize: 10 }}>{t(preset.labelKey)}</span>
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* 意识类型选择 */}

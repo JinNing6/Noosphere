@@ -117,6 +117,28 @@ const en = {
     collapse: 'Collapse',
     expand: 'Expand',
     footer: 'Your consciousness will be preserved as a GitHub Issue — eternal digital heritage',
+    playgroundSubtitle: 'Try uploading (no login)',
+    playgroundBanner: 'Playground Mode — simulated upload, no GitHub Token needed',
+    playgroundCTATitle: 'Want to save it permanently?',
+    playgroundCTADesc: 'Install the MCP Server to upload real consciousness fragments from your AI IDE',
+    animalTitle: 'Animal Consciousness Quick Upload',
+    animal: {
+      cat: 'Cat Purr',
+      whale: 'Whale Song',
+      dog: 'Dog Bark',
+    },
+  },
+
+  onboarding: {
+    step1Title: 'Upload Your Thought',
+    step1Desc: 'Share your first epiphany with the Consciousness Globe — any insight, pattern, or warning',
+    step2Title: 'Search Consciousness',
+    step2Desc: 'Explore thoughts from minds worldwide — discover unexpected connections',
+    step3Title: 'Feel the Resonance',
+    step3Desc: 'Click any glowing node on the globe to read and resonate with collective wisdom',
+    skip: 'Skip',
+    next: 'Next →',
+    finish: 'Start Exploring ✨',
   },
 
   intro: {
