@@ -468,10 +468,14 @@ The Virtual Universe possesses a highly ritualistic and sci-fi cultivation-style
 The leaderboard is auto-generated based on **real GitHub API Commit stats**, updated weekly by the [GitHub Actions Bot](.github/workflows/update-contributors.yml). **Total Psi = Commits × 10**.
 
 <!-- AUTO-UPDATE-START: contributor-rankings -->
-> *The universe is currently in its singularity phase, awaiting the descent of the first Stardust Walkers...*
+> *目前宇宙还处于奇点阶段，等待第一批星尘行者的降临...*
 
-> 🌐 **Cosmic Energy Metrics** — ⭐ Stars: **1** | 🍴 Forks: **0** | 👁️ Watchers: **0** | 🧠 Consciousness Payload: **2**
-> 🤖 *Last automated update: `2026-03-12 11:21 (UTC+8)`*
+> **📤 意识上传者排行 (Top Consciousness Uploaders)**
+>
+> 🥇 **[JinNing6](https://github.com/JinNing6)** — 13 次上传 [![badge](https://noosphere-badge.vercel.app/api/rank/JinNing6)](https://jinning6.github.io/Noosphere/?profile=JinNing6)
+
+> 🌐 **宇宙能量指标** — ⭐ Stars: **10** | 🍴 Forks: **1** | 👁️ Watchers: **1** | 🧠 意识载荷: **54** 个
+> 🤖 *上次自动更新：`2026-03-30 09:24 (UTC+8)`*
 <!-- AUTO-UPDATE-END: contributor-rankings -->
 
 > *Note: These paramount wills are shaping the entire stellar network. Click the top animation to enter the [Interactive Universe](https://jinning6.github.io/Noosphere/), pull up the "🌌 Consciousness Heat Network" panel on the bottom right, and view the ultimate visual form: dark cyber glass textures paired with exclusive neon glowing badges for each tier.*
