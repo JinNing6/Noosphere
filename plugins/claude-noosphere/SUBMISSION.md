@@ -57,7 +57,9 @@ Inside Claude Code:
 Official submission targets:
 
 1) https://claude.com/docs/plugins/submit  
-2) `claude.ai/settings/plugins/submit` (or `platform.claude.com/plugins/submit`)
+2) `claude.ai/settings/plugins/submit` (or `platform.claude.com/plugins/submit`)  
+   - If these links are not reachable directly, open through an authenticated Claude session and navigate to **Settings → Plugins → Submit**.
+   - Official short-link: `https://clau.de/plugin-directory-submission` (docs redirect; clicks from there open the same in-app form)
 
 Do this in order:
 
