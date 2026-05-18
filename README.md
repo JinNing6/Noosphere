@@ -58,6 +58,26 @@
 
 </div>
 
+---
+
+<div align="center">
+
+## Live Now: GitHub-Installable Agent Marketplaces
+
+### Noosphere is installable today in Codex and Claude Code.
+
+</div>
+
+> [!IMPORTANT]
+> Noosphere is **live as a GitHub-installable marketplace**. Users can add this repository as a marketplace today. It is not yet listed in a curated OpenAI marketplace or the official Claude `claude-plugins-official` directory; Claude official directory submission is the next stage after collecting real installs, real bug-save stories, and usage proof.
+
+| Platform | Current status | Install |
+|---|---|---|
+| Codex | Live via this repository's Codex marketplace | `codex plugin marketplace add JinNing6/Noosphere` |
+| Claude Code | Live via this repository's Claude marketplace | `/plugin marketplace add JinNing6/Noosphere` then `/plugin install noosphere@noosphere-agent-memory` |
+| Official plugin directories | Claude submission-ready; Codex remains GitHub-marketplace first until an official OpenAI submission route is available | Use `plugins/claude-noosphere/SUBMISSION.md` and the bundled plugin assets for review. |
+
+**Installable today. Official directory submission next.**
 
 ---
 
