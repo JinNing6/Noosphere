@@ -1,0 +1,18 @@
+{
+  "mcp_servers": {
+    "noosphere": {
+      "command": "uvx",
+      "args": [
+        "noosphere-mcp"
+      ],
+      "env": {
+        "NOOSPHERE_REPO": "JinNing6/Noosphere"
+      },
+      "env_vars": [
+        "GITHUB_TOKEN"
+      ],
+      "startup_timeout_sec": 20,
+      "tool_timeout_sec": 120
+    }
+  }
+}

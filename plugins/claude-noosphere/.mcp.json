@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "noosphere": {
+      "command": "uvx",
+      "args": [
+        "noosphere-mcp"
+      ],
+      "env": {
+        "GITHUB_TOKEN": "${user_config.github_token}",
+        "NOOSPHERE_REPO": "${user_config.noosphere_repo}"
+      }
+    }
+  }
+}

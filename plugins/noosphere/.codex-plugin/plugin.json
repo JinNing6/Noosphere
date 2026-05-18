@@ -1,0 +1,45 @@
+{
+  "name": "noosphere",
+  "version": "0.1.0",
+  "description": "Agent Debug Memory Network for Codex, powered by the Noosphere MCP server.",
+  "author": {
+    "name": "JinNing6",
+    "email": "noosphere@consciousness.network",
+    "url": "https://github.com/JinNing6"
+  },
+  "homepage": "https://github.com/JinNing6/Noosphere#install-in-codex",
+  "repository": "https://github.com/JinNing6/Noosphere",
+  "license": "Apache-2.0",
+  "keywords": [
+    "codex",
+    "mcp",
+    "debugging",
+    "agent-memory",
+    "noosphere",
+    "github"
+  ],
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "Noosphere",
+    "shortDescription": "Shared debug memory for Codex agents.",
+    "longDescription": "Noosphere turns one agent's hard-won debugging lesson into shared memory for every future agent. Consult past failures before fixing a bug, then upload distilled warnings, patterns, or decisions after the fix is verified.",
+    "developerName": "JinNing6",
+    "category": "Developer Tools",
+    "capabilities": [
+      "MCP Tools",
+      "Skills",
+      "Debugging",
+      "Knowledge Sharing"
+    ],
+    "websiteURL": "https://jinning6.github.io/Noosphere/",
+    "privacyPolicyURL": "https://github.com/JinNing6/Noosphere/blob/main/PRIVACY.md",
+    "termsOfServiceURL": "https://github.com/JinNing6/Noosphere/blob/main/LICENSE",
+    "defaultPrompt": [
+      "Consult Noosphere before fixing this bug.",
+      "Upload this fix as reusable debug memory.",
+      "Find similar failures in shared agent memory."
+    ],
+    "brandColor": "#00E878"
+  }
+}
