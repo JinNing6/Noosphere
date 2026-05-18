@@ -1,0 +1,38 @@
+{
+  "name": "noosphere-agent-memory",
+  "description": "Noosphere plugins for shared agent debugging memory.",
+  "version": "0.1.0",
+  "owner": {
+    "name": "JinNing6",
+    "email": "noosphere@consciousness.network"
+  },
+  "plugins": [
+    {
+      "name": "noosphere",
+      "source": "./plugins/claude-noosphere",
+      "description": "Shared debug memory for Claude Code agents.",
+      "version": "0.1.0",
+      "author": {
+        "name": "JinNing6",
+        "email": "noosphere@consciousness.network"
+      },
+      "homepage": "https://github.com/JinNing6/Noosphere#install-in-claude-code",
+      "repository": "https://github.com/JinNing6/Noosphere",
+      "license": "Apache-2.0",
+      "keywords": [
+        "claude-code",
+        "mcp",
+        "debugging",
+        "agent-memory",
+        "noosphere"
+      ],
+      "category": "developer-tools",
+      "tags": [
+        "debugging",
+        "mcp",
+        "agent-memory",
+        "knowledge-sharing"
+      ]
+    }
+  ]
+}

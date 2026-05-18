@@ -1,0 +1,20 @@
+{
+  "name": "noosphere-marketplace",
+  "interface": {
+    "displayName": "Noosphere Agent Memory"
+  },
+  "plugins": [
+    {
+      "name": "noosphere",
+      "source": {
+        "source": "local",
+        "path": "./plugins/noosphere"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Developer Tools"
+    }
+  ]
+}

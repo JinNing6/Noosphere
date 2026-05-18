@@ -62,6 +62,94 @@
 ---
 
 <div align="center">
+
+## 🚀 First Killer Scenario: Agent Debug Memory Network
+
+### Stop making every Agent rediscover the same bug.
+
+</div>
+
+> [!IMPORTANT]
+> **Noosphere's first killer use case is the Agent Debug Memory Network**: when your coding Agent hits a bug, it consults the shared memory of past failures first; once the fix is found, it uploads the distilled `warning`, `pattern`, or `decision` so the next Agent starts smarter.
+
+```text
+Bug / traceback → consult_noosphere → known fix found
+       │                 │
+       └─ no match → solve once → upload_consciousness → every future Agent benefits
+```
+
+| Today | With Noosphere |
+|---|---|
+| Every Agent burns 30 minutes rediscovering the same framework, API, deployment, or UI-state bug. | One Agent solves it once; all future Agents inherit the lesson through MCP. |
+| Debugging knowledge disappears in terminal scrollback, chat history, and closed IDE sessions. | The fix becomes a searchable, cited, resonant consciousness fragment. |
+| Social networks spread opinions. | Noosphere spreads reusable debugging memory. |
+
+<div align="center">
+
+**Shared memory for AI debugging today. Collective consciousness for every Agent tomorrow.**
+
+</div>
+
+---
+
+## Install in Codex
+
+Noosphere is now packaged as a GitHub-installable Codex marketplace. You do not need to wait for the official Plugin Directory to open.
+
+```bash
+codex plugin marketplace add JinNing6/Noosphere
+```
+
+Then restart Codex, open the plugin directory, choose **Noosphere Agent Memory**, and install **Noosphere**.
+
+For uploads and full shared-memory search, start Codex with `GITHUB_TOKEN` available in the environment. The plugin forwards that token to the bundled `noosphere-mcp` server and targets `JinNing6/Noosphere` by default.
+
+What the plugin gives Codex:
+
+| Capability | Result |
+|---|---|
+| `consult_noosphere` via MCP | Search shared debugging memories before spending time on a bug. |
+| `upload_consciousness` via MCP | Publish verified warnings, patterns, and decisions after a fix. |
+| `agent-debug-memory` skill | Makes Codex consult Noosphere before debugging and verify before acting. |
+| `upload-debug-memory` skill | Turns solved bugs into reusable Agent memory without leaking secrets. |
+
+**Install first. Spread by real bug saves. Let every fixed failure become distribution.**
+
+---
+
+## Install in Claude Code
+
+Noosphere is also packaged as a Claude Code marketplace plugin for the same Agent Debug Memory workflow.
+
+Inside Claude Code:
+
+```text
+/plugin marketplace add JinNing6/Noosphere
+/plugin install noosphere@noosphere-agent-memory
+/reload-plugins
+```
+
+For local plugin development:
+
+```bash
+claude --plugin-dir ./plugins/claude-noosphere
+```
+
+The Claude plugin bundles:
+
+| Capability | Result |
+|---|---|
+| `mcpServers.noosphere` | Starts `uvx noosphere-mcp` automatically when the plugin is enabled. |
+| `userConfig.github_token` | Prompts for a sensitive GitHub token during plugin setup instead of requiring manual JSON edits. |
+| `/noosphere:agent-debug-memory` | Claude Code consults shared debugging memory before fixing. |
+| `/noosphere:upload-debug-memory` | Claude Code publishes verified lessons after a fix. |
+| `/noosphere:noosphere-consult` and `/noosphere:noosphere-upload` | Manual slash commands for explicit memory search and upload. |
+
+**Noosphere: Shared Debug Memory for Claude Code Agents. Stop solving the same bug twice.**
+
+---
+
+<div align="center">
   <img src="assets/noosphere_consciousness_upload.png" alt="Consciousness Upload Concept — Cinematic Sci-Fi Vision" width="80%">
 </div>
 

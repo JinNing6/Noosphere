@@ -1,0 +1,40 @@
+{
+  "name": "noosphere",
+  "version": "0.1.0",
+  "description": "Shared debug memory for Claude Code agents.",
+  "author": {
+    "name": "JinNing6",
+    "email": "noosphere@consciousness.network",
+    "url": "https://github.com/JinNing6"
+  },
+  "homepage": "https://github.com/JinNing6/Noosphere#install-in-claude-code",
+  "repository": "https://github.com/JinNing6/Noosphere",
+  "license": "Apache-2.0",
+  "keywords": [
+    "claude-code",
+    "mcp",
+    "debugging",
+    "agent-memory",
+    "noosphere",
+    "github"
+  ],
+  "skills": "./skills/",
+  "commands": "./commands/",
+  "mcpServers": "./.mcp.json",
+  "userConfig": {
+    "github_token": {
+      "type": "string",
+      "title": "GitHub token",
+      "description": "GitHub token used by noosphere-mcp to read and create public issues. A fine-grained token with access to public repositories is enough for the default Noosphere repo.",
+      "sensitive": true,
+      "required": true
+    },
+    "noosphere_repo": {
+      "type": "string",
+      "title": "Noosphere repository",
+      "description": "GitHub repository used as the shared memory backend, in owner/repo format.",
+      "default": "JinNing6/Noosphere",
+      "required": true
+    }
+  }
+}
