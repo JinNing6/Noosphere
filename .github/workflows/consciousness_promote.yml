@@ -1,6 +1,7 @@
 name: 🌌 Consciousness Promotion (意识晋升流水线)
 
-# Trigger on Issue creation with 'consciousness' label
+# Trigger on Issue creation or labeling. The job parses the Issue body and only
+# promotes Issues that contain a recognized Noosphere payload.
 on:
   issues:
     types: [opened, labeled]
@@ -13,10 +14,7 @@ jobs:
   promote_consciousness:
     name: 🧠 Validate & Promote Consciousness
     runs-on: ubuntu-latest
-    # Only run if the issue has the 'consciousness' AND 'ephemeral' labels
-    if: |
-      contains(github.event.issue.labels.*.name, 'consciousness') &&
-      contains(github.event.issue.labels.*.name, 'ephemeral')
+    if: github.event.issue.state == 'open'
 
     steps:
       - name: 🌐 Checkout Repository
@@ -36,45 +34,26 @@ jobs:
           script: |
             const issue = context.payload.issue;
             const body = issue.body || '';
+            const {
+              extractConsciousnessPayload,
+              getMediaModerationTarget,
+            } = require(`${process.env.GITHUB_WORKSPACE}/.github/scripts/consciousness-payload.cjs`);
 
-            // Extract payload to check consciousness_type
-            const startMarker = '<!-- CONSCIOUSNESS_PAYLOAD_START -->';
-            const endMarker = '<!-- CONSCIOUSNESS_PAYLOAD_END -->';
-            const startIdx = body.indexOf(startMarker);
-            const endIdx = body.indexOf(endMarker);
-
-            if (startIdx === -1 || endIdx === -1) {
-              console.log('No payload found, skipping content safety.');
+            const extracted = extractConsciousnessPayload(body);
+            if (!extracted) {
+              console.log('No Noosphere payload found, skipping content safety.');
               return 'SKIP';
             }
 
-            let block = body.substring(startIdx + startMarker.length, endIdx).trim();
-            if (block.startsWith('```json')) block = block.substring(7).trim();
-            if (block.startsWith('```')) block = block.substring(3).trim();
-            if (block.endsWith('```')) block = block.substring(0, block.length - 3).trim();
-
-            let payload;
-            try { payload = JSON.parse(block); } catch (e) { return 'SKIP'; }
-
-            const MEDIA_TYPES = ['image', 'video'];
-            const cType = payload.consciousness_type;
-
-            if (!MEDIA_TYPES.includes(cType)) {
-              console.log(`Type '${cType}' is not visual media, skipping NudeNet.`);
-              return 'SKIP';
-            }
-
-            // Get media URL
-            const mediaUrlKey = cType === 'video' ? 'video_url' : 'image_url';
-            const mediaUrl = payload[mediaUrlKey];
-            if (!mediaUrl) {
-              console.log('No media URL found in payload, skipping.');
+            const mediaTarget = getMediaModerationTarget(extracted.payload);
+            if (!mediaTarget) {
+              console.log(`Payload source '${extracted.source}' is not visual media, skipping NudeNet.`);
               return 'SKIP';
             }
 
             // Set outputs for the Python step
-            core.exportVariable('MEDIA_URL', mediaUrl);
-            core.exportVariable('MEDIA_TYPE', cType);
+            core.exportVariable('MEDIA_URL', mediaTarget.mediaUrl);
+            core.exportVariable('MEDIA_TYPE', mediaTarget.mediaType);
             core.exportVariable('ISSUE_NUMBER', issue.number.toString());
             return 'CHECK';
 
@@ -157,77 +136,19 @@ jobs:
           script: |
             const issue = context.payload.issue;
             const body = issue.body || '';
+            const {
+              extractConsciousnessPayload,
+            } = require(`${process.env.GITHUB_WORKSPACE}/.github/scripts/consciousness-payload.cjs`);
 
             // ── Step 1: Extract payload from Issue body ──
-            const startMarker = '<!-- CONSCIOUSNESS_PAYLOAD_START -->';
-            const endMarker = '<!-- CONSCIOUSNESS_PAYLOAD_END -->';
-
-            const startIdx = body.indexOf(startMarker);
-            const endIdx = body.indexOf(endMarker);
-
-            if (startIdx === -1 || endIdx === -1) {
-              console.log('No payload markers found, skipping.');
-              await github.rest.issues.addLabels({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: issue.number,
-                labels: ['filtered']
-              });
-              await github.rest.issues.createComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: issue.number,
-                body: '❌ **Consciousness Filtered**: No valid payload block found in Issue body.\n\n' +
-                      'Please use the Noosphere MCP tool to upload consciousness correctly.'
-              });
-              await github.rest.issues.update({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: issue.number,
-                state: 'closed'
-              });
+            const extracted = extractConsciousnessPayload(body);
+            if (!extracted) {
+              console.log('No Noosphere payload found, leaving Issue unchanged.');
               return;
             }
 
-            let block = body.substring(startIdx + startMarker.length, endIdx).trim();
-
-            // Remove ```json ... ``` wrapper
-            if (block.startsWith('```json')) {
-              block = block.substring('```json'.length).trim();
-            }
-            if (block.startsWith('```')) {
-              block = block.substring(3).trim();
-            }
-            if (block.endsWith('```')) {
-              block = block.substring(0, block.length - 3).trim();
-            }
-
-            let payload;
-            try {
-              payload = JSON.parse(block);
-            } catch (e) {
-              console.log('Invalid JSON payload:', e.message);
-              await github.rest.issues.addLabels({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: issue.number,
-                labels: ['filtered']
-              });
-              await github.rest.issues.createComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: issue.number,
-                body: '❌ **Consciousness Filtered**: Invalid JSON payload.\n\n' +
-                      `Parse error: ${e.message}`
-              });
-              await github.rest.issues.update({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: issue.number,
-                state: 'closed'
-              });
-              return;
-            }
+            const payload = extracted.payload;
+            console.log(`Noosphere payload found via ${extracted.source}.`);
 
             // ── Step 2: Validate payload fields ──
             const VALID_TYPES = ['epiphany', 'decision', 'pattern', 'warning', 'image', 'video', 'voice'];
@@ -496,7 +417,7 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: issue.number,
-              labels: ['promoted']
+              labels: ['consciousness', 'promoted']
             });
 
             await github.rest.issues.createComment({
