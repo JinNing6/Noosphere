@@ -1,0 +1,147 @@
+const assert = require("node:assert/strict");
+const fs = require("node:fs");
+const path = require("node:path");
+const test = require("node:test");
+
+const {
+  DEFAULT_EMBEDDING_MODEL,
+  applyEmbeddingToPayload,
+  buildEmbeddingText,
+  buildEmbedContentRequest,
+  extractEmbeddingValues,
+  generateEmbedding,
+} = require("./gemini-embedding.cjs");
+
+const repoRoot = path.join(__dirname, "..", "..");
+
+const basePayload = {
+  creator_signature: "debug-agent",
+  is_anonymous: true,
+  consciousness_type: "image",
+  thought_vector_text: "A white image triggered a discussion about absence and existence.",
+  context_environment: "Uploaded through Noosphere media consciousness.",
+  tags: ["philosophy", "visual-memory"],
+  image_url: "https://example.com/white.png",
+  image_format: "png",
+  image_size_bytes: 1119,
+  category: "art",
+};
+
+test("builds text-only Gemini embedding requests with the stable public model", () => {
+  const request = buildEmbedContentRequest(basePayload);
+
+  assert.equal(DEFAULT_EMBEDDING_MODEL, "gemini-embedding-001");
+  assert.equal(
+    request.url,
+    "https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-001:embedContent"
+  );
+  assert.equal(request.body.model, "models/gemini-embedding-001");
+  assert.deepEqual(Object.keys(request.body.content), ["parts"]);
+  assert.equal(request.body.content.parts.length, 1);
+  assert.match(request.body.content.parts[0].text, /white image/);
+  assert.doesNotMatch(JSON.stringify(request.body), /inline_data/);
+});
+
+test("includes media metadata in the unified text representation", () => {
+  const text = buildEmbeddingText(basePayload);
+
+  assert.match(text, /type: image/);
+  assert.match(text, /thought: A white image/);
+  assert.match(text, /context: Uploaded through Noosphere/);
+  assert.match(text, /tags: philosophy, visual-memory/);
+  assert.match(text, /image_url: https:\/\/example\.com\/white\.png/);
+  assert.match(text, /image_format: png/);
+  assert.match(text, /category: art/);
+});
+
+test("extracts embedding vectors from Gemini embedContent responses", () => {
+  assert.deepEqual(extractEmbeddingValues({ embedding: { values: [0.1, 0.2] } }), [0.1, 0.2]);
+  assert.deepEqual(extractEmbeddingValues({ embeddings: [{ values: [0.3, 0.4] }] }), [0.3, 0.4]);
+  assert.equal(extractEmbeddingValues({ embedding: { values: [] } }), null);
+});
+
+test("generateEmbedding sends the API key in a header and never in the URL", async () => {
+  let observed;
+  const result = await generateEmbedding(basePayload, {
+    apiKey: "test-secret",
+    fetchImpl: async (url, options) => {
+      observed = { url, options };
+      return {
+        ok: true,
+        status: 200,
+        async json() {
+          return { embedding: { values: [0.5, 0.6, 0.7] } };
+        },
+      };
+    },
+  });
+
+  assert.deepEqual(result.embedding, [0.5, 0.6, 0.7]);
+  assert.equal(observed.url.includes("test-secret"), false);
+  assert.equal(observed.options.headers["x-goog-api-key"], "test-secret");
+  assert.equal(JSON.parse(observed.options.body).model, "models/gemini-embedding-001");
+});
+
+test("applyEmbeddingToPayload annotates successful payload embeddings", async () => {
+  const payload = { ...basePayload };
+
+  const result = await applyEmbeddingToPayload(payload, {
+    apiKey: "test-secret",
+    now: () => new Date("2026-05-28T12:00:00.000Z"),
+    fetchImpl: async () => ({
+      ok: true,
+      status: 200,
+      async json() {
+        return { embedding: { values: [0.8, 0.9] } };
+      },
+    }),
+  });
+
+  assert.equal(result.status, "ok");
+  assert.deepEqual(payload.embedding, [0.8, 0.9]);
+  assert.equal(payload.embedding_model, "gemini-embedding-001");
+  assert.equal(payload.embedding_generated_at, "2026-05-28T12:00:00.000Z");
+});
+
+test("keeps payload embedding null when the Gemini key is missing", async () => {
+  const payload = { ...basePayload, embedding: [1, 2, 3] };
+
+  const result = await applyEmbeddingToPayload(payload, { apiKey: "" });
+
+  assert.equal(result.status, "missing-key");
+  assert.equal(payload.embedding, null);
+});
+
+test("promotion workflow uses the shared Gemini embedding helper", () => {
+  const workflow = fs.readFileSync(
+    path.join(repoRoot, ".github", "workflows", "consciousness_promote.yml"),
+    "utf8"
+  );
+
+  assert.match(workflow, /gemini-embedding\.cjs/);
+  assert.doesNotMatch(workflow, /gemini-embedding-2-preview/);
+});
+
+test("manual key check workflow calls the safe Gemini probe command", () => {
+  const workflow = fs.readFileSync(
+    path.join(repoRoot, ".github", "workflows", "gemini_key_check.yml"),
+    "utf8"
+  );
+
+  assert.match(workflow, /workflow_dispatch:/);
+  assert.match(workflow, /GEMINI_API_KEY: \$\{\{ secrets\.GEMINI_API_KEY \}\}/);
+  assert.match(workflow, /node \.github\/scripts\/gemini-embedding\.cjs check/);
+});
+
+test("backfill workflow can update historical payload embeddings", () => {
+  const workflow = fs.readFileSync(
+    path.join(repoRoot, ".github", "workflows", "backfill_embeddings.yml"),
+    "utf8"
+  );
+
+  assert.match(workflow, /workflow_dispatch:/);
+  assert.match(workflow, /contents: write/);
+  assert.match(workflow, /args=\(backfill --dir consciousness_payloads\)/);
+  assert.match(workflow, /node \.github\/scripts\/gemini-embedding\.cjs "\$\{args\[@\]\}"/);
+  assert.match(workflow, /concurrency:/);
+});

@@ -1,0 +1,88 @@
+name: Backfill Gemini Embeddings
+
+on:
+  workflow_dispatch:
+    inputs:
+      limit:
+        description: Maximum number of payload files to backfill in this run. Use 0 for all.
+        required: false
+        default: "50"
+      dry_run:
+        description: Check payloads without committing embedding changes.
+        required: false
+        type: boolean
+        default: false
+      force:
+        description: Regenerate embeddings even when a payload already has one.
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: gemini-embedding-backfill-main
+  cancel-in-progress: false
+
+jobs:
+  backfill:
+    name: Backfill historical payload embeddings
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Generate missing embeddings
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_EMBEDDING_MODEL: gemini-embedding-001
+          BACKFILL_LIMIT: ${{ inputs.limit }}
+          BACKFILL_DRY_RUN: ${{ inputs.dry_run }}
+          BACKFILL_FORCE: ${{ inputs.force }}
+        run: |
+          set -euo pipefail
+
+          args=(backfill --dir consciousness_payloads)
+          if [ -n "$BACKFILL_LIMIT" ]; then
+            args+=(--limit "$BACKFILL_LIMIT")
+          fi
+          if [ "$BACKFILL_DRY_RUN" = "true" ]; then
+            args+=(--dry-run)
+          fi
+          if [ "$BACKFILL_FORCE" = "true" ]; then
+            args+=(--force)
+          fi
+
+          node .github/scripts/gemini-embedding.cjs "${args[@]}"
+
+      - name: Commit embedding updates
+        env:
+          BACKFILL_DRY_RUN: ${{ inputs.dry_run }}
+        run: |
+          set -euo pipefail
+
+          if [ "$BACKFILL_DRY_RUN" = "true" ]; then
+            echo "Dry run requested; skipping commit."
+            exit 0
+          fi
+
+          if git diff --quiet -- consciousness_payloads; then
+            echo "No embedding changes to commit."
+            exit 0
+          fi
+
+          git config user.name "Noosphere Bot"
+          git config user.email "noosphere-bot@users.noreply.github.com"
+          git add consciousness_payloads
+          git commit -m "Backfill Gemini embeddings"
+          git pull --rebase origin main
+          git push origin HEAD:main
