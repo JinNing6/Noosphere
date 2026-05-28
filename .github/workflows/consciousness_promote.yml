@@ -6,6 +6,10 @@ on:
   issues:
     types: [opened, labeled]
 
+concurrency:
+  group: consciousness-promotion-main
+  cancel-in-progress: false
+
 permissions:
   contents: write
   issues: write

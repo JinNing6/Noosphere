@@ -1,4 +1,6 @@
 const assert = require("node:assert/strict");
+const fs = require("node:fs");
+const path = require("node:path");
 const test = require("node:test");
 
 const {
@@ -70,4 +72,14 @@ test("detects visual media targets for NudeNet moderation", () => {
 
 test("skips non-media payloads for NudeNet moderation", () => {
   assert.equal(getMediaModerationTarget(validPayload), null);
+});
+
+test("serializes promotion workflow runs to prevent main branch write races", () => {
+  const workflowPath = path.join(__dirname, "..", "workflows", "consciousness_promote.yml");
+  const workflow = fs.readFileSync(workflowPath, "utf8");
+
+  assert.match(
+    workflow,
+    /concurrency:\s*\r?\n\s*group:\s*consciousness-promotion-main\s*\r?\n\s*cancel-in-progress:\s*false/
+  );
 });
