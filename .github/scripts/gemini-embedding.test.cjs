@@ -82,6 +82,27 @@ test("generateEmbedding sends the API key in a header and never in the URL", asy
   assert.equal(JSON.parse(observed.options.body).model, "models/gemini-embedding-001");
 });
 
+test("generateEmbedding passes an abort signal to fetch", async () => {
+  let observedSignal;
+  const result = await generateEmbedding(basePayload, {
+    apiKey: "test-secret",
+    timeoutMs: 500,
+    fetchImpl: async (_url, options) => {
+      observedSignal = options.signal;
+      return {
+        ok: true,
+        status: 200,
+        async json() {
+          return { embedding: { values: [0.1, 0.2, 0.3] } };
+        },
+      };
+    },
+  });
+
+  assert.equal(result.status, "ok");
+  assert.equal(observedSignal instanceof AbortSignal, true);
+});
+
 test("applyEmbeddingToPayload annotates successful payload embeddings", async () => {
   const payload = { ...basePayload };
 

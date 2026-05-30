@@ -4,6 +4,7 @@ const path = require("node:path");
 const DEFAULT_EMBEDDING_MODEL = "gemini-embedding-001";
 const GEMINI_API_BASE = "https://generativelanguage.googleapis.com/v1beta";
 const MAX_EMBEDDING_TEXT_CHARS = 30000;
+const DEFAULT_REQUEST_TIMEOUT_MS = 15000;
 
 const MEDIA_METADATA_FIELDS = [
   "image_url",
@@ -123,6 +124,27 @@ async function readResponseText(response) {
   }
 }
 
+function createTimeoutSignal(timeoutMs) {
+  if (!timeoutMs || timeoutMs <= 0 || typeof AbortSignal === "undefined") {
+    return { signal: undefined, cancel: () => {} };
+  }
+
+  if (typeof AbortSignal.timeout === "function") {
+    return { signal: AbortSignal.timeout(timeoutMs), cancel: () => {} };
+  }
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+  return {
+    signal: controller.signal,
+    cancel: () => clearTimeout(timeoutId),
+  };
+}
+
+function isTimeoutLikeError(error) {
+  return ["AbortError", "TimeoutError"].includes(error?.name);
+}
+
 async function generateEmbedding(payload, options = {}) {
   const apiKey = String(options.apiKey || "").trim();
   if (!apiKey) {
@@ -140,14 +162,35 @@ async function generateEmbedding(payload, options = {}) {
     return { status: "empty-content", error: "Payload has no embeddable text" };
   }
 
-  const response = await fetchImpl(request.url, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-goog-api-key": apiKey,
-    },
-    body: JSON.stringify(request.body),
-  });
+  const timeoutMs = Number.parseInt(options.timeoutMs || DEFAULT_REQUEST_TIMEOUT_MS, 10);
+  const timeout = createTimeoutSignal(timeoutMs);
+  let response;
+  try {
+    response = await fetchImpl(request.url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-goog-api-key": apiKey,
+      },
+      body: JSON.stringify(request.body),
+      signal: timeout.signal,
+    });
+  } catch (error) {
+    if (isTimeoutLikeError(error)) {
+      return {
+        status: "timeout",
+        model: request.model,
+        error: `Gemini embedding request timed out after ${timeoutMs} ms`,
+      };
+    }
+    return {
+      status: "network-error",
+      model: request.model,
+      error: error?.message || String(error),
+    };
+  } finally {
+    timeout.cancel();
+  }
 
   if (!response.ok) {
     const body = await readResponseText(response);
@@ -371,6 +414,7 @@ if (require.main === module) {
 
 module.exports = {
   DEFAULT_EMBEDDING_MODEL,
+  DEFAULT_REQUEST_TIMEOUT_MS,
   applyEmbeddingToPayload,
   backfillEmbeddings,
   buildEmbeddingText,
