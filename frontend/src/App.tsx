@@ -22,6 +22,7 @@ import ConsciousnessUploader from './components/ConsciousnessUploader';
 import LanguageSwitcher from './components/LanguageSwitcher';
 import ProfilePage from './components/ProfilePage';
 import OnboardingGuide from './components/OnboardingGuide';
+import AhaMomentDock from './components/AhaMomentDock';
 import type { KnowledgeNode } from './data/knowledge';
 import { fetchConsciousnessPayloads } from './data/knowledge';
 import SplashScreen from './components/SplashScreen';
@@ -54,6 +55,7 @@ export default function App() {
 function MainApp({ isPlayground = false }: { isPlayground?: boolean }) {
   const [selectedNode, setSelectedNode] = useState<KnowledgeNode | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isUploaderOpen, setIsUploaderOpen] = useState(false);
   // splashDone = false → SplashScreen 遮罩 + 3D 后台预热
   // splashDone = true  → SplashScreen 消失 + 3D 已渲染好直接显示
   const [splashDone, setSplashDone] = useState(false);
@@ -83,6 +85,10 @@ function MainApp({ isPlayground = false }: { isPlayground?: boolean }) {
   // 在线意识上传成功后，将新节点追加到动态意识体列表
   const addDynamicNode = useCallback((node: KnowledgeNode) => {
     setDynamicNodes(prev => [node, ...prev]);
+  }, []);
+
+  const handleOpenUploader = useCallback(() => {
+    setIsUploaderOpen(true);
   }, []);
 
   const handleBootComplete = useCallback(() => {
@@ -128,6 +134,14 @@ function MainApp({ isPlayground = false }: { isPlayground?: boolean }) {
         {/* 搜索栏 */}
         <SearchBar onSearch={handleSearch} />
 
+        {/* 首屏 aha moment：调试记忆即时收益 + 贡献闭环 */}
+        <AhaMomentDock
+          dynamicNodes={dynamicNodes}
+          isUploaderOpen={isUploaderOpen}
+          onSearch={handleSearch}
+          onOpenUploader={handleOpenUploader}
+        />
+
         {/* 语言切换器 */}
         <LanguageSwitcher />
 
@@ -144,10 +158,15 @@ function MainApp({ isPlayground = false }: { isPlayground?: boolean }) {
         <ContributionGraph />
 
         {/* 在线意识上传面板 — 零门槛体验核心 */}
-        <ConsciousnessUploader onUploadSuccess={addDynamicNode} playgroundMode={isPlayground} />
+        <ConsciousnessUploader
+          onUploadSuccess={addDynamicNode}
+          playgroundMode={isPlayground}
+          open={isUploaderOpen}
+          onOpenChange={setIsUploaderOpen}
+        />
 
         {/* 首次访问 Onboarding 引导 */}
-        {splashDone && <OnboardingGuide />}
+        {splashDone && <OnboardingGuide delayMs={30000} />}
 
         {/* Playground 模式顶部横幅 */}
         {isPlayground && (
@@ -188,4 +207,3 @@ function MainApp({ isPlayground = false }: { isPlayground?: boolean }) {
     </div>
   );
 }
-

@@ -144,11 +144,13 @@ const ANIMAL_PRESETS = [
 interface Props {
   onUploadSuccess: (node: KnowledgeNode) => void;
   playgroundMode?: boolean;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
-export default function ConsciousnessUploader({ onUploadSuccess, playgroundMode = false }: Props) {
+export default function ConsciousnessUploader({ onUploadSuccess, playgroundMode = false, open, onOpenChange }: Props) {
   const { t } = useTranslation();
-  const [isOpen, setIsOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
   const [showTokenInput, setShowTokenInput] = useState(false);
 
   // 表单状态
@@ -168,6 +170,15 @@ export default function ConsciousnessUploader({ onUploadSuccess, playgroundMode 
   const [showAnimalPresets, setShowAnimalPresets] = useState(false);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const isControlledOpen = open !== undefined;
+  const isOpen = open ?? internalOpen;
+
+  const setOpen = useCallback((nextOpen: boolean) => {
+    if (!isControlledOpen) {
+      setInternalOpen(nextOpen);
+    }
+    onOpenChange?.(nextOpen);
+  }, [isControlledOpen, onOpenChange]);
 
   // 打开面板时聚焦文本框
   useEffect(() => {
@@ -303,7 +314,7 @@ export default function ConsciousnessUploader({ onUploadSuccess, playgroundMode 
     return (
       <button
         id="consciousness-upload-trigger"
-        onClick={() => setIsOpen(true)}
+        onClick={() => setOpen(true)}
         style={{
           position: 'absolute',
           bottom: 28,
@@ -420,7 +431,7 @@ export default function ConsciousnessUploader({ onUploadSuccess, playgroundMode 
         </div>
         <button
           id="close-uploader"
-          onClick={() => setIsOpen(false)}
+          onClick={() => setOpen(false)}
           style={{
             width: 32, height: 32,
             border: '1px solid rgba(255,255,255,0.06)',

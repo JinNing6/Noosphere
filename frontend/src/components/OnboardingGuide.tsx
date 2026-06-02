@@ -51,49 +51,17 @@ const STEPS: OnboardingStep[] = [
   },
 ];
 
-export default function OnboardingGuide() {
+interface OnboardingGuideProps {
+  delayMs?: number;
+}
+
+export default function OnboardingGuide({ delayMs = 1500 }: OnboardingGuideProps) {
   const { t } = useTranslation();
   const [currentStep, setCurrentStep] = useState(-1); // -1 = not started
   const [bubblePos, setBubblePos] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
   const [visible, setVisible] = useState(false);
 
-  // 检查是否需要显示引导
-  useEffect(() => {
-    try {
-      const done = localStorage.getItem(STORAGE_KEY);
-      if (!done) {
-        // 延迟 1 秒后开始引导（等待 UI 渲染完成）
-        const timer = setTimeout(() => {
-          setCurrentStep(0);
-          setVisible(true);
-        }, 1500);
-        return () => clearTimeout(timer);
-      }
-    } catch {
-      // localStorage 受限，跳过
-    }
-  }, []);
-
-  // 当前步骤变化时，定位气泡
-  useEffect(() => {
-    if (currentStep < 0 || currentStep >= STEPS.length) return;
-
-    const step = STEPS[currentStep];
-    const el = document.getElementById(step.targetId);
-
-    if (el) {
-      const rect = el.getBoundingClientRect();
-      const pos = calculatePosition(rect, step.position);
-      setBubblePos(pos);
-    } else if (step.fallbackPosition) {
-      setBubblePos({
-        top: (window.innerHeight * step.fallbackPosition.top) / 100,
-        left: (window.innerWidth * step.fallbackPosition.left) / 100,
-      });
-    }
-  }, [currentStep]);
-
-  const calculatePosition = (
+  const calculatePosition = useCallback((
     rect: DOMRect,
     position: OnboardingStep['position'],
   ): { top: number; left: number } => {
@@ -107,7 +75,56 @@ export default function OnboardingGuide() {
       default:
         return { top: rect.bottom + 16, left: rect.left };
     }
-  };
+  }, []);
+
+  const completeOnboarding = useCallback(() => {
+    setVisible(false);
+    try {
+      localStorage.setItem(STORAGE_KEY, 'true');
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  // 检查是否需要显示引导
+  useEffect(() => {
+    try {
+      const done = localStorage.getItem(STORAGE_KEY);
+      if (!done) {
+        // 延迟后开始引导（等待首屏价值展示完成）
+        const timer = setTimeout(() => {
+          setCurrentStep(0);
+          setVisible(true);
+        }, delayMs);
+        return () => clearTimeout(timer);
+      }
+    } catch {
+      // localStorage 受限，跳过
+    }
+  }, [delayMs]);
+
+  // 当前步骤变化时，定位气泡
+  useEffect(() => {
+    if (currentStep < 0 || currentStep >= STEPS.length) return;
+
+    const frame = window.requestAnimationFrame(() => {
+      const step = STEPS[currentStep];
+      const el = document.getElementById(step.targetId);
+
+      if (el) {
+        const rect = el.getBoundingClientRect();
+        const pos = calculatePosition(rect, step.position);
+        setBubblePos(pos);
+      } else if (step.fallbackPosition) {
+        setBubblePos({
+          top: (window.innerHeight * step.fallbackPosition.top) / 100,
+          left: (window.innerWidth * step.fallbackPosition.left) / 100,
+        });
+      }
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, [calculatePosition, currentStep]);
 
   const handleNext = useCallback(() => {
     if (currentStep < STEPS.length - 1) {
@@ -116,20 +133,11 @@ export default function OnboardingGuide() {
       // 完成引导
       completeOnboarding();
     }
-  }, [currentStep]);
+  }, [completeOnboarding, currentStep]);
 
   const handleSkip = useCallback(() => {
     completeOnboarding();
-  }, []);
-
-  const completeOnboarding = () => {
-    setVisible(false);
-    try {
-      localStorage.setItem(STORAGE_KEY, 'true');
-    } catch {
-      // ignore
-    }
-  };
+  }, [completeOnboarding]);
 
   if (!visible || currentStep < 0 || currentStep >= STEPS.length) return null;
 

@@ -39,6 +39,7 @@ export default function SearchBar({ onSearch }: SearchBarProps) {
       }}>
         <span style={{ fontSize: 16, opacity: 0.5 }}>🔍</span>
         <input
+          id="search-input"
           type="text"
           value={query}
           onChange={handleChange}

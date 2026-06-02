@@ -801,7 +801,7 @@ function CinematicIntro({ phase, onComplete }: { phase: number; onComplete: () =
 
   return (
     <div style={{
-      position: 'absolute', inset: 0, zIndex: 100,
+      position: 'absolute', inset: 0, zIndex: 30,
       pointerEvents: 'none',
       display: 'flex', flexDirection: 'column',
       alignItems: 'center', justifyContent: 'center',

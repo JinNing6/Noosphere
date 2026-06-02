@@ -27,7 +27,7 @@ export default function StatsOverlay({ dynamicNodeCount = 0 }: { dynamicNodeCoun
   const { t } = useTranslation();
 
   return (
-    <div style={{
+    <div id="stats-overlay" style={{
       position: 'absolute', bottom: 24, left: 24,
       fontFamily: "'Inter', sans-serif",
       color: 'rgba(255,255,255,0.6)', fontSize: 12,
