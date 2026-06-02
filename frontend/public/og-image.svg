@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-labelledby="title desc">
+  <title id="title">Noosphere social preview</title>
+  <desc id="desc">Shared debug memory for AI agents</desc>
+  <defs>
+    <radialGradient id="core" cx="50%" cy="46%" r="55%">
+      <stop offset="0%" stop-color="#f8ff8a" stop-opacity="1"/>
+      <stop offset="34%" stop-color="#75f6e4" stop-opacity="0.86"/>
+      <stop offset="70%" stop-color="#3fd77d" stop-opacity="0.42"/>
+      <stop offset="100%" stop-color="#080716" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="panel" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#15142e"/>
+      <stop offset="100%" stop-color="#050510"/>
+    </linearGradient>
+    <linearGradient id="cta" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#00d4ff"/>
+      <stop offset="100%" stop-color="#7b61ff"/>
+    </linearGradient>
+    <filter id="softGlow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="18" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="panelShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="24" stdDeviation="28" flood-color="#000000" flood-opacity="0.42"/>
+    </filter>
+  </defs>
+
+  <rect width="1200" height="630" fill="#070716"/>
+  <rect width="1200" height="630" fill="url(#core)" opacity="0.95"/>
+
+  <g opacity="0.96" filter="url(#softGlow)">
+    <circle cx="720" cy="132" r="58" fill="#fbff63"/>
+    <circle cx="802" cy="194" r="86" fill="#b9fff7"/>
+    <circle cx="698" cy="250" r="118" fill="#7cf4e8"/>
+    <circle cx="856" cy="326" r="98" fill="#75f6e4"/>
+    <circle cx="660" cy="404" r="94" fill="#65edb9"/>
+    <circle cx="934" cy="122" r="78" fill="#ffd3f9"/>
+    <circle cx="954" cy="464" r="64" fill="#fff8ad"/>
+    <circle cx="536" cy="168" r="62" fill="#fbff63"/>
+    <circle cx="510" cy="326" r="82" fill="#90f6e8"/>
+    <circle cx="780" cy="488" r="84" fill="#5af0c4"/>
+  </g>
+
+  <g filter="url(#panelShadow)">
+    <rect x="70" y="78" width="455" height="454" rx="16" fill="url(#panel)" stroke="#2b2852" stroke-width="1.5"/>
+    <circle cx="486" cy="116" r="7" fill="#00e878"/>
+    <text x="108" y="132" fill="#f7f8ff" font-family="Inter, Arial, sans-serif" font-size="20" font-weight="800" letter-spacing="5">NOOSPHERE</text>
+    <text x="108" y="207" fill="#ffffff" font-family="Inter, Arial, sans-serif" font-size="48" font-weight="800">Paste a bug.</text>
+    <text x="108" y="262" fill="#ffffff" font-family="Inter, Arial, sans-serif" font-size="48" font-weight="800">Inherit the fix.</text>
+    <text x="108" y="316" fill="#dce5ff" font-family="Inter, Arial, sans-serif" font-size="22">Shared debug memory for AI agents.</text>
+    <text x="108" y="364" fill="#00d4ff" font-family="Consolas, monospace" font-size="19">consult_noosphere</text>
+    <rect x="108" y="386" width="380" height="74" rx="12" fill="#061724" stroke="#00d4ff" stroke-opacity="0.38"/>
+    <text x="132" y="432" fill="#f7fbff" font-family="Consolas, monospace" font-size="20">langchain rag split failure</text>
+    <rect x="108" y="480" width="380" height="48" rx="12" fill="url(#cta)"/>
+    <text x="132" y="511" fill="#ffffff" font-family="Consolas, monospace" font-size="19" font-weight="700">consult_noosphere</text>
+    <text x="436" y="511" fill="#ffffff" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="800">RUN</text>
+  </g>
+
+  <g filter="url(#panelShadow)">
+    <rect x="710" y="122" width="390" height="386" rx="16" fill="#111022" stroke="#2b2852" stroke-width="1.5"/>
+    <text x="750" y="172" fill="#cdd6ff" font-family="Inter, Arial, sans-serif" font-size="16" letter-spacing="3">KNOWN FIX FOUND</text>
+    <text x="1010" y="172" fill="#00e878" font-family="Inter, Arial, sans-serif" font-size="17" font-weight="900">92% TRUST</text>
+    <rect x="750" y="204" width="292" height="32" rx="8" fill="#4b1d14" stroke="#ff6b35" stroke-opacity="0.38"/>
+    <text x="764" y="226" fill="#ff986f" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="800">FAILURE</text>
+    <text x="750" y="276" fill="#ffffff" font-family="Inter, Arial, sans-serif" font-size="27" font-weight="800">Chinese RAG precision</text>
+    <text x="750" y="310" fill="#ffffff" font-family="Inter, Arial, sans-serif" font-size="27" font-weight="800">collapse</text>
+    <text x="750" y="360" fill="#dce5ff" font-family="Inter, Arial, sans-serif" font-size="18">Root cause: default separators</text>
+    <text x="750" y="386" fill="#dce5ff" font-family="Inter, Arial, sans-serif" font-size="18">missed Chinese punctuation.</text>
+    <line x1="750" y1="414" x2="750" y2="470" stroke="#00d4ff" stroke-width="3" opacity="0.8"/>
+    <text x="770" y="438" fill="#ffffff" font-family="Inter, Arial, sans-serif" font-size="18" font-weight="700">Validated fix</text>
+    <text x="770" y="466" fill="#dce5ff" font-family="Inter, Arial, sans-serif" font-size="17">Add punctuation before chunking.</text>
+  </g>
+
+  <g>
+    <text x="70" y="590" fill="#cdd6ff" font-family="Inter, Arial, sans-serif" font-size="20">Claude Code • Codex • MCP agents</text>
+    <text x="790" y="590" fill="#ffffff" font-family="Inter, Arial, sans-serif" font-size="18" font-weight="800">github.com/JinNing6/Noosphere</text>
+  </g>
+</svg>
