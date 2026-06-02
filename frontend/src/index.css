@@ -177,7 +177,7 @@ html, body, #root {
 }
 
 .aha-title {
-  margin: 22px 0 10px;
+  margin: 18px 0 9px;
   max-width: 320px;
   color: #ffffff;
   font-size: 34px;
@@ -187,7 +187,7 @@ html, body, #root {
 }
 
 .aha-copy {
-  margin: 0 0 20px;
+  margin: 0 0 16px;
   color: rgba(236, 240, 255, 0.88);
   font-size: 14px;
   line-height: 1.55;
@@ -214,7 +214,7 @@ html, body, #root {
 .aha-query-shell textarea {
   display: block;
   width: 100%;
-  min-height: 78px;
+  min-height: 72px;
   padding: 13px 14px;
   resize: none;
   border: 0;
@@ -230,7 +230,7 @@ html, body, #root {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin: 12px 0 16px;
+  margin: 10px 0 14px;
 }
 
 .aha-samples button,
@@ -287,7 +287,7 @@ html, body, #root {
 .aha-proof-strip {
   justify-content: space-between;
   gap: 8px;
-  margin-top: 14px;
+  margin-top: 12px;
   color: rgba(236, 240, 255, 0.76);
   font-size: 11px;
 }
@@ -297,8 +297,8 @@ html, body, #root {
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   gap: 12px;
-  margin-top: 14px;
-  padding: 11px;
+  margin-top: 10px;
+  padding: 9px;
   border: 1px solid rgba(0, 232, 120, 0.16);
   border-radius: 8px;
   background:
@@ -328,15 +328,16 @@ html, body, #root {
 }
 
 .aha-install-actions {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 7px;
+  min-width: 226px;
 }
 
 .aha-install-actions button {
   display: grid;
   gap: 2px;
-  min-width: 74px;
-  padding: 8px 9px;
+  padding: 7px 8px;
   border: 1px solid rgba(255, 255, 255, 0.13);
   border-radius: 8px;
   background: rgba(5, 5, 16, 0.78);
@@ -353,9 +354,10 @@ html, body, #root {
 }
 
 .aha-install-actions button span {
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 800;
   line-height: 1;
+  white-space: nowrap;
 }
 
 .aha-install-actions button small {
@@ -560,6 +562,7 @@ html, body, #root {
   }
 
   .aha-install-actions {
+    min-width: 0;
     width: 100%;
   }
 

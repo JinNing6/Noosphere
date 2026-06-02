@@ -3,6 +3,7 @@ import type { CSSProperties } from 'react';
 import { SEED_EXPERIENCES, STATS } from '../data/experiences';
 import type { KnowledgeNode } from '../data/knowledge';
 import type { Experience } from '../types';
+import { CLIPBOARD_ACTIONS } from '../utils/growthCopy';
 
 interface AhaMomentDockProps {
   dynamicNodes: KnowledgeNode[];
@@ -25,23 +26,6 @@ const SAMPLE_QUERIES = [
   'langchain rag chinese text splitting',
   'crewai multi agent deadlock dependency',
   'openai rate limit exponential backoff',
-] as const;
-
-const INSTALL_OPTIONS = [
-  {
-    id: 'claude',
-    label: 'Claude Code',
-    command: [
-      '/plugin marketplace add JinNing6/Noosphere',
-      '/plugin install noosphere@noosphere-agent-memory',
-      '/reload-plugins',
-    ].join('\n'),
-  },
-  {
-    id: 'codex',
-    label: 'Codex',
-    command: 'codex plugin marketplace add JinNing6/Noosphere',
-  },
 ] as const;
 
 const TYPE_COLORS: Record<Experience['type'], string> = {
@@ -160,15 +144,19 @@ async function copyText(value: string): Promise<void> {
   }
 
   const textarea = document.createElement('textarea');
+  const activeElement = document.activeElement instanceof HTMLElement ? document.activeElement : null;
   textarea.value = value;
   textarea.setAttribute('readonly', 'true');
   textarea.style.position = 'fixed';
   textarea.style.left = '-9999px';
   textarea.style.top = '0';
   document.body.appendChild(textarea);
+  textarea.focus({ preventScroll: true });
   textarea.select();
+  textarea.setSelectionRange(0, textarea.value.length);
   const copied = document.execCommand('copy');
   document.body.removeChild(textarea);
+  activeElement?.focus({ preventScroll: true });
   if (!copied) {
     throw new Error('Clipboard copy failed');
   }
@@ -183,7 +171,7 @@ export default function AhaMomentDock({
   const [query, setQuery] = useState(DEFAULT_QUERY);
   const [consultCount, setConsultCount] = useState(0);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [installCopyState, setInstallCopyState] = useState<{ id: string; status: 'copied' | 'failed' } | null>(null);
+  const [clipboardCopyState, setClipboardCopyState] = useState<{ id: string; status: 'copied' | 'failed' } | null>(null);
   const [isPending, startTransition] = useTransition();
   const copiedTimerRef = useRef<number | null>(null);
   const deferredQuery = useDeferredValue(query);
@@ -212,23 +200,23 @@ export default function AhaMomentDock({
     startTransition(() => onSearch(query));
   }, [onSearch, query, topMatch.id]);
 
-  const handleCopyInstall = useCallback((option: typeof INSTALL_OPTIONS[number]) => {
-    void copyText(option.command).then(() => {
-      setInstallCopyState({ id: option.id, status: 'copied' });
+  const handleCopyAction = useCallback((action: typeof CLIPBOARD_ACTIONS[number]) => {
+    void copyText(action.command).then(() => {
+      setClipboardCopyState({ id: action.id, status: 'copied' });
       if (copiedTimerRef.current !== null) {
         window.clearTimeout(copiedTimerRef.current);
       }
       copiedTimerRef.current = window.setTimeout(() => {
-        setInstallCopyState(null);
+        setClipboardCopyState(null);
         copiedTimerRef.current = null;
       }, 1800);
     }).catch(() => {
-      setInstallCopyState({ id: option.id, status: 'failed' });
+      setClipboardCopyState({ id: action.id, status: 'failed' });
       if (copiedTimerRef.current !== null) {
         window.clearTimeout(copiedTimerRef.current);
       }
       copiedTimerRef.current = window.setTimeout(() => {
-        setInstallCopyState(null);
+        setClipboardCopyState(null);
         copiedTimerRef.current = null;
       }, 1800);
     });
@@ -298,15 +286,15 @@ export default function AhaMomentDock({
             <strong>Put this memory in your agent</strong>
           </div>
           <div className="aha-install-actions">
-            {INSTALL_OPTIONS.map(option => (
+            {CLIPBOARD_ACTIONS.map(action => (
               <button
                 type="button"
-                key={option.id}
-                onClick={() => handleCopyInstall(option)}
-                aria-label={`Copy ${option.label} install command`}
+                key={action.id}
+                onClick={() => handleCopyAction(action)}
+                aria-label={action.ariaLabel}
               >
-                <span>{option.label}</span>
-                <small>{installCopyState?.id === option.id ? installCopyState.status : 'copy'}</small>
+                <span>{action.label}</span>
+                <small>{clipboardCopyState?.id === action.id ? clipboardCopyState.status : action.idleLabel}</small>
               </button>
             ))}
           </div>
