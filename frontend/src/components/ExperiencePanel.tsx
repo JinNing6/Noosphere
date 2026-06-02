@@ -16,6 +16,31 @@ interface MediaItem {
   caption?: string;
 }
 
+interface WikipediaMediaSource {
+  mime?: string;
+  url?: string;
+}
+
+interface WikipediaMediaSrcSet {
+  src?: string;
+}
+
+interface WikipediaMediaListItem {
+  title?: string;
+  type?: string;
+  original?: {
+    sources?: WikipediaMediaSource[];
+  };
+  srcset?: WikipediaMediaSrcSet[];
+  thumbnail?: {
+    source?: string;
+  };
+}
+
+interface WikipediaMediaListResponse {
+  items?: WikipediaMediaListItem[];
+}
+
 interface DetailPanelProps {
   node: KnowledgeNode | null;
   onClose: () => void;
@@ -26,6 +51,11 @@ const LAYER_ICONS: Record<string, string> = {
   life: '🧬',
   civilization: '🌌',
 };
+
+function normalizeMediaUrl(url?: string): string | undefined {
+  if (!url) return undefined;
+  return url.startsWith('//') ? `https:${url}` : url;
+}
 
 export default function DetailPanel({ node, onClose }: DetailPanelProps) {
   const { t, i18n } = useTranslation();
@@ -56,7 +86,7 @@ export default function DetailPanel({ node, onClose }: DetailPanelProps) {
          const maxItems = 6;
          const res = await fetch(`https://en.wikipedia.org/api/rest_v1/page/media-list/${title}`);
          if (!res.ok) throw new Error('Failed to fetch media');
-         const data = await res.json();
+         const data = await res.json() as WikipediaMediaListResponse;
          
          const items: MediaItem[] = [];
          if (data.items && Array.isArray(data.items)) {
@@ -68,22 +98,22 @@ export default function DetailPanel({ node, onClose }: DetailPanelProps) {
              if (titleLower.includes('.svg') || titleLower.includes('icon') || titleLower.includes('logo') || titleLower.includes('symbol')) continue;
 
              if (item.type === 'video') {
-               const sources = item?.original?.sources || [];
-               const webm = sources.find((s: any) => s.mime === 'video/webm') || sources[0];
-               if (webm) {
-                 const url = webm.url.startsWith('//') ? 'https:' + webm.url : webm.url;
-                 const thumb = item?.thumbnail?.source ? (item.thumbnail.source.startsWith('//') ? 'https:' + item.thumbnail.source : item.thumbnail.source) : undefined;
+               const sources = item.original?.sources || [];
+               const webm = sources.find((source) => source.mime === 'video/webm') || sources[0];
+               const url = normalizeMediaUrl(webm?.url);
+               if (url) {
+                 const thumb = normalizeMediaUrl(item.thumbnail?.source);
                  items.push({ type: 'video', url, thumb });
                }
              } else if (item.type === 'image') {
                 if (item?.srcset && item.srcset.length > 0) {
-                  const bestSrc = item.srcset[item.srcset.length - 1].src;
-                  const url = bestSrc.startsWith('//') ? 'https:' + bestSrc : bestSrc;
-                  const thumb = item?.thumbnail?.source ? (item.thumbnail.source.startsWith('//') ? 'https:' + item.thumbnail.source : item.thumbnail.source) : undefined;
-                  items.push({ type: 'image', url, thumb });
+                  const bestSrc = item.srcset[item.srcset.length - 1]?.src;
+                  const url = normalizeMediaUrl(bestSrc);
+                  const thumb = normalizeMediaUrl(item.thumbnail?.source);
+                  if (url) items.push({ type: 'image', url, thumb });
                 } else if (item?.thumbnail?.source) {
-                  const url = item.thumbnail.source.startsWith('//') ? 'https:' + item.thumbnail.source : item.thumbnail.source;
-                  items.push({ type: 'image', url });
+                  const url = normalizeMediaUrl(item.thumbnail.source);
+                  if (url) items.push({ type: 'image', url });
                 }
              }
            }

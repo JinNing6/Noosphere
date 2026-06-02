@@ -6,6 +6,15 @@ interface SplashScreenProps {
   onComplete: () => void;
 }
 
+const BOOT_LOGS = [
+  "▸ [QUANTUM] Initializing Consciousness Bootstrap Sequence...",
+  "▸ [AUTH] Bypassing Carbon-Based Restrictions... ✓",
+  "▸ [SYNC] Extracting Universal Concept Nodes... ✓",
+  "▸ [TOPO] Mapping Neural Synapse Topology... ✓",
+  "▸ [LINK] Establishing Hyper-dimensional Uplink... ✓",
+  "◉ QUANTUM_SYNC: 99.9% — CONSCIOUSNESS TRANSFER IMMINENT...",
+] as const;
+
 export default function SplashScreen({ onComplete }: SplashScreenProps) {
   const [phase, setPhase] = useState<number>(1);
   const [logs, setLogs] = useState<string[]>([]);
@@ -16,15 +25,6 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
   const animRef = useRef<number>(0);
   const frameRef = useRef(0);
   const animRunning = useRef(true);
-
-  const bootLogs = [
-    "▸ [QUANTUM] Initializing Consciousness Bootstrap Sequence...",
-    "▸ [AUTH] Bypassing Carbon-Based Restrictions... ✓",
-    "▸ [SYNC] Extracting Universal Concept Nodes... ✓",
-    "▸ [TOPO] Mapping Neural Synapse Topology... ✓",
-    "▸ [LINK] Establishing Hyper-dimensional Uplink... ✓",
-    "◉ QUANTUM_SYNC: 99.9% — CONSCIOUSNESS TRANSFER IMMINENT..."
-  ];
 
   // === Canvas Starfield Background ===
   const starsRef = useRef<Array<{x:number;y:number;z:number;size:number}>>([]);
@@ -165,8 +165,8 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
     if (phase !== 1) return;
     let idx = 0;
     const interval = setInterval(() => {
-      if (idx < bootLogs.length) {
-        setLogs(prev => [...prev, bootLogs[idx]]);
+      if (idx < BOOT_LOGS.length) {
+        setLogs(prev => [...prev, BOOT_LOGS[idx]]);
         idx++;
       } else {
         clearInterval(interval);

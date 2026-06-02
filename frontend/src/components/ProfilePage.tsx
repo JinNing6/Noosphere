@@ -18,27 +18,39 @@ interface ProfilePageProps {
   username: string;
 }
 
+const EMPTY_STATS: CreatorStats = {
+  totalFragments: 0,
+  totalResonance: 0,
+  typeCounts: {},
+  firstUpload: '',
+  latestUpload: '',
+};
+
+interface LoadedProfile {
+  username: string;
+  nodes: KnowledgeNode[];
+  stats: CreatorStats;
+}
+
 export default function ProfilePage({ username }: ProfilePageProps) {
-  const [nodes, setNodes] = useState<KnowledgeNode[]>([]);
-  const [stats, setStats] = useState<CreatorStats>({
-    totalFragments: 0,
-    totalResonance: 0,
-    typeCounts: {},
-    firstUpload: '',
-    latestUpload: '',
-  });
+  const [profile, setProfile] = useState<LoadedProfile | null>(null);
   const [selectedNode, setSelectedNode] = useState<KnowledgeNode | null>(null);
-  const [loading, setLoading] = useState(true);
+  const loading = profile?.username !== username;
+  const nodes = loading ? [] : profile.nodes;
+  const stats = loading ? EMPTY_STATS : profile.stats;
 
   // 加载该用户的意识碎片
   useEffect(() => {
-    setLoading(true);
+    let cancelled = false;
     fetchConsciousnessPayloadsByCreator(username).then(({ nodes: fetchedNodes, stats: fetchedStats }) => {
-      setNodes(fetchedNodes);
-      setStats(fetchedStats);
-      setLoading(false);
+      if (cancelled) return;
+      setProfile({ username, nodes: fetchedNodes, stats: fetchedStats });
+      setSelectedNode(null);
       console.log(`[Noosphere Profile] Loaded ${fetchedNodes.length} fragments for ${username}`);
     });
+    return () => {
+      cancelled = true;
+    };
   }, [username]);
 
   const handleSelect = useCallback((node: KnowledgeNode) => {

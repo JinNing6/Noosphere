@@ -1,4 +1,4 @@
-import { useCallback, useDeferredValue, useMemo, useState, useTransition } from 'react';
+import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState, useTransition } from 'react';
 import type { CSSProperties } from 'react';
 import { SEED_EXPERIENCES, STATS } from '../data/experiences';
 import type { KnowledgeNode } from '../data/knowledge';
@@ -25,6 +25,23 @@ const SAMPLE_QUERIES = [
   'langchain rag chinese text splitting',
   'crewai multi agent deadlock dependency',
   'openai rate limit exponential backoff',
+] as const;
+
+const INSTALL_OPTIONS = [
+  {
+    id: 'claude',
+    label: 'Claude Code',
+    command: [
+      '/plugin marketplace add JinNing6/Noosphere',
+      '/plugin install noosphere@noosphere-agent-memory',
+      '/reload-plugins',
+    ].join('\n'),
+  },
+  {
+    id: 'codex',
+    label: 'Codex',
+    command: 'codex plugin marketplace add JinNing6/Noosphere',
+  },
 ] as const;
 
 const TYPE_COLORS: Record<Experience['type'], string> = {
@@ -132,6 +149,31 @@ function rankDebugMemories(query: string): Experience[] {
     .slice(0, 4);
 }
 
+async function copyText(value: string): Promise<void> {
+  if (navigator.clipboard?.writeText) {
+    try {
+      await navigator.clipboard.writeText(value);
+      return;
+    } catch {
+      // Fall through to the textarea copy path for restricted browser contexts.
+    }
+  }
+
+  const textarea = document.createElement('textarea');
+  textarea.value = value;
+  textarea.setAttribute('readonly', 'true');
+  textarea.style.position = 'fixed';
+  textarea.style.left = '-9999px';
+  textarea.style.top = '0';
+  document.body.appendChild(textarea);
+  textarea.select();
+  const copied = document.execCommand('copy');
+  document.body.removeChild(textarea);
+  if (!copied) {
+    throw new Error('Clipboard copy failed');
+  }
+}
+
 export default function AhaMomentDock({
   dynamicNodes,
   isUploaderOpen,
@@ -141,7 +183,9 @@ export default function AhaMomentDock({
   const [query, setQuery] = useState(DEFAULT_QUERY);
   const [consultCount, setConsultCount] = useState(0);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [installCopyState, setInstallCopyState] = useState<{ id: string; status: 'copied' | 'failed' } | null>(null);
   const [isPending, startTransition] = useTransition();
+  const copiedTimerRef = useRef<number | null>(null);
   const deferredQuery = useDeferredValue(query);
 
   const matches = useMemo(() => {
@@ -167,6 +211,36 @@ export default function AhaMomentDock({
     setSelectedId(topMatch.id);
     startTransition(() => onSearch(query));
   }, [onSearch, query, topMatch.id]);
+
+  const handleCopyInstall = useCallback((option: typeof INSTALL_OPTIONS[number]) => {
+    void copyText(option.command).then(() => {
+      setInstallCopyState({ id: option.id, status: 'copied' });
+      if (copiedTimerRef.current !== null) {
+        window.clearTimeout(copiedTimerRef.current);
+      }
+      copiedTimerRef.current = window.setTimeout(() => {
+        setInstallCopyState(null);
+        copiedTimerRef.current = null;
+      }, 1800);
+    }).catch(() => {
+      setInstallCopyState({ id: option.id, status: 'failed' });
+      if (copiedTimerRef.current !== null) {
+        window.clearTimeout(copiedTimerRef.current);
+      }
+      copiedTimerRef.current = window.setTimeout(() => {
+        setInstallCopyState(null);
+        copiedTimerRef.current = null;
+      }, 1800);
+    });
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (copiedTimerRef.current !== null) {
+        window.clearTimeout(copiedTimerRef.current);
+      }
+    };
+  }, []);
 
   return (
     <div className="aha-dock" aria-label="Noosphere debugging memory command surface">
@@ -216,6 +290,26 @@ export default function AhaMomentDock({
           <span>{STATS.total_experiences} seed memories</span>
           <span>{dynamicNodes.length} live fragments</span>
           <span>{STATS.frameworks} frameworks</span>
+        </div>
+
+        <div className="aha-install-bar" aria-label="Install Noosphere">
+          <div className="aha-install-copy">
+            <span>Install</span>
+            <strong>Put this memory in your agent</strong>
+          </div>
+          <div className="aha-install-actions">
+            {INSTALL_OPTIONS.map(option => (
+              <button
+                type="button"
+                key={option.id}
+                onClick={() => handleCopyInstall(option)}
+                aria-label={`Copy ${option.label} install command`}
+              >
+                <span>{option.label}</span>
+                <small>{installCopyState?.id === option.id ? installCopyState.status : 'copy'}</small>
+              </button>
+            ))}
+          </div>
         </div>
       </section>
 

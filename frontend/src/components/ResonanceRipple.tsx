@@ -16,7 +16,7 @@
  *   - 额外的闪光爆发粒子 (Points) 8 个方向飞散
  */
 
-import { useRef, useMemo, useCallback, useImperativeHandle, forwardRef } from 'react';
+import { useRef, useMemo, useCallback, useEffect, useImperativeHandle, forwardRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
@@ -38,6 +38,19 @@ const MAX_RIPPLES = 20;
 const RIPPLE_DURATION = 3.0; // 秒
 const RIPPLE_MAX_RADIUS = 3.0;
 const BURST_PARTICLES_PER_RIPPLE = 8;
+
+type BurstUniforms = {
+  uTime: { value: number };
+  uBirthTimes: { value: Float32Array };
+  uCenters: { value: THREE.Vector3[] };
+  uColors: { value: THREE.Color[] };
+  uIntensities: { value: Float32Array };
+};
+
+function seededUnit(seed: number): number {
+  const value = Math.sin(seed) * 43758.5453123;
+  return value - Math.floor(value);
+}
 
 /* ═══════════════ Shader — 涟漪光环 ═══════════════ */
 
@@ -179,18 +192,20 @@ export const ResonanceRipple = forwardRef<ResonanceRippleHandle>(
         })
       );
     }, []);
+    const ringMaterialsRef = useRef(ringMaterials);
 
     // 共享圆环几何体
     const ringGeo = useMemo(() => new THREE.RingGeometry(0.85, 1.0, 64), []);
 
     // ── 爆发粒子 ──
-    const burstUniforms = useMemo(() => ({
+    const burstUniforms = useMemo<BurstUniforms>(() => ({
       uTime: { value: 0 },
       uBirthTimes: { value: new Float32Array(MAX_RIPPLES).fill(-999) },
       uCenters: { value: Array.from({ length: MAX_RIPPLES }, () => new THREE.Vector3()) },
       uColors: { value: Array.from({ length: MAX_RIPPLES }, () => new THREE.Color()) },
       uIntensities: { value: new Float32Array(MAX_RIPPLES).fill(1.0) },
     }), []);
+    const burstUniformsRef = useRef(burstUniforms);
 
     const { burstPositions, burstDirections, burstIds } = useMemo(() => {
       const total = MAX_RIPPLES * BURST_PARTICLES_PER_RIPPLE;
@@ -202,7 +217,7 @@ export const ResonanceRipple = forwardRef<ResonanceRippleHandle>(
         for (let p = 0; p < BURST_PARTICLES_PER_RIPPLE; p++) {
           const idx = r * BURST_PARTICLES_PER_RIPPLE + p;
           const angle = (p / BURST_PARTICLES_PER_RIPPLE) * Math.PI * 2;
-          const elevation = (Math.random() - 0.5) * 0.6;
+          const elevation = (seededUnit(r * 31.37 + p * 17.91) - 0.5) * 0.6;
 
           dir[idx * 3] = Math.cos(angle) * Math.cos(elevation);
           dir[idx * 3 + 1] = Math.sin(elevation);
@@ -225,6 +240,20 @@ export const ResonanceRipple = forwardRef<ResonanceRippleHandle>(
         blending: THREE.AdditiveBlending,
       }),
     [burstUniforms]);
+    const burstMaterialRef = useRef<THREE.ShaderMaterial | null>(null);
+
+    useEffect(() => {
+      ringMaterialsRef.current = ringMaterials;
+      burstUniformsRef.current = burstUniforms;
+      burstMaterialRef.current = burstMaterial;
+      return () => {
+        ringMaterialsRef.current = [];
+        burstMaterialRef.current = null;
+        ringMaterials.forEach(material => material.dispose());
+        ringGeo.dispose();
+        burstMaterial.dispose();
+      };
+    }, [burstMaterial, burstUniforms, ringGeo, ringMaterials]);
 
     // ── 触发涟漪 ──
     const triggerRipple = useCallback((event: RippleEvent) => {
@@ -235,26 +264,31 @@ export const ResonanceRipple = forwardRef<ResonanceRippleHandle>(
       const intensity = event.intensity ?? 1.0;
 
       // 更新圆环 material
-      const mat = ringMaterials[slot];
+      const mat = ringMaterialsRef.current[slot];
+      if (!mat) return;
       mat.uniforms.uBirthTime.value = time;
       mat.uniforms.uCenter.value.set(...event.position);
       mat.uniforms.uColor.value.setRGB(...event.color);
       mat.uniforms.uIntensity.value = intensity;
 
       // 更新爆发粒子 uniforms
-      burstUniforms.uBirthTimes.value[slot] = time;
-      burstUniforms.uCenters.value[slot].set(...event.position);
-      burstUniforms.uColors.value[slot].setRGB(...event.color);
-      burstUniforms.uIntensities.value[slot] = intensity;
-    }, [ringMaterials, burstUniforms]);
+      const uniforms = burstUniformsRef.current;
+      uniforms.uBirthTimes.value[slot] = time;
+      uniforms.uCenters.value[slot].set(...event.position);
+      uniforms.uColors.value[slot].setRGB(...event.color);
+      uniforms.uIntensities.value[slot] = intensity;
+    }, []);
 
     useImperativeHandle(ref, () => ({ triggerRipple }), [triggerRipple]);
 
     // ── 每帧更新时间 ──
     useFrame(({ clock }) => {
       const t = clock.getElapsedTime();
-      ringMaterials.forEach(mat => { mat.uniforms.uTime.value = t; });
-      burstMaterial.uniforms.uTime.value = t;
+      ringMaterialsRef.current.forEach(mat => { mat.uniforms.uTime.value = t; });
+      const material = burstMaterialRef.current;
+      if (material) {
+        material.uniforms.uTime.value = t;
+      }
     });
 
     return (

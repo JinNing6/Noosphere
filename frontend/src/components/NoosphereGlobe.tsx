@@ -34,7 +34,6 @@ import type { KnowledgeNode, Discipline } from '../data/knowledge';
 import {
   ALL_NODES, EMERGENCE_LINKS,
   DISCIPLINE_COLORS, LAYER_COLORS,
-  DISCIPLINE_GRAVITY_CENTERS,
   CONSCIOUSNESS_TYPE_FLICKER,
   CONSCIOUSNESS_TYPE_COLORS,
   gravityClusterPoint,
@@ -44,15 +43,13 @@ import {
   GPUParticleLayer,
   ConsciousnessNebula,
   GPUPulsePoints,
-  goldenSpherePoint,
-  nodeToParticle,
   type ParticleData,
   type PulseCurveData,
   type GPUParticleLayerHandle,
 } from './InfiniteParticleEngine';
+import { goldenSpherePoint, nodeToParticle } from '../utils/particleGeometry';
 
 import { ResonanceRipple, type ResonanceRippleHandle } from './ResonanceRipple';
-import type { RippleEvent } from './ResonanceRipple';
 
 /* ═══════════════ 工具函数 ═══════════════ */
 
@@ -208,10 +205,22 @@ function PlasmaCore() {
     transparent: true,
     toneMapped: false,
   }), []);
+  const plasmaMatRef = useRef<THREE.ShaderMaterial | null>(null);
+
+  useEffect(() => {
+    plasmaMatRef.current = plasmaMat;
+    return () => {
+      plasmaMatRef.current = null;
+      plasmaMat.dispose();
+    };
+  }, [plasmaMat]);
 
   useFrame(({ clock }) => {
     const t = clock.getElapsedTime();
-    plasmaMat.uniforms.uTime.value = t;
+    const currentPlasmaMat = plasmaMatRef.current;
+    if (currentPlasmaMat) {
+      currentPlasmaMat.uniforms.uTime.value = t;
+    }
     if (glow1Ref.current) {
       const s = 1.3 + Math.sin(t * 0.5) * 0.1;
       glow1Ref.current.scale.setScalar(s);
@@ -385,14 +394,23 @@ function EnergyLines() {
   const lineMaterial = useMemo(() => new THREE.LineBasicMaterial({
     vertexColors: true, transparent: true, opacity: 0.15, toneMapped: false,
   }), []);
+  const lineMaterialRef = useRef<THREE.LineBasicMaterial | null>(null);
 
   // 仅线条呼吸 — O(1)
   useFrame(({ clock }) => {
-    lineMaterial.opacity = 0.1 + Math.sin(clock.getElapsedTime() * 0.4) * 0.06;
+    const currentLineMaterial = lineMaterialRef.current;
+    if (currentLineMaterial) {
+      currentLineMaterial.opacity = 0.1 + Math.sin(clock.getElapsedTime() * 0.4) * 0.06;
+    }
   });
 
   useEffect(() => {
-    return () => { lineGeometry.dispose(); lineMaterial.dispose(); };
+    lineMaterialRef.current = lineMaterial;
+    return () => {
+      lineMaterialRef.current = null;
+      lineGeometry.dispose();
+      lineMaterial.dispose();
+    };
   }, [lineGeometry, lineMaterial]);
 
   return (
@@ -583,31 +601,31 @@ function DynamicConsciousnessCloud({
     birthTimeRef.current = clock.getElapsedTime();
   });
 
+  const createParticle = useCallback((
+    node: KnowledgeNode,
+    index: number,
+    total: number,
+    birthTime: number,
+  ) => {
+    const position = goldenSpherePoint(index, Math.max(total, 1), 5.5);
+
+    let color: THREE.Color;
+    if (node.computedColor) {
+      color = parseColorToThreeColor(node.computedColor);
+    } else if (node.consciousnessType && CONSCIOUSNESS_TYPE_COLORS[node.consciousnessType]) {
+      color = new THREE.Color(CONSCIOUSNESS_TYPE_COLORS[node.consciousnessType]);
+    } else {
+      color = new THREE.Color('#e0e0ff');
+    }
+
+    const flicker = CONSCIOUSNESS_TYPE_FLICKER[node.consciousnessType || 'epiphany'] || { freq: 2.0, amp: 0.4 };
+    return nodeToParticle(position, color, node.importance, index, 0.03, birthTime, flicker.freq, flicker.amp);
+  }, []);
+
   // 当 nodes 变化时转换为 ParticleData —— 使用意识类型主导色
   const particles = useMemo(() => {
-    return nodes.map((node, i) => {
-      const position = goldenSpherePoint(i, Math.max(nodes.length, 1), 5.5);
-
-      // ── 意识类型驱动颜色：使用预计算的 computedColor 或回退到类型基色 ──
-      let color: THREE.Color;
-      if (node.computedColor) {
-        color = parseColorToThreeColor(node.computedColor);
-      } else if (node.consciousnessType && CONSCIOUSNESS_TYPE_COLORS[node.consciousnessType]) {
-        color = new THREE.Color(CONSCIOUSNESS_TYPE_COLORS[node.consciousnessType]);
-      } else {
-        color = new THREE.Color('#e0e0ff'); // 默认银白色
-      }
-
-      // 新粒子标记当前时间用于闪烁入场效果
-      const bt = i >= prevCountRef.current ? birthTimeRef.current : -10;
-
-      // ── 意识类型驱动闪烁参数 ──
-      const flicker = CONSCIOUSNESS_TYPE_FLICKER[node.consciousnessType || 'epiphany'] || { freq: 2.0, amp: 0.4 };
-
-      return nodeToParticle(position, color, node.importance, i, 0.03, bt, flicker.freq, flicker.amp);
-    });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [nodes]);
+    return nodes.map((node, i) => createParticle(node, i, nodes.length, -10));
+  }, [createParticle, nodes]);
 
   // 当新粒子被添加时，使用增量更新
   useEffect(() => {
@@ -616,7 +634,10 @@ function DynamicConsciousnessCloud({
 
     if (nodes.length > prevCountRef.current) {
       // 有新增节点 — 增量添加
-      const newParticles = particles.slice(prevCountRef.current);
+      const previousCount = prevCountRef.current;
+      const newParticles = nodes
+        .slice(previousCount)
+        .map((node, offset) => createParticle(node, previousCount + offset, nodes.length, birthTimeRef.current));
       layer.addParticles(newParticles);
     } else if (nodes.length < prevCountRef.current) {
       // 节点减少（不太常见） — 全量重建
@@ -625,7 +646,7 @@ function DynamicConsciousnessCloud({
     }
 
     prevCountRef.current = nodes.length;
-  }, [nodes, particles]);
+  }, [createParticle, nodes, particles]);
 
   const handleClick = useCallback(
     (instanceId: number) => {
@@ -668,7 +689,7 @@ function DynamicConsciousnessCloud({
  * Stage 3 (+500ms):  EnergyLines + ConsciousnessNebula + EffectComposer + DynamicCloud
  */
 function SceneContent({ onSelect, introPhase, dynamicNodes, rippleRef }: { onSelect: (n: KnowledgeNode) => void; introPhase: number; dynamicNodes: KnowledgeNode[]; rippleRef: React.RefObject<ResonanceRippleHandle | null> }) {
-  const controlsRef = useRef<any>(null);
+  const controlsRef = useRef<React.ElementRef<typeof OrbitControls>>(null);
   const [loadStage, setLoadStage] = useState(0);
 
   // 静态节点列表（模块级缓存）

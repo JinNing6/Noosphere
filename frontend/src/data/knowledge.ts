@@ -198,7 +198,7 @@ const hardcodedUrls = new Set([
 ]);
 
 const WIKI_NODES: KnowledgeNode[] = Object.entries(wiki)
-  .filter(([_, val]) => !hardcodedUrls.has(val.wiki_url))
+  .filter(([, val]) => !hardcodedUrls.has(val.wiki_url))
   .map(([key, val]) => ({
     id: `wiki-${key.toLowerCase().replace(/[^a-z0-9]/g, '-')}`,
     title_zh: val.title_zh,

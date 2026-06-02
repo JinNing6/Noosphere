@@ -292,6 +292,79 @@ html, body, #root {
   font-size: 11px;
 }
 
+.aha-install-bar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  margin-top: 14px;
+  padding: 11px;
+  border: 1px solid rgba(0, 232, 120, 0.16);
+  border-radius: 8px;
+  background:
+    linear-gradient(90deg, rgba(0, 232, 120, 0.08), rgba(0, 212, 255, 0.05)),
+    rgba(255, 255, 255, 0.04);
+}
+
+.aha-install-copy {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.aha-install-copy span {
+  color: #00e878;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.aha-install-copy strong {
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.aha-install-actions {
+  display: flex;
+  gap: 7px;
+}
+
+.aha-install-actions button {
+  display: grid;
+  gap: 2px;
+  min-width: 74px;
+  padding: 8px 9px;
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  border-radius: 8px;
+  background: rgba(5, 5, 16, 0.78);
+  color: #ffffff;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.aha-install-actions button:hover {
+  border-color: rgba(0, 232, 120, 0.34);
+  background: rgba(0, 232, 120, 0.08);
+}
+
+.aha-install-actions button span {
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.aha-install-actions button small {
+  color: rgba(236, 240, 255, 0.62);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
 .aha-proof-header {
   margin-bottom: 14px;
   color: rgba(224, 224, 255, 0.76);
@@ -480,6 +553,19 @@ html, body, #root {
   .aha-proof-strip {
     flex-wrap: wrap;
     justify-content: flex-start;
+  }
+
+  .aha-install-bar {
+    grid-template-columns: 1fr;
+  }
+
+  .aha-install-actions {
+    width: 100%;
+  }
+
+  .aha-install-actions button {
+    min-width: 0;
+    flex: 1;
   }
 }
 

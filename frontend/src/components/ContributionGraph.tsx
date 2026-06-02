@@ -15,7 +15,6 @@ export default function ContributionGraph() {
     if (contributors.length > 0) return; // 已有数据则不重复请求
 
     let cancelled = false;
-    setLoading(true);
 
     fetchGitHubContributors()
       .then((data) => {
@@ -29,6 +28,14 @@ export default function ContributionGraph() {
 
     return () => { cancelled = true; };
   }, [isOpen, contributors.length]);
+
+  const handleTogglePanel = () => {
+    const nextIsOpen = !isOpen;
+    if (nextIsOpen && contributors.length === 0) {
+      setLoading(true);
+    }
+    setIsOpen(nextIsOpen);
+  };
 
   // 渲染热力图颜色
   const getHeatmapColor = (level: number) => {
@@ -53,7 +60,7 @@ export default function ContributionGraph() {
     <>
       {/* 触发按钮 */}
       <div 
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={handleTogglePanel}
         style={{
           position: 'absolute',
           bottom: 24,

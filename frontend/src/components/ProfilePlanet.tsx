@@ -29,12 +29,10 @@ import {
   GPUParticleLayer,
   ConsciousnessNebula,
   GPUPulsePoints,
-  goldenSpherePoint,
-  nodeToParticle,
-  type ParticleData,
   type PulseCurveData,
   type GPUParticleLayerHandle,
 } from './InfiniteParticleEngine';
+import { goldenSpherePoint, nodeToParticle } from '../utils/particleGeometry';
 
 /* ═══════════════ 辅助函数 ═══════════════ */
 
@@ -96,12 +94,24 @@ function ProfileCore({ fragmentCount }: { fragmentCount: number }) {
     transparent: true,
     toneMapped: false,
   }), []);
+  const plasmaMatRef = useRef<THREE.ShaderMaterial | null>(null);
+
+  useEffect(() => {
+    plasmaMatRef.current = plasmaMat;
+    return () => {
+      plasmaMatRef.current = null;
+      plasmaMat.dispose();
+    };
+  }, [plasmaMat]);
 
   const glowGeo = useMemo(() => new THREE.SphereGeometry(coreScale, 32, 32), [coreScale]);
 
   useFrame(({ clock }) => {
     const t = clock.getElapsedTime();
-    plasmaMat.uniforms.uTime.value = t;
+    const currentPlasmaMat = plasmaMatRef.current;
+    if (currentPlasmaMat) {
+      currentPlasmaMat.uniforms.uTime.value = t;
+    }
     if (glow1Ref.current) {
       const s = 1.4 + Math.sin(t * 0.4) * 0.1;
       glow1Ref.current.scale.setScalar(s);

@@ -13,7 +13,7 @@ import { useEffect, useRef } from 'react';
 import type { KnowledgeNode } from '../data/knowledge';
 import { CONSCIOUSNESS_TYPE_COLORS } from '../data/knowledge';
 import type { RippleEvent } from '../components/ResonanceRipple';
-import { goldenSpherePoint } from '../components/InfiniteParticleEngine';
+import { goldenSpherePoint } from './particleGeometry';
 
 function getNodePosition(nodeId: string, nodes: KnowledgeNode[]): [number, number, number] | null {
   const idx = nodes.findIndex(n => n.id === nodeId);
@@ -35,7 +35,10 @@ export function useResonancePolling(
 ) {
   const triggeredRef = useRef(false);
   const onRippleRef = useRef(onRipple);
-  onRippleRef.current = onRipple;
+
+  useEffect(() => {
+    onRippleRef.current = onRipple;
+  }, [onRipple]);
 
   useEffect(() => {
     if (triggeredRef.current || dynamicNodes.length === 0) return;

@@ -25,6 +25,17 @@ import * as THREE from 'three';
 
 const DEFAULT_MAX_CAPACITY = 100_000;
 
+type TimeShader = THREE.WebGLProgramParametersWithUniforms & {
+  uniforms: THREE.WebGLProgramParametersWithUniforms['uniforms'] & {
+    uGlobalTime: THREE.IUniform<number>;
+  };
+};
+
+function seededUnit(seed: number): number {
+  const value = Math.sin(seed) * 43758.5453123;
+  return value - Math.floor(value);
+}
+
 
 /* ═══════════════ Shader — 意识星云 ═══════════════ */
 
@@ -180,8 +191,6 @@ export const GPUParticleLayer = forwardRef<GPUParticleLayerHandle, GPUParticleLa
       initialParticles = [],
       onClick,
       orbitEnabled = true,
-      breathScale = 1.0,
-      driftScale = 1.0,
       enableFlicker = true,
     },
     ref
@@ -256,7 +265,6 @@ export const GPUParticleLayer = forwardRef<GPUParticleLayerHandle, GPUParticleLa
         mesh.geometry.deleteAttribute('aFlickerData');
         flickerAttrRef.current = null;
       };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [flickerBuffer]);
 
     // Sync initialParticles
@@ -331,7 +339,7 @@ export const GPUParticleLayer = forwardRef<GPUParticleLayerHandle, GPUParticleLa
           onBeforeCompile={(shader) => {
             // 注入全局时间 uniform
             shader.uniforms.uGlobalTime = { value: 0 };
-            shaderRef.current = shader as any;
+            shaderRef.current = shader as TimeShader;
 
             if (enableFlicker) {
               // ──── Vertex Shader 注入 ────
@@ -430,10 +438,11 @@ export function ConsciousnessNebula({
 
     for (let i = 0; i < count; i++) {
       // 分层密度分布：内部密、外部疏
-      const t = Math.random();
+      const baseSeed = i * 97.313 + count * 13.719 + innerRadius * 3.11 + outerRadius * 5.17;
+      const t = seededUnit(baseSeed);
       const r = innerRadius + Math.pow(t, 0.7) * (outerRadius - innerRadius);
-      const theta = Math.random() * Math.PI * 2;
-      const phi = Math.acos(2 * Math.random() - 1);
+      const theta = seededUnit(baseSeed + 1.17) * Math.PI * 2;
+      const phi = Math.acos(2 * seededUnit(baseSeed + 2.31) - 1);
 
       pos[i * 3] = r * Math.sin(phi) * Math.cos(theta);
       pos[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
@@ -442,15 +451,15 @@ export function ConsciousnessNebula({
       // 距离相关颜色：近处暖色、远处冷色
       const warmBias = 1.0 - t;
       const paletteIdx = warmBias > 0.5
-        ? Math.floor(Math.random() * 4)        // 暖色
-        : 4 + Math.floor(Math.random() * 8);   // 冷色
+        ? Math.floor(seededUnit(baseSeed + 3.73) * 4)        // 暖色
+        : 4 + Math.floor(seededUnit(baseSeed + 4.91) * 8);   // 冷色
       const c = palette[paletteIdx];
       col[i * 3] = c.r;
       col[i * 3 + 1] = c.g;
       col[i * 3 + 2] = c.b;
 
-      params[i * 2] = 0.2 + Math.random() * 0.8;
-      params[i * 2 + 1] = Math.random() * 100.0;
+      params[i * 2] = 0.2 + seededUnit(baseSeed + 5.29) * 0.8;
+      params[i * 2 + 1] = seededUnit(baseSeed + 6.43) * 100.0;
     }
 
     return { positions: pos, colors: col, nebulaParams: params };
@@ -468,13 +477,21 @@ export function ConsciousnessNebula({
     });
     return mat;
   }, []);
+  const materialRef = useRef<THREE.ShaderMaterial | null>(null);
 
   useEffect(() => {
-    return () => { material.dispose(); };
+    materialRef.current = material;
+    return () => {
+      materialRef.current = null;
+      material.dispose();
+    };
   }, [material]);
 
   useFrame(({ clock }) => {
-    material.uniforms.uTime.value = clock.getElapsedTime();
+    const currentMaterial = materialRef.current;
+    if (currentMaterial) {
+      currentMaterial.uniforms.uTime.value = clock.getElapsedTime();
+    }
   });
 
   return (
@@ -544,20 +561,27 @@ export function GPUPulsePoints({ curves }: GPUPulsePointsProps) {
     });
     return mat;
   }, []);
+  const materialRef = useRef<THREE.ShaderMaterial | null>(null);
+  const dummyPositions = useMemo(() => new Float32Array(count * 3), [count]);
 
   useEffect(() => {
-    return () => { material.dispose(); };
+    materialRef.current = material;
+    return () => {
+      materialRef.current = null;
+      material.dispose();
+    };
   }, [material]);
 
   useFrame(({ clock }) => {
-    material.uniforms.uTime.value = clock.getElapsedTime();
+    const currentMaterial = materialRef.current;
+    if (currentMaterial) {
+      currentMaterial.uniforms.uTime.value = clock.getElapsedTime();
+    }
   });
 
   if (count === 0) return null;
 
   // 使用一个 dummy position 数组（实际位置在 Shader 中计算）
-  const dummyPositions = useMemo(() => new Float32Array(count * 3), [count]);
-
   return (
     <points material={material}>
       <bufferGeometry>
@@ -571,43 +595,4 @@ export function GPUPulsePoints({ curves }: GPUPulsePointsProps) {
       </bufferGeometry>
     </points>
   );
-}
-
-/* ═══════════════ 工具函数 ═══════════════ */
-
-export function goldenSpherePoint(
-  index: number,
-  total: number,
-  radius: number
-): [number, number, number] {
-  const phi = Math.acos(1 - (2 * (index + 0.5)) / total);
-  const theta = Math.PI * (1 + Math.sqrt(5)) * index;
-  return [
-    radius * Math.sin(phi) * Math.cos(theta),
-    radius * Math.sin(phi) * Math.sin(theta),
-    radius * Math.cos(phi),
-  ];
-}
-
-export function nodeToParticle(
-  position: [number, number, number],
-  color: THREE.Color,
-  importance: number,
-  index: number,
-  orbitSpeed: number = 0.03,
-  birthTime: number = -10,
-  flickerFreq?: number,
-  flickerAmp?: number,
-): ParticleData {
-  return {
-    position,
-    color: [color.r, color.g, color.b],
-    importance: importance / 10,
-    seed: (index * 0.618033988749895) % 1.0,
-    orbitSpeed,
-    glowPhase: (index * 2.399963) % (Math.PI * 2),
-    birthTime,
-    flickerFreq,
-    flickerAmp,
-  };
 }
