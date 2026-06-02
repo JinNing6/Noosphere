@@ -3,7 +3,7 @@ import type { CSSProperties } from 'react';
 import { SEED_EXPERIENCES, STATS } from '../data/experiences';
 import type { KnowledgeNode } from '../data/knowledge';
 import type { Experience } from '../types';
-import { CLIPBOARD_ACTIONS } from '../utils/growthCopy';
+import { CLIPBOARD_ACTIONS, createMemorySharePost, readMemoryIdFromSearch } from '../utils/growthCopy';
 
 interface AhaMomentDockProps {
   dynamicNodes: KnowledgeNode[];
@@ -133,6 +133,22 @@ function rankDebugMemories(query: string): Experience[] {
     .slice(0, 4);
 }
 
+function readInitialMemoryFromLocation(): Experience | null {
+  if (typeof window === 'undefined') return null;
+  const memoryId = readMemoryIdFromSearch(window.location.search);
+  if (!memoryId) return null;
+  return SEED_EXPERIENCES.find(memory => memory.id === memoryId) || null;
+}
+
+function getInitialMemoryQuery(memory: Experience | null): string {
+  if (!memory) return DEFAULT_QUERY;
+  return [
+    memory.framework,
+    memory.task_type,
+    ...memory.tags.slice(0, 3),
+  ].filter(Boolean).join(' ');
+}
+
 async function copyText(value: string): Promise<void> {
   if (navigator.clipboard?.writeText) {
     try {
@@ -168,9 +184,11 @@ export default function AhaMomentDock({
   onSearch,
   onOpenUploader,
 }: AhaMomentDockProps) {
-  const [query, setQuery] = useState(DEFAULT_QUERY);
+  const [initialMemory] = useState(() => readInitialMemoryFromLocation());
+  const [initialQuery] = useState(() => getInitialMemoryQuery(initialMemory));
+  const [query, setQuery] = useState(initialQuery);
   const [consultCount, setConsultCount] = useState(0);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(() => initialMemory?.id || null);
   const [clipboardCopyState, setClipboardCopyState] = useState<{ id: string; status: 'copied' | 'failed' } | null>(null);
   const [isPending, startTransition] = useTransition();
   const copiedTimerRef = useRef<number | null>(null);
@@ -182,7 +200,9 @@ export default function AhaMomentDock({
   }, [deferredQuery]);
 
   const selectedMemory = useMemo(() => {
-    return matches.find(memory => memory.id === selectedId) || matches[0];
+    return matches.find(memory => memory.id === selectedId)
+      || SEED_EXPERIENCES.find(memory => memory.id === selectedId)
+      || matches[0];
   }, [matches, selectedId]);
 
   const selectedCopy = useMemo(() => getMemoryCopy(selectedMemory), [selectedMemory]);
@@ -201,7 +221,16 @@ export default function AhaMomentDock({
   }, [onSearch, query, topMatch.id]);
 
   const handleCopyAction = useCallback((action: typeof CLIPBOARD_ACTIONS[number]) => {
-    void copyText(action.command).then(() => {
+    const command = 'command' in action
+      ? action.command
+      : createMemorySharePost({
+        id: selectedMemory.id,
+        title: selectedCopy.title,
+        fix: selectedCopy.fix,
+        outcome: selectedCopy.outcome,
+      });
+
+    void copyText(command).then(() => {
       setClipboardCopyState({ id: action.id, status: 'copied' });
       if (copiedTimerRef.current !== null) {
         window.clearTimeout(copiedTimerRef.current);
@@ -220,7 +249,7 @@ export default function AhaMomentDock({
         copiedTimerRef.current = null;
       }, 1800);
     });
-  }, []);
+  }, [selectedCopy.fix, selectedCopy.outcome, selectedCopy.title, selectedMemory.id]);
 
   useEffect(() => {
     return () => {
@@ -229,6 +258,12 @@ export default function AhaMomentDock({
       }
     };
   }, []);
+
+  useEffect(() => {
+    if (initialMemory) {
+      startTransition(() => onSearch(initialQuery));
+    }
+  }, [initialMemory, initialQuery, onSearch]);
 
   return (
     <div className="aha-dock" aria-label="Noosphere debugging memory command surface">
@@ -304,7 +339,7 @@ export default function AhaMomentDock({
       {!isUploaderOpen && <aside className="aha-proof-panel" aria-label="Known fix proof">
         <div className="aha-proof-header">
           <span>Known fix found</span>
-          <strong key={consultCount}>{Math.round(topMatch.trust_score * 100)}% trust</strong>
+          <strong key={consultCount}>{Math.round(selectedMemory.trust_score * 100)}% trust</strong>
         </div>
 
         <div className="aha-memory-card" key={selectedMemory.id}>
