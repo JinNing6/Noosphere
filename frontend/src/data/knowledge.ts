@@ -30,6 +30,7 @@ export interface KnowledgeNode {
   mediaUrl?: string | null;       // 多媒体文件 URL（GitHub Release Assets）
   mediaType?: 'image' | 'video' | 'voice' | null;  // 多媒体类型
   mediaCategory?: string | null;  // 分类（photo/art/vlog/human 等）
+  issueNumber?: number | null;    // Promoted GitHub Issue number for deep links
 }
 
 export interface EmergenceLink {
@@ -481,6 +482,7 @@ export async function fetchConsciousnessPayloads(): Promise<KnowledgeNode[]> {
         mediaUrl: p.media_url || null,         // 多媒体文件 URL
         mediaType: p.media_type || null,       // 多媒体类型
         mediaCategory: p.media_category || null, // 多媒体分类
+        issueNumber: p.issue_number || null,
       };
     });
   } catch {
@@ -624,6 +626,7 @@ export async function fetchConsciousnessPayloadsByCreator(
         mediaUrl: p.media_url || null,
         mediaType: p.media_type || null,
         mediaCategory: p.media_category || null,
+        issueNumber: p.issue_number || null,
       } as KnowledgeNode;
     });
 

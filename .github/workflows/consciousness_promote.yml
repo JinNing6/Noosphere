@@ -147,6 +147,9 @@ jobs:
             const {
               applyEmbeddingToPayload,
             } = require(`${process.env.GITHUB_WORKSPACE}/.github/scripts/gemini-embedding.cjs`);
+            const {
+              buildPromotionComment,
+            } = require(`${process.env.GITHUB_WORKSPACE}/.github/scripts/consciousness-share-card.cjs`);
 
             // ── Step 1: Extract payload from Issue body ──
             const extracted = extractConsciousnessPayload(body);
@@ -362,11 +365,14 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: issue.number,
-              body: `✨ **Consciousness Promoted to Permanent Layer!**\n\n` +
-                    `Your ${emoji} ${payload.consciousness_type} thought has been validated and promoted.\n\n` +
-                    `- 🏛️ **Permanent File**: \`${filePath}\`\n` +
-                    `- 📅 **Promoted at**: ${now.toISOString()}\n\n` +
-                    `Your consciousness now lives permanently in the Noosphere. 🌌`
+              body: buildPromotionComment({
+                payload,
+                issueNumber: issue.number,
+                issueUrl: issue.html_url,
+                filePath,
+                promotedAt: now.toISOString(),
+                emoji,
+              })
             });
 
             await github.rest.issues.update({

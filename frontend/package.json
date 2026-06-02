@@ -9,7 +9,8 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test:growth": "node scripts/check_growth_copy.mjs"
+    "test:growth": "node scripts/check_growth_copy.mjs",
+    "test:issue-deeplink": "node scripts/check_issue_deeplink.mjs"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.7",

@@ -26,6 +26,7 @@ import AhaMomentDock from './components/AhaMomentDock';
 import type { KnowledgeNode } from './data/knowledge';
 import { fetchConsciousnessPayloads } from './data/knowledge';
 import SplashScreen from './components/SplashScreen';
+import { findNodeByIssueNumber, readIssueNumberFromSearch } from './utils/issueDeepLink';
 import { useResonancePolling } from './utils/useResonancePolling';
 import type { ResonanceRippleHandle } from './components/ResonanceRipple';
 
@@ -61,35 +62,43 @@ function MainApp({ isPlayground = false }: { isPlayground?: boolean }) {
   const [splashDone, setSplashDone] = useState(false);
   // 动态加载的意识体节点
   const [dynamicNodes, setDynamicNodes] = useState<KnowledgeNode[]>([]);
+  const deepLinkedIssueNumber = useMemo(() => {
+    if (typeof window === 'undefined') return null;
+    return readIssueNumberFromSearch(window.location.search);
+  }, []);
 
   // 在 SplashScreen 期间异步加载意识体数据（利用 splash 动画等待时间）
   useEffect(() => {
     fetchConsciousnessPayloads().then(nodes => {
       setDynamicNodes(nodes);
+      const deepLinkedNode = findNodeByIssueNumber(nodes, deepLinkedIssueNumber);
+      if (deepLinkedNode) {
+        setSelectedNode(currentNode => currentNode || deepLinkedNode);
+      }
       console.log(`[Noosphere] Loaded ${nodes.length} consciousness payloads`);
     });
-  }, []);
+  }, [deepLinkedIssueNumber, setDynamicNodes, setSelectedNode]);
 
   const handleSelect = useCallback((node: KnowledgeNode) => {
     setSelectedNode(node);
-  }, []);
+  }, [setSelectedNode]);
 
   const handleClose = useCallback(() => {
     setSelectedNode(null);
-  }, []);
+  }, [setSelectedNode]);
 
   const handleSearch = useCallback((q: string) => {
     setSearchQuery(q);
-  }, []);
+  }, [setSearchQuery]);
 
   // 在线意识上传成功后，将新节点追加到动态意识体列表
   const addDynamicNode = useCallback((node: KnowledgeNode) => {
     setDynamicNodes(prev => [node, ...prev]);
-  }, []);
+  }, [setDynamicNodes]);
 
   const handleOpenUploader = useCallback(() => {
     setIsUploaderOpen(true);
-  }, []);
+  }, [setIsUploaderOpen]);
 
   const handleBootComplete = useCallback(() => {
     // SplashScreen 动画结束 → 移除遮罩（3D 已在后台渲染好）
