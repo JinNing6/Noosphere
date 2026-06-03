@@ -51,6 +51,16 @@ NOOSPHERE_HOME_URL = "https://jinning6.github.io/Noosphere/"
 REPO_URL = "https://github.com/JinNing6/Noosphere"
 UPLOAD_FORM_URL = "https://github.com/JinNing6/Noosphere/issues/new?template=consciousness-upload.yml"
 SHARE_PROOF_FORM_URL = "https://github.com/JinNing6/Noosphere/issues/new?template=share-proof.yml"
+TRACTION_PROOF_URL = "https://jinning6.github.io/Noosphere/traction_proof.json"
+GROWTH_PROOF_TEMPLATE = "growth-proof.yml"
+SHARE_PROOF_TEMPLATE = "share-proof.yml"
+CREATED_GROWTH_ISSUE_URL_PLACEHOLDER = (
+    "https://github.com/JinNing6/Noosphere/issues/<created-growth-issue-number>"
+)
+CREATED_SHARE_PROOF_ISSUE_URL_PLACEHOLDER = (
+    "https://github.com/JinNing6/Noosphere/issues/<created-share-proof-issue-number>"
+)
+PUBLIC_POST_URL_PLACEHOLDER = "<public-post-url>"
 NON_FABRICATION_DISCLOSURE = (
     "No downloads, reposts, referrals, retention, rewards, or install counts are "
     "inferred from public repository, IssueOps, Pull Request, or URL snapshots."
@@ -149,6 +159,17 @@ def read_optional_json_file(path, fallback, access_issues, label):
     if not path.exists():
         return fallback
     return read_json_file(path, fallback, access_issues, label)
+
+
+def build_issue_form_url(template, title=None, fields=None):
+    params = [("template", template)]
+    if title:
+        params.append(("title", title))
+    for key, value in (fields or {}).items():
+        rendered = str(value or "").strip()
+        if rendered:
+            params.append((key, rendered))
+    return f"{REPO_URL}/issues/new?{urllib.parse.urlencode(params)}"
 
 
 def issue_labels(issue):
@@ -373,7 +394,107 @@ def choose_bottleneck(memory_summary, share_summary, contributor_count, target_c
     }
 
 
-def build_share_card(repo_summary, memory_summary, share_summary, target_progress, bottleneck, history_summary):
+def build_first_proof_commands():
+    return [
+        (
+            'record_growth_referral('
+            f'source_url="{CREATED_GROWTH_ISSUE_URL_PLACEHOLDER}", '
+            'campaign="traction-proof")'
+        ),
+        (
+            'record_share_attribution('
+            f'share_url="{PUBLIC_POST_URL_PLACEHOLDER}", '
+            f'source_url="{CREATED_SHARE_PROOF_ISSUE_URL_PLACEHOLDER}", '
+            'artifact="Noosphere traction proof")'
+        ),
+        "share_attribution_report()",
+        "growth_flywheel()",
+    ]
+
+
+def build_first_proof_post(memory_summary, share_summary, target_progress, growth_url, share_url):
+    return "\n".join([
+        "Noosphere public traction proof",
+        (
+            f"{memory_summary['public_memories']} public Agent memories, "
+            f"{share_summary['reviewable_public_urls']} reviewable public proof URLs, "
+            f"{target_progress['real_contributor_identities']}/"
+            f"{target_progress['target_contributor_count']} real contributors."
+        ),
+        f"Live graph: {NOOSPHERE_HOME_URL}",
+        f"Proof snapshot: {TRACTION_PROOF_URL}",
+        f"History: {HISTORY_URL}",
+        f"Upload memory: {UPLOAD_FORM_URL}",
+        f"Record growth proof: {growth_url}",
+        f"Record share proof: {share_url}",
+        NON_FABRICATION_DISCLOSURE,
+    ])
+
+
+def build_first_proof_action(memory_summary, share_summary, target_progress):
+    commands = build_first_proof_commands()
+    growth_url = build_issue_form_url(
+        GROWTH_PROOF_TEMPLATE,
+        title="Growth proof: Noosphere traction proof",
+        fields={
+            "campaign_hook": "First public proof action from the Noosphere traction proof panel.",
+            "target_contributors": target_progress["target_contributor_count"],
+            "real_data_context": "\n".join([
+                f"Public snapshot: {TRACTION_PROOF_URL}",
+                f"History: {HISTORY_URL}",
+                (
+                    f"Current proof gap: {share_summary['reviewable_public_urls']} reviewable public "
+                    f"proof URLs for {memory_summary['public_memories']} public memories."
+                ),
+            ]),
+            "next_commands": "\n".join(commands),
+        },
+    )
+    share_url = build_issue_form_url(
+        SHARE_PROOF_TEMPLATE,
+        title="Share proof: Noosphere traction proof",
+        fields={
+            "source_memory": TRACTION_PROOF_URL,
+            "share_context": (
+                "Shared the Noosphere public traction proof and first proof action kit."
+            ),
+        },
+    )
+    reason = (
+        "No reviewable public share proof URLs have been recorded yet."
+        if share_summary["reviewable_public_urls"] <= 0
+        else "The proof loop is still behind the public memory graph."
+    )
+
+    return {
+        "stage": "first public proof",
+        "reason": reason,
+        "growth_issue_form_url": growth_url,
+        "share_proof_form_url": share_url,
+        "created_growth_issue_url_placeholder": CREATED_GROWTH_ISSUE_URL_PLACEHOLDER,
+        "created_share_proof_issue_url_placeholder": CREATED_SHARE_PROOF_ISSUE_URL_PLACEHOLDER,
+        "public_post_url_placeholder": PUBLIC_POST_URL_PLACEHOLDER,
+        "commands_after_submission": commands,
+        "copy_ready_public_proof_post": build_first_proof_post(
+            memory_summary,
+            share_summary,
+            target_progress,
+            growth_url,
+            share_url,
+        ),
+        "disclaimer": NON_FABRICATION_DISCLOSURE,
+    }
+
+
+def build_share_card(
+    repo_summary,
+    memory_summary,
+    share_summary,
+    target_progress,
+    bottleneck,
+    history_summary,
+    first_proof_action,
+):
     def unit(count, singular, plural):
         return singular if count == 1 else plural
 
@@ -412,6 +533,7 @@ def build_share_card(repo_summary, memory_summary, share_summary, target_progres
         ),
         f"History: {history_summary.get('history_url', HISTORY_URL)}",
         f"Bottleneck: {bottleneck['stage']} - {bottleneck['next_action']}",
+        f"First proof: {first_proof_action['share_proof_form_url']}",
         NON_FABRICATION_DISCLOSURE,
     ])
 
@@ -479,6 +601,11 @@ def build_traction_proof(memories, share_proofs, repo, issues, pulls, access_iss
         target_count,
         access_issues,
     )
+    first_proof_action = build_first_proof_action(
+        memory_summary,
+        share_summary,
+        target_progress,
+    )
 
     snapshot = {
         "generated_at": utc_now_iso(),
@@ -500,10 +627,12 @@ def build_traction_proof(memories, share_proofs, repo, issues, pulls, access_iss
         },
         "target_progress": target_progress,
         "bottleneck": bottleneck,
+        "first_proof_action": first_proof_action,
         "actions": {
             "open_home": NOOSPHERE_HOME_URL,
             "upload_memory": UPLOAD_FORM_URL,
             "record_share_proof": SHARE_PROOF_FORM_URL,
+            "open_growth_proof": first_proof_action["growth_issue_form_url"],
             "github_actions": f"{REPO_URL}/actions",
         },
         "access_issues": access_issues,
@@ -518,6 +647,7 @@ def build_traction_proof(memories, share_proofs, repo, issues, pulls, access_iss
         target_progress,
         bottleneck,
         history_summary,
+        first_proof_action,
     )
     return snapshot
 

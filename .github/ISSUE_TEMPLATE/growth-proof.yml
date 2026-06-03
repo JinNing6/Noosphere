@@ -1,0 +1,56 @@
+name: Record Noosphere growth proof
+description: Record a public source where Noosphere received attention before or after a proof sprint.
+title: "Growth proof: Noosphere traction proof"
+labels: ["growth-proof"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Record reviewable public growth evidence. This issue does not claim downloads, reposts, referrals, retention, rewards, install counts, or private analytics.
+  - type: input
+    id: public_source_url
+    attributes:
+      label: Public source URL
+      description: Paste the created public post, thread, repository comment, article, or video URL.
+      placeholder: https://...
+    validations:
+      required: false
+  - type: textarea
+    id: campaign_hook
+    attributes:
+      label: Campaign hook
+      description: What public proof sprint or Noosphere artifact created this attention?
+      value: |
+        First public proof action from the Noosphere traction proof panel.
+    validations:
+      required: true
+  - type: input
+    id: target_contributors
+    attributes:
+      label: Target contributors
+      description: Positive integer target for the current public proof sprint.
+      value: "10"
+    validations:
+      required: true
+  - type: textarea
+    id: real_data_context
+    attributes:
+      label: Real data context
+      description: Current public snapshot context. Do not add private analytics or inferred adoption metrics.
+      value: |
+        Public snapshot: https://jinning6.github.io/Noosphere/traction_proof.json
+        History: https://jinning6.github.io/Noosphere/traction_history.json
+    validations:
+      required: true
+  - type: textarea
+    id: next_commands
+    attributes:
+      label: Commands to run after submission
+      description: Replace placeholders with the created Issue URLs and public post URL before running ledger commands.
+      value: |
+        record_growth_referral(source_url="https://github.com/JinNing6/Noosphere/issues/<created-growth-issue-number>", campaign="traction-proof")
+        record_share_attribution(share_url="<public-post-url>", source_url="https://github.com/JinNing6/Noosphere/issues/<created-share-proof-issue-number>", artifact="Noosphere traction proof")
+        share_attribution_report()
+        growth_flywheel()
+    validations:
+      required: true

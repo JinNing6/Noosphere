@@ -8,6 +8,7 @@ const cssSource = await readFile(new URL('../src/index.css', import.meta.url), '
 const packageSource = await readFile(new URL('../package.json', import.meta.url), 'utf8');
 const deployWorkflow = await readFile(new URL('../../.github/workflows/deploy-pages.yml', import.meta.url), 'utf8');
 const readmeSource = await readFile(new URL('../../README.md', import.meta.url), 'utf8');
+const growthProofIssueForm = await readFile(new URL('../../.github/ISSUE_TEMPLATE/growth-proof.yml', import.meta.url), 'utf8').catch(() => '');
 
 assert.match(
   appSource,
@@ -24,6 +25,13 @@ assert.match(dataSource, /traction_proof\.json/, 'traction proof data should loa
 assert.match(dataSource, /real_contributor_identities/, 'traction proof should expose real contributor progress');
 assert.match(dataSource, /latest_velocity/, 'traction proof should expose historical velocity deltas');
 assert.match(dataSource, /traction_history\.json/, 'traction proof should link to the append-only public history artifact');
+assert.match(dataSource, /first_proof_action/, 'traction proof should expose the first public proof action kit');
+assert.match(dataSource, /growth_issue_form_url/, 'traction proof should link to the Growth Issue Form');
+assert.match(dataSource, /share_proof_form_url/, 'traction proof should link to the Share Proof Issue Form');
+assert.match(dataSource, /created_growth_issue_url_placeholder/, 'traction proof should ask for the created Growth Issue proof URL');
+assert.match(dataSource, /created_share_proof_issue_url_placeholder/, 'traction proof should ask for the created Share Proof Issue URL');
+assert.match(dataSource, /commands_after_submission/, 'traction proof should expose exact ledger commands after issue submission');
+assert.match(dataSource, /copy_ready_public_proof_post/, 'traction proof should expose a compact copy-ready public proof post');
 assert.match(dataSource, /public share proof/, 'traction proof should name the current public proof bridge');
 assert.match(dataSource, /No downloads, reposts, referrals, retention, rewards, or install counts are inferred/, 'traction proof must carry non-fabrication disclosure');
 assert.match(dataSource, /createTractionProofPost/, 'traction proof should expose copy-ready public proof text');
@@ -37,6 +45,10 @@ assert.match(componentSource, /snapshot\.target_progress\.real_contributor_ident
 assert.match(componentSource, /snapshot\.bottleneck\.stage/, 'component should name the weakest proof bridge');
 assert.match(componentSource, /snapshot\.history\.latest_velocity/, 'component should render velocity from real snapshot history');
 assert.match(componentSource, /Velocity/, 'component should label the historical velocity surface');
+assert.match(componentSource, /First proof/, 'component should label the first public proof action kit');
+assert.match(componentSource, /snapshot\.first_proof_action\.growth_issue_form_url/, 'component should link to Growth Issue Form');
+assert.match(componentSource, /snapshot\.first_proof_action\.share_proof_form_url/, 'component should link to Share Proof Issue Form');
+assert.match(componentSource, /copy_ready_public_proof_post/, 'component should copy the compact first proof post');
 assert.match(componentSource, /createTractionProofPost/, 'component should expose a copy-ready proof report');
 assert.match(componentSource, /onOpenUploader/, 'component should route viewers back into contribution');
 assert.match(componentSource, /next_action_url/, 'component should link back to campaign or share-proof action');
@@ -44,6 +56,7 @@ assert.doesNotMatch(componentSource, /\b\d+\s+(downloads|reposts|referrals|insta
 
 assert.match(cssSource, /\.traction-proof-panel\b/, 'traction proof panel should have a stable CSS surface');
 assert.match(cssSource, /\.traction-proof-metrics\b/, 'traction proof metrics should have stable styling');
+assert.match(cssSource, /\.traction-proof-first-proof\b/, 'first proof action kit should have a stable CSS surface');
 assert.match(cssSource, /@media \(max-width: 1180px\)[\s\S]*\.traction-proof-panel/, 'traction proof should hide on constrained layouts');
 
 assert.match(packageSource, /"test:traction-proof":\s*"node scripts\/check_traction_proof\.mjs"/, 'frontend package should expose the traction proof check');
@@ -59,10 +72,20 @@ assert.match(historyWorkflow, /contents:\s+write/, 'traction history workflow sh
 assert.match(historyWorkflow, /python scripts\/record_traction_history\.py/, 'traction history workflow should append the generated snapshot');
 assert.match(historyWorkflow, /frontend\/public\/traction_history\.json/, 'traction history workflow should commit the reviewable public history artifact');
 
+assert.match(growthProofIssueForm, /name:\s+Record Noosphere growth proof/, 'Growth Issue Form should exist');
+assert.match(growthProofIssueForm, /labels:\s+\["growth-proof"\]/, 'Growth Issue Form should declare the growth-proof label');
+assert.match(growthProofIssueForm, /id:\s+public_source_url/, 'Growth Issue Form should collect a public source URL');
+assert.match(growthProofIssueForm, /id:\s+target_contributors/, 'Growth Issue Form should collect a target contributor count');
+assert.match(growthProofIssueForm, /record_growth_referral/, 'Growth Issue Form should show the next ledger command');
+assert.doesNotMatch(growthProofIssueForm, /\b(downloads|reposts|referrals|retention|rewards|installs)\s*[:=]\s*\d+/i, 'Growth Issue Form must not define fake adoption counters');
+
 const firstScreen = readmeSource.slice(0, 7200);
 assert.match(firstScreen, /Traction Proof/i, 'README first screen should announce the public traction proof surface');
 assert.match(firstScreen, /traction_proof\.json/, 'README should document the real public traction artifact');
 assert.match(firstScreen, /traction_history\.json/, 'README should document the append-only traction history artifact');
+assert.match(firstScreen, /First Proof/i, 'README first screen should expose the first proof action kit');
+assert.match(firstScreen, /growth-proof\.yml/, 'README should link the Growth Proof Issue Form');
+assert.match(firstScreen, /share-proof\.yml/, 'README should link the Share Proof Issue Form');
 assert.match(firstScreen, /velocity/i, 'README should explain that historical velocity comes from real snapshots');
 assert.match(firstScreen, /GitHub REST API/i, 'README should state public repo metrics come from GitHub REST API');
 assert.match(firstScreen, /No downloads, reposts, referrals, retention, rewards, or install counts are inferred/, 'README should disclose traction proof limits');

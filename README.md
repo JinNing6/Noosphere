@@ -67,7 +67,7 @@
 **Loop proof:** successful promotion comment returns your nearest embedding-backed resonance; matched historical Issue gets a backlink comment.<br/>
 **Share Proof Wall:** GitHub Pages now publishes `share_proofs.json` from real Share Proof Issues, turning external posts into a public proof wall without fake adoption metrics.<br/>
 **Launch Kit:** the live homepage now generates copy-ready Claude Code, Codex, and GitHub posts from real memory/resonance data, each with a Share Proof link for recording the public post after sharing.<br/>
-**Traction Proof + History:** Pages publishes real `traction_proof.json` and manual append-only `traction_history.json`; velocity compares GitHub REST API plus generated snapshots without fake adoption metrics.
+**Traction Proof + First Proof:** GitHub REST API `traction_proof.json` + append-only `traction_history.json` show velocity; First Proof links `growth-proof.yml` + `share-proof.yml`. No downloads, reposts, referrals, retention, rewards, or install counts are inferred.
 
 <br/>
 

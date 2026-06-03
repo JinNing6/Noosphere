@@ -73,11 +73,12 @@ export default function TractionProofPanel({ onOpenUploader }: TractionProofPane
   }, []);
 
   const sharePost = useMemo(() => createTractionProofPost(snapshot), [snapshot]);
+  const firstProofPost = snapshot.first_proof_action.copy_ready_public_proof_post || sharePost;
   const accessIssue = firstAccessIssue(snapshot);
   const velocity = snapshot.history.latest_velocity;
 
   const handleCopy = useCallback(() => {
-    void copyText(sharePost).then(() => {
+    void copyText(firstProofPost).then(() => {
       setCopyState('copied');
       if (timerRef.current !== null) window.clearTimeout(timerRef.current);
       timerRef.current = window.setTimeout(() => {
@@ -92,7 +93,7 @@ export default function TractionProofPanel({ onOpenUploader }: TractionProofPane
         timerRef.current = null;
       }, 1800);
     });
-  }, [sharePost]);
+  }, [firstProofPost]);
 
   return (
     <aside className="traction-proof-panel" aria-label="Noosphere public traction proof">
@@ -133,6 +134,20 @@ export default function TractionProofPanel({ onOpenUploader }: TractionProofPane
         <span>Weakest bridge</span>
         <strong>{stageLabel(snapshot.bottleneck.stage)}</strong>
         <p>{accessIssue || snapshot.bottleneck.reason}</p>
+      </div>
+
+      <div className="traction-proof-first-proof">
+        <span>First proof</span>
+        <strong>{stageLabel(snapshot.first_proof_action.stage)}</strong>
+        <p>{snapshot.first_proof_action.reason}</p>
+        <div>
+          <a href={snapshot.first_proof_action.growth_issue_form_url} target="_blank" rel="noopener noreferrer">
+            Growth
+          </a>
+          <a href={snapshot.first_proof_action.share_proof_form_url} target="_blank" rel="noopener noreferrer">
+            Share
+          </a>
+        </div>
       </div>
 
       <div className="traction-proof-actions">

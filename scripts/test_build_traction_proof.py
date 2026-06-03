@@ -152,6 +152,65 @@ class BuildTractionProofTests(unittest.TestCase):
         self.assertIn("403 rate limit", snapshot["access_issues"][0])
         self.assertIn("Retry Pages build", snapshot["bottleneck"]["next_action"])
 
+    def test_inlines_first_public_proof_action_when_share_proof_is_cold(self):
+        snapshot = builder.build_traction_proof(
+            memories=[
+                {
+                    "id": "debug-memory-one",
+                    "type": "warning",
+                    "issue_number": 21,
+                    "media_type": None,
+                    "resonance_count": 0,
+                    "resonates_with": [],
+                }
+            ],
+            share_proofs={
+                "summary": {
+                    "total_proof_issues": 0,
+                    "reviewable_public_urls": 0,
+                    "missing_or_invalid_urls": 0,
+                },
+                "proofs": [],
+            },
+            repo={
+                "full_name": "JinNing6/Noosphere",
+                "html_url": "https://github.com/JinNing6/Noosphere",
+                "stargazers_count": 15,
+                "forks_count": 1,
+                "open_issues_count": 8,
+            },
+            issues=[],
+            pulls=[],
+            access_issues=[],
+            history={},
+        )
+
+        action = snapshot["first_proof_action"]
+        self.assertEqual(action["stage"], "first public proof")
+        self.assertIn("growth-proof.yml", action["growth_issue_form_url"])
+        self.assertIn("share-proof.yml", action["share_proof_form_url"])
+        self.assertIn("<created-growth-issue-number>", action["created_growth_issue_url_placeholder"])
+        self.assertIn("<created-share-proof-issue-number>", action["created_share_proof_issue_url_placeholder"])
+        self.assertIn("<public-post-url>", action["public_post_url_placeholder"])
+        self.assertGreaterEqual(len(action["commands_after_submission"]), 4)
+        self.assertIn("record_growth_referral", action["commands_after_submission"][0])
+        self.assertIn("<created-growth-issue-number>", action["commands_after_submission"][0])
+        self.assertIn("record_share_attribution", "\n".join(action["commands_after_submission"]))
+        self.assertIn("share_attribution_report()", action["commands_after_submission"])
+        self.assertIn("growth_flywheel()", action["commands_after_submission"])
+        self.assertIn("Noosphere public traction proof", action["copy_ready_public_proof_post"])
+        self.assertIn("https://jinning6.github.io/Noosphere/traction_proof.json", action["copy_ready_public_proof_post"])
+        self.assertIn("https://jinning6.github.io/Noosphere/traction_history.json", action["copy_ready_public_proof_post"])
+        self.assertIn("share-proof.yml", action["copy_ready_public_proof_post"])
+        self.assertIn("consciousness-upload.yml", action["copy_ready_public_proof_post"])
+        self.assertIn(builder.NON_FABRICATION_DISCLOSURE, action["disclaimer"])
+        self.assertIn("open_growth_proof", snapshot["actions"])
+        self.assertIn("First proof", snapshot["share_card"])
+        self.assertNotRegex(
+            json.dumps(action),
+            r"\b(downloads|reposts|referrals|retention|rewards|installs)\s*[:=]\s*\d+",
+        )
+
     def test_writes_traction_proof_json_snapshot(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             temp_path = Path(temp_dir)

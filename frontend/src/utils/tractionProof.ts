@@ -2,6 +2,9 @@ import { CONTRIBUTION_ACTION, NOOSPHERE_HOME_URL } from './growthCopy';
 import { SHARE_PROOF_FORM_URL } from './shareProofs';
 
 export const TRACTION_PROOF_DISCLOSURE = 'No downloads, reposts, referrals, retention, rewards, or install counts are inferred from public repository, IssueOps, Pull Request, or URL snapshots.';
+export const GROWTH_PROOF_FORM_URL = 'https://github.com/JinNing6/Noosphere/issues/new?template=growth-proof.yml';
+export const TRACTION_PROOF_URL = 'https://jinning6.github.io/Noosphere/traction_proof.json';
+export const TRACTION_HISTORY_URL = 'https://jinning6.github.io/Noosphere/traction_history.json';
 
 export interface TractionRepoSnapshot {
   status: string;
@@ -72,6 +75,19 @@ export interface TractionHistorySummary {
   latest_velocity: TractionVelocity;
 }
 
+export interface FirstProofAction {
+  stage: string;
+  reason: string;
+  growth_issue_form_url: string;
+  share_proof_form_url: string;
+  created_growth_issue_url_placeholder: string;
+  created_share_proof_issue_url_placeholder: string;
+  public_post_url_placeholder: string;
+  commands_after_submission: string[];
+  copy_ready_public_proof_post: string;
+  disclaimer: string;
+}
+
 export interface TractionProofSnapshot {
   generated_at: string;
   source: string;
@@ -80,6 +96,7 @@ export interface TractionProofSnapshot {
   share_proof: TractionShareProofSnapshot;
   target_progress: TractionTargetProgress;
   bottleneck: TractionBottleneck;
+  first_proof_action: FirstProofAction;
   history: TractionHistorySummary;
   access_issues: string[];
   share_card: string;
@@ -124,9 +141,34 @@ export const EMPTY_TRACTION_PROOF: TractionProofSnapshot = {
     next_action: 'Share one memory publicly, then record the URL.',
     next_action_url: SHARE_PROOF_FORM_URL,
   },
+  first_proof_action: {
+    stage: 'first public proof',
+    reason: 'No reviewable public share proof URLs have been recorded yet.',
+    growth_issue_form_url: GROWTH_PROOF_FORM_URL,
+    share_proof_form_url: SHARE_PROOF_FORM_URL,
+    created_growth_issue_url_placeholder: 'https://github.com/JinNing6/Noosphere/issues/<created-growth-issue-number>',
+    created_share_proof_issue_url_placeholder: 'https://github.com/JinNing6/Noosphere/issues/<created-share-proof-issue-number>',
+    public_post_url_placeholder: '<public-post-url>',
+    commands_after_submission: [
+      'record_growth_referral(source_url="https://github.com/JinNing6/Noosphere/issues/<created-growth-issue-number>", campaign="traction-proof")',
+      'record_share_attribution(share_url="<public-post-url>", source_url="https://github.com/JinNing6/Noosphere/issues/<created-share-proof-issue-number>", artifact="Noosphere traction proof")',
+      'share_attribution_report()',
+      'growth_flywheel()',
+    ],
+    copy_ready_public_proof_post: [
+      'Noosphere public traction proof',
+      `Proof snapshot: ${TRACTION_PROOF_URL}`,
+      `History: ${TRACTION_HISTORY_URL}`,
+      `Upload memory: ${CONTRIBUTION_ACTION.url}`,
+      `Record growth proof: ${GROWTH_PROOF_FORM_URL}`,
+      `Record share proof: ${SHARE_PROOF_FORM_URL}`,
+      TRACTION_PROOF_DISCLOSURE,
+    ].join('\n'),
+    disclaimer: TRACTION_PROOF_DISCLOSURE,
+  },
   history: {
     mode: 'manual append-only',
-    history_url: 'https://jinning6.github.io/Noosphere/traction_history.json',
+    history_url: TRACTION_HISTORY_URL,
     record_workflow_url: 'https://github.com/JinNing6/Noosphere/actions/workflows/record-traction-history.yml',
     recording_policy: 'Manual append-only history. Velocity is computed only from prior recorded snapshots.',
     snapshots_recorded: 0,
@@ -163,7 +205,7 @@ export const EMPTY_TRACTION_PROOF: TractionProofSnapshot = {
 function isTractionProofSnapshot(value: unknown): value is TractionProofSnapshot {
   if (!value || typeof value !== 'object') return false;
   const candidate = value as Partial<TractionProofSnapshot>;
-  return Boolean(candidate.repo && candidate.memory && candidate.share_proof && candidate.target_progress && candidate.bottleneck && candidate.history);
+  return Boolean(candidate.repo && candidate.memory && candidate.share_proof && candidate.target_progress && candidate.bottleneck && candidate.first_proof_action && candidate.history);
 }
 
 function unit(count: number, singular: string, plural: string): string {
@@ -183,6 +225,9 @@ export async function fetchTractionProof(): Promise<TractionProofSnapshot> {
 }
 
 export function createTractionProofPost(snapshot: TractionProofSnapshot): string {
+  const firstProofPost = snapshot.first_proof_action.copy_ready_public_proof_post.trim();
+  if (firstProofPost) return firstProofPost;
+
   const bottleneck = snapshot.bottleneck.stage || 'public share proof';
   const nextActionUrl = snapshot.bottleneck.next_action_url || SHARE_PROOF_FORM_URL;
   const velocity = snapshot.history.latest_velocity;
