@@ -23,6 +23,7 @@ import LanguageSwitcher from './components/LanguageSwitcher';
 import ProfilePage from './components/ProfilePage';
 import OnboardingGuide from './components/OnboardingGuide';
 import AhaMomentDock from './components/AhaMomentDock';
+import LiveResonanceBoard from './components/LiveResonanceBoard';
 import type { KnowledgeNode } from './data/knowledge';
 import { fetchConsciousnessPayloads } from './data/knowledge';
 import SplashScreen from './components/SplashScreen';
@@ -150,6 +151,8 @@ function MainApp({ isPlayground = false }: { isPlayground?: boolean }) {
           onSearch={handleSearch}
           onOpenUploader={handleOpenUploader}
         />
+
+        <LiveResonanceBoard dynamicNodes={dynamicNodes} onOpenUploader={handleOpenUploader} />
 
         {/* 语言切换器 */}
         <LanguageSwitcher />

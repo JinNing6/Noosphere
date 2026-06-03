@@ -506,6 +506,172 @@ html, body, #root {
   background: rgba(0, 232, 120, 0.08);
 }
 
+.resonance-board {
+  pointer-events: auto;
+  position: absolute;
+  top: 96px;
+  right: 430px;
+  z-index: 44;
+  width: 324px;
+  padding: 16px;
+  border: 1px solid rgba(0, 232, 120, 0.16);
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, rgba(12, 24, 24, 0.94), rgba(5, 5, 16, 0.94)),
+    rgb(5, 5, 16);
+  box-shadow:
+    0 18px 54px rgba(0, 0, 0, 0.38),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  color: #f4f7ff;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  animation: ahaPanelIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.14s both;
+}
+
+.resonance-board-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.resonance-board-header div,
+.resonance-metric-grid div {
+  display: grid;
+  gap: 3px;
+}
+
+.resonance-board-header span,
+.resonance-metric-grid span,
+.resonance-latest span,
+.resonance-section-label {
+  color: rgba(236, 240, 255, 0.56);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.resonance-board-header strong {
+  color: #ffffff;
+  font-size: 18px;
+  line-height: 1.05;
+}
+
+.resonance-share-button,
+.resonance-upload-button {
+  border-radius: 8px;
+  border: 1px solid rgba(0, 232, 120, 0.24);
+  background: rgba(0, 232, 120, 0.09);
+  color: #ffffff;
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: 800;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.resonance-share-button {
+  min-width: 72px;
+  padding: 8px 10px;
+  font-size: 11px;
+  text-transform: uppercase;
+}
+
+.resonance-share-button:hover,
+.resonance-upload-button:hover {
+  border-color: rgba(0, 232, 120, 0.46);
+  background: rgba(0, 232, 120, 0.15);
+}
+
+.resonance-metric-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.resonance-metric-grid div {
+  min-width: 0;
+  padding: 9px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.055);
+}
+
+.resonance-metric-grid strong {
+  color: #00e878;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.resonance-latest {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 12px;
+  padding: 11px;
+  border: 1px solid rgba(0, 212, 255, 0.16);
+  border-radius: 8px;
+  background: rgba(0, 212, 255, 0.06);
+}
+
+.resonance-latest a,
+.resonance-latest strong {
+  color: rgba(255, 255, 255, 0.94);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.35;
+  text-decoration: none;
+}
+
+.resonance-latest a:hover {
+  color: #00d4ff;
+}
+
+.resonance-board-columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.resonance-board-columns > div {
+  min-width: 0;
+}
+
+.resonance-section-label {
+  display: block;
+  margin-bottom: 7px;
+}
+
+.resonance-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 26px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  color: rgba(236, 240, 255, 0.8);
+  font-size: 11px;
+}
+
+.resonance-row span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.resonance-row strong {
+  color: #ffb454;
+  font-size: 11px;
+}
+
+.resonance-upload-button {
+  width: 100%;
+  padding: 11px 12px;
+  font-size: 12px;
+}
+
 @keyframes ahaPanelIn {
   from {
     opacity: 0;
@@ -543,6 +709,10 @@ html, body, #root {
   .aha-proof-panel {
     display: none;
   }
+
+  .resonance-board {
+    right: 24px;
+  }
 }
 
 @media (max-width: 760px) {
@@ -576,11 +746,16 @@ html, body, #root {
     min-width: 0;
     flex: 1;
   }
+
+  .resonance-board {
+    display: none;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .aha-command-panel,
   .aha-proof-panel,
+  .resonance-board,
   .aha-live-dot,
   .aha-proof-header strong {
     animation: none;
