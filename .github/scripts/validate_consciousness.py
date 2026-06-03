@@ -4,7 +4,7 @@ import os
 from pathlib import Path
 
 # 定义四大正统的意识谱系
-VALID_CONSCIOUSNESS_TYPES = {"epiphany", "decision", "pattern", "warning"}
+VALID_CONSCIOUSNESS_TYPES = {"epiphany", "decision", "pattern", "warning", "image", "video", "voice"}
 REQUIRED_FIELDS = ["creator_signature", "consciousness_type", "thought_vector_text", "context_environment"]
 
 def validate_payload(file_path: str):
