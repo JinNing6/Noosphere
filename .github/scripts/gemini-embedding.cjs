@@ -1,10 +1,45 @@
 const fs = require("node:fs");
 const path = require("node:path");
 
-const DEFAULT_EMBEDDING_MODEL = "gemini-embedding-001";
+const DEFAULT_EMBEDDING_MODEL = "gemini-embedding-2";
 const GEMINI_API_BASE = "https://generativelanguage.googleapis.com/v1beta";
 const MAX_EMBEDDING_TEXT_CHARS = 30000;
 const DEFAULT_REQUEST_TIMEOUT_MS = 15000;
+const DEFAULT_MAX_MEDIA_BYTES = 20 * 1024 * 1024;
+
+const MULTIMODAL_EMBEDDING_MODELS = new Set(["gemini-embedding-2"]);
+
+const SUPPORTED_MEDIA_MIME_TYPES = new Map([
+  ["image/png", "image"],
+  ["image/jpeg", "image"],
+  ["audio/mpeg", "audio"],
+  ["audio/mp3", "audio"],
+  ["audio/wav", "audio"],
+  ["audio/x-wav", "audio"],
+  ["video/mp4", "video"],
+  ["video/quicktime", "video"],
+  ["application/pdf", "document"],
+]);
+
+const EXTENSION_MIME_TYPES = new Map([
+  [".png", "image/png"],
+  [".jpg", "image/jpeg"],
+  [".jpeg", "image/jpeg"],
+  [".mp3", "audio/mpeg"],
+  [".wav", "audio/wav"],
+  [".mp4", "video/mp4"],
+  [".mov", "video/quicktime"],
+  [".pdf", "application/pdf"],
+]);
+
+const MEDIA_URL_FIELDS_BY_TYPE = {
+  image: ["image_url", "media_url", "source_url"],
+  video: ["video_url", "media_url", "source_url"],
+  voice: ["audio_url", "voice_url", "media_url", "source_url"],
+  audio: ["audio_url", "voice_url", "media_url", "source_url"],
+  document: ["document_url", "pdf_url", "media_url", "source_url"],
+  pdf: ["pdf_url", "document_url", "media_url", "source_url"],
+};
 
 const MEDIA_METADATA_FIELDS = [
   "image_url",
@@ -39,6 +74,216 @@ function normalizeEmbeddingModel(model = DEFAULT_EMBEDDING_MODEL) {
   return {
     id,
     resource: `models/${id}`,
+  };
+}
+
+function supportsInlineMedia(model) {
+  return MULTIMODAL_EMBEDDING_MODELS.has(normalizeEmbeddingModel(model).id);
+}
+
+function normalizeMimeType(value) {
+  const mimeType = String(value || "").split(";")[0].trim().toLowerCase();
+  if (mimeType === "image/jpg") return "image/jpeg";
+  if (mimeType === "audio/mp3") return "audio/mpeg";
+  return mimeType;
+}
+
+function inferMimeTypeFromUrl(mediaUrl) {
+  try {
+    const url = new URL(mediaUrl);
+    return EXTENSION_MIME_TYPES.get(path.extname(url.pathname).toLowerCase()) || "";
+  } catch {
+    return "";
+  }
+}
+
+function inferMimeTypeFromPayload(payload, mediaUrl) {
+  const explicit = normalizeMimeType(payload?.mime_type);
+  if (SUPPORTED_MEDIA_MIME_TYPES.has(explicit)) return explicit;
+
+  const type = String(payload?.consciousness_type || "").toLowerCase();
+  const formatCandidates = [
+    payload?.image_format,
+    payload?.video_format,
+    payload?.audio_format,
+    payload?.voice_format,
+    payload?.media_format,
+    type,
+  ];
+
+  for (const candidate of formatCandidates) {
+    const normalized = String(candidate || "").trim().toLowerCase().replace(/^\./, "");
+    if (!normalized) continue;
+    const mimeType = EXTENSION_MIME_TYPES.get(`.${normalized}`);
+    if (mimeType) return mimeType;
+  }
+
+  return inferMimeTypeFromUrl(mediaUrl);
+}
+
+function getHeader(headers, name) {
+  if (!headers) return "";
+  if (typeof headers.get === "function") return headers.get(name) || "";
+  const lowerName = name.toLowerCase();
+  for (const [key, value] of Object.entries(headers)) {
+    if (key.toLowerCase() === lowerName) return value;
+  }
+  return "";
+}
+
+function parseContentLength(headers) {
+  const raw = getHeader(headers, "content-length");
+  const parsed = Number.parseInt(raw, 10);
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : null;
+}
+
+function normalizeMediaUrl(value) {
+  const mediaUrl = String(value || "").trim();
+  if (!mediaUrl) return null;
+
+  try {
+    const url = new URL(mediaUrl);
+    if (!["https:", "http:"].includes(url.protocol)) return null;
+    return url.toString();
+  } catch {
+    return null;
+  }
+}
+
+function getMediaUrlFields(payload) {
+  const type = String(payload?.consciousness_type || "").toLowerCase();
+  const fields = MEDIA_URL_FIELDS_BY_TYPE[type] || [];
+  return [...fields, "image_url", "video_url", "audio_url", "voice_url", "media_url", "source_url"];
+}
+
+function selectMediaSource(payload) {
+  const seen = new Set();
+  for (const field of getMediaUrlFields(payload)) {
+    if (seen.has(field)) continue;
+    seen.add(field);
+
+    const mediaUrl = normalizeMediaUrl(payload?.[field]);
+    if (!mediaUrl) continue;
+
+    const mimeType = inferMimeTypeFromPayload(payload, mediaUrl);
+    const modality = SUPPORTED_MEDIA_MIME_TYPES.get(mimeType);
+    if (!modality) {
+      return {
+        status: "skipped",
+        reason: "unsupported-media-type",
+        field,
+        url: mediaUrl,
+        mimeType: mimeType || "",
+      };
+    }
+
+    return {
+      status: "selected",
+      field,
+      url: mediaUrl,
+      mimeType,
+      modality,
+    };
+  }
+
+  return null;
+}
+
+async function fetchInlineMediaPart(source, options = {}) {
+  if (!source) return null;
+  if (source.status !== "selected") return source;
+
+  const fetchImpl = options.fetchImpl || globalThis.fetch;
+  if (typeof fetchImpl !== "function") {
+    return { ...source, status: "skipped", reason: "missing-fetch" };
+  }
+
+  const maxBytes = Number.parseInt(options.maxMediaBytes || DEFAULT_MAX_MEDIA_BYTES, 10);
+  const timeoutMs = Number.parseInt(options.timeoutMs || DEFAULT_REQUEST_TIMEOUT_MS, 10);
+  const timeout = createTimeoutSignal(timeoutMs);
+  let response;
+
+  try {
+    response = await fetchImpl(source.url, {
+      method: "GET",
+      headers: {
+        Accept: Array.from(SUPPORTED_MEDIA_MIME_TYPES.keys()).join(", "),
+      },
+      signal: timeout.signal,
+    });
+  } catch (error) {
+    if (isTimeoutLikeError(error)) {
+      return { ...source, status: "skipped", reason: "media-fetch-timeout" };
+    }
+    return {
+      ...source,
+      status: "skipped",
+      reason: "media-fetch-network-error",
+      error: error?.message || String(error),
+    };
+  } finally {
+    timeout.cancel();
+  }
+
+  if (!response.ok) {
+    return {
+      ...source,
+      status: "skipped",
+      reason: "media-fetch-failed",
+      statusCode: response.status,
+    };
+  }
+
+  const responseMimeType = normalizeMimeType(getHeader(response.headers, "content-type"));
+  const mimeType = SUPPORTED_MEDIA_MIME_TYPES.has(responseMimeType) ? responseMimeType : source.mimeType;
+  const modality = SUPPORTED_MEDIA_MIME_TYPES.get(mimeType);
+  if (!modality) {
+    return {
+      ...source,
+      status: "skipped",
+      reason: "unsupported-media-type",
+      mimeType: responseMimeType || source.mimeType || "",
+    };
+  }
+
+  const contentLength = parseContentLength(response.headers);
+  if (contentLength !== null && contentLength > maxBytes) {
+    return {
+      ...source,
+      status: "skipped",
+      reason: "media-too-large",
+      mimeType,
+      bytes: contentLength,
+    };
+  }
+
+  if (typeof response.arrayBuffer !== "function") {
+    return { ...source, status: "skipped", reason: "media-body-unavailable", mimeType };
+  }
+
+  const bytes = Buffer.from(await response.arrayBuffer());
+  if (bytes.length > maxBytes) {
+    return {
+      ...source,
+      status: "skipped",
+      reason: "media-too-large",
+      mimeType,
+      bytes: bytes.length,
+    };
+  }
+
+  return {
+    ...source,
+    status: "included",
+    mimeType,
+    modality,
+    bytes: bytes.length,
+    part: {
+      inline_data: {
+        mime_type: mimeType,
+        data: bytes.toString("base64"),
+      },
+    },
   };
 }
 
@@ -83,14 +328,27 @@ function buildEmbedContentRequest(payload, options = {}) {
   const model = normalizeEmbeddingModel(options.model);
   const apiBase = String(options.apiBase || GEMINI_API_BASE).replace(/\/+$/, "");
   const text = buildEmbeddingText(payload, options);
+  const media = options.media?.status === "included" ? options.media : null;
+  const parts = [];
+  const inputModalities = [];
+
+  if (text) {
+    parts.push({ text });
+    inputModalities.push("text");
+  }
+  if (media?.part) {
+    parts.push(media.part);
+    inputModalities.push(media.modality);
+  }
 
   return {
     model: model.id,
     url: `${apiBase}/models/${model.id}:embedContent`,
+    inputModalities,
     body: {
       model: model.resource,
       content: {
-        parts: [{ text }],
+        parts,
       },
     },
   };
@@ -156,9 +414,15 @@ async function generateEmbedding(payload, options = {}) {
     return { status: "missing-fetch", error: "A fetch implementation is required" };
   }
 
-  const request = buildEmbedContentRequest(payload, options);
-  const text = request.body.content.parts[0].text;
-  if (!text) {
+  const model = normalizeEmbeddingModel(options.model);
+  const mediaSource = supportsInlineMedia(model.id) ? selectMediaSource(payload) : null;
+  const media = await fetchInlineMediaPart(mediaSource, {
+    fetchImpl,
+    maxMediaBytes: options.maxMediaBytes,
+    timeoutMs: options.timeoutMs,
+  });
+  const request = buildEmbedContentRequest(payload, { ...options, model: model.id, media });
+  if (request.body.content.parts.length === 0) {
     return { status: "empty-content", error: "Payload has no embeddable text" };
   }
 
@@ -216,6 +480,8 @@ async function generateEmbedding(payload, options = {}) {
     status: "ok",
     model: request.model,
     embedding,
+    inputModalities: request.inputModalities,
+    media,
   };
 }
 
@@ -229,6 +495,11 @@ async function applyEmbeddingToPayload(payload, options = {}) {
   const now = options.now || (() => new Date());
   payload.embedding = result.embedding;
   payload.embedding_model = result.model;
+  payload.embedding_input_modalities = result.inputModalities;
+  if (result.media?.status === "included") {
+    payload.embedding_media_mime_type = result.media.mimeType;
+    payload.embedding_media_bytes = result.media.bytes;
+  }
   payload.embedding_generated_at = now().toISOString();
   return result;
 }
@@ -414,12 +685,16 @@ if (require.main === module) {
 
 module.exports = {
   DEFAULT_EMBEDDING_MODEL,
+  DEFAULT_MAX_MEDIA_BYTES,
   DEFAULT_REQUEST_TIMEOUT_MS,
   applyEmbeddingToPayload,
   backfillEmbeddings,
   buildEmbeddingText,
   buildEmbedContentRequest,
   extractEmbeddingValues,
+  fetchInlineMediaPart,
   generateEmbedding,
   normalizeEmbeddingModel,
+  selectMediaSource,
+  supportsInlineMedia,
 };

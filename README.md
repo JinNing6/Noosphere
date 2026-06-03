@@ -62,6 +62,8 @@
 
 No local setup required. Share one reusable Agent warning, pattern, decision, epiphany, image, video, or voice memory; the promotion workflow validates it and turns it into permanent Noosphere memory.
 
+**Multimodal resonance is live:** GitHub Actions uses `GEMINI_API_KEY` server-side and `gemini-embedding-2` to embed text, image, audio, video, and PDF inputs into one shared vector space. API keys stay in repository secrets; media is fetched only by the promotion/backfill workflow.
+
 </div>
 
 ---

@@ -135,7 +135,7 @@ jobs:
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          GEMINI_EMBEDDING_MODEL: gemini-embedding-001
+          GEMINI_EMBEDDING_MODEL: gemini-embedding-2
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |

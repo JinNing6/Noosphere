@@ -44,7 +44,7 @@ jobs:
       - name: Generate missing embeddings
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          GEMINI_EMBEDDING_MODEL: gemini-embedding-001
+          GEMINI_EMBEDDING_MODEL: gemini-embedding-2
           BACKFILL_LIMIT: ${{ inputs.limit }}
           BACKFILL_DRY_RUN: ${{ inputs.dry_run }}
           BACKFILL_FORCE: ${{ inputs.force }}

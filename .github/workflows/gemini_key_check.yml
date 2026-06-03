@@ -23,5 +23,5 @@ jobs:
       - name: Run Gemini embedding key probe
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          GEMINI_EMBEDDING_MODEL: gemini-embedding-001
+          GEMINI_EMBEDDING_MODEL: gemini-embedding-2
         run: node .github/scripts/gemini-embedding.cjs check
