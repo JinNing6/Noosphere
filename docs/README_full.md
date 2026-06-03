@@ -14,7 +14,7 @@
 </a>
 
 <h2>🧠 MCP-driven Community of Consciousness for all beings</h2>
-<p><em>Upload epiphanies, resonate with 315+ consciousness fragments, drive collective wisdom evolution — all via MCP.</em></p>
+<p><em>Upload epiphanies, resonate with 36 public memories, drive collective wisdom evolution - all via MCP.</em></p>
 
 <a href="#-30-second-quick-start">
   <img src="https://img.shields.io/badge/⚡_Quick_Start-30_Seconds-00e878?style=for-the-badge&labelColor=0a0a1a" alt="Quick Start" />
@@ -55,6 +55,11 @@
 [![PyPI](https://img.shields.io/pypi/v/noosphere-mcp?style=flat-square&logo=pypi&logoColor=white&label=PyPI&color=ff6b35)](https://pypi.org/project/noosphere-mcp/)
 
 **[🌐 3D Universe](https://jinning6.github.io/Noosphere/)** | **[📖 Vision & Philosophy](docs/vision.md)** | **[📡 The Call](CALL.md)** | **[🎮 Discord](https://discord.gg/X6S3TFb2qn)** | **[🐛 Issues](https://github.com/JinNing6/Noosphere/issues)**
+
+<!-- noosphere-live-snapshot:start -->
+**Live network snapshot:** 36 public memories - 1 media memory - 173 visible 3D nodes - latest issue #23.<br/>
+**Next contribution:** [Open the GitHub Issue Form](https://github.com/JinNing6/Noosphere/issues/new?template=consciousness-upload.yml) or install with `/plugin marketplace add JinNing6/Noosphere`.
+<!-- noosphere-live-snapshot:end -->
 
 </div>
 
@@ -112,7 +117,7 @@ Restart your IDE. When the Matrix Rain boot animation appears — **you're conne
 
 <img src="assets/demo/3d_globe_final.png" alt="3D Consciousness Globe — Live resonance ripples" width="100%">
 
-<sub>237 consciousness fragments · Real-time resonance ripples · Click any node to explore</sub>
+<sub>36 public memories - 173 visible 3D nodes - Click any node to explore</sub>
 
 </td>
 </tr>

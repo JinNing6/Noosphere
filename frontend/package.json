@@ -13,7 +13,8 @@
     "test:homepage-cta": "node scripts/check_homepage_contribution_cta.mjs",
     "test:issue-deeplink": "node scripts/check_issue_deeplink.mjs",
     "test:index": "node scripts/check_consciousness_index.mjs",
-    "test:resonance": "node scripts/check_resonance_board.mjs"
+    "test:resonance": "node scripts/check_resonance_board.mjs",
+    "test:readme-growth": "node scripts/check_readme_growth_claims.mjs"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.7",
