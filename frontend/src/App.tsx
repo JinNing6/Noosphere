@@ -24,6 +24,7 @@ import ProfilePage from './components/ProfilePage';
 import OnboardingGuide from './components/OnboardingGuide';
 import AhaMomentDock from './components/AhaMomentDock';
 import LiveResonanceBoard from './components/LiveResonanceBoard';
+import ShareProofWall from './components/ShareProofWall';
 import type { KnowledgeNode } from './data/knowledge';
 import { fetchConsciousnessPayloads } from './data/knowledge';
 import SplashScreen from './components/SplashScreen';
@@ -153,6 +154,7 @@ function MainApp({ isPlayground = false }: { isPlayground?: boolean }) {
         />
 
         <LiveResonanceBoard dynamicNodes={dynamicNodes} onOpenUploader={handleOpenUploader} />
+        <ShareProofWall />
 
         {/* 语言切换器 */}
         <LanguageSwitcher />

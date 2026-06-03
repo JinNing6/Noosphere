@@ -61,9 +61,11 @@
 <!-- noosphere-live-snapshot:start -->
 **Live network snapshot:** 36 public memories - 1 media memory - 173 visible 3D nodes - latest issue #23.<br/>
 **Next contribution:** [Open the GitHub Issue Form](https://github.com/JinNing6/Noosphere/issues/new?template=consciousness-upload.yml) or install with `/plugin marketplace add JinNing6/Noosphere`.
-**Shared it publicly? Record proof:** [Open the Share Proof Issue Form](https://github.com/JinNing6/Noosphere/issues/new?template=share-proof.yml). Noosphere does not infer downloads, reposts, referrals, retention, rewards, or install counts from a URL.<br/>
-**Loop proof:** successful promotion comment returns your nearest embedding-backed resonance; matched historical Issue gets a backlink comment.
 <!-- noosphere-live-snapshot:end -->
+
+**Shared it publicly? Record proof:** [Open the Share Proof Issue Form](https://github.com/JinNing6/Noosphere/issues/new?template=share-proof.yml). Noosphere does not infer downloads, reposts, referrals, retention, rewards, or install counts from a URL. No downloads, reposts, referrals, retention, rewards, or install counts are inferred from share proof URLs.<br/>
+**Loop proof:** successful promotion comment returns your nearest embedding-backed resonance; matched historical Issue gets a backlink comment.<br/>
+**Share Proof Wall:** GitHub Pages now publishes `share_proofs.json` from real Share Proof Issues, turning external posts into a public proof wall without fake adoption metrics.
 
 <br/>
 

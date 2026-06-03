@@ -708,6 +708,176 @@ html, body, #root {
   font-size: 12px;
 }
 
+.share-proof-wall {
+  pointer-events: auto;
+  position: absolute;
+  top: 96px;
+  right: 82px;
+  z-index: 43;
+  width: 320px;
+  padding: 15px;
+  border: 1px solid rgba(255, 180, 84, 0.18);
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, rgba(30, 22, 10, 0.94), rgba(6, 7, 16, 0.94)),
+    rgb(6, 7, 16);
+  box-shadow:
+    0 18px 54px rgba(0, 0, 0, 0.36),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  color: #f8f4eb;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  animation: ahaPanelIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both;
+}
+
+.share-proof-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.share-proof-header div {
+  display: grid;
+  gap: 3px;
+}
+
+.share-proof-header span,
+.share-proof-metrics span {
+  color: rgba(248, 244, 235, 0.58);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.share-proof-header strong {
+  color: #ffffff;
+  font-size: 18px;
+  line-height: 1.05;
+}
+
+.share-proof-copy,
+.share-proof-submit {
+  border-radius: 8px;
+  border: 1px solid rgba(255, 180, 84, 0.28);
+  background: rgba(255, 180, 84, 0.1);
+  color: #ffffff;
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: 800;
+  text-decoration: none;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.share-proof-copy {
+  min-width: 72px;
+  padding: 8px 10px;
+  font-size: 11px;
+  text-transform: uppercase;
+}
+
+.share-proof-copy:hover,
+.share-proof-submit:hover {
+  border-color: rgba(255, 180, 84, 0.5);
+  background: rgba(255, 180, 84, 0.16);
+}
+
+.share-proof-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.share-proof-metrics div {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+  padding: 9px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.055);
+}
+
+.share-proof-metrics strong {
+  color: #ffb454;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.share-proof-list {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.share-proof-card,
+.share-proof-empty {
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.055);
+}
+
+.share-proof-card > a,
+.share-proof-empty strong {
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.32;
+  text-decoration: none;
+}
+
+.share-proof-card > a:hover,
+.share-proof-card div a:hover {
+  color: #ffb454;
+}
+
+.share-proof-card div {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  color: rgba(248, 244, 235, 0.62);
+  font-size: 11px;
+}
+
+.share-proof-card div span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.share-proof-card div a {
+  color: rgba(255, 180, 84, 0.9);
+  font-weight: 800;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.share-proof-empty span,
+.share-proof-disclaimer {
+  color: rgba(248, 244, 235, 0.66);
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.share-proof-disclaimer {
+  margin: 0 0 11px;
+}
+
+.share-proof-submit {
+  display: block;
+  width: 100%;
+  padding: 11px 12px;
+  box-sizing: border-box;
+  font-size: 12px;
+  text-align: center;
+}
+
 @keyframes ahaPanelIn {
   from {
     opacity: 0;
@@ -749,6 +919,10 @@ html, body, #root {
   .resonance-board {
     right: 24px;
   }
+
+  .share-proof-wall {
+    display: none;
+  }
 }
 
 @media (max-width: 760px) {
@@ -786,12 +960,17 @@ html, body, #root {
   .resonance-board {
     display: none;
   }
+
+  .share-proof-wall {
+    display: none;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .aha-command-panel,
   .aha-proof-panel,
   .resonance-board,
+  .share-proof-wall,
   .aha-live-dot,
   .aha-proof-header strong {
     animation: none;
