@@ -1,0 +1,52 @@
+name: Record Traction History Snapshot
+
+on:
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: Optional review note for this manual traction snapshot.
+        required: false
+        type: string
+
+permissions:
+  contents: write
+  issues: read
+  pull-requests: read
+
+concurrency:
+  group: traction-history-record-main
+  cancel-in-progress: false
+
+jobs:
+  record:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build consciousness index
+        run: python scripts/build_consciousness_index.py
+
+      - name: Build share proof index
+        run: python scripts/build_share_proof_index.py
+
+      - name: Build traction proof
+        run: python scripts/build_traction_proof.py
+
+      - name: Append current traction proof to history
+        run: python scripts/record_traction_history.py
+
+      - name: Test traction history builder
+        run: python -m unittest scripts.test_record_traction_history scripts.test_build_traction_proof
+
+      - name: Commit reviewable traction history
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git restore --worktree frontend/public/consciousness_index.json frontend/public/share_proofs.json frontend/public/traction_proof.json
+          git add frontend/public/traction_history.json
+          if git diff --cached --quiet; then
+            echo "No new traction history snapshot to commit."
+          else
+            git commit -m "Record traction history snapshot"
+            git push
+          fi

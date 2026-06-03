@@ -94,6 +94,17 @@ class BuildTractionProofTests(unittest.TestCase):
             issues=issues,
             pulls=pulls,
             access_issues=[],
+            history={
+                "snapshots": [
+                    {
+                        "generated_at": "2026-06-01T00:00:00Z",
+                        "repo": {"stars": 4, "forks": 2, "open_issues": 5},
+                        "memory": {"public_memories": 1},
+                        "share_proof": {"reviewable_public_urls": 0},
+                        "target_progress": {"real_contributor_identities": 2},
+                    }
+                ]
+            },
         )
 
         self.assertEqual(snapshot["repo"]["stars"], 7)
@@ -110,6 +121,10 @@ class BuildTractionProofTests(unittest.TestCase):
         self.assertIn("memory-user", snapshot["target_progress"]["contributors"])
         self.assertIn("pr-user", snapshot["target_progress"]["contributors"])
         self.assertEqual(snapshot["bottleneck"]["stage"], "public share proof")
+        self.assertEqual(snapshot["history"]["mode"], "manual append-only")
+        self.assertEqual(snapshot["history"]["latest_velocity"]["deltas"]["stars"], 3)
+        self.assertEqual(snapshot["history"]["latest_velocity"]["deltas"]["public_memories"], 1)
+        self.assertIn("traction_history.json", snapshot["history"]["history_url"])
         self.assertIn("share-proof.yml", snapshot["bottleneck"]["next_action_url"])
         self.assertIn("Noosphere public traction proof", snapshot["share_card"])
         self.assertIn("real contributors", snapshot["share_card"])
@@ -127,6 +142,7 @@ class BuildTractionProofTests(unittest.TestCase):
             issues=[],
             pulls=[],
             access_issues=["GitHub repository fetch failed: 403 rate limit"],
+            history={},
         )
 
         self.assertEqual(snapshot["repo"]["status"], "unavailable")
@@ -168,6 +184,7 @@ class BuildTractionProofTests(unittest.TestCase):
 
             original_memory_file = builder.CONSCIOUSNESS_INDEX_FILE
             original_share_file = builder.SHARE_PROOF_FILE
+            original_history_file = builder.HISTORY_FILE
             original_output_file = builder.OUTPUT_FILE
             original_fetch_repo = builder.fetch_repository
             original_fetch_issues = builder.fetch_repository_issues
@@ -176,6 +193,7 @@ class BuildTractionProofTests(unittest.TestCase):
             try:
                 builder.CONSCIOUSNESS_INDEX_FILE = memories_file
                 builder.SHARE_PROOF_FILE = share_file
+                builder.HISTORY_FILE = temp_path / "missing_traction_history.json"
                 builder.OUTPUT_FILE = output_file
                 builder.fetch_repository = lambda: ({
                     "full_name": "JinNing6/Noosphere",
@@ -191,6 +209,7 @@ class BuildTractionProofTests(unittest.TestCase):
             finally:
                 builder.CONSCIOUSNESS_INDEX_FILE = original_memory_file
                 builder.SHARE_PROOF_FILE = original_share_file
+                builder.HISTORY_FILE = original_history_file
                 builder.OUTPUT_FILE = original_output_file
                 builder.fetch_repository = original_fetch_repo
                 builder.fetch_repository_issues = original_fetch_issues
@@ -199,6 +218,9 @@ class BuildTractionProofTests(unittest.TestCase):
             snapshot = json.loads(output_file.read_text(encoding="utf-8"))
             self.assertEqual(snapshot["repo"]["stars"], 2)
             self.assertEqual(snapshot["memory"]["public_memories"], 1)
+            self.assertEqual(snapshot["access_issues"], [])
+            self.assertEqual(snapshot["bottleneck"]["stage"], "public share proof")
+            self.assertEqual(snapshot["history"]["latest_velocity"]["status"], "baseline-only")
             self.assertIn("traction_proof.json", str(output_file))
 
 

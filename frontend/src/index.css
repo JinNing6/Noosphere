@@ -1103,6 +1103,24 @@ html, body, #root {
   background: rgba(0, 212, 255, 0.06);
 }
 
+.traction-proof-velocity {
+  display: grid;
+  gap: 4px;
+  margin-bottom: 11px;
+  padding: 10px;
+  border: 1px solid rgba(0, 232, 120, 0.16);
+  border-radius: 8px;
+  background: rgba(0, 232, 120, 0.06);
+}
+
+.traction-proof-velocity span {
+  color: rgba(236, 240, 255, 0.58);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
 .traction-proof-bottleneck strong {
   color: rgba(255, 255, 255, 0.94);
   font-size: 13px;
@@ -1110,7 +1128,14 @@ html, body, #root {
   text-transform: capitalize;
 }
 
+.traction-proof-velocity strong {
+  color: #00e878;
+  font-size: 13px;
+  line-height: 1.25;
+}
+
 .traction-proof-bottleneck p,
+.traction-proof-velocity p,
 .traction-proof-disclosure {
   margin: 0;
   color: rgba(236, 240, 255, 0.66);

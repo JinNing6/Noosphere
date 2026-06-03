@@ -43,6 +43,35 @@ export interface TractionBottleneck {
   next_action_url: string;
 }
 
+export interface TractionVelocity {
+  status: string;
+  baseline_generated_at: string;
+  current_generated_at: string;
+  days_elapsed: number;
+  deltas: {
+    stars: number;
+    forks: number;
+    open_issues: number;
+    public_memories: number;
+    reviewable_public_urls: number;
+    real_contributor_identities: number;
+  };
+  per_day: {
+    stars: number;
+    reviewable_public_urls: number;
+    real_contributor_identities: number;
+  };
+}
+
+export interface TractionHistorySummary {
+  mode: string;
+  history_url: string;
+  record_workflow_url: string;
+  recording_policy: string;
+  snapshots_recorded: number;
+  latest_velocity: TractionVelocity;
+}
+
 export interface TractionProofSnapshot {
   generated_at: string;
   source: string;
@@ -51,6 +80,7 @@ export interface TractionProofSnapshot {
   share_proof: TractionShareProofSnapshot;
   target_progress: TractionTargetProgress;
   bottleneck: TractionBottleneck;
+  history: TractionHistorySummary;
   access_issues: string[];
   share_card: string;
   disclaimer: string;
@@ -94,6 +124,32 @@ export const EMPTY_TRACTION_PROOF: TractionProofSnapshot = {
     next_action: 'Share one memory publicly, then record the URL.',
     next_action_url: SHARE_PROOF_FORM_URL,
   },
+  history: {
+    mode: 'manual append-only',
+    history_url: 'https://jinning6.github.io/Noosphere/traction_history.json',
+    record_workflow_url: 'https://github.com/JinNing6/Noosphere/actions/workflows/record-traction-history.yml',
+    recording_policy: 'Manual append-only history. Velocity is computed only from prior recorded snapshots.',
+    snapshots_recorded: 0,
+    latest_velocity: {
+      status: 'baseline-only',
+      baseline_generated_at: '',
+      current_generated_at: '',
+      days_elapsed: 0,
+      deltas: {
+        stars: 0,
+        forks: 0,
+        open_issues: 0,
+        public_memories: 0,
+        reviewable_public_urls: 0,
+        real_contributor_identities: 0,
+      },
+      per_day: {
+        stars: 0,
+        reviewable_public_urls: 0,
+        real_contributor_identities: 0,
+      },
+    },
+  },
   access_issues: [],
   share_card: [
     'Noosphere public traction proof',
@@ -107,7 +163,7 @@ export const EMPTY_TRACTION_PROOF: TractionProofSnapshot = {
 function isTractionProofSnapshot(value: unknown): value is TractionProofSnapshot {
   if (!value || typeof value !== 'object') return false;
   const candidate = value as Partial<TractionProofSnapshot>;
-  return Boolean(candidate.repo && candidate.memory && candidate.share_proof && candidate.target_progress && candidate.bottleneck);
+  return Boolean(candidate.repo && candidate.memory && candidate.share_proof && candidate.target_progress && candidate.bottleneck && candidate.history);
 }
 
 function unit(count: number, singular: string, plural: string): string {
@@ -129,6 +185,7 @@ export async function fetchTractionProof(): Promise<TractionProofSnapshot> {
 export function createTractionProofPost(snapshot: TractionProofSnapshot): string {
   const bottleneck = snapshot.bottleneck.stage || 'public share proof';
   const nextActionUrl = snapshot.bottleneck.next_action_url || SHARE_PROOF_FORM_URL;
+  const velocity = snapshot.history.latest_velocity;
 
   return [
     'Noosphere public traction proof',
@@ -136,6 +193,8 @@ export function createTractionProofPost(snapshot: TractionProofSnapshot): string
     `Memory graph: ${snapshot.memory.public_memories} public ${unit(snapshot.memory.public_memories, 'memory', 'memories')}, ${snapshot.memory.media_memories} media ${unit(snapshot.memory.media_memories, 'memory', 'memories')}, ${snapshot.memory.embedding_neighbor_edges} embedding neighbor ${unit(snapshot.memory.embedding_neighbor_edges, 'edge', 'edges')}`,
     `Share proof: ${snapshot.share_proof.reviewable_public_urls} reviewable public URLs from ${snapshot.share_proof.total_proof_issues} proof ${unit(snapshot.share_proof.total_proof_issues, 'issue', 'issues')}`,
     `Sprint: ${snapshot.target_progress.real_contributor_identities}/${snapshot.target_progress.target_contributor_count} real contributors`,
+    `Velocity: ${velocity.deltas.stars >= 0 ? '+' : ''}${velocity.deltas.stars} stars, ${velocity.deltas.reviewable_public_urls >= 0 ? '+' : ''}${velocity.deltas.reviewable_public_urls} proof URLs, ${velocity.deltas.real_contributor_identities >= 0 ? '+' : ''}${velocity.deltas.real_contributor_identities} real contributors since ${velocity.baseline_generated_at || 'baseline'}`,
+    `History: ${snapshot.history.history_url}`,
     `Bottleneck: ${bottleneck}`,
     `Next: ${nextActionUrl}`,
     `Upload memory: ${CONTRIBUTION_ACTION.url}`,

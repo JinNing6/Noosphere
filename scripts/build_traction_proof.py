@@ -14,6 +14,7 @@ Output: frontend/public/traction_proof.json
 """
 import json
 import os
+import sys
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -22,8 +23,21 @@ from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).parent.parent
+SCRIPT_DIR = Path(__file__).parent
+if str(SCRIPT_DIR) not in sys.path:
+    sys.path.insert(0, str(SCRIPT_DIR))
+
+from record_traction_history import (  # noqa: E402
+    HISTORY_URL,
+    RECORDING_POLICY,
+    RECORD_WORKFLOW_URL,
+    build_velocity,
+    normalize_snapshot,
+)
+
 CONSCIOUSNESS_INDEX_FILE = REPO_ROOT / "frontend" / "public" / "consciousness_index.json"
 SHARE_PROOF_FILE = REPO_ROOT / "frontend" / "public" / "share_proofs.json"
+HISTORY_FILE = REPO_ROOT / "frontend" / "public" / "traction_history.json"
 OUTPUT_FILE = REPO_ROOT / "frontend" / "public" / "traction_proof.json"
 
 GITHUB_REPO = os.environ.get("GITHUB_REPOSITORY", "JinNing6/Noosphere")
@@ -129,6 +143,12 @@ def read_json_file(path, fallback, access_issues, label):
     except (OSError, json.JSONDecodeError, UnicodeDecodeError) as exc:
         access_issues.append(f"{label} read failed: {exc}")
         return fallback
+
+
+def read_optional_json_file(path, fallback, access_issues, label):
+    if not path.exists():
+        return fallback
+    return read_json_file(path, fallback, access_issues, label)
 
 
 def issue_labels(issue):
@@ -353,9 +373,12 @@ def choose_bottleneck(memory_summary, share_summary, contributor_count, target_c
     }
 
 
-def build_share_card(repo_summary, memory_summary, share_summary, target_progress, bottleneck):
+def build_share_card(repo_summary, memory_summary, share_summary, target_progress, bottleneck, history_summary):
     def unit(count, singular, plural):
         return singular if count == 1 else plural
+
+    velocity = history_summary.get("latest_velocity", {})
+    deltas = velocity.get("deltas", {})
 
     return "\n".join([
         "Noosphere public traction proof",
@@ -381,12 +404,49 @@ def build_share_card(repo_summary, memory_summary, share_summary, target_progres
             f"Sprint: {target_progress['real_contributor_identities']}/"
             f"{target_progress['target_contributor_count']} real contributors"
         ),
+        (
+            "Velocity: "
+            f"{int(deltas.get('stars', 0)):+d} stars, "
+            f"{int(deltas.get('reviewable_public_urls', 0)):+d} proof URLs, "
+            f"{int(deltas.get('real_contributor_identities', 0)):+d} real contributors"
+        ),
+        f"History: {history_summary.get('history_url', HISTORY_URL)}",
         f"Bottleneck: {bottleneck['stage']} - {bottleneck['next_action']}",
         NON_FABRICATION_DISCLOSURE,
     ])
 
 
-def build_traction_proof(memories, share_proofs, repo, issues, pulls, access_issues):
+def summarize_history(history, snapshot):
+    history = history if isinstance(history, dict) else {}
+    snapshots = []
+    seen = set()
+    for raw_snapshot in history.get("snapshots", []):
+        normalized = normalize_snapshot(raw_snapshot)
+        if not normalized:
+            continue
+        key = normalized["generated_at"]
+        if key in seen:
+            continue
+        snapshots.append(normalized)
+        seen.add(key)
+
+    current = normalize_snapshot(snapshot)
+    if snapshots and current:
+        latest_velocity = build_velocity(snapshots[-1], current)
+    else:
+        latest_velocity = build_velocity(None, current or snapshot)
+
+    return {
+        "mode": "manual append-only",
+        "history_url": HISTORY_URL,
+        "record_workflow_url": RECORD_WORKFLOW_URL,
+        "recording_policy": RECORDING_POLICY,
+        "snapshots_recorded": len(snapshots),
+        "latest_velocity": latest_velocity,
+    }
+
+
+def build_traction_proof(memories, share_proofs, repo, issues, pulls, access_issues, history=None):
     access_issues = list(access_issues or [])
     share_proofs = share_proofs if isinstance(share_proofs, dict) else {}
     issues = issues if isinstance(issues, list) else []
@@ -420,7 +480,7 @@ def build_traction_proof(memories, share_proofs, repo, issues, pulls, access_iss
         access_issues,
     )
 
-    return {
+    snapshot = {
         "generated_at": utc_now_iso(),
         "source": (
             "GitHub REST API repository/issues/pulls plus generated Noosphere "
@@ -447,15 +507,19 @@ def build_traction_proof(memories, share_proofs, repo, issues, pulls, access_iss
             "github_actions": f"{REPO_URL}/actions",
         },
         "access_issues": access_issues,
-        "share_card": build_share_card(
-            repo_summary,
-            memory_summary,
-            share_summary,
-            target_progress,
-            bottleneck,
-        ),
         "disclaimer": NON_FABRICATION_DISCLOSURE,
     }
+    history_summary = summarize_history(history, snapshot)
+    snapshot["history"] = history_summary
+    snapshot["share_card"] = build_share_card(
+        repo_summary,
+        memory_summary,
+        share_summary,
+        target_progress,
+        bottleneck,
+        history_summary,
+    )
+    return snapshot
 
 
 def write_traction_proof():
@@ -472,6 +536,12 @@ def write_traction_proof():
         access_issues,
         "share_proofs.json",
     )
+    history = read_optional_json_file(
+        HISTORY_FILE,
+        {"snapshots": []},
+        access_issues,
+        "traction_history.json",
+    )
 
     repo, repo_error = fetch_repository()
     issues, issues_error = fetch_repository_issues()
@@ -487,6 +557,7 @@ def write_traction_proof():
         issues=issues,
         pulls=pulls,
         access_issues=access_issues,
+        history=history,
     )
     OUTPUT_FILE.parent.mkdir(parents=True, exist_ok=True)
     OUTPUT_FILE.write_text(

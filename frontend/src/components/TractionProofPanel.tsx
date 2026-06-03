@@ -45,6 +45,10 @@ function firstAccessIssue(snapshot: TractionProofSnapshot): string {
   return snapshot.access_issues[0] || '';
 }
 
+function signed(value: number): string {
+  return value >= 0 ? `+${value}` : String(value);
+}
+
 export default function TractionProofPanel({ onOpenUploader }: TractionProofPanelProps) {
   const [snapshot, setSnapshot] = useState<TractionProofSnapshot>(EMPTY_TRACTION_PROOF);
   const [copyState, setCopyState] = useState<'idle' | 'copied' | 'failed'>('idle');
@@ -70,6 +74,7 @@ export default function TractionProofPanel({ onOpenUploader }: TractionProofPane
 
   const sharePost = useMemo(() => createTractionProofPost(snapshot), [snapshot]);
   const accessIssue = firstAccessIssue(snapshot);
+  const velocity = snapshot.history.latest_velocity;
 
   const handleCopy = useCallback(() => {
     void copyText(sharePost).then(() => {
@@ -114,6 +119,14 @@ export default function TractionProofPanel({ onOpenUploader }: TractionProofPane
           <span>Proof URLs</span>
           <strong>{snapshot.share_proof.reviewable_public_urls}</strong>
         </div>
+      </div>
+
+      <div className="traction-proof-velocity">
+        <span>Velocity</span>
+        <strong>
+          {signed(velocity.deltas.stars)} stars / {signed(velocity.deltas.reviewable_public_urls)} proof URLs
+        </strong>
+        <p>{snapshot.history.snapshots_recorded} recorded snapshots - {snapshot.history.mode}</p>
       </div>
 
       <div className="traction-proof-bottleneck">

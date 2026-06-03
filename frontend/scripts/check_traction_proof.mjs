@@ -22,6 +22,8 @@ assert.match(
 
 assert.match(dataSource, /traction_proof\.json/, 'traction proof data should load the generated public JSON');
 assert.match(dataSource, /real_contributor_identities/, 'traction proof should expose real contributor progress');
+assert.match(dataSource, /latest_velocity/, 'traction proof should expose historical velocity deltas');
+assert.match(dataSource, /traction_history\.json/, 'traction proof should link to the append-only public history artifact');
 assert.match(dataSource, /public share proof/, 'traction proof should name the current public proof bridge');
 assert.match(dataSource, /No downloads, reposts, referrals, retention, rewards, or install counts are inferred/, 'traction proof must carry non-fabrication disclosure');
 assert.match(dataSource, /createTractionProofPost/, 'traction proof should expose copy-ready public proof text');
@@ -33,6 +35,8 @@ assert.match(componentSource, /snapshot\.repo\.stars/, 'component should show re
 assert.match(componentSource, /snapshot\.share_proof\.reviewable_public_urls/, 'component should show real reviewable proof count');
 assert.match(componentSource, /snapshot\.target_progress\.real_contributor_identities/, 'component should show real contributor identities');
 assert.match(componentSource, /snapshot\.bottleneck\.stage/, 'component should name the weakest proof bridge');
+assert.match(componentSource, /snapshot\.history\.latest_velocity/, 'component should render velocity from real snapshot history');
+assert.match(componentSource, /Velocity/, 'component should label the historical velocity surface');
 assert.match(componentSource, /createTractionProofPost/, 'component should expose a copy-ready proof report');
 assert.match(componentSource, /onOpenUploader/, 'component should route viewers back into contribution');
 assert.match(componentSource, /next_action_url/, 'component should link back to campaign or share-proof action');
@@ -49,9 +53,17 @@ assert.match(deployWorkflow, /pull-requests:\s+read/, 'Pages build should be all
 assert.match(deployWorkflow, /Build traction proof/, 'Pages workflow should generate traction_proof.json before build');
 assert.match(deployWorkflow, /python scripts\/build_traction_proof\.py/, 'Pages workflow should call the traction proof builder');
 
+const historyWorkflow = await readFile(new URL('../../.github/workflows/record-traction-history.yml', import.meta.url), 'utf8');
+assert.match(historyWorkflow, /workflow_dispatch:/, 'traction history recording should be explicit and manual');
+assert.match(historyWorkflow, /contents:\s+write/, 'traction history workflow should be able to commit the append-only history file');
+assert.match(historyWorkflow, /python scripts\/record_traction_history\.py/, 'traction history workflow should append the generated snapshot');
+assert.match(historyWorkflow, /frontend\/public\/traction_history\.json/, 'traction history workflow should commit the reviewable public history artifact');
+
 const firstScreen = readmeSource.slice(0, 7200);
 assert.match(firstScreen, /Traction Proof/i, 'README first screen should announce the public traction proof surface');
 assert.match(firstScreen, /traction_proof\.json/, 'README should document the real public traction artifact');
+assert.match(firstScreen, /traction_history\.json/, 'README should document the append-only traction history artifact');
+assert.match(firstScreen, /velocity/i, 'README should explain that historical velocity comes from real snapshots');
 assert.match(firstScreen, /GitHub REST API/i, 'README should state public repo metrics come from GitHub REST API');
 assert.match(firstScreen, /No downloads, reposts, referrals, retention, rewards, or install counts are inferred/, 'README should disclose traction proof limits');
 
