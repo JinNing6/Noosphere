@@ -11,7 +11,13 @@ permissions:
 jobs:
   comment:
     name: Comment on share proof
-    if: github.event.issue.state == 'open' && contains(github.event.issue.labels.*.name, 'share-proof')
+    if: >
+      github.event.issue.state == 'open' &&
+      (
+        contains(github.event.issue.labels.*.name, 'share-proof') ||
+        startsWith(github.event.issue.title, 'Share proof:') ||
+        contains(github.event.issue.body, '### Public share URL')
+      )
     runs-on: ubuntu-latest
     steps:
       - name: Reply with proof next actions

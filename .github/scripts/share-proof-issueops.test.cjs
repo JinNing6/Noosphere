@@ -37,6 +37,8 @@ test("Share Proof IssueOps workflow is a safe comment-only loop", () => {
   assert.match(workflow, /on:\s*\r?\n\s+issues:\s*\r?\n\s+types:\s+\[opened, edited, labeled\]/);
   assert.match(workflow, /permissions:\s*\r?\n\s+contents:\s+read\s*\r?\n\s+issues:\s+write/);
   assert.match(workflow, /contains\(github\.event\.issue\.labels\.\*\.name, 'share-proof'\)/);
+  assert.match(workflow, /startsWith\(github\.event\.issue\.title, 'Share proof:'\)/);
+  assert.match(workflow, /contains\(github\.event\.issue\.body, '### Public share URL'\)/);
   assert.match(workflow, /uses:\s+actions\/github-script@v7/);
   assert.match(workflow, /github\.rest\.issues\.listComments/);
   assert.match(workflow, /github\.rest\.issues\.createComment/);
