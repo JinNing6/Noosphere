@@ -628,7 +628,9 @@ function buildCheckPayload(modelId, args = {}) {
     tags: ["noosphere", "gemini", "embedding-check"],
   };
 
-  if (supportsInlineMedia(modelId)) {
+  const textOnly = Boolean(args.textOnly) || parseBoolean(args["text-only"]);
+
+  if (!textOnly && supportsInlineMedia(modelId)) {
     return {
       ...basePayload,
       consciousness_type: "image",
@@ -652,13 +654,22 @@ function formatModalities(modalities = []) {
   return modalities.length > 0 ? modalities.join("+") : "unknown";
 }
 
+function getCheckMode(args = {}, env = {}) {
+  if (Boolean(args.textOnly) || parseBoolean(args["text-only"])) return "text-only";
+  const rawMode = String(env.GEMINI_CHECK_MODE || "").trim().toLowerCase();
+  if (rawMode === "text-only" || rawMode === "text") return "text-only";
+  if (parseBoolean(env.GEMINI_CHECK_TEXT_ONLY)) return "text-only";
+  return "multimodal";
+}
+
 async function runCheck(argv = [], options = {}) {
   const args = parseArgs(argv);
   const env = options.env || process.env;
   const log = options.log || console.log;
   const error = options.error || console.error;
-  const model = normalizeEmbeddingModel(env.GEMINI_EMBEDDING_MODEL);
-  const result = await generateEmbedding(buildCheckPayload(model.id, args), {
+  const model = normalizeEmbeddingModel(args.model || env.GEMINI_EMBEDDING_MODEL);
+  const mode = getCheckMode(args, env);
+  const result = await generateEmbedding(buildCheckPayload(model.id, { ...args, textOnly: mode === "text-only" }), {
     apiKey: env.GEMINI_API_KEY,
     model: model.id,
     fetchImpl: options.fetchImpl,

@@ -2,6 +2,23 @@ name: Gemini Key Check
 
 on:
   workflow_dispatch:
+    inputs:
+      model:
+        description: Gemini embedding model to probe.
+        required: true
+        default: gemini-embedding-2
+        type: choice
+        options:
+          - gemini-embedding-2
+          - gemini-embedding-001
+      mode:
+        description: Use multimodal by default; text-only isolates secret and model access.
+        required: true
+        default: multimodal
+        type: choice
+        options:
+          - multimodal
+          - text-only
 
 permissions:
   contents: read
@@ -23,5 +40,12 @@ jobs:
       - name: Run Gemini embedding key probe
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          GEMINI_EMBEDDING_MODEL: gemini-embedding-2
-        run: node .github/scripts/gemini-embedding.cjs check
+          GEMINI_EMBEDDING_MODEL: ${{ inputs.model || 'gemini-embedding-2' }}
+          GEMINI_CHECK_MODE: ${{ inputs.mode || 'multimodal' }}
+        run: |
+          extra_args=()
+          if [ "$GEMINI_CHECK_MODE" = "text-only" ]; then
+            extra_args+=(--text-only)
+          fi
+
+          node .github/scripts/gemini-embedding.cjs check "${extra_args[@]}"
