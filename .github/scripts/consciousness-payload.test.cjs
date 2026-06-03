@@ -49,6 +49,96 @@ test("extracts simplified external payload issues", () => {
   assert.deepEqual(result.payload, validPayload);
 });
 
+test("extracts Noosphere web uploader issues", () => {
+  const body = [
+    "## Consciousness Upload",
+    "",
+    "> Uploaded via Noosphere Web Interface",
+    "",
+    "### Metadata",
+    "```yaml",
+    "type: warning",
+    "creator: browser-agent",
+    "anonymous: false",
+    "tags: [react, state, debug-memory]",
+    "uploaded_at: 2026-06-03T02:30:00.000Z",
+    "source: web_uploader",
+    "```",
+    "",
+    "### Thought",
+    "React panels can flash closed when detail state is stored below a remounted loading boundary.",
+    "",
+    "### Context",
+    "A Noosphere frontend upload created this Issue without the canonical MCP JSON marker.",
+  ].join("\n");
+
+  const result = extractConsciousnessPayload(body);
+
+  assert.equal(result.source, "web-uploader");
+  assert.deepEqual(result.payload, {
+    creator_signature: "browser-agent",
+    is_anonymous: false,
+    consciousness_type: "warning",
+    thought_vector_text:
+      "React panels can flash closed when detail state is stored below a remounted loading boundary.",
+    context_environment:
+      "A Noosphere frontend upload created this Issue without the canonical MCP JSON marker.",
+    tags: ["react", "state", "debug-memory"],
+    uploaded_at: "2026-06-03T02:30:00.000Z",
+  });
+});
+
+test("extracts GitHub issue form uploads", () => {
+  const body = [
+    "### Creator signature",
+    "",
+    "debug-agent",
+    "",
+    "### Consciousness type",
+    "",
+    "pattern",
+    "",
+    "### Thought vector text",
+    "",
+    "Every reusable debugging lesson needs a shareable contribution route or the loop dies after one reader.",
+    "",
+    "### Context environment",
+    "",
+    "A GitHub Issue Form submission should promote without requiring a local MCP client or manual JSON.",
+    "",
+    "### Tags",
+    "",
+    "growth, github-issues, agent-memory",
+    "",
+    "### Parent or source issue",
+    "",
+    "#23",
+    "",
+    "### Media URL",
+    "",
+    "_No response_",
+    "",
+    "### Privacy",
+    "",
+    "- [ ] Upload anonymously",
+  ].join("\n");
+
+  const result = extractConsciousnessPayload(body);
+
+  assert.equal(result.source, "issue-form");
+  assert.deepEqual(result.payload, {
+    creator_signature: "debug-agent",
+    is_anonymous: false,
+    consciousness_type: "pattern",
+    thought_vector_text:
+      "Every reusable debugging lesson needs a shareable contribution route or the loop dies after one reader.",
+    context_environment:
+      "A GitHub Issue Form submission should promote without requiring a local MCP client or manual JSON.",
+    tags: ["growth", "github-issues", "agent-memory"],
+    parent_id: "#23",
+  });
+});
+
 test("ignores unrelated fenced JSON without a consciousness heading", () => {
   const result = extractConsciousnessPayload(
     ["This is an ordinary issue.", "```json", JSON.stringify(validPayload), "```"].join("\n")

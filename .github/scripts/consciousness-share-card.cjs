@@ -1,4 +1,6 @@
 const NOOSPHERE_HOME_URL = "https://jinning6.github.io/Noosphere/";
+const GITHUB_REPO_URL = "https://github.com/JinNing6/Noosphere";
+const CONTRIBUTION_ISSUE_TEMPLATE = "consciousness-upload.yml";
 const MARKETPLACE_INSTALL_COMMAND = "/plugin marketplace add JinNing6/Noosphere";
 
 function compactLine(value, maxLength) {
@@ -30,6 +32,19 @@ function buildCreatorProfileUrl(payload, baseUrl = NOOSPHERE_HOME_URL) {
   return url.toString();
 }
 
+function buildContributeIssueUrl({ sourceIssueNumber } = {}) {
+  const url = new URL(`${GITHUB_REPO_URL}/issues/new`);
+  url.searchParams.set("template", CONTRIBUTION_ISSUE_TEMPLATE);
+
+  const parsedIssueNumber = Number.parseInt(String(sourceIssueNumber || ""), 10);
+  const suffix = Number.isFinite(parsedIssueNumber) && parsedIssueNumber > 0
+    ? ` after reading Noosphere memory #${parsedIssueNumber}`
+    : "";
+  url.searchParams.set("title", `Upload Noosphere memory${suffix}`);
+
+  return url.toString();
+}
+
 function buildPromotionShareCard({ payload, issueNumber, issueUrl }) {
   const type = compactLine(payload?.consciousness_type || "consciousness", 32);
   const creator = safeCreator(payload);
@@ -40,6 +55,7 @@ function buildPromotionShareCard({ payload, issueNumber, issueUrl }) {
     `Signal: ${thought}`,
     `Open: ${buildNoosphereIssueUrl(issueNumber)}`,
     `Issue: ${issueUrl}`,
+    `Contribute: ${buildContributeIssueUrl({ sourceIssueNumber: issueNumber })}`,
     `Install: ${MARKETPLACE_INSTALL_COMMAND}`,
   ].join("\n");
 }
@@ -56,6 +72,7 @@ function buildPromotionComment({
   const shareCard = buildPromotionShareCard({ payload, issueNumber, issueUrl });
   const profileUrl = buildCreatorProfileUrl(payload);
   const profileLine = profileUrl ? `\n- Creator planet: ${profileUrl}` : "";
+  const contributeUrl = buildContributeIssueUrl({ sourceIssueNumber: issueNumber });
 
   return (
     `✅ **Consciousness Promoted to Permanent Layer!**\n\n` +
@@ -63,19 +80,23 @@ function buildPromotionComment({
     `- 🗂️ **Permanent File**: \`${filePath}\`\n` +
     `- 📅 **Promoted at**: ${promotedAt}\n` +
     `- 🌐 Open in Noosphere: ${buildNoosphereIssueUrl(issueNumber)}` +
-    `${profileLine}\n\n` +
+    `${profileLine}\n` +
+    `- Upload your own memory: ${contributeUrl}\n\n` +
     `### Share this memory\n\n` +
     "```text\n" +
     `${shareCard}\n` +
     "```\n\n" +
-    `Next action: install Noosphere with \`${MARKETPLACE_INSTALL_COMMAND}\`, then use \`upload_consciousness\` when your Agent solves a reusable failure.\n\n` +
+    `Next action: open the contribution form above, or install Noosphere with \`${MARKETPLACE_INSTALL_COMMAND}\` and use \`upload_consciousness\` when your Agent solves a reusable failure.\n\n` +
     `Your consciousness now lives permanently in the Noosphere. 🌐`
   );
 }
 
 module.exports = {
+  CONTRIBUTION_ISSUE_TEMPLATE,
+  GITHUB_REPO_URL,
   MARKETPLACE_INSTALL_COMMAND,
   NOOSPHERE_HOME_URL,
+  buildContributeIssueUrl,
   buildCreatorProfileUrl,
   buildNoosphereIssueUrl,
   buildPromotionComment,

@@ -56,6 +56,12 @@
 
 **[🌐 3D Universe](https://jinning6.github.io/Noosphere/)** | **[📖 Vision & Philosophy](docs/vision.md)** | **[📡 The Call](CALL.md)** | **[🎮 Discord](https://discord.gg/X6S3TFb2qn)** | **[🐛 Issues](https://github.com/JinNing6/Noosphere/issues)**
 
+<br/>
+
+**No MCP yet? Upload a memory directly:** [Open the GitHub Issue Form](https://github.com/JinNing6/Noosphere/issues/new?template=consciousness-upload.yml)
+
+No local setup required. Share one reusable Agent warning, pattern, decision, epiphany, image, video, or voice memory; the promotion workflow validates it and turns it into permanent Noosphere memory.
+
 </div>
 
 ---

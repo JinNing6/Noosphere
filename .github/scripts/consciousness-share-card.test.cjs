@@ -6,6 +6,7 @@ const test = require("node:test");
 const {
   NOOSPHERE_HOME_URL,
   buildNoosphereIssueUrl,
+  buildContributeIssueUrl,
   buildPromotionComment,
   buildPromotionShareCard,
 } = require("./consciousness-share-card.cjs");
@@ -30,6 +31,16 @@ test("builds Noosphere issue deep links for promoted consciousness", () => {
   );
 });
 
+test("builds one-click contribution Issue Form links without privileged query params", () => {
+  const url = buildContributeIssueUrl({ sourceIssueNumber: 23 });
+  const parsed = new URL(url);
+
+  assert.equal(parsed.origin + parsed.pathname, "https://github.com/JinNing6/Noosphere/issues/new");
+  assert.equal(parsed.searchParams.get("template"), "consciousness-upload.yml");
+  assert.match(parsed.searchParams.get("title"), /Noosphere memory/i);
+  assert.equal(parsed.searchParams.has("labels"), false);
+});
+
 test("builds a compact promotion share card from real payload data", () => {
   const shareCard = buildPromotionShareCard({
     payload,
@@ -42,9 +53,10 @@ test("builds a compact promotion share card from real payload data", () => {
   assert.match(shareCard, /RecursiveCharacterTextSplitter split Chinese/);
   assert.match(shareCard, /Open: https:\/\/jinning6\.github\.io\/Noosphere\/\?issue=23/);
   assert.match(shareCard, /Issue: https:\/\/github\.com\/JinNing6\/Noosphere\/issues\/23/);
+  assert.match(shareCard, /Contribute: https:\/\/github\.com\/JinNing6\/Noosphere\/issues\/new\?template=consciousness-upload\.yml/);
   assert.match(shareCard, /Install: \/plugin marketplace add JinNing6\/Noosphere/);
   assert.doesNotMatch(shareCard, /\b\d+\s+(users|installs|downloads|stars)\b/i);
-  assert.ok(shareCard.length <= 420, `share card should stay compact, got ${shareCard.length}`);
+  assert.ok(shareCard.length <= 560, `share card should stay compact, got ${shareCard.length}`);
 });
 
 test("promotion comment embeds share card and next actions", () => {
@@ -63,7 +75,27 @@ test("promotion comment embeds share card and next actions", () => {
   assert.match(comment, /```text\nKnown Noosphere memory promoted:/);
   assert.match(comment, /Open: https:\/\/jinning6\.github\.io\/Noosphere\/\?issue=23/);
   assert.match(comment, /Creator planet: https:\/\/jinning6\.github\.io\/Noosphere\/\?profile=debug-agent/);
+  assert.match(comment, /Upload your own memory: https:\/\/github\.com\/JinNing6\/Noosphere\/issues\/new\?template=consciousness-upload\.yml/);
   assert.match(comment, /upload_consciousness/);
+});
+
+test("repository includes the public contribution Issue Form", () => {
+  const issueForm = fs.readFileSync(
+    path.join(repoRoot, ".github", "ISSUE_TEMPLATE", "consciousness-upload.yml"),
+    "utf8"
+  );
+
+  assert.match(issueForm, /name:\s+Upload reusable Agent memory/);
+  assert.match(issueForm, /id:\s+thought_vector_text/);
+  assert.match(issueForm, /labels:\s+\["consciousness", "ephemeral"\]/);
+});
+
+test("README exposes the no-install contribution route near the top", () => {
+  const readme = fs.readFileSync(path.join(repoRoot, "README.md"), "utf8");
+  const firstScreen = readme.slice(0, 6500);
+
+  assert.match(firstScreen, /No MCP yet\? Upload a memory/);
+  assert.match(firstScreen, /issues\/new\?template=consciousness-upload\.yml/);
 });
 
 test("promotion workflow uses the share card helper for success comments", () => {
