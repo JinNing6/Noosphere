@@ -878,6 +878,123 @@ html, body, #root {
   text-align: center;
 }
 
+.launch-kit {
+  pointer-events: auto;
+  position: absolute;
+  left: 24px;
+  bottom: 24px;
+  z-index: 45;
+  width: 374px;
+  padding: 15px;
+  border: 1px solid rgba(0, 212, 255, 0.18);
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, rgba(8, 20, 30, 0.94), rgba(5, 6, 16, 0.94)),
+    rgb(5, 6, 16);
+  box-shadow:
+    0 18px 54px rgba(0, 0, 0, 0.38),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  color: #f4f7ff;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  animation: ahaPanelIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.22s both;
+}
+
+.launch-kit-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 11px;
+}
+
+.launch-kit-header div {
+  display: grid;
+  gap: 3px;
+}
+
+.launch-kit-header span,
+.launch-kit-post span {
+  color: rgba(236, 240, 255, 0.58);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.launch-kit-header strong {
+  color: #ffffff;
+  font-size: 18px;
+  line-height: 1.05;
+}
+
+.launch-kit-header button,
+.launch-kit-post button,
+.launch-kit-post a {
+  border-radius: 8px;
+  border: 1px solid rgba(0, 212, 255, 0.24);
+  background: rgba(0, 212, 255, 0.09);
+  color: #ffffff;
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: 800;
+  text-decoration: none;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.launch-kit-header button {
+  padding: 8px 10px;
+  font-size: 11px;
+  text-transform: uppercase;
+}
+
+.launch-kit-header button:hover,
+.launch-kit-post button:hover,
+.launch-kit-post a:hover {
+  border-color: rgba(0, 212, 255, 0.48);
+  background: rgba(0, 212, 255, 0.15);
+}
+
+.launch-kit-posts {
+  display: grid;
+  gap: 8px;
+}
+
+.launch-kit-post {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.055);
+}
+
+.launch-kit-post div {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.launch-kit-post strong {
+  min-width: 0;
+  overflow: hidden;
+  color: rgba(255, 255, 255, 0.94);
+  font-size: 12px;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.launch-kit-post button,
+.launch-kit-post a {
+  min-width: 58px;
+  padding: 7px 8px;
+  font-size: 10px;
+  text-align: center;
+  text-transform: uppercase;
+}
+
 @keyframes ahaPanelIn {
   from {
     opacity: 0;
@@ -923,6 +1040,10 @@ html, body, #root {
   .share-proof-wall {
     display: none;
   }
+
+  .launch-kit {
+    display: none;
+  }
 }
 
 @media (max-width: 760px) {
@@ -964,6 +1085,10 @@ html, body, #root {
   .share-proof-wall {
     display: none;
   }
+
+  .launch-kit {
+    display: none;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -971,6 +1096,7 @@ html, body, #root {
   .aha-proof-panel,
   .resonance-board,
   .share-proof-wall,
+  .launch-kit,
   .aha-live-dot,
   .aha-proof-header strong {
     animation: none;

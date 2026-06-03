@@ -65,7 +65,8 @@
 
 **Shared it publicly? Record proof:** [Open the Share Proof Issue Form](https://github.com/JinNing6/Noosphere/issues/new?template=share-proof.yml). Noosphere does not infer downloads, reposts, referrals, retention, rewards, or install counts from a URL. No downloads, reposts, referrals, retention, rewards, or install counts are inferred from share proof URLs.<br/>
 **Loop proof:** successful promotion comment returns your nearest embedding-backed resonance; matched historical Issue gets a backlink comment.<br/>
-**Share Proof Wall:** GitHub Pages now publishes `share_proofs.json` from real Share Proof Issues, turning external posts into a public proof wall without fake adoption metrics.
+**Share Proof Wall:** GitHub Pages now publishes `share_proofs.json` from real Share Proof Issues, turning external posts into a public proof wall without fake adoption metrics.<br/>
+**Launch Kit:** the live homepage now generates copy-ready Claude Code, Codex, and GitHub posts from real memory/resonance data, each with a Share Proof link for recording the public post after sharing.
 
 <br/>
 
