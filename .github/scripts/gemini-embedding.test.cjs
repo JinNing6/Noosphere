@@ -10,6 +10,7 @@ const {
   buildEmbedContentRequest,
   extractEmbeddingValues,
   generateEmbedding,
+  runCheck,
 } = require("./gemini-embedding.cjs");
 
 const repoRoot = path.join(__dirname, "..", "..");
@@ -237,6 +238,58 @@ test("manual key check workflow calls the safe Gemini probe command", () => {
   assert.match(workflow, /GEMINI_API_KEY: \$\{\{ secrets\.GEMINI_API_KEY \}\}/);
   assert.match(workflow, /GEMINI_EMBEDDING_MODEL: gemini-embedding-2/);
   assert.match(workflow, /node \.github\/scripts\/gemini-embedding\.cjs check/);
+});
+
+test("manual key check validates a real multimodal image payload for Gemini Embedding 2", async () => {
+  const calls = [];
+  const messages = [];
+
+  const exitCode = await runCheck([], {
+    env: {
+      GEMINI_API_KEY: "test-secret",
+      GEMINI_EMBEDDING_MODEL: "gemini-embedding-2",
+    },
+    log: (message) => messages.push(message),
+    error: (message) => messages.push(message),
+    fetchImpl: async (url, options) => {
+      calls.push({ url, options });
+
+      if (url.includes("/releases/download/image-consciousness/")) {
+        return {
+          ok: true,
+          status: 200,
+          headers: new Map([["content-type", "image/png"], ["content-length", "4"]]),
+          async arrayBuffer() {
+            return new Uint8Array([0x89, 0x50, 0x4e, 0x47]).buffer;
+          },
+        };
+      }
+
+      const body = JSON.parse(options.body);
+      assert.equal(url, "https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-2:embedContent");
+      assert.match(body.content.parts[0].text, /health check image probe/);
+      assert.deepEqual(body.content.parts[1], {
+        inline_data: {
+          mime_type: "image/png",
+          data: Buffer.from([0x89, 0x50, 0x4e, 0x47]).toString("base64"),
+        },
+      });
+
+      return {
+        ok: true,
+        status: 200,
+        async json() {
+          return { embedding: { values: [0.1, 0.2, 0.3] } };
+        },
+      };
+    },
+  });
+
+  assert.equal(exitCode, 0);
+  assert.equal(calls.length, 2);
+  assert.equal(calls[0].options.headers?.["x-goog-api-key"], undefined);
+  assert.equal(calls[1].options.headers["x-goog-api-key"], "test-secret");
+  assert.match(messages.join("\n"), /text\+image/);
 });
 
 test("backfill workflow can update historical payload embeddings", () => {

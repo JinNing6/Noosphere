@@ -6,6 +6,9 @@ const GEMINI_API_BASE = "https://generativelanguage.googleapis.com/v1beta";
 const MAX_EMBEDDING_TEXT_CHARS = 30000;
 const DEFAULT_REQUEST_TIMEOUT_MS = 15000;
 const DEFAULT_MAX_MEDIA_BYTES = 20 * 1024 * 1024;
+const DEFAULT_CHECK_IMAGE_URL =
+  "https://github.com/JinNing6/Noosphere/releases/download/image-consciousness/image_JinNing6_20260320093215_a34f9fb8.png";
+const DEFAULT_CHECK_IMAGE_SIZE_BYTES = 1119;
 
 const MULTIMODAL_EMBEDDING_MODELS = new Set(["gemini-embedding-2"]);
 
@@ -617,30 +620,74 @@ async function backfillEmbeddings(options = {}) {
   return summary;
 }
 
-async function runCheck() {
-  const result = await generateEmbedding(
-    {
-      consciousness_type: "epiphany",
-      thought_vector_text: "Noosphere Gemini API key validation probe.",
-      context_environment: "GitHub Actions secret health check for Gemini embeddings.",
-      tags: ["noosphere", "gemini", "embedding-check"],
-    },
-    {
-      apiKey: process.env.GEMINI_API_KEY,
-      model: process.env.GEMINI_EMBEDDING_MODEL,
-    }
-  );
+function buildCheckPayload(modelId, args = {}) {
+  const basePayload = {
+    creator_signature: "noosphere-ci",
+    is_anonymous: true,
+    context_environment: "GitHub Actions secret health check for Gemini embeddings.",
+    tags: ["noosphere", "gemini", "embedding-check"],
+  };
+
+  if (supportsInlineMedia(modelId)) {
+    return {
+      ...basePayload,
+      consciousness_type: "image",
+      thought_vector_text: "Noosphere Gemini Embedding 2 health check image probe.",
+      image_url: args["media-url"] || DEFAULT_CHECK_IMAGE_URL,
+      image_format: "png",
+      image_size_bytes: DEFAULT_CHECK_IMAGE_SIZE_BYTES,
+      mime_type: args["media-mime-type"] || "image/png",
+      category: "health-check",
+    };
+  }
+
+  return {
+    ...basePayload,
+    consciousness_type: "epiphany",
+    thought_vector_text: "Noosphere Gemini API key validation probe.",
+  };
+}
+
+function formatModalities(modalities = []) {
+  return modalities.length > 0 ? modalities.join("+") : "unknown";
+}
+
+async function runCheck(argv = [], options = {}) {
+  const args = parseArgs(argv);
+  const env = options.env || process.env;
+  const log = options.log || console.log;
+  const error = options.error || console.error;
+  const model = normalizeEmbeddingModel(env.GEMINI_EMBEDDING_MODEL);
+  const result = await generateEmbedding(buildCheckPayload(model.id, args), {
+    apiKey: env.GEMINI_API_KEY,
+    model: model.id,
+    fetchImpl: options.fetchImpl,
+    maxMediaBytes: options.maxMediaBytes,
+    timeoutMs: options.timeoutMs || args.timeout,
+  });
 
   if (result.status === "ok") {
-    console.log(`Gemini embedding key is valid: ${result.model}, ${result.embedding.length} dimensions.`);
+    if (supportsInlineMedia(result.model) && !result.inputModalities?.includes("image")) {
+      error("Gemini embedding key check failed: image media was not included in the multimodal request.");
+      if (result.media?.reason) {
+        error(`Media status: ${result.media.status} ${result.media.reason}`);
+      }
+      return 1;
+    }
+
+    const mediaSummary =
+      result.media?.status === "included" ? `, media ${result.media.mimeType} ${result.media.bytes} bytes` : "";
+    log(
+      `Gemini embedding key is valid: ${result.model}, ${result.embedding.length} dimensions, modalities ${formatModalities(result.inputModalities)}${mediaSummary}.`
+    );
     return 0;
   }
 
-  console.error(
+  error(
     `Gemini embedding key check failed: ${result.status}${result.statusCode ? ` ${result.statusCode}` : ""}`
   );
   if (result.error) {
-    console.error(result.error);
+    error(result.error);
   }
   return result.status === "missing-key" ? 2 : 1;
 }
@@ -662,7 +709,7 @@ async function runBackfill(argv) {
 async function main() {
   const [command, ...argv] = process.argv.slice(2);
   if (command === "check") {
-    return runCheck();
+    return runCheck(argv);
   }
   if (command === "backfill") {
     return runBackfill(argv);
@@ -685,16 +732,19 @@ if (require.main === module) {
 
 module.exports = {
   DEFAULT_EMBEDDING_MODEL,
+  DEFAULT_CHECK_IMAGE_URL,
   DEFAULT_MAX_MEDIA_BYTES,
   DEFAULT_REQUEST_TIMEOUT_MS,
   applyEmbeddingToPayload,
   backfillEmbeddings,
+  buildCheckPayload,
   buildEmbeddingText,
   buildEmbedContentRequest,
   extractEmbeddingValues,
   fetchInlineMediaPart,
   generateEmbedding,
   normalizeEmbeddingModel,
+  runCheck,
   selectMediaSource,
   supportsInlineMedia,
 };
