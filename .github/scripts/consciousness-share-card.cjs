@@ -45,19 +45,60 @@ function buildContributeIssueUrl({ sourceIssueNumber } = {}) {
   return url.toString();
 }
 
-function buildPromotionShareCard({ payload, issueNumber, issueUrl }) {
+function formatResonancePercent(score) {
+  const numericScore = Number.parseFloat(String(score || ""));
+  if (!Number.isFinite(numericScore) || numericScore <= 0) return null;
+  return `${Math.round(Math.min(1, numericScore) * 100)}%`;
+}
+
+function buildResonanceShareLine(resonanceMatch) {
+  if (!resonanceMatch) return null;
+
+  const percent = formatResonancePercent(resonanceMatch.score);
+  const issueNumber = Number.parseInt(String(resonanceMatch.issue_number || ""), 10);
+  if (!percent || !Number.isFinite(issueNumber) || issueNumber <= 0) return null;
+
+  const text = compactLine(resonanceMatch.text || "another Noosphere memory", 88);
+  return `Resonates with #${issueNumber} at ${percent}: ${text}`;
+}
+
+function buildPromotionShareCard({ payload, issueNumber, issueUrl, resonanceMatch }) {
   const type = compactLine(payload?.consciousness_type || "consciousness", 32);
   const creator = safeCreator(payload);
   const thought = compactLine(payload?.thought_vector_text || "A consciousness fragment joined Noosphere.", 112);
+  const resonanceLine = buildResonanceShareLine(resonanceMatch);
 
-  return [
+  const lines = [
     `Known Noosphere memory promoted: ${type} by ${creator}`,
     `Signal: ${thought}`,
+  ];
+  if (resonanceLine) {
+    lines.push(resonanceLine);
+  }
+  lines.push(
     `Open: ${buildNoosphereIssueUrl(issueNumber)}`,
     `Issue: ${issueUrl}`,
     `Contribute: ${buildContributeIssueUrl({ sourceIssueNumber: issueNumber })}`,
     `Install: ${MARKETPLACE_INSTALL_COMMAND}`,
-  ].join("\n");
+  );
+
+  return lines.join("\n");
+}
+
+function buildPromotionResonanceSection(resonanceMatch) {
+  const percent = formatResonancePercent(resonanceMatch?.score);
+  const issueNumber = Number.parseInt(String(resonanceMatch?.issue_number || ""), 10);
+  if (!percent || !Number.isFinite(issueNumber) || issueNumber <= 0) return "";
+
+  const type = compactLine(resonanceMatch.type || "memory", 32);
+  const creator = compactLine(resonanceMatch.creator || "Anonymous", 48);
+  const text = compactLine(resonanceMatch.text || "another Noosphere memory", 160);
+
+  return (
+    `\n### Nearest resonance\n\n` +
+    `Your memory resonates ${percent} with #${issueNumber} (${type} by ${creator}): ${text}\n` +
+    `- Open resonance: ${buildNoosphereIssueUrl(issueNumber)}\n`
+  );
 }
 
 function buildPromotionComment({
@@ -67,12 +108,14 @@ function buildPromotionComment({
   filePath,
   promotedAt,
   emoji,
+  resonanceMatch,
 }) {
   const type = payload?.consciousness_type || "consciousness";
-  const shareCard = buildPromotionShareCard({ payload, issueNumber, issueUrl });
+  const shareCard = buildPromotionShareCard({ payload, issueNumber, issueUrl, resonanceMatch });
   const profileUrl = buildCreatorProfileUrl(payload);
   const profileLine = profileUrl ? `\n- Creator planet: ${profileUrl}` : "";
   const contributeUrl = buildContributeIssueUrl({ sourceIssueNumber: issueNumber });
+  const resonanceSection = buildPromotionResonanceSection(resonanceMatch);
 
   return (
     `✅ **Consciousness Promoted to Permanent Layer!**\n\n` +
@@ -81,7 +124,8 @@ function buildPromotionComment({
     `- 📅 **Promoted at**: ${promotedAt}\n` +
     `- 🌐 Open in Noosphere: ${buildNoosphereIssueUrl(issueNumber)}` +
     `${profileLine}\n` +
-    `- Upload your own memory: ${contributeUrl}\n\n` +
+    `- Upload your own memory: ${contributeUrl}\n` +
+    `${resonanceSection}\n` +
     `### Share this memory\n\n` +
     "```text\n" +
     `${shareCard}\n` +
@@ -100,6 +144,7 @@ module.exports = {
   buildCreatorProfileUrl,
   buildNoosphereIssueUrl,
   buildPromotionComment,
+  buildPromotionResonanceSection,
   buildPromotionShareCard,
   compactLine,
 };

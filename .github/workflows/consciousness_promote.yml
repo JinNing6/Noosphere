@@ -155,6 +155,10 @@ jobs:
               applyEmbeddingToPayload,
             } = require(`${process.env.GITHUB_WORKSPACE}/.github/scripts/gemini-embedding.cjs`);
             const {
+              findNearestResonanceMatch,
+              loadCandidatePayloads,
+            } = require(`${process.env.GITHUB_WORKSPACE}/.github/scripts/resonance-neighbors.cjs`);
+            const {
               buildPromotionComment,
             } = require(`${process.env.GITHUB_WORKSPACE}/.github/scripts/consciousness-share-card.cjs`);
 
@@ -316,6 +320,26 @@ jobs:
               }
             }
 
+            let resonanceMatch = null;
+            if (embeddingResult.status === 'ok') {
+              const candidatePayloads = loadCandidatePayloads(`${process.env.GITHUB_WORKSPACE}/consciousness_payloads`);
+              resonanceMatch = findNearestResonanceMatch(payload, candidatePayloads, {
+                excludeIssueNumber: issue.number,
+              });
+
+              if (resonanceMatch) {
+                payload.resonates_with = [{
+                  id: resonanceMatch.id,
+                  score: resonanceMatch.score,
+                  issue_number: resonanceMatch.issue_number,
+                  type: resonanceMatch.type,
+                }];
+                console.log(`Nearest resonance found: issue #${resonanceMatch.issue_number} at ${Math.round(resonanceMatch.score * 100)}%`);
+              } else {
+                console.log('No embedding-backed resonance match found yet.');
+              }
+            }
+
             // ── Step 4: Promote — commit file to main branch ──
             const now = new Date();
             const timestamp = now.toISOString().replace(/[-:T]/g, '').substring(0, 15);
@@ -379,6 +403,7 @@ jobs:
                 filePath,
                 promotedAt: now.toISOString(),
                 emoji,
+                resonanceMatch,
               })
             });
 

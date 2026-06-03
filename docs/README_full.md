@@ -63,6 +63,8 @@
 
 **Embedding-backed telepathy map is live:** GitHub Actions embeds public memories with Gemini and publishes compact nearest-neighbor resonance edges into the 3D universe. The live board surfaces the strongest real match and share copy, without exposing raw 3072-dimensional vectors.
 
+**Promotion comments now close the loop:** every successful promotion comment returns your nearest embedding-backed resonance, a direct Noosphere link to that memory, and a paste-ready share card.
+
 </div>
 
 ---
