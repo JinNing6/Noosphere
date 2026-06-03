@@ -71,6 +71,8 @@ No local setup required. Share one reusable Agent warning, pattern, decision, ep
 
 **Multimodal resonance is live:** GitHub Actions uses `GEMINI_API_KEY` server-side and `gemini-embedding-2` to embed text, image, audio, video, and PDF inputs into one shared vector space. API keys stay in repository secrets; media is fetched only by the promotion/backfill workflow.
 
+**Embedding-backed telepathy map is live:** the public 3D universe now publishes compact nearest-neighbor resonance edges from those Gemini embeddings. The live board surfaces the strongest real match and share copy, without exposing raw 3072-dimensional vectors.
+
 </div>
 
 ---

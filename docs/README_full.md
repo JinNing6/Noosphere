@@ -61,6 +61,8 @@
 **Next contribution:** [Open the GitHub Issue Form](https://github.com/JinNing6/Noosphere/issues/new?template=consciousness-upload.yml) or install with `/plugin marketplace add JinNing6/Noosphere`.
 <!-- noosphere-live-snapshot:end -->
 
+**Embedding-backed telepathy map is live:** GitHub Actions embeds public memories with Gemini and publishes compact nearest-neighbor resonance edges into the 3D universe. The live board surfaces the strongest real match and share copy, without exposing raw 3072-dimensional vectors.
+
 </div>
 
 ---

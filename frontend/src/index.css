@@ -627,6 +627,42 @@ html, body, #root {
   color: #00d4ff;
 }
 
+.resonance-strongest {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 12px;
+  padding: 11px;
+  border: 1px solid rgba(255, 180, 84, 0.18);
+  border-radius: 8px;
+  background: rgba(255, 180, 84, 0.07);
+}
+
+.resonance-strongest span {
+  color: rgba(236, 240, 255, 0.56);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.resonance-strongest strong {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 7px;
+  color: rgba(255, 255, 255, 0.94);
+  font-size: 11px;
+  line-height: 1.25;
+}
+
+.resonance-strongest small {
+  padding: 3px 5px;
+  border-radius: 6px;
+  background: rgba(255, 180, 84, 0.12);
+  color: #ffb454;
+  font-size: 10px;
+}
+
 .resonance-board-columns {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

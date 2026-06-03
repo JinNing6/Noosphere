@@ -47,6 +47,11 @@ function normalizePayload(fileName, payload) {
         : type === 'voice'
           ? payload.audio_species || 'human'
           : null,
+    embedded: Array.isArray(payload.embedding) && payload.embedding.length > 0,
+    embedding_model: payload.embedding_model || null,
+    embedding_input_modalities: Array.isArray(payload.embedding_input_modalities)
+      ? payload.embedding_input_modalities
+      : [],
   };
 }
 
@@ -86,6 +91,26 @@ for (const memory of expected) {
   assert.equal(indexed.media_type, memory.media_type, `${memory.id} should preserve media type`);
   assert.equal(indexed.media_url, memory.media_url, `${memory.id} should preserve media URL`);
   assert.equal(indexed.media_category, memory.media_category, `${memory.id} should preserve media category`);
+  assert.equal('embedding' in indexed, false, `${memory.id} should not expose raw embedding vectors in the public index`);
+  if (memory.embedded) {
+    assert.equal(indexed.embedding_model, memory.embedding_model, `${memory.id} should preserve embedding model metadata`);
+    assert.deepEqual(
+      indexed.embedding_input_modalities,
+      memory.embedding_input_modalities,
+      `${memory.id} should preserve embedding input modalities`,
+    );
+    assert.ok(
+      Array.isArray(indexed.resonates_with) && indexed.resonates_with.length > 0,
+      `${memory.id} should expose nearest public resonance neighbors`,
+    );
+    for (const neighbor of indexed.resonates_with) {
+      assert.equal(typeof neighbor.id, 'string', `${memory.id} resonance neighbor should include an id`);
+      assert.equal(typeof neighbor.score, 'number', `${memory.id} resonance neighbor should include a numeric score`);
+      assert.ok(neighbor.score >= 0 && neighbor.score <= 1, `${memory.id} resonance score should be normalized`);
+      assert.notEqual(neighbor.id, indexed.id, `${memory.id} should not resonate with itself`);
+      assert.ok(indexById.has(neighbor.id), `${memory.id} resonance neighbor ${neighbor.id} should exist in the public index`);
+    }
+  }
 }
 
 const mediaMemories = index.filter(entry => entry.media_type);
@@ -93,6 +118,10 @@ assert.ok(mediaMemories.length >= 1, 'public index should expose at least one re
 assert.ok(
   index.some(entry => entry.issue_number === 23),
   'public index should include the latest promoted payload issue #23',
+);
+assert.ok(
+  index.some(entry => Array.isArray(entry.resonates_with) && entry.resonates_with.length > 0),
+  'public index should expose at least one embedding-backed resonance edge',
 );
 
 console.log(`consciousness index ok: ${index.length} unique memories from ${payloadFiles.length} payload files`);

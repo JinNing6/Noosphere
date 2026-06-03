@@ -12,6 +12,12 @@ export interface ResonanceCreatorRow {
   count: number;
 }
 
+export interface StrongestResonance {
+  source: KnowledgeNode;
+  target: KnowledgeNode;
+  score: number;
+}
+
 export interface ResonanceBoardSummary {
   totalMemories: number;
   mediaMemories: number;
@@ -19,6 +25,7 @@ export interface ResonanceBoardSummary {
   typeRows: ResonanceTypeRow[];
   topCreators: ResonanceCreatorRow[];
   latestMemory: KnowledgeNode | null;
+  strongestResonance: StrongestResonance | null;
 }
 
 const TYPE_ORDER = ['warning', 'pattern', 'decision', 'epiphany', 'image', 'video', 'voice'];
@@ -38,6 +45,36 @@ function readCreator(node: KnowledgeNode): string {
 
 function readType(node: KnowledgeNode): string {
   return node.consciousnessType || node.mediaType || 'memory';
+}
+
+function findStrongestResonance(nodes: KnowledgeNode[]): StrongestResonance | null {
+  const nodesById = new Map(nodes.map(node => [node.id, node]));
+  let strongest: StrongestResonance | null = null;
+
+  for (const source of nodes) {
+    for (const neighbor of source.resonantWith || []) {
+      const target = nodesById.get(neighbor.id);
+      if (!target || target.id === source.id) continue;
+      if (!Number.isFinite(neighbor.score) || neighbor.score <= 0) continue;
+
+      if (
+        !strongest
+        || neighbor.score > strongest.score
+        || (
+          neighbor.score === strongest.score
+          && `${source.id}:${target.id}` < `${strongest.source.id}:${strongest.target.id}`
+        )
+      ) {
+        strongest = {
+          source,
+          target,
+          score: neighbor.score,
+        };
+      }
+    }
+  }
+
+  return strongest;
 }
 
 export function summarizeResonanceBoard(nodes: KnowledgeNode[]): ResonanceBoardSummary {
@@ -70,6 +107,7 @@ export function summarizeResonanceBoard(nodes: KnowledgeNode[]): ResonanceBoardS
     typeRows,
     topCreators,
     latestMemory: nodes[0] || null,
+    strongestResonance: findStrongestResonance(nodes),
   };
 }
 
@@ -81,11 +119,16 @@ export function createResonanceBoardSharePost(summary: ResonanceBoardSummary): s
   const latestUrl = latest?.issueNumber
     ? createNoosphereIssueUrl(latest.issueNumber)
     : NOOSPHERE_HOME_URL;
+  const strongestResonance = summary.strongestResonance;
+  const strongestLine = strongestResonance
+    ? `Strongest resonance: ${compactLine(strongestResonance.source.title_zh || strongestResonance.source.title_en, 34)} <-> ${compactLine(strongestResonance.target.title_zh || strongestResonance.target.title_en, 34)} (${Math.round(strongestResonance.score * 100)}%)`
+    : 'Strongest resonance: waiting for embedded neighbors';
 
   return [
     'Noosphere live memory network',
     `${summary.totalMemories} real memories - ${summary.mediaMemories} media memories - ${summary.totalResonance} resonance`,
     `Latest: ${latestTitle}`,
+    strongestLine,
     `Open: ${latestUrl}`,
     `Install: ${MARKETPLACE_INSTALL_COMMAND}`,
     `Upload: ${CONTRIBUTION_ACTION.url}`,

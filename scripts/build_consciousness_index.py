@@ -13,6 +13,7 @@ Output: frontend/public/consciousness_index.json
 import json
 import os
 import hashlib
+import math
 import urllib.request
 import urllib.error
 from pathlib import Path
@@ -23,6 +24,7 @@ OUTPUT_FILE = Path(__file__).parent.parent / "frontend" / "public" / "consciousn
 # GitHub API config
 GITHUB_REPO = os.environ.get("GITHUB_REPOSITORY", "JinNing6/Noosphere")
 GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN", "")
+MAX_RESONANCE_NEIGHBORS = 3
 
 
 def fetch_issue_reactions(issue_number: int) -> int:
@@ -48,10 +50,72 @@ def fetch_issue_reactions(issue_number: int) -> int:
         return 0
 
 
+def normalized_embedding(value):
+    """Return a clean numeric embedding vector, or None when invalid."""
+    if not isinstance(value, list) or not value:
+        return None
+
+    vector = []
+    for item in value:
+        if not isinstance(item, (int, float)) or not math.isfinite(item):
+            return None
+        vector.append(float(item))
+
+    norm = math.sqrt(math.fsum(component * component for component in vector))
+    if norm <= 0:
+        return None
+    return vector
+
+
+def cosine_similarity(left, right):
+    """Compute cosine similarity for two same-dimensional embedding vectors."""
+    if len(left) != len(right):
+        return None
+
+    dot = math.fsum(a * b for a, b in zip(left, right))
+    left_norm = math.sqrt(math.fsum(a * a for a in left))
+    right_norm = math.sqrt(math.fsum(b * b for b in right))
+    if left_norm <= 0 or right_norm <= 0:
+        return None
+    return dot / (left_norm * right_norm)
+
+
+def attach_embedding_resonance(payloads, vectors):
+    """Attach nearest public neighbors using precomputed Gemini embeddings."""
+    if len(vectors) < 2:
+        return
+
+    for current in vectors:
+        current_payload = payloads[current["index"]]
+        neighbors = []
+
+        for candidate in vectors:
+            if candidate["index"] == current["index"]:
+                continue
+
+            score = cosine_similarity(current["embedding"], candidate["embedding"])
+            if score is None or score <= 0:
+                continue
+
+            candidate_payload = payloads[candidate["index"]]
+            neighbors.append({
+                "id": candidate_payload["id"],
+                "score": round(min(1.0, max(0.0, score)), 4),
+                "issue_number": candidate_payload.get("issue_number"),
+                "type": candidate_payload.get("type"),
+            })
+
+        current_payload["resonates_with"] = sorted(
+            neighbors,
+            key=lambda item: (-item["score"], item["id"]),
+        )[:MAX_RESONANCE_NEIGHBORS]
+
+
 def build_index():
     payloads = []
     seen_texts = set()  # Deduplicate by thought_vector_text
     issue_numbers = []  # Collect issue numbers for batch fetching
+    vectors = []  # Embeddings used only to publish compact nearest-neighbor edges
 
     # Phase 1: Read all JSON files and collect data
     for f in sorted(PAYLOADS_DIR.glob("*.json")):
@@ -87,6 +151,16 @@ def build_index():
             "media_category": None,
         }
 
+        embedding = normalized_embedding(data.get("embedding"))
+        if embedding:
+            payload["embedding_model"] = data.get("embedding_model")
+            payload["embedding_input_modalities"] = data.get("embedding_input_modalities", [])
+            payload["resonates_with"] = []
+            vectors.append({
+                "index": len(payloads),
+                "embedding": embedding,
+            })
+
         # ── 多媒体意识体字段提取 ──
         c_type = data.get("consciousness_type", "")
         if c_type == "image":
@@ -107,6 +181,8 @@ def build_index():
             issue_numbers.append((len(payloads), payload["issue_number"]))
 
         payloads.append(payload)
+
+    attach_embedding_resonance(payloads, vectors)
 
     # Phase 2: Batch fetch reactions from GitHub API
     if issue_numbers:

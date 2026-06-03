@@ -12,6 +12,13 @@ import wikiCache from './wikipedia_cache.json';
 export type Layer = 'matter' | 'life' | 'civilization';
 export type Discipline = 'math' | 'physics' | 'biology' | 'philosophy' | 'art' | 'engineering' | 'history' | 'ai';
 
+export interface ResonanceNeighbor {
+  id: string;
+  score: number;
+  issueNumber?: number | null;
+  type?: string | null;
+}
+
 export interface KnowledgeNode {
   id: string;
   title_zh: string;
@@ -31,6 +38,9 @@ export interface KnowledgeNode {
   mediaType?: 'image' | 'video' | 'voice' | null;  // 多媒体类型
   mediaCategory?: string | null;  // 分类（photo/art/vlog/human 等）
   issueNumber?: number | null;    // Promoted GitHub Issue number for deep links
+  embeddingModel?: string | null;
+  embeddingInputModalities?: string[];
+  resonantWith?: ResonanceNeighbor[];
 }
 
 export interface EmergenceLink {
@@ -410,6 +420,14 @@ interface ConsciousnessPayload {
   media_type?: 'image' | 'video' | 'voice' | null;  // 多媒体类型
   media_url?: string | null;     // 多媒体文件 URL
   media_category?: string | null; // 多媒体分类
+  embedding_model?: string | null;
+  embedding_input_modalities?: string[];
+  resonates_with?: {
+    id: string;
+    score: number;
+    issue_number?: number | null;
+    type?: string | null;
+  }[];
 }
 
 /** 意识类型 → 三层映射 */
@@ -483,6 +501,14 @@ export async function fetchConsciousnessPayloads(): Promise<KnowledgeNode[]> {
         mediaType: p.media_type || null,       // 多媒体类型
         mediaCategory: p.media_category || null, // 多媒体分类
         issueNumber: p.issue_number || null,
+        embeddingModel: p.embedding_model || null,
+        embeddingInputModalities: p.embedding_input_modalities || [],
+        resonantWith: (p.resonates_with || []).map(neighbor => ({
+          id: neighbor.id,
+          score: neighbor.score,
+          issueNumber: neighbor.issue_number || null,
+          type: neighbor.type || null,
+        })),
       };
     });
   } catch {
@@ -627,6 +653,14 @@ export async function fetchConsciousnessPayloadsByCreator(
         mediaType: p.media_type || null,
         mediaCategory: p.media_category || null,
         issueNumber: p.issue_number || null,
+        embeddingModel: p.embedding_model || null,
+        embeddingInputModalities: p.embedding_input_modalities || [],
+        resonantWith: (p.resonates_with || []).map(neighbor => ({
+          id: neighbor.id,
+          score: neighbor.score,
+          issueNumber: neighbor.issue_number || null,
+          type: neighbor.type || null,
+        })),
       } as KnowledgeNode;
     });
 

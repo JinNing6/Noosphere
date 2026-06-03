@@ -41,6 +41,11 @@ function latestLabel(node: KnowledgeNode | null): string {
   return title.length > 42 ? `${title.slice(0, 39).trimEnd()}...` : title;
 }
 
+function resonanceLabel(node: KnowledgeNode): string {
+  const title = node.title_zh || node.title_en || node.id;
+  return title.length > 28 ? `${title.slice(0, 25).trimEnd()}...` : title;
+}
+
 export default function LiveResonanceBoard({
   dynamicNodes,
   onOpenUploader,
@@ -121,6 +126,17 @@ export default function LiveResonanceBoard({
           <strong>{latestLabel(summary.latestMemory)}</strong>
         )}
       </div>
+
+      {summary.strongestResonance && (
+        <div className="resonance-strongest">
+          <span>Strongest resonance</span>
+          <strong>
+            {resonanceLabel(summary.strongestResonance.source)}
+            <small>{Math.round(summary.strongestResonance.score * 100)}%</small>
+            {resonanceLabel(summary.strongestResonance.target)}
+          </strong>
+        </div>
+      )}
 
       <div className="resonance-board-columns">
         <div aria-label="Memory type distribution">
