@@ -1,0 +1,29 @@
+name: Record Noosphere share proof
+description: Submit a public URL where Noosphere or a Noosphere memory was shared.
+title: "Share proof: "
+labels: ["share-proof"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Record a reviewable public share. This issue does not claim downloads, reposts, referrals, retention, rewards, or install counts.
+  - type: input
+    id: share_url
+    attributes:
+      label: Public share URL
+      description: A public http(s) URL to the share post, thread, article, video, or repository comment.
+      placeholder: https://...
+    validations:
+      required: true
+  - type: input
+    id: source_memory
+    attributes:
+      label: Source Noosphere memory or Issue
+      description: Optional memory, Issue, or Noosphere URL that was shared.
+      placeholder: "#23 or https://jinning6.github.io/Noosphere/?issue=23"
+  - type: textarea
+    id: share_context
+    attributes:
+      label: Share context
+      description: Optional audience/context and what you want others to do next.
+      placeholder: Shared a reusable Agent debugging lesson with a Claude Code community.

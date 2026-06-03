@@ -1,0 +1,111 @@
+name: Share Proof IssueOps
+
+on:
+  issues:
+    types: [opened, edited, labeled]
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  comment:
+    name: Comment on share proof
+    if: github.event.issue.state == 'open' && contains(github.event.issue.labels.*.name, 'share-proof')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Reply with proof next actions
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue = context.payload.issue;
+            const marker = `<!-- noosphere-share-proof:issue=${issue.number} -->`;
+            const { owner, repo } = context.repo;
+
+            const comments = await github.rest.issues.listComments({
+              owner,
+              repo,
+              issue_number: issue.number,
+              per_page: 100,
+            });
+
+            if (comments.data.some((comment) => String(comment.body || '').includes(marker))) {
+              core.info(`Share proof comment already exists for issue #${issue.number}.`);
+              return;
+            }
+
+            function escapeRegExp(value) {
+              return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            }
+
+            function extractIssueFormField(body, label) {
+              const pattern = new RegExp(`### ${escapeRegExp(label)}\\s*\\r?\\n+([\\s\\S]*?)(?=\\r?\\n### |$)`, 'i');
+              const match = String(body || '').match(pattern);
+              return match ? match[1].trim() : '';
+            }
+
+            function normalizePublicUrl(value) {
+              const raw = String(value || '').trim().split(/\s+/)[0];
+              if (!raw) return '';
+              try {
+                const parsed = new URL(raw);
+                return ['http:', 'https:'].includes(parsed.protocol) ? parsed.toString() : '';
+              } catch {
+                return '';
+              }
+            }
+
+            function oneLine(value, fallback) {
+              const compact = String(value || '').replace(/\s+/g, ' ').trim();
+              return compact || fallback;
+            }
+
+            const shareUrl = normalizePublicUrl(extractIssueFormField(issue.body, 'Public share URL'));
+            const sourceMemory = oneLine(
+              extractIssueFormField(issue.body, 'Source Noosphere memory or Issue'),
+              'Not provided'
+            );
+            const shareContext = oneLine(
+              extractIssueFormField(issue.body, 'Share context'),
+              'Not provided'
+            );
+            const uploadFormUrl = 'https://github.com/JinNing6/Noosphere/issues/new?template=consciousness-upload.yml';
+            const marketplaceInstall = '/plugin marketplace add JinNing6/Noosphere';
+            const proofLine = shareUrl
+              ? `- Proof URL: ${shareUrl}`
+              : '- Proof URL: No valid public http(s) URL detected yet. Edit the issue with a public proof URL to make this reviewable.';
+
+            const shareBlockProof = shareUrl || 'No valid public http(s) URL yet';
+            const body = [
+              '### Share proof received',
+              '',
+              proofLine,
+              `- Proof Issue: ${context.payload.issue.html_url}`,
+              `- Source memory: ${sourceMemory}`,
+              `- Context: ${shareContext}`,
+              '',
+              'No downloads, reposts, referrals, retention, rewards, or install counts are inferred from this URL. The issue is only a reviewable public proof record.',
+              '',
+              'Next actions:',
+              `- Upload the reusable memory behind this share: ${uploadFormUrl}`,
+              `- Install Noosphere in Claude Code or Codex: \`${marketplaceInstall}\``,
+              '- With MCP installed, use `share_consciousness` after a useful memory is promoted so the proof URL can travel with the memory.',
+              '',
+              'Paste-ready recap:',
+              '',
+              '```text',
+              `Noosphere share proof recorded: ${shareBlockProof}`,
+              `Proof Issue: ${context.payload.issue.html_url}`,
+              `Continue: ${uploadFormUrl}`,
+              `Install: ${marketplaceInstall}`,
+              '```',
+              '',
+              marker,
+            ].join('\n');
+
+            await github.rest.issues.createComment({
+              owner,
+              repo,
+              issue_number: issue.number,
+              body,
+            });
