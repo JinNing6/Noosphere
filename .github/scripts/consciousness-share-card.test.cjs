@@ -9,7 +9,9 @@ const {
   buildContributeIssueUrl,
   buildPromotionComment,
   buildPromotionShareCard,
+  buildResonanceBacklinkMarker,
   buildResonanceBacklinkComment,
+  hasResonanceBacklinkComment,
 } = require("./consciousness-share-card.cjs");
 
 const repoRoot = path.join(__dirname, "..", "..");
@@ -114,7 +116,34 @@ test("resonance backlink comment reactivates the matched historical issue", () =
   assert.match(comment, /Continue the chain: https:\/\/github\.com\/JinNing6\/Noosphere\/issues\/new\?template=consciousness-upload\.yml/);
   assert.match(comment, /```text\nNoosphere resonance bridge:/);
   assert.match(comment, /Install: \/plugin marketplace add JinNing6\/Noosphere/);
+  assert.match(comment, /<!-- noosphere-resonance-backlink:new=23;matched=3 -->/);
   assert.doesNotMatch(comment, /\b\d+\s+(users|installs|downloads|stars|referrals)\b/i);
+});
+
+test("resonance backlink markers make historical issue comments idempotent", () => {
+  const marker = buildResonanceBacklinkMarker({
+    newIssueNumber: 23,
+    matchedIssueNumber: 3,
+  });
+
+  assert.equal(marker, "<!-- noosphere-resonance-backlink:new=23;matched=3 -->");
+  assert.equal(
+    hasResonanceBacklinkComment(
+      [
+        { body: "Unrelated comment" },
+        { body: `Earlier bridge\n\n${marker}` },
+      ],
+      { newIssueNumber: 23, matchedIssueNumber: 3 }
+    ),
+    true
+  );
+  assert.equal(
+    hasResonanceBacklinkComment(
+      [{ body: "<!-- noosphere-resonance-backlink:new=22;matched=3 -->" }],
+      { newIssueNumber: 23, matchedIssueNumber: 3 }
+    ),
+    false
+  );
 });
 
 test("repository includes the public contribution Issue Form", () => {
@@ -150,6 +179,8 @@ test("promotion workflow uses the share card helper for success comments", () =>
   assert.match(workflow, /loadCandidatePayloads/);
   assert.match(workflow, /buildPromotionComment/);
   assert.match(workflow, /buildResonanceBacklinkComment/);
+  assert.match(workflow, /hasResonanceBacklinkComment/);
+  assert.match(workflow, /github\.rest\.issues\.listComments/);
   assert.match(workflow, /resonanceMatch/);
   assert.match(workflow, /issue_number: resonanceMatch\.issue_number/);
 });

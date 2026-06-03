@@ -161,6 +161,7 @@ jobs:
             const {
               buildPromotionComment,
               buildResonanceBacklinkComment,
+              hasResonanceBacklinkComment,
             } = require(`${process.env.GITHUB_WORKSPACE}/.github/scripts/consciousness-share-card.cjs`);
 
             // ── Step 1: Extract payload from Issue body ──
@@ -410,18 +411,32 @@ jobs:
 
             if (resonanceMatch?.issue_number && resonanceMatch.issue_number !== issue.number) {
               try {
-                await github.rest.issues.createComment({
+                const existingBacklinkComments = await github.rest.issues.listComments({
                   owner: context.repo.owner,
                   repo: context.repo.repo,
                   issue_number: resonanceMatch.issue_number,
-                  body: buildResonanceBacklinkComment({
-                    payload,
-                    newIssueNumber: issue.number,
-                    newIssueUrl: issue.html_url,
-                    resonanceMatch,
-                  })
+                  per_page: 100,
                 });
-                console.log(`Backlinked resonance to historical issue #${resonanceMatch.issue_number}`);
+
+                if (hasResonanceBacklinkComment(existingBacklinkComments.data, {
+                  newIssueNumber: issue.number,
+                  matchedIssueNumber: resonanceMatch.issue_number,
+                })) {
+                  console.log(`Resonance backlink already exists on issue #${resonanceMatch.issue_number}`);
+                } else {
+                  await github.rest.issues.createComment({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: resonanceMatch.issue_number,
+                    body: buildResonanceBacklinkComment({
+                      payload,
+                      newIssueNumber: issue.number,
+                      newIssueUrl: issue.html_url,
+                      resonanceMatch,
+                    })
+                  });
+                  console.log(`Backlinked resonance to historical issue #${resonanceMatch.issue_number}`);
+                }
               } catch (backlinkErr) {
                 console.log(`Could not backlink resonance to issue #${resonanceMatch.issue_number}: ${backlinkErr.message}`);
               }

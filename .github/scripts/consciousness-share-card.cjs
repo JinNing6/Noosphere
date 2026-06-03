@@ -101,6 +101,26 @@ function buildPromotionResonanceSection(resonanceMatch) {
   );
 }
 
+function parsePositiveIssueNumber(value, label) {
+  const parsed = Number.parseInt(String(value || ""), 10);
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    throw new Error(`A valid ${label} issue number is required`);
+  }
+  return parsed;
+}
+
+function buildResonanceBacklinkMarker({ newIssueNumber, matchedIssueNumber }) {
+  const parsedNewIssueNumber = parsePositiveIssueNumber(newIssueNumber, "new");
+  const parsedMatchedIssueNumber = parsePositiveIssueNumber(matchedIssueNumber, "matched");
+  return `<!-- noosphere-resonance-backlink:new=${parsedNewIssueNumber};matched=${parsedMatchedIssueNumber} -->`;
+}
+
+function hasResonanceBacklinkComment(comments, { newIssueNumber, matchedIssueNumber }) {
+  const marker = buildResonanceBacklinkMarker({ newIssueNumber, matchedIssueNumber });
+  if (!Array.isArray(comments)) return false;
+  return comments.some((comment) => String(comment?.body || "").includes(marker));
+}
+
 function buildResonanceBacklinkComment({
   payload,
   newIssueNumber,
@@ -113,10 +133,11 @@ function buildResonanceBacklinkComment({
     throw new Error("A valid resonance match issue number and score are required");
   }
 
-  const parsedNewIssueNumber = Number.parseInt(String(newIssueNumber || ""), 10);
-  if (!Number.isFinite(parsedNewIssueNumber) || parsedNewIssueNumber <= 0) {
-    throw new Error("A valid new issue number is required");
-  }
+  const parsedNewIssueNumber = parsePositiveIssueNumber(newIssueNumber, "new");
+  const marker = buildResonanceBacklinkMarker({
+    newIssueNumber: parsedNewIssueNumber,
+    matchedIssueNumber,
+  });
 
   const newThought = compactLine(payload?.thought_vector_text || "A new Noosphere memory", 112);
   const matchedThought = compactLine(resonanceMatch.text || "this Noosphere memory", 112);
@@ -143,7 +164,8 @@ function buildResonanceBacklinkComment({
     `Share this bridge:\n\n` +
     "```text\n" +
     `${shareCard}\n` +
-    "```"
+    "```\n\n" +
+    marker
   );
 }
 
@@ -192,6 +214,8 @@ module.exports = {
   buildPromotionComment,
   buildPromotionResonanceSection,
   buildPromotionShareCard,
+  buildResonanceBacklinkMarker,
   buildResonanceBacklinkComment,
+  hasResonanceBacklinkComment,
   compactLine,
 };
