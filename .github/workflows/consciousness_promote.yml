@@ -160,6 +160,7 @@ jobs:
             } = require(`${process.env.GITHUB_WORKSPACE}/.github/scripts/resonance-neighbors.cjs`);
             const {
               buildPromotionComment,
+              buildResonanceBacklinkComment,
             } = require(`${process.env.GITHUB_WORKSPACE}/.github/scripts/consciousness-share-card.cjs`);
 
             // ── Step 1: Extract payload from Issue body ──
@@ -406,6 +407,25 @@ jobs:
                 resonanceMatch,
               })
             });
+
+            if (resonanceMatch?.issue_number && resonanceMatch.issue_number !== issue.number) {
+              try {
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: resonanceMatch.issue_number,
+                  body: buildResonanceBacklinkComment({
+                    payload,
+                    newIssueNumber: issue.number,
+                    newIssueUrl: issue.html_url,
+                    resonanceMatch,
+                  })
+                });
+                console.log(`Backlinked resonance to historical issue #${resonanceMatch.issue_number}`);
+              } catch (backlinkErr) {
+                console.log(`Could not backlink resonance to issue #${resonanceMatch.issue_number}: ${backlinkErr.message}`);
+              }
+            }
 
             await github.rest.issues.update({
               owner: context.repo.owner,

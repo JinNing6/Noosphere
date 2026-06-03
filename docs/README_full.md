@@ -65,6 +65,8 @@
 
 **Promotion comments now close the loop:** every successful promotion comment returns your nearest embedding-backed resonance, a direct Noosphere link to that memory, and a paste-ready share card.
 
+**Resonance back-links revive old threads:** when a match exists, the matched historical Issue gets a backlink comment so previous contributors can see the new memory and continue the chain.
+
 </div>
 
 ---

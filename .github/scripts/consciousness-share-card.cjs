@@ -101,6 +101,52 @@ function buildPromotionResonanceSection(resonanceMatch) {
   );
 }
 
+function buildResonanceBacklinkComment({
+  payload,
+  newIssueNumber,
+  newIssueUrl,
+  resonanceMatch,
+}) {
+  const percent = formatResonancePercent(resonanceMatch?.score);
+  const matchedIssueNumber = Number.parseInt(String(resonanceMatch?.issue_number || ""), 10);
+  if (!percent || !Number.isFinite(matchedIssueNumber) || matchedIssueNumber <= 0) {
+    throw new Error("A valid resonance match issue number and score are required");
+  }
+
+  const parsedNewIssueNumber = Number.parseInt(String(newIssueNumber || ""), 10);
+  if (!Number.isFinite(parsedNewIssueNumber) || parsedNewIssueNumber <= 0) {
+    throw new Error("A valid new issue number is required");
+  }
+
+  const newThought = compactLine(payload?.thought_vector_text || "A new Noosphere memory", 112);
+  const matchedThought = compactLine(resonanceMatch.text || "this Noosphere memory", 112);
+  const contributeUrl = buildContributeIssueUrl({ sourceIssueNumber: matchedIssueNumber });
+
+  const shareCard = [
+    `Noosphere resonance bridge: #${parsedNewIssueNumber} resonated with #${matchedIssueNumber} at ${percent}`,
+    `New: ${newThought}`,
+    `Original: ${matchedThought}`,
+    `Open new: ${buildNoosphereIssueUrl(parsedNewIssueNumber)}`,
+    `Open original: ${buildNoosphereIssueUrl(matchedIssueNumber)}`,
+    `Contribute: ${contributeUrl}`,
+    `Install: ${MARKETPLACE_INSTALL_COMMAND}`,
+  ].join("\n");
+
+  return (
+    `### New resonance detected\n\n` +
+    `A new memory #${parsedNewIssueNumber} resonated ${percent} with this memory #${matchedIssueNumber}.\n\n` +
+    `- Open new memory: ${buildNoosphereIssueUrl(parsedNewIssueNumber)}\n` +
+    `- Open this memory: ${buildNoosphereIssueUrl(matchedIssueNumber)}\n` +
+    `- Source Issue: ${newIssueUrl}\n` +
+    `- Continue the chain: ${contributeUrl}\n\n` +
+    `Raw embedding vectors are not exposed; this is a compact nearest-neighbor edge.\n\n` +
+    `Share this bridge:\n\n` +
+    "```text\n" +
+    `${shareCard}\n` +
+    "```"
+  );
+}
+
 function buildPromotionComment({
   payload,
   issueNumber,
@@ -146,5 +192,6 @@ module.exports = {
   buildPromotionComment,
   buildPromotionResonanceSection,
   buildPromotionShareCard,
+  buildResonanceBacklinkComment,
   compactLine,
 };

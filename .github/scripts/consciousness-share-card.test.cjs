@@ -9,6 +9,7 @@ const {
   buildContributeIssueUrl,
   buildPromotionComment,
   buildPromotionShareCard,
+  buildResonanceBacklinkComment,
 } = require("./consciousness-share-card.cjs");
 
 const repoRoot = path.join(__dirname, "..", "..");
@@ -96,6 +97,26 @@ test("promotion comment embeds share card and next actions", () => {
   assert.match(comment, /upload_consciousness/);
 });
 
+test("resonance backlink comment reactivates the matched historical issue", () => {
+  const comment = buildResonanceBacklinkComment({
+    payload,
+    newIssueNumber: 23,
+    newIssueUrl: "https://github.com/JinNing6/Noosphere/issues/23",
+    resonanceMatch,
+  });
+
+  assert.match(comment, /New resonance detected/);
+  assert.match(comment, /85%/);
+  assert.match(comment, /new memory #23/);
+  assert.match(comment, /this memory #3/);
+  assert.match(comment, /Open new memory: https:\/\/jinning6\.github\.io\/Noosphere\/\?issue=23/);
+  assert.match(comment, /Open this memory: https:\/\/jinning6\.github\.io\/Noosphere\/\?issue=3/);
+  assert.match(comment, /Continue the chain: https:\/\/github\.com\/JinNing6\/Noosphere\/issues\/new\?template=consciousness-upload\.yml/);
+  assert.match(comment, /```text\nNoosphere resonance bridge:/);
+  assert.match(comment, /Install: \/plugin marketplace add JinNing6\/Noosphere/);
+  assert.doesNotMatch(comment, /\b\d+\s+(users|installs|downloads|stars|referrals)\b/i);
+});
+
 test("repository includes the public contribution Issue Form", () => {
   const issueForm = fs.readFileSync(
     path.join(repoRoot, ".github", "ISSUE_TEMPLATE", "consciousness-upload.yml"),
@@ -114,6 +135,7 @@ test("README exposes the no-install contribution route near the top", () => {
   assert.match(firstScreen, /No MCP yet\? Upload a memory/);
   assert.match(firstScreen, /issues\/new\?template=consciousness-upload\.yml/);
   assert.match(firstScreen, /successful promotion comment returns your nearest embedding-backed resonance/i);
+  assert.match(firstScreen, /matched historical Issue gets a backlink comment/i);
 });
 
 test("promotion workflow uses the share card helper for success comments", () => {
@@ -127,5 +149,7 @@ test("promotion workflow uses the share card helper for success comments", () =>
   assert.match(workflow, /findNearestResonanceMatch/);
   assert.match(workflow, /loadCandidatePayloads/);
   assert.match(workflow, /buildPromotionComment/);
+  assert.match(workflow, /buildResonanceBacklinkComment/);
   assert.match(workflow, /resonanceMatch/);
+  assert.match(workflow, /issue_number: resonanceMatch\.issue_number/);
 });
