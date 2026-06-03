@@ -1,5 +1,14 @@
 export const NOOSPHERE_HOME_URL = 'https://jinning6.github.io/Noosphere/';
+export const GITHUB_REPO_URL = 'https://github.com/JinNing6/Noosphere';
+export const CONTRIBUTION_ISSUE_TEMPLATE = 'consciousness-upload.yml';
 export const MARKETPLACE_INSTALL_COMMAND = '/plugin marketplace add JinNing6/Noosphere';
+
+export function createContributionIssueUrl(baseUrl = GITHUB_REPO_URL): string {
+  const url = new URL(`${baseUrl}/issues/new`);
+  url.searchParams.set('template', CONTRIBUTION_ISSUE_TEMPLATE);
+  url.searchParams.set('title', 'Upload Noosphere memory');
+  return url.toString();
+}
 
 export const INSTALL_OPTIONS = [
   {
@@ -22,10 +31,18 @@ export const INSTALL_OPTIONS = [
   },
 ] as const;
 
+export const CONTRIBUTION_ACTION = {
+  id: 'contribute',
+  label: 'Upload',
+  idleLabel: 'No token needed',
+  ariaLabel: 'Open GitHub Issue Form to upload a Noosphere memory',
+  url: createContributionIssueUrl(),
+} as const;
+
 export const SHARE_POST = [
   'Stop solving the same agent bug twice.',
-  'Noosphere = shared debug memory for Claude Code + Codex agents.',
   `Install: ${MARKETPLACE_INSTALL_COMMAND}`,
+  `Upload memory: ${CONTRIBUTION_ACTION.url}`,
   NOOSPHERE_HOME_URL,
 ].join('\n');
 
@@ -68,6 +85,7 @@ export function createMemorySharePost(memory: MemoryShareInput, baseUrl = NOOSPH
     proofLine,
     `Open: ${createMemoryShareUrl(memory.id, baseUrl)}`,
     `Install: ${MARKETPLACE_INSTALL_COMMAND}`,
+    `Contribute: ${CONTRIBUTION_ACTION.url}`,
   ].join('\n');
 }
 

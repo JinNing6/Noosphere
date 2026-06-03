@@ -3,7 +3,7 @@ import type { CSSProperties } from 'react';
 import { SEED_EXPERIENCES, STATS } from '../data/experiences';
 import type { KnowledgeNode } from '../data/knowledge';
 import type { Experience } from '../types';
-import { CLIPBOARD_ACTIONS, createMemorySharePost, readMemoryIdFromSearch } from '../utils/growthCopy';
+import { CLIPBOARD_ACTIONS, CONTRIBUTION_ACTION, createMemorySharePost, readMemoryIdFromSearch } from '../utils/growthCopy';
 
 interface AhaMomentDockProps {
   dynamicNodes: KnowledgeNode[];
@@ -332,6 +332,15 @@ export default function AhaMomentDock({
                 <small>{clipboardCopyState?.id === action.id ? clipboardCopyState.status : action.idleLabel}</small>
               </button>
             ))}
+            <a
+              href={CONTRIBUTION_ACTION.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={CONTRIBUTION_ACTION.ariaLabel}
+            >
+              <span>{CONTRIBUTION_ACTION.label}</span>
+              <small>{CONTRIBUTION_ACTION.idleLabel}</small>
+            </a>
           </div>
         </div>
       </section>

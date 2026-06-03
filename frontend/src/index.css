@@ -294,9 +294,9 @@ html, body, #root {
 
 .aha-install-bar {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: 1fr;
   align-items: center;
-  gap: 12px;
+  gap: 9px;
   margin-top: 10px;
   padding: 9px;
   border: 1px solid rgba(0, 232, 120, 0.16);
@@ -329,12 +329,14 @@ html, body, #root {
 
 .aha-install-actions {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 7px;
-  min-width: 226px;
+  min-width: 0;
+  width: 100%;
 }
 
-.aha-install-actions button {
+.aha-install-actions button,
+.aha-install-actions a {
   display: grid;
   gap: 2px;
   padding: 7px 8px;
@@ -345,22 +347,26 @@ html, body, #root {
   cursor: pointer;
   font-family: inherit;
   text-align: left;
+  text-decoration: none;
   transition: border-color 0.2s ease, background 0.2s ease;
 }
 
-.aha-install-actions button:hover {
+.aha-install-actions button:hover,
+.aha-install-actions a:hover {
   border-color: rgba(0, 232, 120, 0.34);
   background: rgba(0, 232, 120, 0.08);
 }
 
-.aha-install-actions button span {
+.aha-install-actions button span,
+.aha-install-actions a span {
   font-size: 10px;
   font-weight: 800;
   line-height: 1;
   white-space: nowrap;
 }
 
-.aha-install-actions button small {
+.aha-install-actions button small,
+.aha-install-actions a small {
   color: rgba(236, 240, 255, 0.62);
   font-size: 9px;
   letter-spacing: 0.08em;
