@@ -173,3 +173,30 @@ test("serializes promotion workflow runs to prevent main branch write races", ()
     /concurrency:\s*\r?\n\s*group:\s*consciousness-promotion-main\s*\r?\n\s*cancel-in-progress:\s*false/
   );
 });
+
+test("promotion workflow syncs public growth surfaces after successful promotion", () => {
+  const workflowPath = path.join(__dirname, "..", "workflows", "consciousness_promote.yml");
+  const workflow = fs.readFileSync(workflowPath, "utf8");
+
+  assert.match(workflow, /permissions:\s*\r?\n\s*actions:\s*write/);
+  assert.match(workflow, /id:\s*promote/);
+  assert.match(workflow, /core\.setOutput\(['"]promoted['"],\s*['"]true['"]\)/);
+  assert.match(workflow, /uses:\s*actions\/setup-node@v4/);
+  assert.match(
+    workflow,
+    /if:\s*steps\.promote\.outputs\.promoted == 'true'[\s\S]*python scripts\/build_consciousness_index\.py/
+  );
+  assert.match(
+    workflow,
+    /if:\s*steps\.promote\.outputs\.promoted == 'true'[\s\S]*node frontend\/scripts\/update_readme_growth_snapshot\.mjs/
+  );
+  assert.match(workflow, /id:\s*sync_public_growth/);
+  assert.match(
+    workflow,
+    /git add frontend\/public\/consciousness_index\.json README\.md docs\/README_full\.md/
+  );
+  assert.match(workflow, /git commit -m "Sync public growth snapshot for promoted consciousness"/);
+  assert.match(workflow, /echo "committed=true" >> \$GITHUB_OUTPUT/);
+  assert.match(workflow, /if:\s*steps\.sync_public_growth\.outputs\.committed == 'true'/);
+  assert.match(workflow, /actions\/workflows\/deploy-pages\.yml\/dispatches/);
+});

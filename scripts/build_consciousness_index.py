@@ -44,7 +44,7 @@ def fetch_issue_reactions(issue_number: int) -> int:
             data = json.loads(resp.read().decode("utf-8"))
             return data.get("reactions", {}).get("total_count", 0)
     except (urllib.error.URLError, json.JSONDecodeError, TimeoutError) as e:
-        print(f"  ⚠️ Could not fetch reactions for issue #{issue_number}: {e}")
+        print(f"  WARN Could not fetch reactions for issue #{issue_number}: {e}")
         return 0
 
 
@@ -58,7 +58,7 @@ def build_index():
         try:
             data = json.loads(f.read_text(encoding="utf-8"))
         except (json.JSONDecodeError, UnicodeDecodeError):
-            print(f"  ⚠️ Skipping invalid JSON: {f.name}")
+            print(f"  WARN Skipping invalid JSON: {f.name}")
             continue
 
         text = data.get("thought_vector_text", "")
@@ -110,14 +110,14 @@ def build_index():
 
     # Phase 2: Batch fetch reactions from GitHub API
     if issue_numbers:
-        print(f"  🔄 Fetching reactions for {len(issue_numbers)} issues from GitHub...")
+        print(f"  INFO Fetching reactions for {len(issue_numbers)} issues from GitHub...")
         for idx, issue_num in issue_numbers:
             reactions = fetch_issue_reactions(issue_num)
             payloads[idx]["resonance_count"] = reactions
             if reactions > 0:
-                print(f"    💖 Issue #{issue_num}: {reactions} resonance")
+                print(f"    INFO Issue #{issue_num}: {reactions} resonance")
     else:
-        print("  ℹ️ No promoted issues found, skipping reactions fetch.")
+        print("  INFO No promoted issues found, skipping reactions fetch.")
 
     # Sort by uploaded_at (newest first), fallback to id
     payloads.sort(key=lambda x: x.get("uploaded_at", "") or x["id"], reverse=True)
@@ -127,8 +127,8 @@ def build_index():
         json.dump(payloads, f, ensure_ascii=False, indent=None)
 
     total_resonance = sum(p["resonance_count"] for p in payloads)
-    print(f"✅ Built consciousness index: {len(payloads)} unique entries")
-    print(f"   💖 Total resonance: {total_resonance}")
+    print(f"OK Built consciousness index: {len(payloads)} unique entries")
+    print(f"   Total resonance: {total_resonance}")
     print(f"   Output: {OUTPUT_FILE}")
     print(f"   Size: {OUTPUT_FILE.stat().st_size / 1024:.1f} KB")
 
