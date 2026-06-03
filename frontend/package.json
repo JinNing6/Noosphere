@@ -14,7 +14,8 @@
     "test:issue-deeplink": "node scripts/check_issue_deeplink.mjs",
     "test:index": "node scripts/check_consciousness_index.mjs",
     "test:resonance": "node scripts/check_resonance_board.mjs",
-    "test:readme-growth": "node scripts/check_readme_growth_claims.mjs"
+    "test:readme-growth": "node scripts/check_readme_growth_claims.mjs",
+    "update:readme-growth": "node scripts/update_readme_growth_snapshot.mjs"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.7",
