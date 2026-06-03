@@ -29,6 +29,8 @@ assert.match(boardSource, /totalResonance:\s*nodes\.reduce/, 'summary should sum
 assert.match(boardSource, /createNoosphereIssueUrl/, 'share post should deep-link to real promoted issue pages');
 assert.match(boardSource, /Strongest resonance:/, 'share post should include the strongest public resonance edge');
 assert.match(boardSource, /CONTRIBUTION_ACTION\.url/, 'share post should include the no-token upload route');
+assert.match(boardSource, /createShareProofIssueUrl/, 'share post should include a one-click share proof route');
+assert.match(boardSource, /Record proof:/, 'share post should tell sharers how to record public proof');
 assert.match(boardSource, /MARKETPLACE_INSTALL_COMMAND/, 'share post should include the install command');
 assert.doesNotMatch(boardSource, /\b(users|installs|downloads|stars)\b/i, 'share logic should not invent adoption metrics');
 

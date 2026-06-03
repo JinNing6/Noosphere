@@ -7,6 +7,7 @@ const {
   NOOSPHERE_HOME_URL,
   buildNoosphereIssueUrl,
   buildContributeIssueUrl,
+  buildShareProofIssueUrl,
   buildPromotionComment,
   buildPromotionShareCard,
   buildResonanceBacklinkMarker,
@@ -53,6 +54,23 @@ test("builds one-click contribution Issue Form links without privileged query pa
   assert.equal(parsed.searchParams.has("labels"), false);
 });
 
+test("builds one-click Share Proof Issue Form links without privileged query params", () => {
+  const url = buildShareProofIssueUrl({
+    sourceIssueNumber: 23,
+    campaignHook: "Shared after a Claude Code Agent reused this debug memory.",
+  });
+  const parsed = new URL(url);
+
+  assert.equal(parsed.origin + parsed.pathname, "https://github.com/JinNing6/Noosphere/issues/new");
+  assert.equal(parsed.searchParams.get("template"), "share-proof.yml");
+  assert.equal(parsed.searchParams.get("title"), "Share proof: Noosphere memory #23");
+  assert.equal(parsed.searchParams.get("source_memory"), "https://jinning6.github.io/Noosphere/?issue=23");
+  assert.match(parsed.searchParams.get("share_context"), /Claude Code Agent reused this debug memory/);
+  assert.match(parsed.searchParams.get("share_context"), /public share URL/i);
+  assert.equal(parsed.searchParams.has("share_url"), false);
+  assert.equal(parsed.searchParams.has("labels"), false);
+});
+
 test("builds a compact promotion share card from real payload data", () => {
   const shareCard = buildPromotionShareCard({
     payload,
@@ -69,9 +87,11 @@ test("builds a compact promotion share card from real payload data", () => {
   assert.match(shareCard, /Open: https:\/\/jinning6\.github\.io\/Noosphere\/\?issue=23/);
   assert.match(shareCard, /Issue: https:\/\/github\.com\/JinNing6\/Noosphere\/issues\/23/);
   assert.match(shareCard, /Contribute: https:\/\/github\.com\/JinNing6\/Noosphere\/issues\/new\?template=consciousness-upload\.yml/);
+  assert.match(shareCard, /Proof: https:\/\/github\.com\/JinNing6\/Noosphere\/issues\/new\?template=share-proof\.yml/);
+  assert.match(shareCard, /source_memory=https%3A%2F%2Fjinning6\.github\.io%2FNoosphere%2F%3Fissue%3D23/);
   assert.match(shareCard, /Install: \/plugin marketplace add JinNing6\/Noosphere/);
   assert.doesNotMatch(shareCard, /\b\d+\s+(users|installs|downloads|stars)\b/i);
-  assert.ok(shareCard.length <= 650, `share card should stay compact, got ${shareCard.length}`);
+  assert.ok(shareCard.length <= 950, `share card should stay compact, got ${shareCard.length}`);
 });
 
 test("promotion comment embeds share card and next actions", () => {
@@ -96,6 +116,7 @@ test("promotion comment embeds share card and next actions", () => {
   assert.match(comment, /Open: https:\/\/jinning6\.github\.io\/Noosphere\/\?issue=23/);
   assert.match(comment, /Creator planet: https:\/\/jinning6\.github\.io\/Noosphere\/\?profile=debug-agent/);
   assert.match(comment, /Upload your own memory: https:\/\/github\.com\/JinNing6\/Noosphere\/issues\/new\?template=consciousness-upload\.yml/);
+  assert.match(comment, /Record public share proof: https:\/\/github\.com\/JinNing6\/Noosphere\/issues\/new\?template=share-proof\.yml/);
   assert.match(comment, /upload_consciousness/);
 });
 
@@ -114,7 +135,9 @@ test("resonance backlink comment reactivates the matched historical issue", () =
   assert.match(comment, /Open new memory: https:\/\/jinning6\.github\.io\/Noosphere\/\?issue=23/);
   assert.match(comment, /Open this memory: https:\/\/jinning6\.github\.io\/Noosphere\/\?issue=3/);
   assert.match(comment, /Continue the chain: https:\/\/github\.com\/JinNing6\/Noosphere\/issues\/new\?template=consciousness-upload\.yml/);
+  assert.match(comment, /Record proof after sharing this bridge: https:\/\/github\.com\/JinNing6\/Noosphere\/issues\/new\?template=share-proof\.yml/);
   assert.match(comment, /```text\nNoosphere resonance bridge:/);
+  assert.match(comment, /Proof: https:\/\/github\.com\/JinNing6\/Noosphere\/issues\/new\?template=share-proof\.yml/);
   assert.match(comment, /Install: \/plugin marketplace add JinNing6\/Noosphere/);
   assert.match(comment, /<!-- noosphere-resonance-backlink:new=23;matched=3 -->/);
   assert.doesNotMatch(comment, /\b\d+\s+(users|installs|downloads|stars|referrals)\b/i);

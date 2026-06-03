@@ -1,6 +1,7 @@
 import type { KnowledgeNode } from '../data/knowledge';
 import { createNoosphereIssueUrl, NOOSPHERE_HOME_URL } from './issueDeepLink';
 import { CONTRIBUTION_ACTION, MARKETPLACE_INSTALL_COMMAND } from './growthCopy';
+import { createShareProofIssueUrl } from './shareProofs';
 
 export interface ResonanceTypeRow {
   type: string;
@@ -119,10 +120,15 @@ export function createResonanceBoardSharePost(summary: ResonanceBoardSummary): s
   const latestUrl = latest?.issueNumber
     ? createNoosphereIssueUrl(latest.issueNumber)
     : NOOSPHERE_HOME_URL;
+  const latestIssueNumber = typeof latest?.issueNumber === 'number' ? latest.issueNumber : undefined;
   const strongestResonance = summary.strongestResonance;
   const strongestLine = strongestResonance
     ? `Strongest resonance: ${compactLine(strongestResonance.source.title_zh || strongestResonance.source.title_en, 34)} <-> ${compactLine(strongestResonance.target.title_zh || strongestResonance.target.title_en, 34)} (${Math.round(strongestResonance.score * 100)}%)`
     : 'Strongest resonance: waiting for embedded neighbors';
+  const proofUrl = createShareProofIssueUrl({
+    sourceIssueNumber: latestIssueNumber,
+    campaignHook: 'I shared this Noosphere live memory network snapshot.',
+  });
 
   return [
     'Noosphere live memory network',
@@ -130,6 +136,7 @@ export function createResonanceBoardSharePost(summary: ResonanceBoardSummary): s
     `Latest: ${latestTitle}`,
     strongestLine,
     `Open: ${latestUrl}`,
+    `Record proof: ${proofUrl}`,
     `Install: ${MARKETPLACE_INSTALL_COMMAND}`,
     `Upload: ${CONTRIBUTION_ACTION.url}`,
   ].join('\n');

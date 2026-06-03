@@ -34,6 +34,13 @@ export interface ShareProofIndex {
   proofs: ShareProofRecord[];
 }
 
+export interface ShareProofIssueLinkOptions {
+  sourceIssueNumber?: number;
+  sourceMemory?: string;
+  campaignHook?: string;
+  shareUrl?: string;
+}
+
 export const EMPTY_SHARE_PROOF_INDEX: ShareProofIndex = {
   generated_at: '',
   source: 'GitHub Issues',
@@ -53,6 +60,38 @@ export const EMPTY_SHARE_PROOF_INDEX: ShareProofIndex = {
   ].join('\n'),
   proofs: [],
 };
+
+export function createShareProofIssueUrl(options: ShareProofIssueLinkOptions = {}): string {
+  const url = new URL(SHARE_PROOF_FORM_URL);
+  const issueNumber = Number.parseInt(String(options.sourceIssueNumber || ''), 10);
+  const hasIssueNumber = Number.isFinite(issueNumber) && issueNumber > 0;
+
+  url.searchParams.set('template', 'share-proof.yml');
+  url.searchParams.set(
+    'title',
+    hasIssueNumber ? `Share proof: Noosphere memory #${issueNumber}` : 'Share proof: Noosphere memory',
+  );
+
+  const sourceMemory = options.sourceMemory || (hasIssueNumber ? `https://jinning6.github.io/Noosphere/?issue=${issueNumber}` : '');
+  if (sourceMemory) {
+    url.searchParams.set('source_memory', sourceMemory);
+  }
+
+  url.searchParams.set(
+    'share_context',
+    [
+      options.campaignHook || 'I shared a Noosphere memory publicly.',
+      'After posting, paste the public share URL into share_url so Noosphere can record reviewable proof.',
+    ].join(' '),
+  );
+
+  const shareUrl = options.shareUrl?.trim();
+  if (shareUrl && /^https?:\/\//i.test(shareUrl)) {
+    url.searchParams.set('share_url', shareUrl);
+  }
+
+  return url.toString();
+}
 
 function isShareProofIndex(value: unknown): value is ShareProofIndex {
   if (!value || typeof value !== 'object') return false;

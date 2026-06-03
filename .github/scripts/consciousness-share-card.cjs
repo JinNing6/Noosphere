@@ -1,6 +1,7 @@
 const NOOSPHERE_HOME_URL = "https://jinning6.github.io/Noosphere/";
 const GITHUB_REPO_URL = "https://github.com/JinNing6/Noosphere";
 const CONTRIBUTION_ISSUE_TEMPLATE = "consciousness-upload.yml";
+const SHARE_PROOF_ISSUE_TEMPLATE = "share-proof.yml";
 const MARKETPLACE_INSTALL_COMMAND = "/plugin marketplace add JinNing6/Noosphere";
 
 function compactLine(value, maxLength) {
@@ -45,6 +46,50 @@ function buildContributeIssueUrl({ sourceIssueNumber } = {}) {
   return url.toString();
 }
 
+function buildShareProofIssueUrl({
+  sourceIssueNumber,
+  sourceIssueUrl,
+  sourceMemory,
+  memoryUrl,
+  campaignHook,
+  shareUrl,
+} = {}) {
+  const url = new URL(`${GITHUB_REPO_URL}/issues/new`);
+  url.searchParams.set("template", SHARE_PROOF_ISSUE_TEMPLATE);
+
+  const parsedIssueNumber = Number.parseInt(String(sourceIssueNumber || ""), 10);
+  const hasIssueNumber = Number.isFinite(parsedIssueNumber) && parsedIssueNumber > 0;
+  url.searchParams.set(
+    "title",
+    hasIssueNumber ? `Share proof: Noosphere memory #${parsedIssueNumber}` : "Share proof: Noosphere memory"
+  );
+
+  const resolvedMemory =
+    sourceMemory ||
+    memoryUrl ||
+    (hasIssueNumber ? buildNoosphereIssueUrl(parsedIssueNumber) : "") ||
+    sourceIssueUrl ||
+    "";
+  if (resolvedMemory) {
+    url.searchParams.set("source_memory", compactLine(resolvedMemory, 180));
+  }
+
+  url.searchParams.set(
+    "share_context",
+    [
+      campaignHook || "I shared this Noosphere memory publicly.",
+      "Paste the public share URL after posting; Noosphere records reviewable proof only.",
+    ].join(" ")
+  );
+
+  const normalizedShareUrl = String(shareUrl || "").trim();
+  if (/^https?:\/\//i.test(normalizedShareUrl)) {
+    url.searchParams.set("share_url", normalizedShareUrl);
+  }
+
+  return url.toString();
+}
+
 function formatResonancePercent(score) {
   const numericScore = Number.parseFloat(String(score || ""));
   if (!Number.isFinite(numericScore) || numericScore <= 0) return null;
@@ -67,6 +112,11 @@ function buildPromotionShareCard({ payload, issueNumber, issueUrl, resonanceMatc
   const creator = safeCreator(payload);
   const thought = compactLine(payload?.thought_vector_text || "A consciousness fragment joined Noosphere.", 112);
   const resonanceLine = buildResonanceShareLine(resonanceMatch);
+  const proofUrl = buildShareProofIssueUrl({
+    sourceIssueNumber: issueNumber,
+    sourceIssueUrl: issueUrl,
+    campaignHook: "I shared this Noosphere memory.",
+  });
 
   const lines = [
     `Known Noosphere memory promoted: ${type} by ${creator}`,
@@ -79,6 +129,7 @@ function buildPromotionShareCard({ payload, issueNumber, issueUrl, resonanceMatc
     `Open: ${buildNoosphereIssueUrl(issueNumber)}`,
     `Issue: ${issueUrl}`,
     `Contribute: ${buildContributeIssueUrl({ sourceIssueNumber: issueNumber })}`,
+    `Proof: ${proofUrl}`,
     `Install: ${MARKETPLACE_INSTALL_COMMAND}`,
   );
 
@@ -142,6 +193,11 @@ function buildResonanceBacklinkComment({
   const newThought = compactLine(payload?.thought_vector_text || "A new Noosphere memory", 112);
   const matchedThought = compactLine(resonanceMatch.text || "this Noosphere memory", 112);
   const contributeUrl = buildContributeIssueUrl({ sourceIssueNumber: matchedIssueNumber });
+  const proofUrl = buildShareProofIssueUrl({
+    sourceIssueNumber: parsedNewIssueNumber,
+    sourceMemory: `${buildNoosphereIssueUrl(parsedNewIssueNumber)} resonated with ${buildNoosphereIssueUrl(matchedIssueNumber)}`,
+    campaignHook: `I shared bridge #${parsedNewIssueNumber} -> #${matchedIssueNumber}.`,
+  });
 
   const shareCard = [
     `Noosphere resonance bridge: #${parsedNewIssueNumber} resonated with #${matchedIssueNumber} at ${percent}`,
@@ -150,6 +206,7 @@ function buildResonanceBacklinkComment({
     `Open new: ${buildNoosphereIssueUrl(parsedNewIssueNumber)}`,
     `Open original: ${buildNoosphereIssueUrl(matchedIssueNumber)}`,
     `Contribute: ${contributeUrl}`,
+    `Proof: ${proofUrl}`,
     `Install: ${MARKETPLACE_INSTALL_COMMAND}`,
   ].join("\n");
 
@@ -160,6 +217,7 @@ function buildResonanceBacklinkComment({
     `- Open this memory: ${buildNoosphereIssueUrl(matchedIssueNumber)}\n` +
     `- Source Issue: ${newIssueUrl}\n` +
     `- Continue the chain: ${contributeUrl}\n\n` +
+    `- Record proof after sharing this bridge: ${proofUrl}\n\n` +
     `Raw embedding vectors are not exposed; this is a compact nearest-neighbor edge.\n\n` +
     `Share this bridge:\n\n` +
     "```text\n" +
@@ -183,6 +241,11 @@ function buildPromotionComment({
   const profileUrl = buildCreatorProfileUrl(payload);
   const profileLine = profileUrl ? `\n- Creator planet: ${profileUrl}` : "";
   const contributeUrl = buildContributeIssueUrl({ sourceIssueNumber: issueNumber });
+  const proofUrl = buildShareProofIssueUrl({
+    sourceIssueNumber: issueNumber,
+    sourceIssueUrl: issueUrl,
+    campaignHook: "I shared this Noosphere memory.",
+  });
   const resonanceSection = buildPromotionResonanceSection(resonanceMatch);
 
   return (
@@ -193,6 +256,7 @@ function buildPromotionComment({
     `- 🌐 Open in Noosphere: ${buildNoosphereIssueUrl(issueNumber)}` +
     `${profileLine}\n` +
     `- Upload your own memory: ${contributeUrl}\n` +
+    `- Record public share proof: ${proofUrl}\n` +
     `${resonanceSection}\n` +
     `### Share this memory\n\n` +
     "```text\n" +
@@ -208,9 +272,11 @@ module.exports = {
   GITHUB_REPO_URL,
   MARKETPLACE_INSTALL_COMMAND,
   NOOSPHERE_HOME_URL,
+  SHARE_PROOF_ISSUE_TEMPLATE,
   buildContributeIssueUrl,
   buildCreatorProfileUrl,
   buildNoosphereIssueUrl,
+  buildShareProofIssueUrl,
   buildPromotionComment,
   buildPromotionResonanceSection,
   buildPromotionShareCard,
