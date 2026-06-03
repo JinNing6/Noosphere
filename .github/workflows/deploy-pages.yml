@@ -8,6 +8,7 @@ on:
 permissions:
   contents: read
   issues: read
+  pull-requests: read
   pages: write
   id-token: write
 
@@ -39,6 +40,9 @@ jobs:
 
       - name: Build share proof index
         run: python scripts/build_share_proof_index.py
+
+      - name: Build traction proof
+        run: python scripts/build_traction_proof.py
 
       - name: Build
         working-directory: frontend

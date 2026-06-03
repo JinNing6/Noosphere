@@ -16,6 +16,7 @@
     "test:resonance": "node scripts/check_resonance_board.mjs",
     "test:share-proof": "node scripts/check_share_proof_wall.mjs",
     "test:launch-kit": "node scripts/check_launch_kit.mjs",
+    "test:traction-proof": "node scripts/check_traction_proof.mjs",
     "test:readme-growth": "node scripts/check_readme_growth_claims.mjs",
     "update:readme-growth": "node scripts/update_readme_growth_snapshot.mjs"
   },

@@ -1,0 +1,511 @@
+"""
+Build a public traction proof snapshot from real public sources.
+
+The snapshot combines:
+- GitHub repository metadata from the official REST API
+- GitHub IssueOps and Pull Request authors from the official REST API
+- Noosphere's generated public memory and share-proof JSON files
+
+It never infers downloads, reposts, referrals, retention, rewards, install
+counts, private analytics, or active users.
+
+Usage: python scripts/build_traction_proof.py
+Output: frontend/public/traction_proof.json
+"""
+import json
+import os
+import urllib.error
+import urllib.parse
+import urllib.request
+from datetime import datetime, timezone
+from pathlib import Path
+
+
+REPO_ROOT = Path(__file__).parent.parent
+CONSCIOUSNESS_INDEX_FILE = REPO_ROOT / "frontend" / "public" / "consciousness_index.json"
+SHARE_PROOF_FILE = REPO_ROOT / "frontend" / "public" / "share_proofs.json"
+OUTPUT_FILE = REPO_ROOT / "frontend" / "public" / "traction_proof.json"
+
+GITHUB_REPO = os.environ.get("GITHUB_REPOSITORY", "JinNing6/Noosphere")
+GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN", "")
+GITHUB_API_VERSION = "2022-11-28"
+MAX_ISSUES = 300
+MAX_PULLS = 100
+DEFAULT_TARGET_CONTRIBUTORS = 10
+
+NOOSPHERE_HOME_URL = "https://jinning6.github.io/Noosphere/"
+REPO_URL = "https://github.com/JinNing6/Noosphere"
+UPLOAD_FORM_URL = "https://github.com/JinNing6/Noosphere/issues/new?template=consciousness-upload.yml"
+SHARE_PROOF_FORM_URL = "https://github.com/JinNing6/Noosphere/issues/new?template=share-proof.yml"
+NON_FABRICATION_DISCLOSURE = (
+    "No downloads, reposts, referrals, retention, rewards, or install counts are "
+    "inferred from public repository, IssueOps, Pull Request, or URL snapshots."
+)
+
+
+def utc_now_iso():
+    return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+
+
+def github_headers(user_agent):
+    headers = {
+        "Accept": "application/vnd.github+json",
+        "User-Agent": user_agent,
+        "X-GitHub-Api-Version": GITHUB_API_VERSION,
+    }
+    if GITHUB_TOKEN:
+        headers["Authorization"] = f"Bearer {GITHUB_TOKEN}"
+    return headers
+
+
+def fetch_json(url, user_agent):
+    request = urllib.request.Request(url, headers=github_headers(user_agent))
+    try:
+        with urllib.request.urlopen(request, timeout=20) as response:
+            return json.loads(response.read().decode("utf-8")), None
+    except (urllib.error.HTTPError, urllib.error.URLError, TimeoutError, json.JSONDecodeError) as exc:
+        return None, str(exc)
+
+
+def fetch_repository():
+    url = f"https://api.github.com/repos/{GITHUB_REPO.strip()}"
+    data, error = fetch_json(url, "Noosphere-Traction-Proof-Builder/1.0")
+    if not isinstance(data, dict):
+        return None, f"GitHub repository fetch failed: {error or 'unexpected response'}"
+    return data, None
+
+
+def fetch_repository_issues():
+    issues = []
+    page = 1
+    while len(issues) < MAX_ISSUES:
+        params = urllib.parse.urlencode({
+            "state": "all",
+            "sort": "updated",
+            "direction": "desc",
+            "per_page": "100",
+            "page": str(page),
+        })
+        url = f"https://api.github.com/repos/{GITHUB_REPO.strip()}/issues?{params}"
+        batch, error = fetch_json(url, "Noosphere-Traction-Proof-Builder/1.0")
+        if not isinstance(batch, list):
+            return issues[:MAX_ISSUES], f"GitHub issues fetch failed: {error or 'unexpected response'}"
+        if not batch:
+            break
+        issues.extend(batch)
+        if len(batch) < 100:
+            break
+        page += 1
+    return issues[:MAX_ISSUES], None
+
+
+def fetch_repository_pulls():
+    pulls = []
+    page = 1
+    while len(pulls) < MAX_PULLS:
+        params = urllib.parse.urlencode({
+            "state": "all",
+            "sort": "updated",
+            "direction": "desc",
+            "per_page": "100",
+            "page": str(page),
+        })
+        url = f"https://api.github.com/repos/{GITHUB_REPO.strip()}/pulls?{params}"
+        batch, error = fetch_json(url, "Noosphere-Traction-Proof-Builder/1.0")
+        if not isinstance(batch, list):
+            return pulls[:MAX_PULLS], f"GitHub pull requests fetch failed: {error or 'unexpected response'}"
+        if not batch:
+            break
+        pulls.extend(batch)
+        if len(batch) < 100:
+            break
+        page += 1
+    return pulls[:MAX_PULLS], None
+
+
+def read_json_file(path, fallback, access_issues, label):
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError, UnicodeDecodeError) as exc:
+        access_issues.append(f"{label} read failed: {exc}")
+        return fallback
+
+
+def issue_labels(issue):
+    labels = []
+    for label in issue.get("labels", []):
+        if isinstance(label, dict) and label.get("name"):
+            labels.append(str(label["name"]).strip())
+    return labels
+
+
+def is_pull_request_issue(issue):
+    return "pull_request" in issue
+
+
+def is_share_proof_issue(issue):
+    labels = {label.lower() for label in issue_labels(issue)}
+    title = str(issue.get("title", ""))
+    body = str(issue.get("body", ""))
+    return (
+        not is_pull_request_issue(issue)
+        and (
+            "share-proof" in labels
+            or title.startswith("Share proof:")
+            or "### Public share URL" in body
+        )
+    )
+
+
+def is_consciousness_issue(issue):
+    labels = {label.lower() for label in issue_labels(issue)}
+    title = str(issue.get("title", ""))
+    body = str(issue.get("body", ""))
+    return (
+        not is_pull_request_issue(issue)
+        and (
+            "consciousness" in labels
+            or "consciousness-upload" in labels
+            or "Consciousness Payload" in title
+            or "CONSCIOUSNESS_PAYLOAD_START" in body
+            or "## Consciousness Payload" in body
+        )
+    )
+
+
+def actor_login(value):
+    user = value.get("user") if isinstance(value, dict) else None
+    if isinstance(user, dict):
+        login = str(user.get("login") or "").strip()
+        return login
+    return ""
+
+
+def normalize_positive_int(value, fallback):
+    try:
+        parsed = int(value)
+    except (TypeError, ValueError):
+        return fallback
+    return parsed if parsed > 0 else fallback
+
+
+def summarize_memories(memories):
+    if not isinstance(memories, list):
+        memories = []
+
+    embedding_neighbor_edges = 0
+    resonance_events = 0
+    promoted_issue_memories = 0
+    media_memories = 0
+
+    for memory in memories:
+        if not isinstance(memory, dict):
+            continue
+        neighbors = memory.get("resonates_with")
+        if isinstance(neighbors, list):
+            embedding_neighbor_edges += len(neighbors)
+        if isinstance(memory.get("resonance_count"), (int, float)):
+            resonance_events += int(memory["resonance_count"])
+        if isinstance(memory.get("issue_number"), int) and memory["issue_number"] > 0:
+            promoted_issue_memories += 1
+        if memory.get("media_type"):
+            media_memories += 1
+
+    return {
+        "public_memories": len([item for item in memories if isinstance(item, dict)]),
+        "promoted_issue_memories": promoted_issue_memories,
+        "media_memories": media_memories,
+        "resonance_events": resonance_events,
+        "embedding_neighbor_edges": embedding_neighbor_edges,
+    }
+
+
+def summarize_share_proofs(share_proofs):
+    summary = share_proofs.get("summary") if isinstance(share_proofs, dict) else {}
+    proofs = share_proofs.get("proofs") if isinstance(share_proofs, dict) else []
+    if not isinstance(summary, dict):
+        summary = {}
+    if not isinstance(proofs, list):
+        proofs = []
+
+    return {
+        "total_proof_issues": int(summary.get("total_proof_issues") or 0),
+        "reviewable_public_urls": int(summary.get("reviewable_public_urls") or 0),
+        "missing_or_invalid_urls": int(summary.get("missing_or_invalid_urls") or 0),
+        "latest_reviewable_url": next(
+            (
+                str(proof.get("share_url"))
+                for proof in proofs
+                if isinstance(proof, dict) and proof.get("reviewable") and proof.get("share_url")
+            ),
+            "",
+        ),
+    }
+
+
+def summarize_repo(repo):
+    if not isinstance(repo, dict):
+        return {
+            "status": "unavailable",
+            "full_name": GITHUB_REPO,
+            "html_url": REPO_URL,
+            "stars": 0,
+            "forks": 0,
+            "open_issues": 0,
+        }
+
+    return {
+        "status": "ok",
+        "full_name": repo.get("full_name") or GITHUB_REPO,
+        "html_url": repo.get("html_url") or REPO_URL,
+        "stars": int(repo.get("stargazers_count") or 0),
+        "forks": int(repo.get("forks_count") or repo.get("forks") or 0),
+        "open_issues": int(repo.get("open_issues_count") or 0),
+    }
+
+
+def summarize_issueops(issues):
+    public_issues = [issue for issue in issues if isinstance(issue, dict) and not is_pull_request_issue(issue)]
+    share_issues = [issue for issue in public_issues if is_share_proof_issue(issue)]
+    consciousness_issues = [issue for issue in public_issues if is_consciousness_issue(issue)]
+
+    return {
+        "sampled_issues": len(public_issues),
+        "share_proof_issues": len(share_issues),
+        "open_share_proof_issues": len([issue for issue in share_issues if issue.get("state") == "open"]),
+        "consciousness_issues": len(consciousness_issues),
+        "open_consciousness_issues": len([issue for issue in consciousness_issues if issue.get("state") == "open"]),
+    }
+
+
+def collect_contributors(issues, pulls, share_proofs):
+    contributors = set()
+
+    for issue in issues:
+        if not isinstance(issue, dict):
+            continue
+        if is_share_proof_issue(issue) or is_consciousness_issue(issue):
+            login = actor_login(issue)
+            if login:
+                contributors.add(login)
+
+    for pull in pulls:
+        if not isinstance(pull, dict):
+            continue
+        login = actor_login(pull)
+        if login:
+            contributors.add(login)
+
+    proofs = share_proofs.get("proofs") if isinstance(share_proofs, dict) else []
+    if isinstance(proofs, list):
+        for proof in proofs:
+            if not isinstance(proof, dict):
+                continue
+            if not proof.get("reviewable"):
+                continue
+            login = str(proof.get("submitted_by") or "").strip()
+            if login and login != "unknown":
+                contributors.add(login)
+
+    return sorted(contributors, key=str.lower)
+
+
+def choose_bottleneck(memory_summary, share_summary, contributor_count, target_count, access_issues):
+    if access_issues:
+        return {
+            "stage": "public API recovery",
+            "reason": "One or more public snapshot sources could not be read.",
+            "next_action": "Retry Pages build after checking GitHub API permissions and generated JSON artifacts.",
+            "next_action_url": f"{REPO_URL}/actions",
+        }
+
+    if memory_summary["public_memories"] <= 0:
+        return {
+            "stage": "public memory supply",
+            "reason": "The live memory graph has no public payloads to share yet.",
+            "next_action": "Upload one reusable Agent debugging memory.",
+            "next_action_url": UPLOAD_FORM_URL,
+        }
+
+    if share_summary["reviewable_public_urls"] < memory_summary["public_memories"]:
+        return {
+            "stage": "public share proof",
+            "reason": (
+                "Public memories exist, but reviewable external share URLs still lag behind the memory graph."
+            ),
+            "next_action": "Share one memory publicly, then record the URL with the Share Proof Issue Form.",
+            "next_action_url": SHARE_PROOF_FORM_URL,
+        }
+
+    if contributor_count < target_count:
+        return {
+            "stage": "contributor expansion",
+            "reason": "The current sprint still needs more real contributor identities.",
+            "next_action": "Publish the traction proof card and invite one Agent user to upload or record proof.",
+            "next_action_url": NOOSPHERE_HOME_URL,
+        }
+
+    return {
+        "stage": "repeat proof velocity",
+        "reason": "The target is reached; the next proof gap is repeated public proof over time.",
+        "next_action": "Run another proof sprint and compare against the next real snapshot.",
+        "next_action_url": NOOSPHERE_HOME_URL,
+    }
+
+
+def build_share_card(repo_summary, memory_summary, share_summary, target_progress, bottleneck):
+    def unit(count, singular, plural):
+        return singular if count == 1 else plural
+
+    return "\n".join([
+        "Noosphere public traction proof",
+        (
+            f"Repo: {repo_summary['stars']} {unit(repo_summary['stars'], 'star', 'stars')}, "
+            f"{repo_summary['forks']} {unit(repo_summary['forks'], 'fork', 'forks')}, "
+            f"{repo_summary['open_issues']} open {unit(repo_summary['open_issues'], 'issue', 'issues')}"
+        ),
+        (
+            f"Memory graph: {memory_summary['public_memories']} public "
+            f"{unit(memory_summary['public_memories'], 'memory', 'memories')}, "
+            f"{memory_summary['media_memories']} media "
+            f"{unit(memory_summary['media_memories'], 'memory', 'memories')}, "
+            f"{memory_summary['embedding_neighbor_edges']} embedding neighbor "
+            f"{unit(memory_summary['embedding_neighbor_edges'], 'edge', 'edges')}"
+        ),
+        (
+            f"Share proof: {share_summary['reviewable_public_urls']} reviewable public URLs "
+            f"from {share_summary['total_proof_issues']} proof "
+            f"{unit(share_summary['total_proof_issues'], 'issue', 'issues')}"
+        ),
+        (
+            f"Sprint: {target_progress['real_contributor_identities']}/"
+            f"{target_progress['target_contributor_count']} real contributors"
+        ),
+        f"Bottleneck: {bottleneck['stage']} - {bottleneck['next_action']}",
+        NON_FABRICATION_DISCLOSURE,
+    ])
+
+
+def build_traction_proof(memories, share_proofs, repo, issues, pulls, access_issues):
+    access_issues = list(access_issues or [])
+    share_proofs = share_proofs if isinstance(share_proofs, dict) else {}
+    issues = issues if isinstance(issues, list) else []
+    pulls = pulls if isinstance(pulls, list) else []
+
+    repo_summary = summarize_repo(repo)
+    memory_summary = summarize_memories(memories)
+    share_summary = summarize_share_proofs(share_proofs)
+    issueops_summary = summarize_issueops(issues)
+    contributors = collect_contributors(issues, pulls, share_proofs)
+    target_count = normalize_positive_int(
+        os.environ.get("NOOSPHERE_TRACTION_TARGET_CONTRIBUTORS"),
+        DEFAULT_TARGET_CONTRIBUTORS,
+    )
+    target_progress = {
+        "target_contributor_count": target_count,
+        "real_contributor_identities": len(contributors),
+        "contributors": contributors,
+        "progress_percent": round(min(100, (len(contributors) / target_count) * 100), 1) if target_count else 0,
+        "counting_rule": (
+            "Counts public Share Proof Issue authors, public Consciousness Issue authors, "
+            "public Pull Request authors, and submitted_by fields from share_proofs.json. "
+            "Stars, forks, watchers, downloads, reposts, retention, and subscribers are not contributors."
+        ),
+    }
+    bottleneck = choose_bottleneck(
+        memory_summary,
+        share_summary,
+        len(contributors),
+        target_count,
+        access_issues,
+    )
+
+    return {
+        "generated_at": utc_now_iso(),
+        "source": (
+            "GitHub REST API repository/issues/pulls plus generated Noosphere "
+            "consciousness_index.json and share_proofs.json"
+        ),
+        "repo": repo_summary,
+        "memory": memory_summary,
+        "share_proof": {
+            **share_summary,
+            "form_url": SHARE_PROOF_FORM_URL,
+        },
+        "issueops": issueops_summary,
+        "pull_requests": {
+            "public_prs_sampled": len([pull for pull in pulls if isinstance(pull, dict)]),
+            "authors_sampled": len({actor_login(pull) for pull in pulls if actor_login(pull)}),
+            "source_url": f"https://api.github.com/repos/{GITHUB_REPO.strip()}/pulls",
+        },
+        "target_progress": target_progress,
+        "bottleneck": bottleneck,
+        "actions": {
+            "open_home": NOOSPHERE_HOME_URL,
+            "upload_memory": UPLOAD_FORM_URL,
+            "record_share_proof": SHARE_PROOF_FORM_URL,
+            "github_actions": f"{REPO_URL}/actions",
+        },
+        "access_issues": access_issues,
+        "share_card": build_share_card(
+            repo_summary,
+            memory_summary,
+            share_summary,
+            target_progress,
+            bottleneck,
+        ),
+        "disclaimer": NON_FABRICATION_DISCLOSURE,
+    }
+
+
+def write_traction_proof():
+    access_issues = []
+    memories = read_json_file(
+        CONSCIOUSNESS_INDEX_FILE,
+        [],
+        access_issues,
+        "consciousness_index.json",
+    )
+    share_proofs = read_json_file(
+        SHARE_PROOF_FILE,
+        {},
+        access_issues,
+        "share_proofs.json",
+    )
+
+    repo, repo_error = fetch_repository()
+    issues, issues_error = fetch_repository_issues()
+    pulls, pulls_error = fetch_repository_pulls()
+    for error in (repo_error, issues_error, pulls_error):
+        if error:
+            access_issues.append(error)
+
+    snapshot = build_traction_proof(
+        memories=memories,
+        share_proofs=share_proofs,
+        repo=repo,
+        issues=issues,
+        pulls=pulls,
+        access_issues=access_issues,
+    )
+    OUTPUT_FILE.parent.mkdir(parents=True, exist_ok=True)
+    OUTPUT_FILE.write_text(
+        json.dumps(snapshot, ensure_ascii=False, separators=(",", ":")),
+        encoding="utf-8",
+    )
+
+    print(
+        "OK Built traction proof: "
+        f"{snapshot['target_progress']['real_contributor_identities']} real contributors, "
+        f"{snapshot['share_proof']['reviewable_public_urls']} reviewable proof URLs"
+    )
+    if snapshot["access_issues"]:
+        print(f"   Access issues: {len(snapshot['access_issues'])}")
+    print(f"   Bottleneck: {snapshot['bottleneck']['stage']}")
+    print(f"   Output: {OUTPUT_FILE}")
+    print(f"   Size: {OUTPUT_FILE.stat().st_size / 1024:.1f} KB")
+    return snapshot
+
+
+if __name__ == "__main__":
+    write_traction_proof()

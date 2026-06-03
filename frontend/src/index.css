@@ -995,6 +995,147 @@ html, body, #root {
   text-transform: uppercase;
 }
 
+.traction-proof-panel {
+  pointer-events: auto;
+  position: absolute;
+  right: 92px;
+  bottom: 24px;
+  z-index: 44;
+  width: 340px;
+  padding: 15px;
+  border: 1px solid rgba(0, 232, 120, 0.16);
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, rgba(8, 24, 18, 0.94), rgba(5, 6, 16, 0.94)),
+    rgb(5, 6, 16);
+  box-shadow:
+    0 18px 54px rgba(0, 0, 0, 0.38),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  color: #f4f7ff;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  animation: ahaPanelIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.26s both;
+}
+
+.traction-proof-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 11px;
+}
+
+.traction-proof-header div,
+.traction-proof-metrics div,
+.traction-proof-bottleneck {
+  display: grid;
+  gap: 3px;
+}
+
+.traction-proof-header span,
+.traction-proof-metrics span,
+.traction-proof-bottleneck span {
+  color: rgba(236, 240, 255, 0.58);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.traction-proof-header strong {
+  color: #ffffff;
+  font-size: 18px;
+  line-height: 1.05;
+}
+
+.traction-proof-header button,
+.traction-proof-actions a,
+.traction-proof-actions button {
+  border-radius: 8px;
+  border: 1px solid rgba(0, 232, 120, 0.24);
+  background: rgba(0, 232, 120, 0.09);
+  color: #ffffff;
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: 800;
+  text-decoration: none;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.traction-proof-header button {
+  padding: 8px 10px;
+  font-size: 11px;
+  text-transform: uppercase;
+}
+
+.traction-proof-header button:hover,
+.traction-proof-actions a:hover,
+.traction-proof-actions button:hover {
+  border-color: rgba(0, 232, 120, 0.48);
+  background: rgba(0, 232, 120, 0.15);
+}
+
+.traction-proof-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 11px;
+}
+
+.traction-proof-metrics div {
+  min-width: 0;
+  padding: 9px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.055);
+}
+
+.traction-proof-metrics strong {
+  color: #00e878;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.traction-proof-bottleneck {
+  margin-bottom: 11px;
+  padding: 10px;
+  border: 1px solid rgba(0, 212, 255, 0.16);
+  border-radius: 8px;
+  background: rgba(0, 212, 255, 0.06);
+}
+
+.traction-proof-bottleneck strong {
+  color: rgba(255, 255, 255, 0.94);
+  font-size: 13px;
+  line-height: 1.25;
+  text-transform: capitalize;
+}
+
+.traction-proof-bottleneck p,
+.traction-proof-disclosure {
+  margin: 0;
+  color: rgba(236, 240, 255, 0.66);
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.traction-proof-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.traction-proof-actions a,
+.traction-proof-actions button {
+  display: block;
+  width: 100%;
+  padding: 10px 11px;
+  box-sizing: border-box;
+  font-size: 11px;
+  text-align: center;
+  text-transform: uppercase;
+}
+
 @keyframes ahaPanelIn {
   from {
     opacity: 0;
@@ -1044,6 +1185,10 @@ html, body, #root {
   .launch-kit {
     display: none;
   }
+
+  .traction-proof-panel {
+    display: none;
+  }
 }
 
 @media (max-width: 760px) {
@@ -1089,6 +1234,10 @@ html, body, #root {
   .launch-kit {
     display: none;
   }
+
+  .traction-proof-panel {
+    display: none;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1097,6 +1246,7 @@ html, body, #root {
   .resonance-board,
   .share-proof-wall,
   .launch-kit,
+  .traction-proof-panel,
   .aha-live-dot,
   .aha-proof-header strong {
     animation: none;
