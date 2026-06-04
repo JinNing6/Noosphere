@@ -10,7 +10,7 @@ except ModuleNotFoundError:  # pragma: no cover - Python 3.10 release runners
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 SDK_ROOT = REPO_ROOT / "sdk"
-EXPECTED_RELEASE_VERSION = "0.6.3"
+EXPECTED_RELEASE_VERSION = "0.6.4"
 PYPI_BASELINE_VERSION = "0.6.0"
 
 
@@ -88,7 +88,7 @@ def test_package_release_includes_growth_ledger_tools():
 def test_readme_documents_pypi_release_recovery_route():
     readme = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
 
-    assert "v0.6.3" in readme
+    assert "v0.6.4" in readme
     assert ".github/workflows/publish-pypi.yml" in readme
     assert "Trusted Publishing" in readme
     assert "40 MCP tools" in readme

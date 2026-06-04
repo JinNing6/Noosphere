@@ -41,6 +41,7 @@ SHARE_PROOF_FILE = REPO_ROOT / "frontend" / "public" / "share_proofs.json"
 HISTORY_FILE = REPO_ROOT / "frontend" / "public" / "traction_history.json"
 OUTPUT_FILE = REPO_ROOT / "frontend" / "public" / "traction_proof.json"
 SDK_PYPROJECT_FILE = REPO_ROOT / "sdk" / "pyproject.toml"
+PUBLISH_WORKFLOW_FILE = REPO_ROOT / ".github" / "workflows" / "publish-pypi.yml"
 
 GITHUB_REPO = os.environ.get("GITHUB_REPOSITORY", "JinNing6/Noosphere")
 GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN", "")
@@ -190,6 +191,23 @@ def read_local_package_version(access_issues):
         access_issues.append("Local package metadata read failed: sdk/pyproject.toml has no project version")
         return ""
     return match.group(1)
+
+
+def publish_workflow_supports_tag_push(workflow_text):
+    return (
+        "push:" in workflow_text
+        and "tags:" in workflow_text
+        and re.search(r"""['"]?v\*['"]?""", workflow_text) is not None
+    )
+
+
+def read_publish_workflow_supports_tag_push(access_issues):
+    try:
+        workflow_text = PUBLISH_WORKFLOW_FILE.read_text(encoding="utf-8")
+    except (OSError, UnicodeDecodeError) as exc:
+        access_issues.append(f"Publish workflow read failed: {exc}")
+        return False
+    return publish_workflow_supports_tag_push(workflow_text)
 
 
 def read_json_file(path, fallback, access_issues, label):
@@ -403,11 +421,11 @@ def build_distribution_readiness(
     access_errors=None,
     pypi_error=None,
     release_error=None,
+    tag_trigger_supported=False,
 ):
     access_errors = [str(error) for error in (access_errors or []) if error]
     pypi_errors = [str(error) for error in [pypi_error] if error]
     release_errors = [str(error) for error in [release_error] if error]
-    all_errors = [*access_errors, *pypi_errors, *release_errors]
     release_tag = f"v{local_version}" if local_version else ""
     latest_version = ""
     if isinstance(pypi_project, dict):
@@ -426,6 +444,8 @@ def build_distribution_readiness(
 
     if not local_version:
         release_status = "local-version-missing"
+    elif release_errors and any("404" in error for error in release_errors) and not access_errors:
+        release_status = "missing"
     elif release_errors or access_errors:
         release_status = "unverified"
     elif not isinstance(release, dict):
@@ -439,13 +459,22 @@ def build_distribution_readiness(
     else:
         release_status = "published"
 
+    publish_trigger = "tag-or-release" if tag_trigger_supported else "release-only"
+    publish_trigger_ready = tag_trigger_supported or release_status == "published"
+    publish_trigger_status = "available" if publish_trigger_ready else "blocked"
+    all_errors = [
+        *access_errors,
+        *pypi_errors,
+        *(release_errors if not publish_trigger_ready else []),
+    ]
+
     registry_url = f"https://pypi.org/project/{PYPI_PROJECT}/"
     release_url = f"{REPO_URL}/releases/tag/{release_tag}" if release_tag else f"{REPO_URL}/releases"
     workflow_url = f"{REPO_URL}/actions/workflows/publish-pypi.yml"
     verifier_command = "python scripts/verify_pypi_release.py --tool-count 40"
     publish_workflow = ".github/workflows/publish-pypi.yml"
 
-    if pypi_status == "current" and release_status == "published":
+    if pypi_status == "current" and publish_trigger_ready:
         status = "ready"
         blocker = ""
         next_action = "Re-run traction proof after the next real public proof action."
@@ -455,11 +484,20 @@ def build_distribution_readiness(
             f"Install-loop launch blocker: PyPI latest {latest_version or 'unknown'} "
             f"does not match local package {local_version}."
         )
-        next_action = f"Publish {PYPI_PROJECT}=={local_version} through Trusted Publishing, then recheck PyPI JSON."
-    elif release_status != "published":
+        next_action = (
+            f"Push release tag {release_tag or '<target-tag>'} or publish a GitHub Release "
+            f"so Trusted Publishing can publish {PYPI_PROJECT}=={local_version}, then recheck PyPI JSON."
+        )
+    elif not publish_trigger_ready:
         status = "blocked"
-        blocker = f"Release-trigger blocker: GitHub Release {release_tag or '<missing-version>'} is {release_status}."
-        next_action = f"Publish GitHub Release {release_tag or '<missing-version>'} to trigger Trusted Publishing."
+        blocker = (
+            f"Publish-trigger blocker: {publish_workflow} is release-only and GitHub Release "
+            f"{release_tag or '<missing-version>'} is {release_status}."
+        )
+        next_action = (
+            f"Publish GitHub Release {release_tag or '<missing-version>'} or add a v* tag trigger "
+            "to the Trusted Publishing workflow."
+        )
     elif pypi_status == "unverified":
         status = "blocked"
         blocker = "Distribution public API access is unverified; PyPI state could not be proven."
@@ -473,7 +511,7 @@ def build_distribution_readiness(
         "Run package gates: python -m pytest tests/test_noosphere_mcp.py tests/test_vector_store.py tests/test_preflight.py tests/test_release_boundary.py",
         "Run release verifier tests: python -m unittest scripts.test_verify_pypi_release",
         f"Build artifacts: cd sdk && python -m build",
-        f"Publish GitHub Release {release_tag or '<target-tag>'} so {publish_workflow} can publish with PyPI Trusted Publishing/OIDC.",
+        f"Push release tag {release_tag or '<target-tag>'} or publish GitHub Release {release_tag or '<target-tag>'} so {publish_workflow} can publish with PyPI Trusted Publishing/OIDC.",
         f"Verify registry latest: {verifier_command}",
         "Rebuild traction proof: python scripts/build_traction_proof.py",
     ]
@@ -487,6 +525,9 @@ def build_distribution_readiness(
         "registry_url": registry_url,
         "release_tag": release_tag,
         "release_status": release_status,
+        "publish_trigger": publish_trigger,
+        "publish_trigger_status": publish_trigger_status,
+        "tag_trigger_supported": tag_trigger_supported,
         "release_url": release.get("html_url", release_url) if isinstance(release, dict) else release_url,
         "trusted_publishing_workflow": publish_workflow,
         "trusted_publishing_workflow_url": workflow_url,
@@ -495,7 +536,7 @@ def build_distribution_readiness(
         "next_action": next_action,
         "closure_checklist": checklist,
         "access_issues": all_errors,
-        "disclaimer": "Distribution readiness uses PyPI JSON and GitHub Release APIs; it does not infer installs or downloads.",
+        "disclaimer": "Distribution readiness uses PyPI JSON, GitHub Release APIs, and the Trusted Publishing workflow trigger contract; it does not infer installs or downloads.",
     }
 
 
@@ -863,6 +904,7 @@ def write_traction_proof():
             access_issues.append(error)
 
     local_version = read_local_package_version(access_issues)
+    tag_trigger_supported = read_publish_workflow_supports_tag_push(access_issues)
     pypi_project, pypi_error = fetch_pypi_project()
     release_tag = f"v{local_version}" if local_version else ""
     release, release_error = fetch_github_release(release_tag) if release_tag else (None, "Release tag unavailable")
@@ -872,6 +914,7 @@ def write_traction_proof():
         release=release,
         pypi_error=pypi_error,
         release_error=release_error,
+        tag_trigger_supported=tag_trigger_supported,
     )
 
     snapshot = build_traction_proof(

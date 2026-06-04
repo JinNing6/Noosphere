@@ -691,7 +691,7 @@ Unlike the old world, the Community of Consciousness continuously evolves. When 
 | `uvx` / `npx` (Recommended) | ⚡ **Auto Evolve** | Just restart the IDE / MCP client. `uvx` automatically pulls the latest version on launch |
 | `pip install` (Manual) | 🔧 Manual Upgrade | Execute `pip install --upgrade noosphere-mcp`, then restart IDE |
 
-Maintainer release path for the next install-loop closure: publish GitHub Release `v0.6.3`. The release triggers `.github/workflows/publish-pypi.yml`, which builds `noosphere-mcp` with SDK tests and publishes through PyPI Trusted Publishing/OIDC without a stored `PYPI_TOKEN`. After PyPI shows `0.6.3`, `uvx noosphere-mcp` and `pip install --upgrade noosphere-mcp` deliver the 40 MCP tools, including the Growth Proof Ledger and `launch_preflight`.
+Maintainer release path for the next install-loop closure: push release tag `v0.6.4` or publish GitHub Release `v0.6.4`. Either trigger runs `.github/workflows/publish-pypi.yml`, which builds `noosphere-mcp` with SDK tests and publishes through PyPI Trusted Publishing/OIDC without a stored `PYPI_TOKEN`. After PyPI shows `0.6.4`, `uvx noosphere-mcp` and `pip install --upgrade noosphere-mcp` deliver the 40 MCP tools, including the Growth Proof Ledger and `launch_preflight`.
 
 > 💡 **How to check**: Look at your MCP config. If `command` is `"uvx"`, you are in Auto Evolve mode; if `"python"`, you are in Manual mode.
 >

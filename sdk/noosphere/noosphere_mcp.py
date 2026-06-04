@@ -5007,6 +5007,9 @@ def _workflow_url(workflow_name: str = "publish-pypi.yml") -> str:
     return f"{_repo_url()}/actions/workflows/{workflow_name}"
 
 
+TAG_PUSH_PUBLISHING_ENABLED = True
+
+
 def _get_package_version() -> str:
     try:
         from noosphere import __version__
@@ -5057,6 +5060,39 @@ def _extract_ref_sha(ref: dict | None) -> str:
     return ""
 
 
+def _extract_ref_type(ref: dict | None) -> str:
+    if not isinstance(ref, dict):
+        return ""
+    obj = ref.get("object")
+    if isinstance(obj, dict):
+        return str(obj.get("type") or "").strip()
+    return ""
+
+
+async def _resolve_tag_commit_sha(owner_repo: str, tag_ref: dict | None) -> tuple[str, str]:
+    tag_sha = _extract_ref_sha(tag_ref)
+    if not tag_sha:
+        return "", ""
+
+    tag_type = _extract_ref_type(tag_ref)
+    if tag_type != "tag":
+        return tag_sha, ""
+
+    tag_object, tag_object_error = await _fetch_github_json(f"/repos/{owner_repo}/git/tags/{tag_sha}")
+    if not isinstance(tag_object, dict):
+        return "", f"annotated tag lookup failed for {tag_sha}: {tag_object_error or 'unexpected response'}"
+
+    target = tag_object.get("object")
+    if not isinstance(target, dict):
+        return "", f"annotated tag {tag_sha} has no target object"
+
+    target_type = str(target.get("type") or "").strip()
+    target_sha = str(target.get("sha") or "").strip()
+    if target_type != "commit" or not target_sha:
+        return "", f"annotated tag {tag_sha} points to {target_type or 'unknown'} instead of commit"
+    return target_sha, ""
+
+
 def _short_sha(sha: str) -> str:
     text = str(sha or "").strip()
     return text[:7] if text else "unknown"
@@ -5084,10 +5120,16 @@ def _tag_status(main_sha: str, tag_sha: str, tag_error: str) -> str:
     return "aligned"
 
 
-def _choose_launch_bottleneck(tag_status: str, release_status: str, pypi_status: str, proof_status: str) -> tuple[str, str]:
+def _choose_launch_bottleneck(
+    tag_status: str,
+    release_status: str,
+    pypi_status: str,
+    proof_status: str,
+    tag_trigger_supported: bool = TAG_PUSH_PUBLISHING_ENABLED,
+) -> tuple[str, str]:
     if tag_status != "aligned":
         return "release tag", "Align the release tag with the current main commit before publishing."
-    if release_status != "published":
+    if not tag_trigger_supported and release_status != "published":
         return "release trigger", "Publish the GitHub Release so the Trusted Publishing workflow can run."
     if pypi_status != "current":
         return "install-loop launch blocker", "Publish and verify the package on PyPI before claiming install readiness."
@@ -5121,8 +5163,9 @@ async def launch_preflight(target_version: str = "") -> str:
     pypi_status = "current" if pypi_latest == package_version else "blocked" if pypi_latest else "unverified"
 
     main_sha = _extract_ref_sha(main_ref)
-    tag_sha = _extract_ref_sha(tag_ref)
-    tag_state = _tag_status(main_sha, tag_sha, tag_error)
+    tag_ref_sha = _extract_ref_sha(tag_ref)
+    tag_sha, tag_object_error = await _resolve_tag_commit_sha(owner_repo, tag_ref)
+    tag_state = _tag_status(main_sha, tag_sha, tag_error or tag_object_error)
     release_state = _release_status(release, release_error, tag_name)
 
     proof_distribution = {}
@@ -5133,10 +5176,19 @@ async def launch_preflight(target_version: str = "") -> str:
         proof_bottleneck = traction_data.get("bottleneck") if isinstance(traction_data.get("bottleneck"), dict) else {}
         first_proof = traction_data.get("first_proof_action") if isinstance(traction_data.get("first_proof_action"), dict) else {}
     proof_status = str(proof_distribution.get("status") or ("unverified" if traction_error else "not_checked"))
-    bottleneck, bottleneck_action = _choose_launch_bottleneck(tag_state, release_state, pypi_status, proof_status)
+    tag_trigger_supported = TAG_PUSH_PUBLISHING_ENABLED
+    publish_trigger = "tag-or-release" if tag_trigger_supported else "release-only"
+    publish_trigger_status = "available" if tag_trigger_supported or release_state == "published" else "blocked"
+    bottleneck, bottleneck_action = _choose_launch_bottleneck(
+        tag_state,
+        release_state,
+        pypi_status,
+        proof_status,
+        tag_trigger_supported=tag_trigger_supported,
+    )
     status = "ready" if all([
         tag_state == "aligned",
-        release_state == "published",
+        publish_trigger_status == "available",
         pypi_status == "current",
     ]) else "blocked"
 
@@ -5146,7 +5198,8 @@ async def launch_preflight(target_version: str = "") -> str:
         ("traction_proof.json", traction_error),
         ("GitHub main ref", main_error),
         ("GitHub tag ref", tag_error if tag_state == "unverified" else ""),
-        ("GitHub Release", release_error if release_state == "unverified" else ""),
+        ("GitHub annotated tag object", tag_object_error if tag_state == "unverified" else ""),
+        ("GitHub Release", release_error if release_state == "unverified" and not tag_trigger_supported else ""),
     ]:
         if error:
             access_issues.append(f"{label}: {error}")
@@ -5162,8 +5215,9 @@ async def launch_preflight(target_version: str = "") -> str:
         f"Target package: {PYPI_PROJECT}=={package_version}",
         f"- PyPI latest: {pypi_latest or 'unverified'} ({pypi_status})",
         f"- Main ref: {_short_sha(main_sha)}",
-        f"- Release tag {tag_name}: {tag_state} ({_short_sha(tag_sha)})",
-        f"- GitHub Release {tag_name}: {release_state}",
+        f"- Release tag {tag_name}: {tag_state} ({_short_sha(tag_sha)}, ref {_short_sha(tag_ref_sha)})",
+        f"- Trusted Publishing trigger: {publish_trigger} ({publish_trigger_status})",
+        f"- GitHub Release {tag_name}: {release_state}{' (optional; v* tag trigger is active)' if tag_trigger_supported and release_state != 'published' else ''}",
         f"- Public traction proof: {proof_status}",
         f"- Current bottleneck: {bottleneck} - {bottleneck_action}",
         "",
@@ -5171,7 +5225,7 @@ async def launch_preflight(target_version: str = "") -> str:
         "1. Run local package gates: python -m pytest tests/test_noosphere_mcp.py tests/test_vector_store.py tests/test_preflight.py tests/test_release_boundary.py",
         "2. Run release verifier tests: python -m unittest scripts.test_verify_pypi_release",
         "3. Build artifacts: cd sdk && python -m build",
-        f"4. Publish GitHub Release {tag_name}: {release_link}",
+        f"4. Push release tag {tag_name} or publish GitHub Release: {release_link}",
         f"5. Watch Trusted Publishing workflow: {workflow_link}",
         "6. Verify registry install: python scripts/verify_pypi_release.py --tool-count 40",
         "7. Rebuild public proof: python scripts/build_traction_proof.py",
@@ -5202,7 +5256,8 @@ async def launch_preflight(target_version: str = "") -> str:
         (
             f"Noosphere launch preflight: {status}. Target {PYPI_PROJECT}=={package_version}; "
             f"PyPI latest {pypi_latest or 'unverified'}; tag {tag_name} is {tag_state}; "
-            f"current bottleneck is {bottleneck}. Proof: {NOOSPHERE_TRACTION_PROOF_URL}"
+            f"publish trigger is {publish_trigger}; current bottleneck is {bottleneck}. "
+            f"Proof: {NOOSPHERE_TRACTION_PROOF_URL}"
         ),
         "",
         GROWTH_NON_FABRICATION_DISCLOSURE,

@@ -156,15 +156,16 @@ class BuildTractionProofTests(unittest.TestCase):
 
     def test_distribution_blocker_when_pypi_lags_local_package(self):
         distribution = builder.build_distribution_readiness(
-            local_version="0.6.3",
+            local_version="0.6.4",
             pypi_project={"info": {"version": "0.6.0"}},
             release={
-                "tag_name": "v0.6.3",
+                "tag_name": "v0.6.4",
                 "draft": False,
                 "prerelease": False,
-                "html_url": "https://github.com/JinNing6/Noosphere/releases/tag/v0.6.3",
+                "html_url": "https://github.com/JinNing6/Noosphere/releases/tag/v0.6.4",
             },
             access_errors=[],
+            tag_trigger_supported=True,
         )
         snapshot = builder.build_traction_proof(
             memories=[
@@ -208,16 +209,47 @@ class BuildTractionProofTests(unittest.TestCase):
 
         self.assertEqual(snapshot["distribution"]["status"], "blocked")
         self.assertEqual(snapshot["distribution"]["registry_latest_version"], "0.6.0")
-        self.assertEqual(snapshot["distribution"]["local_version"], "0.6.3")
+        self.assertEqual(snapshot["distribution"]["local_version"], "0.6.4")
         self.assertEqual(snapshot["bottleneck"]["stage"], "install-loop launch blocker")
         self.assertIn("PyPI latest 0.6.0", snapshot["bottleneck"]["reason"])
         self.assertIn(".github/workflows/publish-pypi.yml", "\n".join(snapshot["distribution"]["closure_checklist"]))
+        self.assertEqual(snapshot["distribution"]["publish_trigger"], "tag-or-release")
         self.assertIn("python scripts/verify_pypi_release.py --tool-count 40", snapshot["distribution"]["verifier_command"])
         self.assertIn("Distribution:", snapshot["share_card"])
         self.assertNotRegex(
             json.dumps(snapshot),
             r"\b(downloads|reposts|referrals|retention|rewards|installs)\s*[:=]\s*\d+",
         )
+
+    def test_distribution_ready_when_tag_trigger_available_without_github_release(self):
+        distribution = builder.build_distribution_readiness(
+            local_version="0.6.4",
+            pypi_project={"info": {"version": "0.6.4"}},
+            release=None,
+            release_error="HTTP Error 404: Not Found",
+            access_errors=[],
+            tag_trigger_supported=True,
+        )
+
+        self.assertEqual(distribution["status"], "ready")
+        self.assertEqual(distribution["publish_trigger"], "tag-or-release")
+        self.assertEqual(distribution["publish_trigger_status"], "available")
+        self.assertEqual(distribution["release_status"], "missing")
+        self.assertEqual(distribution["access_issues"], [])
+        self.assertIn("Push release tag v0.6.4", "\n".join(distribution["closure_checklist"]))
+
+    def test_detects_publish_workflow_tag_trigger(self):
+        workflow = """
+        on:
+          release:
+            types: [published]
+          push:
+            tags:
+              - "v*"
+        """
+
+        self.assertTrue(builder.publish_workflow_supports_tag_push(workflow))
+        self.assertFalse(builder.publish_workflow_supports_tag_push("on:\n  release:\n    types: [published]\n"))
 
     def test_inlines_first_public_proof_action_when_share_proof_is_cold(self):
         snapshot = builder.build_traction_proof(
@@ -332,7 +364,7 @@ class BuildTractionProofTests(unittest.TestCase):
                 }, None)
                 builder.fetch_repository_issues = lambda: ([], None)
                 builder.fetch_repository_pulls = lambda: ([], None)
-                builder.fetch_pypi_project = lambda: ({"info": {"version": "0.6.3"}}, None)
+                builder.fetch_pypi_project = lambda: ({"info": {"version": "0.6.4"}}, None)
                 builder.fetch_github_release = lambda tag_name: ({
                     "tag_name": tag_name,
                     "draft": False,
