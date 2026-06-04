@@ -1,0 +1,87 @@
+import json
+import re
+from pathlib import Path
+
+try:
+    import tomllib
+except ModuleNotFoundError:  # pragma: no cover - Python 3.10 release runners
+    import tomli as tomllib
+
+
+REPO_ROOT = Path(__file__).resolve().parents[2]
+SDK_ROOT = REPO_ROOT / "sdk"
+EXPECTED_RELEASE_VERSION = "0.6.1"
+PYPI_BASELINE_VERSION = "0.6.0"
+
+
+def _version_tuple(version: str) -> tuple[int, ...]:
+    return tuple(int(part) for part in version.split("."))
+
+
+def _project_metadata() -> dict:
+    return tomllib.loads((SDK_ROOT / "pyproject.toml").read_text(encoding="utf-8"))
+
+
+def _package_version() -> str:
+    source = (SDK_ROOT / "noosphere" / "__init__.py").read_text(encoding="utf-8")
+    match = re.search(r'__version__\s*=\s*"([^"]+)"', source)
+    assert match, "noosphere.__version__ must be declared for release verification"
+    return match.group(1)
+
+
+def test_release_versions_are_synchronized_and_newer_than_pypi_baseline():
+    project_version = _project_metadata()["project"]["version"]
+    sdk_server_manifest = json.loads((SDK_ROOT / "server.json").read_text(encoding="utf-8"))
+    root_server_manifest = json.loads((REPO_ROOT / "server.json").read_text(encoding="utf-8"))
+
+    assert project_version == EXPECTED_RELEASE_VERSION
+    assert _package_version() == EXPECTED_RELEASE_VERSION
+    assert sdk_server_manifest["version"] == EXPECTED_RELEASE_VERSION
+    assert sdk_server_manifest["packages"][0]["version"] == EXPECTED_RELEASE_VERSION
+    assert root_server_manifest["version"] == EXPECTED_RELEASE_VERSION
+    assert root_server_manifest["packages"][0]["version"] == EXPECTED_RELEASE_VERSION
+    assert _version_tuple(project_version) > _version_tuple(PYPI_BASELINE_VERSION)
+
+
+def test_publish_workflow_is_release_only_trusted_publishing_with_quality_gates():
+    workflow = (REPO_ROOT / ".github" / "workflows" / "publish-pypi.yml").read_text(encoding="utf-8")
+
+    assert "release:" in workflow
+    assert "types: [published]" in workflow
+    assert "workflow_dispatch" not in workflow
+    assert "push:" not in workflow
+    assert "PYPI_TOKEN" not in workflow
+    assert "password:" not in workflow
+    assert re.search(r"permissions:\s*\n\s*id-token:\s*write", workflow)
+    assert "environment:" in workflow and "name: pypi" in workflow
+    assert "pypa/gh-action-pypi-publish@release/v1" in workflow
+
+    assert "python -m pytest tests/test_noosphere_mcp.py tests/test_vector_store.py tests/test_preflight.py tests/test_release_boundary.py" in workflow
+    assert "import noosphere.noosphere_mcp" in workflow
+    assert "python -m build" in workflow
+
+
+def test_package_release_includes_growth_ledger_tools():
+    source = (SDK_ROOT / "noosphere" / "noosphere_mcp.py").read_text(encoding="utf-8")
+    tool_names = re.findall(
+        r"@mcp\.tool\(\)\s*(?:\n[^\n]*)*?\n(?:async\s+def|def)\s+([a-zA-Z_][a-zA-Z0-9_]*)",
+        source,
+    )
+
+    assert len(tool_names) == 39
+    for tool_name in [
+        "record_growth_referral",
+        "record_share_attribution",
+        "share_attribution_report",
+        "growth_flywheel",
+    ]:
+        assert tool_name in tool_names
+
+
+def test_readme_documents_pypi_release_recovery_route():
+    readme = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
+
+    assert "v0.6.1" in readme
+    assert ".github/workflows/publish-pypi.yml" in readme
+    assert "Trusted Publishing" in readme
+    assert "39 MCP tools" in readme
