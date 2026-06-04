@@ -76,6 +76,25 @@ def wait_for_pypi_release(project: str, version: str, attempts: int, delay_secon
     raise RuntimeError(f"PyPI release {project}=={version} did not become verifiable: {last_error}")
 
 
+def wait_for_pypi_project_latest(project: str, version: str, attempts: int, delay_seconds: float) -> dict:
+    url = f"https://pypi.org/pypi/{project}/json"
+    last_error = ""
+
+    for attempt in range(1, attempts + 1):
+        try:
+            data = fetch_json(url)
+            validate_release_json(data, version)
+            return data
+        except (HTTPError, URLError, TimeoutError, RuntimeError) as exc:
+            last_error = str(exc)
+            if attempt == attempts:
+                break
+            print(f"PyPI project latest not ready yet ({attempt}/{attempts}): {last_error}", flush=True)
+            time.sleep(delay_seconds)
+
+    raise RuntimeError(f"PyPI project {project} latest did not become {version}: {last_error}")
+
+
 def install_release_to_target(project: str, version: str, target_dir: Path, python_executable: str = sys.executable) -> None:
     command = [
         python_executable,
@@ -132,6 +151,8 @@ def inspect_installed_release(
 def verify_pypi_release(project: str, version: str, attempts: int, delay_seconds: float, expected_tool_count: int) -> dict:
     release_json = wait_for_pypi_release(project, version, attempts, delay_seconds)
     filenames = validate_release_json(release_json, version)
+    project_json = wait_for_pypi_project_latest(project, version, attempts, delay_seconds)
+    latest_filenames = validate_release_json(project_json, version)
 
     temp_dir = Path(tempfile.mkdtemp(prefix="noosphere-pypi-verify-"))
     try:
@@ -144,6 +165,7 @@ def verify_pypi_release(project: str, version: str, attempts: int, delay_seconds
         "project": project,
         "version": version,
         "files": filenames,
+        "latest_files": latest_filenames,
         **installed,
     }
 
