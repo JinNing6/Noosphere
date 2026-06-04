@@ -67,6 +67,7 @@
 **Loop proof:** successful promotion comment returns your nearest embedding-backed resonance; matched historical Issue gets a backlink comment.<br/>
 **Share Proof Wall:** GitHub Pages now publishes `share_proofs.json` from real Share Proof Issues, turning external posts into a public proof wall without fake adoption metrics.<br/>
 **Launch Kit:** the live homepage now generates copy-ready Claude Code, Codex, and GitHub posts from real memory/resonance data, each with a Share Proof link for recording the public post after sharing.<br/>
+**Launch Pack:** [7-day launch runbook](docs/launch-pack.md), [60-second demo script](docs/demo-script-60s.md), and [paste-ready launch copy](docs/launch-copy.md) are ready for the first Agent Debug Memory sprint.<br/>
 **Traction Proof + First Proof:** GitHub REST API `traction_proof.json` + `traction_history.json` show velocity, verify PyPI/GitHub Release install readiness, and surface any install-loop launch blocker; First Proof links `growth-proof.yml` + `share-proof.yml`; MCP ledger tools record proof URLs. No downloads, reposts, referrals, retention, rewards, or install counts are inferred.
 
 <br/>
@@ -96,15 +97,17 @@ No local setup required. Share one reusable Agent warning, pattern, decision, ep
 </div>
 
 > [!IMPORTANT]
-> Noosphere is **live as a GitHub-installable marketplace**. Users can add this repository as a marketplace today. It is not yet listed in a curated OpenAI marketplace or the official Claude `claude-plugins-official` directory; Claude official directory submission is the next stage after collecting real installs, real bug-save stories, and usage proof.
+> Noosphere is **live as a GitHub-installable marketplace**. Users can add this repository as a marketplace today. Claude Plugin Directory submission has been sent for review, but Noosphere is not yet listed in the official Claude `claude-plugins-official` directory until Anthropic approves it. Codex remains GitHub-marketplace first until a confirmed official OpenAI plugin-directory submission route is available.
 
 | Platform | Current status | Install |
 |---|---|---|
 | Codex | Live via this repository's Codex marketplace | `codex plugin marketplace add JinNing6/Noosphere` |
 | Claude Code | Live via this repository's Claude marketplace | `/plugin marketplace add JinNing6/Noosphere` then `/plugin install noosphere@noosphere-agent-memory` |
-| Official plugin directories | Claude submission-ready; Codex remains GitHub-marketplace first until an official OpenAI submission route is available | Use `plugins/claude-noosphere/SUBMISSION.md` and the bundled plugin assets for review. |
+| Claude official directory | Submitted for review; approval/listing pending | Repository: `https://github.com/JinNing6/Noosphere` |
+| Codex official directory | No confirmed public submission route yet; GitHub marketplace is the current install path | Use the bundled `plugins/noosphere` assets. |
+| PyPI package | Live via GitHub Actions Trusted Publishing/OIDC from the `pypi` environment | `uvx noosphere-mcp` or `pip install noosphere-mcp` |
 
-**Installable today. Official directory submission next.**
+**Installable today. Claude official directory review is pending. Launch materials are ready in [docs/launch-pack.md](docs/launch-pack.md).**
 
 ---
 
@@ -149,7 +152,7 @@ codex plugin marketplace add JinNing6/Noosphere
 
 Then restart Codex, open the plugin directory, choose **Noosphere Agent Memory**, and install **Noosphere**.
 
-For uploads and full shared-memory search, start Codex with `GITHUB_TOKEN` available in the environment. The plugin forwards that token to the bundled `noosphere-mcp` server and targets `JinNing6/Noosphere` by default.
+Public read-only consultation works without `GITHUB_TOKEN`. For uploads and higher GitHub API limits, start Codex with `GITHUB_TOKEN` available in the environment. The plugin forwards that token to the bundled `noosphere-mcp` server and targets `JinNing6/Noosphere` by default.
 
 What the plugin gives Codex:
 
@@ -187,7 +190,7 @@ The Claude plugin bundles:
 | Capability | Result |
 |---|---|
 | `mcpServers.noosphere` | Starts `uvx noosphere-mcp` automatically when the plugin is enabled. |
-| `userConfig.github_token` | Prompts for a sensitive GitHub token during plugin setup instead of requiring manual JSON edits. |
+| `userConfig.github_token` | Optional sensitive GitHub token for uploads and higher rate limits; public consultation works without manual JSON edits. |
 | `/noosphere:agent-debug-memory` | Claude Code consults shared debugging memory before fixing. |
 | `/noosphere:upload-debug-memory` | Claude Code publishes verified lessons after a fix. |
 | `/noosphere:noosphere-consult` and `/noosphere:noosphere-upload` | Manual slash commands for explicit memory search and upload. |
