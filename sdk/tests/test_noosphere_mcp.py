@@ -35,10 +35,15 @@ from noosphere.noosphere_mcp import (
     upload_image,
     upload_video,
     resonate_media,
+    record_growth_referral,
+    record_share_attribution,
+    share_attribution_report,
+    growth_flywheel,
     set_engagement_mode,
     get_engagement_mode,
     _get_engagement_mode,
     _set_engagement_mode_config,
+    _load_growth_ledger,
     _extract_payload_from_issue_body,
     _get_rank_tier,
     _get_next_tier,
@@ -1461,6 +1466,117 @@ async def test_share_consciousness_empty_commentary(mock_env):
 
 
 # ────────────────── Tests: group_telepathy ──────────────────
+
+
+# ────────────────── Tests: growth/share proof ledger ──────────────────
+
+
+@pytest.mark.asyncio
+async def test_record_growth_referral_writes_reviewable_source_url(mock_env, tmp_path):
+    ledger_path = tmp_path / "growth_ledger.json"
+    with patch("noosphere.noosphere_mcp._get_growth_ledger_path", return_value=str(ledger_path)):
+        result = await record_growth_referral(
+            source_url="https://github.com/JinNing6/Noosphere/issues/101",
+            campaign="traction-proof",
+            actor="Neo",
+            notes="First proof action from the traction panel",
+        )
+
+        ledger = _load_growth_ledger()
+
+    assert ledger_path.exists()
+    assert len(ledger["growth_referrals"]) == 1
+    event = ledger["growth_referrals"][0]
+    assert event["source_url"] == "https://github.com/JinNing6/Noosphere/issues/101"
+    assert event["campaign"] == "traction-proof"
+    assert event["actor"] == "Neo"
+    assert "record_share_attribution" in result
+    assert "share_attribution_report()" in result
+    assert "growth_flywheel()" in result
+    assert "No downloads, reposts, referrals, retention, rewards, or install counts are inferred" in result
+
+
+@pytest.mark.asyncio
+async def test_record_growth_referral_rejects_issue_form_entrypoint(mock_env, tmp_path):
+    ledger_path = tmp_path / "growth_ledger.json"
+    with patch("noosphere.noosphere_mcp._get_growth_ledger_path", return_value=str(ledger_path)):
+        result = await record_growth_referral(
+            source_url="https://github.com/JinNing6/Noosphere/issues/new?template=growth-proof.yml",
+            campaign="traction-proof",
+            actor="Neo",
+        )
+
+    assert "created public Issue/PR/Discussion URL" in result
+    assert not ledger_path.exists()
+
+
+@pytest.mark.asyncio
+async def test_record_share_attribution_report_and_flywheel_use_real_ledger(mock_env, tmp_path):
+    ledger_path = tmp_path / "growth_ledger.json"
+    with patch("noosphere.noosphere_mcp._get_growth_ledger_path", return_value=str(ledger_path)):
+        await record_growth_referral(
+            source_url="https://github.com/JinNing6/Noosphere/issues/101",
+            campaign="traction-proof",
+            actor="Neo",
+        )
+        share_result = await record_share_attribution(
+            share_url="https://x.com/example/status/123",
+            source_url="https://github.com/JinNing6/Noosphere/issues/102",
+            artifact="Noosphere traction proof",
+            actor="Trinity",
+            campaign="traction-proof",
+        )
+        report = await share_attribution_report()
+        flywheel = await growth_flywheel(target_contributors=3)
+
+        ledger = _load_growth_ledger()
+
+    assert len(ledger["share_attributions"]) == 1
+    assert ledger["share_attributions"][0]["share_url"] == "https://x.com/example/status/123"
+    assert "Share attribution recorded" in share_result
+    assert "1 reviewable public share URL" in report
+    assert "1 source-to-share bridge" in report
+    assert "Neo" in report
+    assert "Trinity" in report
+    assert "Noosphere traction proof" in report
+    assert "record_share_attribution" in report
+    assert "External attention" in flywheel
+    assert "Public share proof" in flywheel
+    assert "2/3 real contributor identities" in flywheel
+    assert "No downloads, reposts, referrals, retention, rewards, or install counts are inferred" in flywheel
+    assert not any(fake in report.lower() for fake in ["downloads: 1", "retention: 1", "installs: 1"])
+
+
+@pytest.mark.asyncio
+async def test_growth_flywheel_empty_ledger_recruits_first_public_proof(mock_env, tmp_path):
+    ledger_path = tmp_path / "growth_ledger.json"
+    with patch("noosphere.noosphere_mcp._get_growth_ledger_path", return_value=str(ledger_path)):
+        result = await growth_flywheel(target_contributors=5)
+
+    assert "0/5 real contributor identities" in result
+    assert "record_growth_referral" in result
+    assert "record_share_attribution" in result
+    assert "No downloads, reposts, referrals, retention, rewards, or install counts are inferred" in result
+
+
+def test_growth_ledger_tools_are_documented_in_public_surfaces():
+    repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+    readme = open(os.path.join(repo_root, "README.md"), encoding="utf-8").read()
+    mcp_source = open(os.path.join(repo_root, "sdk", "noosphere", "noosphere_mcp.py"), encoding="utf-8").read()
+
+    for tool_name in [
+        "record_growth_referral",
+        "record_share_attribution",
+        "share_attribution_report",
+        "growth_flywheel",
+    ]:
+        assert tool_name in readme
+        assert tool_name in mcp_source
+
+    assert "39 MCP tools" in readme
+    assert "resonate_media" in readme
+    assert "First Proof links `growth-proof.yml` + `share-proof.yml`; MCP ledger tools" in readme
+    assert "No downloads, reposts, referrals, retention, rewards, or install counts are inferred" in readme
 
 
 @pytest.mark.asyncio

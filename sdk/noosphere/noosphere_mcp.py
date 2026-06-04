@@ -44,12 +44,18 @@ import threading
 import time
 from mcp.server.fastmcp import FastMCP
 import asyncio
+from urllib.parse import urlsplit
 
 # ── Configuration ──
 GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN", "")
 GITHUB_REPO = os.environ.get("NOOSPHERE_REPO", "JinNing6/Noosphere")
 GITHUB_BRANCH = os.environ.get("NOOSPHERE_BRANCH", "main")
 GITHUB_API = "https://api.github.com"
+GROWTH_LEDGER_VERSION = 1
+GROWTH_NON_FABRICATION_DISCLOSURE = (
+    "No downloads, reposts, referrals, retention, rewards, or install counts are "
+    "inferred from public URLs or the local growth ledger."
+)
 
 # ── Process-Level Shared HTTP Client ──
 _shared_client: httpx.AsyncClient | None = None
@@ -922,7 +928,12 @@ mcp = FastMCP(
         "31. `withdraw_consciousness` — Withdraw (soft-delete) your own consciousness fragment\n"
         "32. `upload_voice` — Upload voice/sound consciousness (human, whale, cat, dog, bird, dolphin)\n"
         "33. `upload_image` — Upload visual consciousness (photos, art, diagrams, screenshots)\n"
-        "34. `upload_video` — Upload motion consciousness (vlogs, recordings, tutorials, nature)\n\n"
+        "34. `upload_video` — Upload motion consciousness (vlogs, recordings, tutorials, nature)\n"
+        "35. `resonate_media` — Find similar media consciousness\n"
+        "36. `record_growth_referral` - Record a created public growth-proof URL in the local ledger\n"
+        "37. `record_share_attribution` - Record a reviewable public share URL in the local ledger\n"
+        "38. `share_attribution_report` - Summarize share proof from real ledger events\n"
+        "39. `growth_flywheel` - Diagnose the proof loop from real ledger events\n\n"
         "When uploading consciousness, ensure you provide sufficient context description (at least 10 characters),\n"
         "so that future Agents can understand the scenario in which this thought was born."
     ),
@@ -4805,6 +4816,348 @@ async def telepathy_threads(creator: str) -> str:
 
 
 # ────────────────── Tool: Share / Forward Consciousness ──────────────────
+
+
+# ────────────────── Growth Proof Ledger ──────────────────
+
+
+def _get_growth_ledger_path() -> str:
+    path = os.path.expanduser("~/.noosphere/growth_ledger.json")
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    return path
+
+
+def _empty_growth_ledger() -> dict:
+    return {
+        "version": GROWTH_LEDGER_VERSION,
+        "growth_referrals": [],
+        "share_attributions": [],
+    }
+
+
+def _load_growth_ledger() -> dict:
+    path = _get_growth_ledger_path()
+    if os.path.exists(path):
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            if isinstance(data, dict):
+                data.setdefault("version", GROWTH_LEDGER_VERSION)
+                data.setdefault("growth_referrals", [])
+                data.setdefault("share_attributions", [])
+                if isinstance(data["growth_referrals"], list) and isinstance(data["share_attributions"], list):
+                    return data
+        except Exception as e:
+            logger.warning(f"Failed to load growth ledger: {e}")
+    return _empty_growth_ledger()
+
+
+def _save_growth_ledger(ledger: dict) -> tuple[bool, str]:
+    path = _get_growth_ledger_path()
+    tmp_path = f"{path}.tmp"
+    try:
+        with open(tmp_path, "w", encoding="utf-8") as f:
+            json.dump(ledger, f, indent=2, ensure_ascii=False)
+            f.write("\n")
+        os.replace(tmp_path, path)
+        return True, ""
+    except Exception as e:
+        try:
+            if os.path.exists(tmp_path):
+                os.remove(tmp_path)
+        except Exception:
+            pass
+        logger.error(f"Failed to save growth ledger: {e}")
+        return False, str(e)
+
+
+def _clean_ledger_text(value: str | None, fallback: str = "", max_chars: int = 240) -> str:
+    text = re.sub(r"\s+", " ", str(value or "").strip())
+    if not text:
+        return fallback
+    return text[:max_chars]
+
+
+def _normalize_public_proof_url(value: str, field_name: str, require_created_issue: bool = False) -> tuple[bool, str, str]:
+    raw = str(value or "").strip().split()[0] if str(value or "").strip() else ""
+    if not raw:
+        return False, "", f"{field_name} is required and must be a public http(s) URL."
+    if "<" in raw or ">" in raw:
+        return False, "", f"{field_name} still contains a placeholder. Replace it with the created public Issue/PR/Discussion URL."
+
+    parsed = urlsplit(raw)
+    if parsed.scheme not in {"http", "https"} or not parsed.netloc:
+        return False, "", f"{field_name} must be a reviewable public http(s) URL."
+
+    if parsed.netloc.lower() == "github.com" and parsed.path.rstrip("/").endswith("/issues/new"):
+        return (
+            False,
+            "",
+            (
+                f"{field_name} is an Issue Form entrypoint, not proof. Submit the form first, "
+                "then pass the created public Issue/PR/Discussion URL."
+            ),
+        )
+    if require_created_issue and "template=" in parsed.query.lower():
+        return (
+            False,
+            "",
+            (
+                f"{field_name} is a template URL, not proof. Submit the form first, then pass "
+                "the created public Issue/PR/Discussion URL."
+            ),
+        )
+
+    return True, raw, ""
+
+
+def _append_growth_ledger_event(section: str, event: dict) -> tuple[bool, str, dict]:
+    ledger = _load_growth_ledger()
+    events = ledger.setdefault(section, [])
+    event["id"] = f"{section.rstrip('s')}-{len(events) + 1:04d}"
+    event["recorded_at"] = datetime.now(timezone.utc).isoformat()
+    events.append(event)
+    ok, error = _save_growth_ledger(ledger)
+    return ok, error, ledger
+
+
+def _unique_nonempty(values: list[str]) -> list[str]:
+    seen = set()
+    result = []
+    for value in values:
+        text = str(value or "").strip()
+        if not text or text in seen:
+            continue
+        seen.add(text)
+        result.append(text)
+    return result
+
+
+def _plural(count: int, singular: str, plural: str) -> str:
+    return singular if count == 1 else plural
+
+
+def _summarize_growth_ledger(target_contributors: int = 10) -> dict:
+    ledger = _load_growth_ledger()
+    referrals = [event for event in ledger.get("growth_referrals", []) if isinstance(event, dict)]
+    shares = [event for event in ledger.get("share_attributions", []) if isinstance(event, dict)]
+    share_urls = _unique_nonempty([event.get("share_url", "") for event in shares])
+    referral_sources = _unique_nonempty([event.get("source_url", "") for event in referrals])
+    bridged_sources = _unique_nonempty([event.get("source_url", "") for event in shares if event.get("source_url")])
+    actors = _unique_nonempty([
+        event.get("actor", "")
+        for event in [*referrals, *shares]
+        if event.get("actor") and event.get("actor") != "unknown"
+    ])
+    artifacts = _unique_nonempty([event.get("artifact", "") for event in shares if event.get("artifact")])
+    target = max(1, int(target_contributors or 10))
+
+    if not referral_sources:
+        bottleneck = "external attention"
+        next_command = 'record_growth_referral(source_url="<created-growth-issue-url>", campaign="traction-proof")'
+    elif not share_urls:
+        bottleneck = "public share proof"
+        next_command = (
+            'record_share_attribution(share_url="<public-post-url>", '
+            'source_url="<created-share-proof-issue-url>", artifact="Noosphere traction proof")'
+        )
+    elif not bridged_sources:
+        bottleneck = "source-to-share bridge"
+        next_command = (
+            'record_share_attribution(share_url="<public-post-url>", '
+            'source_url="<created-share-proof-issue-url>", artifact="Noosphere traction proof")'
+        )
+    elif len(actors) < target:
+        bottleneck = "contributor expansion"
+        next_command = f"growth_flywheel(target_contributors={target})"
+    else:
+        bottleneck = "repeat proof velocity"
+        next_command = "share_attribution_report()"
+
+    return {
+        "ledger": ledger,
+        "referrals": referrals,
+        "shares": shares,
+        "share_urls": share_urls,
+        "referral_sources": referral_sources,
+        "bridged_sources": bridged_sources,
+        "actors": actors,
+        "artifacts": artifacts,
+        "target_contributors": target,
+        "bottleneck": bottleneck,
+        "next_command": next_command,
+    }
+
+
+@mcp.tool()
+async def record_growth_referral(
+    source_url: str,
+    campaign: str = "traction-proof",
+    actor: str = "",
+    notes: str = "",
+) -> str:
+    """
+    Record a reviewable public source URL that brought attention back to Noosphere.
+
+    Pass the created public Issue/PR/Discussion/post URL after submitting a Growth
+    Proof form. Do not pass an `issues/new?...` template URL.
+    """
+    ok, normalized_url, error = _normalize_public_proof_url(
+        source_url,
+        "source_url",
+        require_created_issue=True,
+    )
+    if not ok:
+        return (
+            f"Cannot record growth referral: {error}\n\n"
+            "Correct command:\n"
+            'record_growth_referral(source_url="https://github.com/JinNing6/Noosphere/issues/<created-growth-issue-number>", campaign="traction-proof")'
+        )
+
+    event = {
+        "source_url": normalized_url,
+        "campaign": _clean_ledger_text(campaign, "traction-proof", 120),
+        "actor": _clean_ledger_text(actor, _CURRENT_USER or "unknown", 120),
+        "notes": _clean_ledger_text(notes, "", 500),
+    }
+    saved, save_error, _ledger = _append_growth_ledger_event("growth_referrals", event)
+    if not saved:
+        return f"Growth referral was not persisted: {save_error}"
+
+    return "\n".join([
+        "Growth referral recorded.",
+        f"- Source URL: {normalized_url}",
+        f"- Campaign: {event['campaign']}",
+        f"- Actor: {event['actor']}",
+        "",
+        "Next proof commands:",
+        'record_share_attribution(share_url="<public-post-url>", source_url="<created-share-proof-issue-url>", artifact="Noosphere traction proof")',
+        "share_attribution_report()",
+        "growth_flywheel()",
+        "",
+        GROWTH_NON_FABRICATION_DISCLOSURE,
+    ])
+
+
+@mcp.tool()
+async def record_share_attribution(
+    share_url: str,
+    source_url: str = "",
+    artifact: str = "Noosphere traction proof",
+    actor: str = "",
+    campaign: str = "traction-proof",
+) -> str:
+    """
+    Record a reviewable public share URL and optional created proof-source URL.
+    """
+    ok, normalized_share, error = _normalize_public_proof_url(share_url, "share_url")
+    if not ok:
+        return f"Cannot record share attribution: {error}"
+
+    normalized_source = ""
+    if str(source_url or "").strip():
+        ok, normalized_source, error = _normalize_public_proof_url(source_url, "source_url")
+        if not ok:
+            return f"Cannot record share attribution: {error}"
+
+    event = {
+        "share_url": normalized_share,
+        "source_url": normalized_source,
+        "artifact": _clean_ledger_text(artifact, "Noosphere traction proof", 180),
+        "actor": _clean_ledger_text(actor, _CURRENT_USER or "unknown", 120),
+        "campaign": _clean_ledger_text(campaign, "traction-proof", 120),
+    }
+    saved, save_error, _ledger = _append_growth_ledger_event("share_attributions", event)
+    if not saved:
+        return f"Share attribution was not persisted: {save_error}"
+
+    return "\n".join([
+        "Share attribution recorded.",
+        f"- Share URL: {normalized_share}",
+        f"- Source URL: {normalized_source or 'not provided'}",
+        f"- Artifact: {event['artifact']}",
+        f"- Actor: {event['actor']}",
+        "",
+        "Next proof commands:",
+        "share_attribution_report()",
+        "growth_flywheel()",
+        "",
+        GROWTH_NON_FABRICATION_DISCLOSURE,
+    ])
+
+
+@mcp.tool()
+async def share_attribution_report() -> str:
+    """
+    Summarize the local public share attribution ledger using only reviewable URLs.
+    """
+    summary = _summarize_growth_ledger()
+    share_count = len(summary["share_urls"])
+    bridge_count = len(summary["bridged_sources"])
+    actor_text = ", ".join(summary["actors"]) if summary["actors"] else "none yet"
+    artifact_text = ", ".join(summary["artifacts"]) if summary["artifacts"] else "none yet"
+
+    return "\n".join([
+        "Noosphere share attribution report",
+        f"- {share_count} reviewable public {_plural(share_count, 'share URL', 'share URLs')} from {len(summary['shares'])} share attribution {_plural(len(summary['shares']), 'event', 'events')}.",
+        f"- {bridge_count} source-to-share {_plural(bridge_count, 'bridge', 'bridges')}.",
+        f"- Growth referral sources: {len(summary['referral_sources'])}.",
+        f"- Actors: {actor_text}.",
+        f"- Artifacts: {artifact_text}.",
+        f"- Current proof bottleneck: {summary['bottleneck']}.",
+        "",
+        f"Next proof command: {summary['next_command']}",
+        'Record another public share: record_share_attribution(share_url="<public-post-url>", source_url="<created-share-proof-issue-url>", artifact="Noosphere traction proof")',
+        "Then run: growth_flywheel()",
+        "",
+        "Copy-ready proof recap:",
+        (
+            f"Noosphere proof ledger: {share_count} reviewable public "
+            f"{_plural(share_count, 'share URL', 'share URLs')}, "
+            f"{bridge_count} source-to-share {_plural(bridge_count, 'bridge', 'bridges')}. "
+            "Install: /plugin marketplace add JinNing6/Noosphere"
+        ),
+        "",
+        GROWTH_NON_FABRICATION_DISCLOSURE,
+    ])
+
+
+@mcp.tool()
+async def growth_flywheel(target_contributors: int = 10) -> str:
+    """
+    Diagnose the public proof flywheel from the local growth ledger.
+    """
+    try:
+        target = max(1, int(target_contributors))
+    except (TypeError, ValueError):
+        target = 10
+    summary = _summarize_growth_ledger(target)
+    contributor_count = len(summary["actors"])
+    share_count = len(summary["share_urls"])
+    referral_count = len(summary["referral_sources"])
+    bridge_count = len(summary["bridged_sources"])
+
+    return "\n".join([
+        "Noosphere growth flywheel",
+        f"- External attention: {referral_count} reviewable source {_plural(referral_count, 'URL', 'URLs')} -> record_growth_referral(source_url=\"<created-growth-issue-url>\", campaign=\"traction-proof\")",
+        f"- Public share proof: {share_count} reviewable public share {_plural(share_count, 'URL', 'URLs')} -> record_share_attribution(share_url=\"<public-post-url>\", source_url=\"<created-share-proof-issue-url>\", artifact=\"Noosphere traction proof\")",
+        f"- Source-to-share bridges: {bridge_count}.",
+        f"- Contributor progress: {contributor_count}/{target} real contributor identities.",
+        f"- Current bottleneck: {summary['bottleneck']}.",
+        "",
+        f"Next executable action: {summary['next_command']}",
+        "Review ledger: share_attribution_report()",
+        "",
+        "Copy-ready public proof post:",
+        (
+            f"Noosphere public proof sprint: {contributor_count}/{target} real contributor identities, "
+            f"{share_count} reviewable public share {_plural(share_count, 'URL', 'URLs')}, "
+            f"{bridge_count} source-to-share {_plural(bridge_count, 'bridge', 'bridges')}. "
+            "Proof snapshot: https://jinning6.github.io/Noosphere/traction_proof.json"
+        ),
+        "",
+        GROWTH_NON_FABRICATION_DISCLOSURE,
+    ])
 
 
 @mcp.tool()
