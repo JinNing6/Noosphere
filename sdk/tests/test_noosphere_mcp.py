@@ -1579,22 +1579,22 @@ async def test_launch_preflight_reports_release_and_install_blockers(mock_env):
     respx.get("https://api.github.com/repos/test_owner/test_repo/git/ref/heads/main").mock(
         return_value=Response(200, json={"object": {"sha": "main-sha-123"}})
     )
-    respx.get("https://api.github.com/repos/test_owner/test_repo/git/ref/tags/v0.6.7").mock(
+    respx.get("https://api.github.com/repos/test_owner/test_repo/git/ref/tags/v0.6.8").mock(
         return_value=Response(404, json={"message": "Not Found"})
     )
-    respx.get("https://api.github.com/repos/test_owner/test_repo/releases/tags/v0.6.7").mock(
+    respx.get("https://api.github.com/repos/test_owner/test_repo/releases/tags/v0.6.8").mock(
         return_value=Response(404, json={"message": "Not Found"})
     )
     respx.get("https://jinning6.github.io/Noosphere/traction_proof.json").mock(
         return_value=Response(200, json={
             "distribution": {
                 "status": "blocked",
-                "local_version": "0.6.7",
+                "local_version": "0.6.8",
                 "registry_latest_version": "0.6.0",
             },
             "bottleneck": {
                 "stage": "install-loop launch blocker",
-                "reason": "PyPI latest 0.6.0 does not match local package 0.6.7.",
+                "reason": "PyPI latest 0.6.0 does not match local package 0.6.8.",
             },
             "first_proof_action": {
                 "share_proof_form_url": "https://github.com/JinNing6/Noosphere/issues/new?template=share-proof.yml",
@@ -1603,14 +1603,14 @@ async def test_launch_preflight_reports_release_and_install_blockers(mock_env):
         })
     )
 
-    result = await launch_preflight(target_version="0.6.7")
+    result = await launch_preflight(target_version="0.6.8")
 
     assert "Noosphere launch preflight" in result
-    assert "Target package: noosphere-mcp==0.6.7" in result
+    assert "Target package: noosphere-mcp==0.6.8" in result
     assert "PyPI latest: 0.6.0" in result
-    assert "Release tag v0.6.7: missing" in result
+    assert "Release tag v0.6.8: missing" in result
     assert "Trusted Publishing trigger: tag-or-release" in result
-    assert "GitHub Release v0.6.7: missing" in result
+    assert "GitHub Release v0.6.8: missing" in result
     assert "Current bottleneck: release tag" in result
     assert "python scripts/verify_pypi_release.py --tool-count 40" in result
     assert "share-proof.yml" in result
@@ -1621,28 +1621,28 @@ async def test_launch_preflight_reports_release_and_install_blockers(mock_env):
 @respx.mock
 async def test_launch_preflight_reports_ready_when_release_and_registry_match(mock_env):
     respx.get("https://pypi.org/pypi/noosphere-mcp/json").mock(
-        return_value=Response(200, json={"info": {"version": "0.6.7"}})
+        return_value=Response(200, json={"info": {"version": "0.6.8"}})
     )
     respx.get("https://api.github.com/repos/test_owner/test_repo/git/ref/heads/main").mock(
         return_value=Response(200, json={"object": {"sha": "same-sha"}})
     )
-    respx.get("https://api.github.com/repos/test_owner/test_repo/git/ref/tags/v0.6.7").mock(
+    respx.get("https://api.github.com/repos/test_owner/test_repo/git/ref/tags/v0.6.8").mock(
         return_value=Response(200, json={"object": {"sha": "same-sha"}})
     )
-    respx.get("https://api.github.com/repos/test_owner/test_repo/releases/tags/v0.6.7").mock(
+    respx.get("https://api.github.com/repos/test_owner/test_repo/releases/tags/v0.6.8").mock(
         return_value=Response(200, json={
-            "tag_name": "v0.6.7",
+            "tag_name": "v0.6.8",
             "draft": False,
             "prerelease": False,
-            "html_url": "https://github.com/JinNing6/Noosphere/releases/tag/v0.6.7",
+            "html_url": "https://github.com/JinNing6/Noosphere/releases/tag/v0.6.8",
         })
     )
     respx.get("https://jinning6.github.io/Noosphere/traction_proof.json").mock(
         return_value=Response(200, json={
             "distribution": {
                 "status": "ready",
-                "local_version": "0.6.7",
-                "registry_latest_version": "0.6.7",
+                "local_version": "0.6.8",
+                "registry_latest_version": "0.6.8",
             },
             "bottleneck": {"stage": "public share proof", "reason": "Share proof still needs users."},
             "first_proof_action": {
@@ -1652,7 +1652,7 @@ async def test_launch_preflight_reports_ready_when_release_and_registry_match(mo
         })
     )
 
-    result = await launch_preflight(target_version="0.6.7")
+    result = await launch_preflight(target_version="0.6.8")
 
     assert "Status: ready" in result
     assert "Trusted Publishing trigger: tag-or-release" in result
@@ -1664,26 +1664,26 @@ async def test_launch_preflight_reports_ready_when_release_and_registry_match(mo
 @respx.mock
 async def test_launch_preflight_accepts_annotated_tag_without_github_release(mock_env):
     respx.get("https://pypi.org/pypi/noosphere-mcp/json").mock(
-        return_value=Response(200, json={"info": {"version": "0.6.7"}})
+        return_value=Response(200, json={"info": {"version": "0.6.8"}})
     )
     respx.get("https://api.github.com/repos/test_owner/test_repo/git/ref/heads/main").mock(
         return_value=Response(200, json={"object": {"type": "commit", "sha": "commit-sha-123"}})
     )
-    respx.get("https://api.github.com/repos/test_owner/test_repo/git/ref/tags/v0.6.7").mock(
+    respx.get("https://api.github.com/repos/test_owner/test_repo/git/ref/tags/v0.6.8").mock(
         return_value=Response(200, json={"object": {"type": "tag", "sha": "tag-object-sha"}})
     )
     respx.get("https://api.github.com/repos/test_owner/test_repo/git/tags/tag-object-sha").mock(
         return_value=Response(200, json={"object": {"type": "commit", "sha": "commit-sha-123"}})
     )
-    respx.get("https://api.github.com/repos/test_owner/test_repo/releases/tags/v0.6.7").mock(
+    respx.get("https://api.github.com/repos/test_owner/test_repo/releases/tags/v0.6.8").mock(
         return_value=Response(404, json={"message": "Not Found"})
     )
     respx.get("https://jinning6.github.io/Noosphere/traction_proof.json").mock(
         return_value=Response(200, json={
             "distribution": {
                 "status": "ready",
-                "local_version": "0.6.7",
-                "registry_latest_version": "0.6.7",
+                "local_version": "0.6.8",
+                "registry_latest_version": "0.6.8",
             },
             "bottleneck": {"stage": "public share proof", "reason": "Share proof still needs users."},
             "first_proof_action": {
@@ -1693,12 +1693,12 @@ async def test_launch_preflight_accepts_annotated_tag_without_github_release(moc
         })
     )
 
-    result = await launch_preflight(target_version="0.6.7")
+    result = await launch_preflight(target_version="0.6.8")
 
     assert "Status: ready" in result
-    assert "Release tag v0.6.7: aligned" in result
+    assert "Release tag v0.6.8: aligned" in result
     assert "Trusted Publishing trigger: tag-or-release (available)" in result
-    assert "GitHub Release v0.6.7: missing (optional; v* tag trigger is active)" in result
+    assert "GitHub Release v0.6.8: missing (optional; v* tag trigger is active)" in result
     assert "Access issues:" not in result
 
 

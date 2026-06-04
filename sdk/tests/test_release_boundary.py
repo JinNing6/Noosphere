@@ -10,7 +10,7 @@ except ModuleNotFoundError:  # pragma: no cover - Python 3.10 release runners
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 SDK_ROOT = REPO_ROOT / "sdk"
-EXPECTED_RELEASE_VERSION = "0.6.7"
+EXPECTED_RELEASE_VERSION = "0.6.8"
 PYPI_BASELINE_VERSION = "0.6.0"
 
 
@@ -67,12 +67,10 @@ def test_publish_workflow_uses_release_or_tag_trusted_publishing_with_quality_ga
     assert "python scripts/verify_pypi_release.py --tool-count 40" in workflow
     assert "refresh-pages-proof:" in workflow
     assert "needs: verify-pypi" in workflow
-    assert "Build traction proof after PyPI verification" in workflow
-    assert "python scripts/build_traction_proof.py" in workflow
-    assert "actions/upload-pages-artifact@v3" in workflow
-    assert "actions/deploy-pages@v4" in workflow
-    assert "pages: write" in workflow
-    assert "pull-requests: read" in workflow
+    assert "actions: write" in workflow
+    assert "Dispatch Pages deploy on main after PyPI verification" in workflow
+    assert "/actions/workflows/deploy-pages.yml/dispatches" in workflow
+    assert """-d '{"ref":"main"}'""" in workflow
 
 
 def test_package_release_includes_growth_ledger_tools():
@@ -96,7 +94,7 @@ def test_package_release_includes_growth_ledger_tools():
 def test_readme_documents_pypi_release_recovery_route():
     readme = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
 
-    assert "v0.6.7" in readme
+    assert "v0.6.8" in readme
     assert ".github/workflows/publish-pypi.yml" in readme
     assert "Trusted Publishing" in readme
     assert "40 MCP tools" in readme
