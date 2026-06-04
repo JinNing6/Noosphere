@@ -277,6 +277,42 @@ test("manual key check can isolate the official stable text embedding model", as
   assert.match(messages.join("\n"), /modalities text/);
 });
 
+test("manual key check can isolate Gemini Embedding 2 text access without media", async () => {
+  const calls = [];
+  const messages = [];
+
+  const exitCode = await runCheck(["--model", "gemini-embedding-2", "--text-only"], {
+    env: {
+      GEMINI_API_KEY: "test-secret",
+      GEMINI_EMBEDDING_MODEL: "gemini-embedding-2",
+    },
+    log: (message) => messages.push(message),
+    error: (message) => messages.push(message),
+    fetchImpl: async (url, options) => {
+      calls.push({ url, options });
+      assert.equal(url, "https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-2:embedContent");
+      const body = JSON.parse(options.body);
+      assert.equal(body.model, "models/gemini-embedding-2");
+      assert.equal(body.content.parts.length, 1);
+      assert.match(body.content.parts[0].text, /Gemini API key validation probe/);
+      assert.doesNotMatch(JSON.stringify(body), /inline_data/);
+
+      return {
+        ok: true,
+        status: 200,
+        async json() {
+          return { embedding: { values: [0.1, 0.2, 0.3] } };
+        },
+      };
+    },
+  });
+
+  assert.equal(exitCode, 0);
+  assert.equal(calls.length, 1);
+  assert.match(messages.join("\n"), /gemini-embedding-2/);
+  assert.match(messages.join("\n"), /modalities text/);
+});
+
 test("manual key check validates a real multimodal image payload for Gemini Embedding 2", async () => {
   const calls = [];
   const messages = [];

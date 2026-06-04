@@ -678,7 +678,7 @@ async function runCheck(argv = [], options = {}) {
   });
 
   if (result.status === "ok") {
-    if (supportsInlineMedia(result.model) && !result.inputModalities?.includes("image")) {
+    if (mode !== "text-only" && supportsInlineMedia(result.model) && !result.inputModalities?.includes("image")) {
       error("Gemini embedding key check failed: image media was not included in the multimodal request.");
       if (result.media?.reason) {
         error(`Media status: ${result.media.status} ${result.media.reason}`);
