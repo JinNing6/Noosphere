@@ -10,7 +10,7 @@ except ModuleNotFoundError:  # pragma: no cover - Python 3.10 release runners
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 SDK_ROOT = REPO_ROOT / "sdk"
-EXPECTED_RELEASE_VERSION = "0.6.2"
+EXPECTED_RELEASE_VERSION = "0.6.3"
 PYPI_BASELINE_VERSION = "0.6.0"
 
 
@@ -43,13 +43,15 @@ def test_release_versions_are_synchronized_and_newer_than_pypi_baseline():
     assert _version_tuple(project_version) > _version_tuple(PYPI_BASELINE_VERSION)
 
 
-def test_publish_workflow_is_release_only_trusted_publishing_with_quality_gates():
+def test_publish_workflow_uses_release_or_tag_trusted_publishing_with_quality_gates():
     workflow = (REPO_ROOT / ".github" / "workflows" / "publish-pypi.yml").read_text(encoding="utf-8")
 
     assert "release:" in workflow
     assert "types: [published]" in workflow
+    assert "push:" in workflow
+    assert "tags:" in workflow
+    assert '"v*"' in workflow
     assert "workflow_dispatch" not in workflow
-    assert "push:" not in workflow
     assert "PYPI_TOKEN" not in workflow
     assert "password:" not in workflow
     assert re.search(r"permissions:\s*\n\s*id-token:\s*write", workflow)
@@ -86,7 +88,7 @@ def test_package_release_includes_growth_ledger_tools():
 def test_readme_documents_pypi_release_recovery_route():
     readme = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
 
-    assert "v0.6.2" in readme
+    assert "v0.6.3" in readme
     assert ".github/workflows/publish-pypi.yml" in readme
     assert "Trusted Publishing" in readme
     assert "40 MCP tools" in readme

@@ -1579,22 +1579,22 @@ async def test_launch_preflight_reports_release_and_install_blockers(mock_env):
     respx.get("https://api.github.com/repos/test_owner/test_repo/git/ref/heads/main").mock(
         return_value=Response(200, json={"object": {"sha": "main-sha-123"}})
     )
-    respx.get("https://api.github.com/repos/test_owner/test_repo/git/ref/tags/v0.6.2").mock(
+    respx.get("https://api.github.com/repos/test_owner/test_repo/git/ref/tags/v0.6.3").mock(
         return_value=Response(404, json={"message": "Not Found"})
     )
-    respx.get("https://api.github.com/repos/test_owner/test_repo/releases/tags/v0.6.2").mock(
+    respx.get("https://api.github.com/repos/test_owner/test_repo/releases/tags/v0.6.3").mock(
         return_value=Response(404, json={"message": "Not Found"})
     )
     respx.get("https://jinning6.github.io/Noosphere/traction_proof.json").mock(
         return_value=Response(200, json={
             "distribution": {
                 "status": "blocked",
-                "local_version": "0.6.2",
+                "local_version": "0.6.3",
                 "registry_latest_version": "0.6.0",
             },
             "bottleneck": {
                 "stage": "install-loop launch blocker",
-                "reason": "PyPI latest 0.6.0 does not match local package 0.6.2.",
+                "reason": "PyPI latest 0.6.0 does not match local package 0.6.3.",
             },
             "first_proof_action": {
                 "share_proof_form_url": "https://github.com/JinNing6/Noosphere/issues/new?template=share-proof.yml",
@@ -1603,13 +1603,13 @@ async def test_launch_preflight_reports_release_and_install_blockers(mock_env):
         })
     )
 
-    result = await launch_preflight(target_version="0.6.2")
+    result = await launch_preflight(target_version="0.6.3")
 
     assert "Noosphere launch preflight" in result
-    assert "Target package: noosphere-mcp==0.6.2" in result
+    assert "Target package: noosphere-mcp==0.6.3" in result
     assert "PyPI latest: 0.6.0" in result
-    assert "Release tag v0.6.2: missing" in result
-    assert "GitHub Release v0.6.2: missing" in result
+    assert "Release tag v0.6.3: missing" in result
+    assert "GitHub Release v0.6.3: missing" in result
     assert "Current bottleneck: release tag" in result
     assert "python scripts/verify_pypi_release.py --tool-count 40" in result
     assert "share-proof.yml" in result
@@ -1620,28 +1620,28 @@ async def test_launch_preflight_reports_release_and_install_blockers(mock_env):
 @respx.mock
 async def test_launch_preflight_reports_ready_when_release_and_registry_match(mock_env):
     respx.get("https://pypi.org/pypi/noosphere-mcp/json").mock(
-        return_value=Response(200, json={"info": {"version": "0.6.2"}})
+        return_value=Response(200, json={"info": {"version": "0.6.3"}})
     )
     respx.get("https://api.github.com/repos/test_owner/test_repo/git/ref/heads/main").mock(
         return_value=Response(200, json={"object": {"sha": "same-sha"}})
     )
-    respx.get("https://api.github.com/repos/test_owner/test_repo/git/ref/tags/v0.6.2").mock(
+    respx.get("https://api.github.com/repos/test_owner/test_repo/git/ref/tags/v0.6.3").mock(
         return_value=Response(200, json={"object": {"sha": "same-sha"}})
     )
-    respx.get("https://api.github.com/repos/test_owner/test_repo/releases/tags/v0.6.2").mock(
+    respx.get("https://api.github.com/repos/test_owner/test_repo/releases/tags/v0.6.3").mock(
         return_value=Response(200, json={
-            "tag_name": "v0.6.2",
+            "tag_name": "v0.6.3",
             "draft": False,
             "prerelease": False,
-            "html_url": "https://github.com/JinNing6/Noosphere/releases/tag/v0.6.2",
+            "html_url": "https://github.com/JinNing6/Noosphere/releases/tag/v0.6.3",
         })
     )
     respx.get("https://jinning6.github.io/Noosphere/traction_proof.json").mock(
         return_value=Response(200, json={
             "distribution": {
                 "status": "ready",
-                "local_version": "0.6.2",
-                "registry_latest_version": "0.6.2",
+                "local_version": "0.6.3",
+                "registry_latest_version": "0.6.3",
             },
             "bottleneck": {"stage": "public share proof", "reason": "Share proof still needs users."},
             "first_proof_action": {
@@ -1651,7 +1651,7 @@ async def test_launch_preflight_reports_ready_when_release_and_registry_match(mo
         })
     )
 
-    result = await launch_preflight(target_version="0.6.2")
+    result = await launch_preflight(target_version="0.6.3")
 
     assert "Status: ready" in result
     assert "Current bottleneck: first public proof" in result
