@@ -57,8 +57,12 @@ def test_publish_workflow_is_release_only_trusted_publishing_with_quality_gates(
     assert "pypa/gh-action-pypi-publish@release/v1" in workflow
 
     assert "python -m pytest tests/test_noosphere_mcp.py tests/test_vector_store.py tests/test_preflight.py tests/test_release_boundary.py" in workflow
+    assert "python -m unittest scripts.test_verify_pypi_release" in workflow
     assert "import noosphere.noosphere_mcp" in workflow
     assert "python -m build" in workflow
+    assert "verify-pypi:" in workflow
+    assert "needs: publish-pypi" in workflow
+    assert "python scripts/verify_pypi_release.py --tool-count 39" in workflow
 
 
 def test_package_release_includes_growth_ledger_tools():
