@@ -110,6 +110,30 @@ def install_release_to_target(project: str, version: str, target_dir: Path, pyth
     subprocess.run(command, check=True)
 
 
+def wait_for_installable_release(
+    project: str,
+    version: str,
+    target_dir: Path,
+    attempts: int,
+    delay_seconds: float,
+    python_executable: str = sys.executable,
+) -> None:
+    last_error = ""
+
+    for attempt in range(1, attempts + 1):
+        try:
+            install_release_to_target(project, version, target_dir, python_executable=python_executable)
+            return
+        except subprocess.CalledProcessError as exc:
+            last_error = str(exc)
+            if attempt == attempts:
+                break
+            print(f"PyPI pip install not ready yet ({attempt}/{attempts}): {last_error}", flush=True)
+            time.sleep(delay_seconds)
+
+    raise RuntimeError(f"PyPI release {project}=={version} did not become pip-installable: {last_error}")
+
+
 def inspect_installed_release(
     target_dir: Path,
     expected_version: str,
@@ -156,7 +180,7 @@ def verify_pypi_release(project: str, version: str, attempts: int, delay_seconds
 
     temp_dir = Path(tempfile.mkdtemp(prefix="noosphere-pypi-verify-"))
     try:
-        install_release_to_target(project, version, temp_dir)
+        wait_for_installable_release(project, version, temp_dir, attempts, delay_seconds)
         installed = inspect_installed_release(temp_dir, version, expected_tool_count=expected_tool_count)
     finally:
         shutil.rmtree(temp_dir, ignore_errors=True)
