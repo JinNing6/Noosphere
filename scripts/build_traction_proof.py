@@ -14,6 +14,7 @@ Output: frontend/public/traction_proof.json
 """
 import json
 import os
+import re
 import sys
 import urllib.error
 import urllib.parse
@@ -39,6 +40,7 @@ CONSCIOUSNESS_INDEX_FILE = REPO_ROOT / "frontend" / "public" / "consciousness_in
 SHARE_PROOF_FILE = REPO_ROOT / "frontend" / "public" / "share_proofs.json"
 HISTORY_FILE = REPO_ROOT / "frontend" / "public" / "traction_history.json"
 OUTPUT_FILE = REPO_ROOT / "frontend" / "public" / "traction_proof.json"
+SDK_PYPROJECT_FILE = REPO_ROOT / "sdk" / "pyproject.toml"
 
 GITHUB_REPO = os.environ.get("GITHUB_REPOSITORY", "JinNing6/Noosphere")
 GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN", "")
@@ -46,6 +48,8 @@ GITHUB_API_VERSION = "2022-11-28"
 MAX_ISSUES = 300
 MAX_PULLS = 100
 DEFAULT_TARGET_CONTRIBUTORS = 10
+PYPI_PROJECT = "noosphere-mcp"
+PYPI_JSON_URL = f"https://pypi.org/pypi/{PYPI_PROJECT}/json"
 
 NOOSPHERE_HOME_URL = "https://jinning6.github.io/Noosphere/"
 REPO_URL = "https://github.com/JinNing6/Noosphere"
@@ -84,6 +88,18 @@ def github_headers(user_agent):
 
 def fetch_json(url, user_agent):
     request = urllib.request.Request(url, headers=github_headers(user_agent))
+    try:
+        with urllib.request.urlopen(request, timeout=20) as response:
+            return json.loads(response.read().decode("utf-8")), None
+    except (urllib.error.HTTPError, urllib.error.URLError, TimeoutError, json.JSONDecodeError) as exc:
+        return None, str(exc)
+
+
+def fetch_public_json(url, user_agent):
+    request = urllib.request.Request(url, headers={
+        "Accept": "application/json",
+        "User-Agent": user_agent,
+    })
     try:
         with urllib.request.urlopen(request, timeout=20) as response:
             return json.loads(response.read().decode("utf-8")), None
@@ -145,6 +161,35 @@ def fetch_repository_pulls():
             break
         page += 1
     return pulls[:MAX_PULLS], None
+
+
+def fetch_pypi_project():
+    data, error = fetch_public_json(PYPI_JSON_URL, "Noosphere-Traction-Proof-Builder/1.0")
+    if not isinstance(data, dict):
+        return None, f"PyPI JSON fetch failed: {error or 'unexpected response'}"
+    return data, None
+
+
+def fetch_github_release(tag_name):
+    encoded_tag = urllib.parse.quote(str(tag_name or "").strip(), safe="")
+    url = f"https://api.github.com/repos/{GITHUB_REPO.strip()}/releases/tags/{encoded_tag}"
+    data, error = fetch_json(url, "Noosphere-Traction-Proof-Builder/1.0")
+    if not isinstance(data, dict):
+        return None, f"GitHub Release fetch failed for {tag_name}: {error or 'unexpected response'}"
+    return data, None
+
+
+def read_local_package_version(access_issues):
+    try:
+        text = SDK_PYPROJECT_FILE.read_text(encoding="utf-8")
+    except (OSError, UnicodeDecodeError) as exc:
+        access_issues.append(f"Local package metadata read failed: {exc}")
+        return ""
+    match = re.search(r'^version\s*=\s*"([^"]+)"', text, re.MULTILINE)
+    if not match:
+        access_issues.append("Local package metadata read failed: sdk/pyproject.toml has no project version")
+        return ""
+    return match.group(1)
 
 
 def read_json_file(path, fallback, access_issues, label):
@@ -351,7 +396,118 @@ def collect_contributors(issues, pulls, share_proofs):
     return sorted(contributors, key=str.lower)
 
 
-def choose_bottleneck(memory_summary, share_summary, contributor_count, target_count, access_issues):
+def build_distribution_readiness(
+    local_version,
+    pypi_project=None,
+    release=None,
+    access_errors=None,
+    pypi_error=None,
+    release_error=None,
+):
+    access_errors = [str(error) for error in (access_errors or []) if error]
+    pypi_errors = [str(error) for error in [pypi_error] if error]
+    release_errors = [str(error) for error in [release_error] if error]
+    all_errors = [*access_errors, *pypi_errors, *release_errors]
+    release_tag = f"v{local_version}" if local_version else ""
+    latest_version = ""
+    if isinstance(pypi_project, dict):
+        latest_version = str(pypi_project.get("info", {}).get("version") or "").strip()
+
+    if not local_version:
+        pypi_status = "local-version-missing"
+    elif pypi_errors:
+        pypi_status = "unverified"
+    elif not latest_version:
+        pypi_status = "unverified"
+    elif latest_version == local_version:
+        pypi_status = "current"
+    else:
+        pypi_status = "registry-version-mismatch"
+
+    if not local_version:
+        release_status = "local-version-missing"
+    elif release_errors or access_errors:
+        release_status = "unverified"
+    elif not isinstance(release, dict):
+        release_status = "missing"
+    elif str(release.get("tag_name") or "").strip() != release_tag:
+        release_status = "tag-mismatch"
+    elif release.get("draft"):
+        release_status = "draft"
+    elif release.get("prerelease"):
+        release_status = "prerelease"
+    else:
+        release_status = "published"
+
+    registry_url = f"https://pypi.org/project/{PYPI_PROJECT}/"
+    release_url = f"{REPO_URL}/releases/tag/{release_tag}" if release_tag else f"{REPO_URL}/releases"
+    workflow_url = f"{REPO_URL}/actions/workflows/publish-pypi.yml"
+    verifier_command = "python scripts/verify_pypi_release.py --tool-count 39"
+    publish_workflow = ".github/workflows/publish-pypi.yml"
+
+    if pypi_status == "current" and release_status == "published":
+        status = "ready"
+        blocker = ""
+        next_action = "Re-run traction proof after the next real public proof action."
+    elif pypi_status == "registry-version-mismatch":
+        status = "blocked"
+        blocker = (
+            f"Install-loop launch blocker: PyPI latest {latest_version or 'unknown'} "
+            f"does not match local package {local_version}."
+        )
+        next_action = f"Publish {PYPI_PROJECT}=={local_version} through Trusted Publishing, then recheck PyPI JSON."
+    elif release_status != "published":
+        status = "blocked"
+        blocker = f"Release-trigger blocker: GitHub Release {release_tag or '<missing-version>'} is {release_status}."
+        next_action = f"Publish GitHub Release {release_tag or '<missing-version>'} to trigger Trusted Publishing."
+    elif pypi_status == "unverified":
+        status = "blocked"
+        blocker = "Distribution public API access is unverified; PyPI state could not be proven."
+        next_action = "Retry the distribution preflight with PyPI API access, then rerun traction proof."
+    else:
+        status = "blocked"
+        blocker = "Distribution readiness is incomplete."
+        next_action = "Close the release, PyPI, and verifier checklist before claiming install readiness."
+
+    checklist = [
+        "Run package gates: python -m pytest tests/test_noosphere_mcp.py tests/test_vector_store.py tests/test_preflight.py tests/test_release_boundary.py",
+        "Run release verifier tests: python -m unittest scripts.test_verify_pypi_release",
+        f"Build artifacts: cd sdk && python -m build",
+        f"Publish GitHub Release {release_tag or '<target-tag>'} so {publish_workflow} can publish with PyPI Trusted Publishing/OIDC.",
+        f"Verify registry latest: {verifier_command}",
+        "Rebuild traction proof: python scripts/build_traction_proof.py",
+    ]
+
+    return {
+        "status": status,
+        "package": PYPI_PROJECT,
+        "local_version": local_version,
+        "registry_latest_version": latest_version,
+        "pypi_status": pypi_status,
+        "registry_url": registry_url,
+        "release_tag": release_tag,
+        "release_status": release_status,
+        "release_url": release.get("html_url", release_url) if isinstance(release, dict) else release_url,
+        "trusted_publishing_workflow": publish_workflow,
+        "trusted_publishing_workflow_url": workflow_url,
+        "verifier_command": verifier_command,
+        "blocker": blocker,
+        "next_action": next_action,
+        "closure_checklist": checklist,
+        "access_issues": all_errors,
+        "disclaimer": "Distribution readiness uses PyPI JSON and GitHub Release APIs; it does not infer installs or downloads.",
+    }
+
+
+def choose_bottleneck(memory_summary, share_summary, contributor_count, target_count, access_issues, distribution=None):
+    if isinstance(distribution, dict) and distribution.get("status") == "blocked":
+        return {
+            "stage": "install-loop launch blocker",
+            "reason": distribution.get("blocker") or "Distribution readiness is incomplete.",
+            "next_action": distribution.get("next_action") or "Close the release and registry checklist.",
+            "next_action_url": distribution.get("trusted_publishing_workflow_url") or distribution.get("release_url") or f"{REPO_URL}/actions",
+        }
+
     if access_issues:
         return {
             "stage": "public API recovery",
@@ -494,6 +650,7 @@ def build_share_card(
     bottleneck,
     history_summary,
     first_proof_action,
+    distribution,
 ):
     def unit(count, singular, plural):
         return singular if count == 1 else plural
@@ -526,6 +683,11 @@ def build_share_card(
             f"{target_progress['target_contributor_count']} real contributors"
         ),
         (
+            f"Distribution: local {distribution.get('local_version') or 'unknown'}, "
+            f"PyPI {distribution.get('registry_latest_version') or 'unknown'}, "
+            f"{distribution.get('status', 'not_checked')}"
+        ),
+        (
             "Velocity: "
             f"{int(deltas.get('stars', 0)):+d} stars, "
             f"{int(deltas.get('reviewable_public_urls', 0)):+d} proof URLs, "
@@ -538,7 +700,7 @@ def build_share_card(
     ])
 
 
-def summarize_history(history, snapshot):
+def summarize_history(history, snapshot, access_issues=None):
     history = history if isinstance(history, dict) else {}
     snapshots = []
     seen = set()
@@ -551,6 +713,19 @@ def summarize_history(history, snapshot):
             continue
         snapshots.append(normalized)
         seen.add(key)
+
+    if access_issues:
+        return {
+            "mode": "manual append-only",
+            "history_url": HISTORY_URL,
+            "record_workflow_url": RECORD_WORKFLOW_URL,
+            "recording_policy": RECORDING_POLICY,
+            "snapshots_recorded": len(snapshots),
+            "latest_velocity": {
+                "status": "unavailable",
+                "reason": "Public API access issues were present, so velocity deltas were not computed.",
+            },
+        }
 
     current = normalize_snapshot(snapshot)
     if snapshots and current:
@@ -568,7 +743,7 @@ def summarize_history(history, snapshot):
     }
 
 
-def build_traction_proof(memories, share_proofs, repo, issues, pulls, access_issues, history=None):
+def build_traction_proof(memories, share_proofs, repo, issues, pulls, access_issues, history=None, distribution=None):
     access_issues = list(access_issues or [])
     share_proofs = share_proofs if isinstance(share_proofs, dict) else {}
     issues = issues if isinstance(issues, list) else []
@@ -600,6 +775,7 @@ def build_traction_proof(memories, share_proofs, repo, issues, pulls, access_iss
         len(contributors),
         target_count,
         access_issues,
+        distribution,
     )
     first_proof_action = build_first_proof_action(
         memory_summary,
@@ -626,6 +802,11 @@ def build_traction_proof(memories, share_proofs, repo, issues, pulls, access_iss
             "source_url": f"https://api.github.com/repos/{GITHUB_REPO.strip()}/pulls",
         },
         "target_progress": target_progress,
+        "distribution": distribution or {
+            "status": "not_checked",
+            "package": PYPI_PROJECT,
+            "disclaimer": "Distribution readiness was not checked for this local snapshot input.",
+        },
         "bottleneck": bottleneck,
         "first_proof_action": first_proof_action,
         "actions": {
@@ -638,7 +819,7 @@ def build_traction_proof(memories, share_proofs, repo, issues, pulls, access_iss
         "access_issues": access_issues,
         "disclaimer": NON_FABRICATION_DISCLOSURE,
     }
-    history_summary = summarize_history(history, snapshot)
+    history_summary = summarize_history(history, snapshot, access_issues)
     snapshot["history"] = history_summary
     snapshot["share_card"] = build_share_card(
         repo_summary,
@@ -648,6 +829,7 @@ def build_traction_proof(memories, share_proofs, repo, issues, pulls, access_iss
         bottleneck,
         history_summary,
         first_proof_action,
+        snapshot["distribution"],
     )
     return snapshot
 
@@ -680,6 +862,18 @@ def write_traction_proof():
         if error:
             access_issues.append(error)
 
+    local_version = read_local_package_version(access_issues)
+    pypi_project, pypi_error = fetch_pypi_project()
+    release_tag = f"v{local_version}" if local_version else ""
+    release, release_error = fetch_github_release(release_tag) if release_tag else (None, "Release tag unavailable")
+    distribution = build_distribution_readiness(
+        local_version=local_version,
+        pypi_project=pypi_project,
+        release=release,
+        pypi_error=pypi_error,
+        release_error=release_error,
+    )
+
     snapshot = build_traction_proof(
         memories=memories,
         share_proofs=share_proofs,
@@ -688,6 +882,7 @@ def write_traction_proof():
         pulls=pulls,
         access_issues=access_issues,
         history=history,
+        distribution=distribution,
     )
     OUTPUT_FILE.parent.mkdir(parents=True, exist_ok=True)
     OUTPUT_FILE.write_text(
@@ -703,6 +898,7 @@ def write_traction_proof():
     if snapshot["access_issues"]:
         print(f"   Access issues: {len(snapshot['access_issues'])}")
     print(f"   Bottleneck: {snapshot['bottleneck']['stage']}")
+    print(f"   Distribution: {snapshot['distribution']['status']}")
     print(f"   Output: {OUTPUT_FILE}")
     print(f"   Size: {OUTPUT_FILE.stat().st_size / 1024:.1f} KB")
     return snapshot

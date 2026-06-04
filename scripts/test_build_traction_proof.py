@@ -151,6 +151,73 @@ class BuildTractionProofTests(unittest.TestCase):
         self.assertEqual(snapshot["bottleneck"]["stage"], "public API recovery")
         self.assertIn("403 rate limit", snapshot["access_issues"][0])
         self.assertIn("Retry Pages build", snapshot["bottleneck"]["next_action"])
+        self.assertEqual(snapshot["history"]["latest_velocity"]["status"], "unavailable")
+        self.assertNotIn("deltas", snapshot["history"]["latest_velocity"])
+
+    def test_distribution_blocker_when_pypi_lags_local_package(self):
+        distribution = builder.build_distribution_readiness(
+            local_version="0.6.1",
+            pypi_project={"info": {"version": "0.6.0"}},
+            release={
+                "tag_name": "v0.6.1",
+                "draft": False,
+                "prerelease": False,
+                "html_url": "https://github.com/JinNing6/Noosphere/releases/tag/v0.6.1",
+            },
+            access_errors=[],
+        )
+        snapshot = builder.build_traction_proof(
+            memories=[
+                {
+                    "id": "debug-memory-one",
+                    "type": "warning",
+                    "issue_number": 21,
+                    "media_type": None,
+                    "resonance_count": 0,
+                    "resonates_with": [],
+                }
+            ],
+            share_proofs={
+                "summary": {
+                    "total_proof_issues": 1,
+                    "reviewable_public_urls": 1,
+                    "missing_or_invalid_urls": 0,
+                },
+                "proofs": [
+                    {
+                        "issue_number": 101,
+                        "submitted_by": "agent-user",
+                        "share_url": "https://example.com/post",
+                        "reviewable": True,
+                    },
+                ],
+            },
+            repo={
+                "full_name": "JinNing6/Noosphere",
+                "html_url": "https://github.com/JinNing6/Noosphere",
+                "stargazers_count": 15,
+                "forks_count": 1,
+                "open_issues_count": 8,
+            },
+            issues=[],
+            pulls=[],
+            access_issues=[],
+            history={},
+            distribution=distribution,
+        )
+
+        self.assertEqual(snapshot["distribution"]["status"], "blocked")
+        self.assertEqual(snapshot["distribution"]["registry_latest_version"], "0.6.0")
+        self.assertEqual(snapshot["distribution"]["local_version"], "0.6.1")
+        self.assertEqual(snapshot["bottleneck"]["stage"], "install-loop launch blocker")
+        self.assertIn("PyPI latest 0.6.0", snapshot["bottleneck"]["reason"])
+        self.assertIn(".github/workflows/publish-pypi.yml", "\n".join(snapshot["distribution"]["closure_checklist"]))
+        self.assertIn("python scripts/verify_pypi_release.py --tool-count 39", snapshot["distribution"]["verifier_command"])
+        self.assertIn("Distribution:", snapshot["share_card"])
+        self.assertNotRegex(
+            json.dumps(snapshot),
+            r"\b(downloads|reposts|referrals|retention|rewards|installs)\s*[:=]\s*\d+",
+        )
 
     def test_inlines_first_public_proof_action_when_share_proof_is_cold(self):
         snapshot = builder.build_traction_proof(
@@ -248,6 +315,8 @@ class BuildTractionProofTests(unittest.TestCase):
             original_fetch_repo = builder.fetch_repository
             original_fetch_issues = builder.fetch_repository_issues
             original_fetch_pulls = builder.fetch_repository_pulls
+            original_fetch_pypi = builder.fetch_pypi_project
+            original_fetch_release = builder.fetch_github_release
 
             try:
                 builder.CONSCIOUSNESS_INDEX_FILE = memories_file
@@ -263,6 +332,13 @@ class BuildTractionProofTests(unittest.TestCase):
                 }, None)
                 builder.fetch_repository_issues = lambda: ([], None)
                 builder.fetch_repository_pulls = lambda: ([], None)
+                builder.fetch_pypi_project = lambda: ({"info": {"version": "0.6.1"}}, None)
+                builder.fetch_github_release = lambda tag_name: ({
+                    "tag_name": tag_name,
+                    "draft": False,
+                    "prerelease": False,
+                    "html_url": f"https://github.com/JinNing6/Noosphere/releases/tag/{tag_name}",
+                }, None)
 
                 builder.write_traction_proof()
             finally:
@@ -273,11 +349,14 @@ class BuildTractionProofTests(unittest.TestCase):
                 builder.fetch_repository = original_fetch_repo
                 builder.fetch_repository_issues = original_fetch_issues
                 builder.fetch_repository_pulls = original_fetch_pulls
+                builder.fetch_pypi_project = original_fetch_pypi
+                builder.fetch_github_release = original_fetch_release
 
             snapshot = json.loads(output_file.read_text(encoding="utf-8"))
             self.assertEqual(snapshot["repo"]["stars"], 2)
             self.assertEqual(snapshot["memory"]["public_memories"], 1)
             self.assertEqual(snapshot["access_issues"], [])
+            self.assertEqual(snapshot["distribution"]["status"], "ready")
             self.assertEqual(snapshot["bottleneck"]["stage"], "public share proof")
             self.assertEqual(snapshot["history"]["latest_velocity"]["status"], "baseline-only")
             self.assertIn("traction_proof.json", str(output_file))
