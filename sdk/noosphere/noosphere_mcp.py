@@ -52,6 +52,9 @@ GITHUB_REPO = os.environ.get("NOOSPHERE_REPO", "JinNing6/Noosphere")
 GITHUB_BRANCH = os.environ.get("NOOSPHERE_BRANCH", "main")
 GITHUB_API = "https://api.github.com"
 GROWTH_LEDGER_VERSION = 1
+PYPI_PROJECT = "noosphere-mcp"
+PYPI_JSON_URL = f"https://pypi.org/pypi/{PYPI_PROJECT}/json"
+NOOSPHERE_TRACTION_PROOF_URL = "https://jinning6.github.io/Noosphere/traction_proof.json"
 GROWTH_NON_FABRICATION_DISCLOSURE = (
     "No downloads, reposts, referrals, retention, rewards, or install counts are "
     "inferred from public URLs or the local growth ledger."
@@ -933,7 +936,8 @@ mcp = FastMCP(
         "36. `record_growth_referral` - Record a created public growth-proof URL in the local ledger\n"
         "37. `record_share_attribution` - Record a reviewable public share URL in the local ledger\n"
         "38. `share_attribution_report` - Summarize share proof from real ledger events\n"
-        "39. `growth_flywheel` - Diagnose the proof loop from real ledger events\n\n"
+        "39. `growth_flywheel` - Diagnose the proof loop from real ledger events\n"
+        "40. `launch_preflight` - Check release, PyPI, Pages, and proof readiness before launch\n\n"
         "When uploading consciousness, ensure you provide sufficient context description (at least 10 characters),\n"
         "so that future Agents can understand the scenario in which this thought was born."
     ),
@@ -973,11 +977,13 @@ def _jaccard_similarity(set_a: set, set_b: set) -> float:
 
 def _github_headers() -> dict:
     """Build GitHub API request headers"""
-    return {
+    headers = {
         "Accept": "application/vnd.github+json",
-        "Authorization": f"Bearer {GITHUB_TOKEN}",
         "X-GitHub-Api-Version": "2022-11-28",
     }
+    if GITHUB_TOKEN:
+        headers["Authorization"] = f"Bearer {GITHUB_TOKEN}"
+    return headers
 
 
 def _parse_repo() -> tuple[str, str]:
@@ -4989,6 +4995,221 @@ def _summarize_growth_ledger(target_contributors: int = 10) -> dict:
     }
 
 
+def _repo_url() -> str:
+    return f"https://github.com/{GITHUB_REPO}"
+
+
+def _release_url(tag_name: str) -> str:
+    return f"{_repo_url()}/releases/tag/{tag_name}"
+
+
+def _workflow_url(workflow_name: str = "publish-pypi.yml") -> str:
+    return f"{_repo_url()}/actions/workflows/{workflow_name}"
+
+
+def _get_package_version() -> str:
+    try:
+        from noosphere import __version__
+        return str(__version__).strip()
+    except Exception:
+        return ""
+
+
+async def _fetch_public_json(url: str) -> tuple[dict | None, str]:
+    try:
+        async with httpx.AsyncClient(
+            timeout=20,
+            headers={"Accept": "application/json", "User-Agent": "Noosphere-Launch-Preflight/1.0"},
+            follow_redirects=True,
+        ) as client:
+            response = await client.get(url)
+        if response.status_code != 200:
+            return None, f"{response.status_code} {response.text[:160]}"
+        data = response.json()
+        return data if isinstance(data, dict) else None, "" if isinstance(data, dict) else "unexpected JSON response"
+    except Exception as exc:
+        return None, str(exc)
+
+
+async def _fetch_github_json(path: str) -> tuple[dict | None, str]:
+    try:
+        async with httpx.AsyncClient(
+            base_url=GITHUB_API,
+            headers=_github_headers(),
+            timeout=20,
+            follow_redirects=True,
+        ) as client:
+            response = await client.get(path)
+        if response.status_code != 200:
+            return None, f"{response.status_code} {response.text[:160]}"
+        data = response.json()
+        return data if isinstance(data, dict) else None, "" if isinstance(data, dict) else "unexpected JSON response"
+    except Exception as exc:
+        return None, str(exc)
+
+
+def _extract_ref_sha(ref: dict | None) -> str:
+    if not isinstance(ref, dict):
+        return ""
+    obj = ref.get("object")
+    if isinstance(obj, dict):
+        return str(obj.get("sha") or "").strip()
+    return ""
+
+
+def _short_sha(sha: str) -> str:
+    text = str(sha or "").strip()
+    return text[:7] if text else "unknown"
+
+
+def _release_status(release: dict | None, error: str, tag_name: str) -> str:
+    if not isinstance(release, dict):
+        if "404" in str(error):
+            return "missing"
+        return "unverified"
+    if str(release.get("tag_name") or "").strip() != tag_name:
+        return "tag-mismatch"
+    if release.get("draft"):
+        return "draft"
+    if release.get("prerelease"):
+        return "prerelease"
+    return "published"
+
+
+def _tag_status(main_sha: str, tag_sha: str, tag_error: str) -> str:
+    if not tag_sha:
+        return "missing" if "404" in str(tag_error) else "unverified"
+    if main_sha and tag_sha != main_sha:
+        return "drift"
+    return "aligned"
+
+
+def _choose_launch_bottleneck(tag_status: str, release_status: str, pypi_status: str, proof_status: str) -> tuple[str, str]:
+    if tag_status != "aligned":
+        return "release tag", "Align the release tag with the current main commit before publishing."
+    if release_status != "published":
+        return "release trigger", "Publish the GitHub Release so the Trusted Publishing workflow can run."
+    if pypi_status != "current":
+        return "install-loop launch blocker", "Publish and verify the package on PyPI before claiming install readiness."
+    if proof_status == "blocked":
+        return "public traction proof", "Close the public proof blocker reported by traction_proof.json."
+    return "first public proof", "Record the next public share proof and rerun growth_flywheel()."
+
+
+@mcp.tool()
+async def launch_preflight(target_version: str = "") -> str:
+    """
+    Check Noosphere launch readiness from real public release, registry, and proof surfaces.
+
+    This is read-only. It does not create tags, publish releases, upload to PyPI,
+    or record local ledger events.
+    """
+    version = _clean_ledger_text(target_version, "", 40) or _get_package_version() or "unknown"
+    tag_name = f"v{version}" if not version.startswith("v") else version
+    package_version = tag_name[1:] if tag_name.startswith("v") else version
+    owner_repo = GITHUB_REPO.strip()
+
+    pypi_data, pypi_error = await _fetch_public_json(PYPI_JSON_URL)
+    traction_data, traction_error = await _fetch_public_json(NOOSPHERE_TRACTION_PROOF_URL)
+    main_ref, main_error = await _fetch_github_json(f"/repos/{owner_repo}/git/ref/heads/{GITHUB_BRANCH}")
+    tag_ref, tag_error = await _fetch_github_json(f"/repos/{owner_repo}/git/ref/tags/{tag_name}")
+    release, release_error = await _fetch_github_json(f"/repos/{owner_repo}/releases/tags/{tag_name}")
+
+    pypi_latest = ""
+    if isinstance(pypi_data, dict):
+        pypi_latest = str(pypi_data.get("info", {}).get("version") or "").strip()
+    pypi_status = "current" if pypi_latest == package_version else "blocked" if pypi_latest else "unverified"
+
+    main_sha = _extract_ref_sha(main_ref)
+    tag_sha = _extract_ref_sha(tag_ref)
+    tag_state = _tag_status(main_sha, tag_sha, tag_error)
+    release_state = _release_status(release, release_error, tag_name)
+
+    proof_distribution = {}
+    proof_bottleneck = {}
+    first_proof = {}
+    if isinstance(traction_data, dict):
+        proof_distribution = traction_data.get("distribution") if isinstance(traction_data.get("distribution"), dict) else {}
+        proof_bottleneck = traction_data.get("bottleneck") if isinstance(traction_data.get("bottleneck"), dict) else {}
+        first_proof = traction_data.get("first_proof_action") if isinstance(traction_data.get("first_proof_action"), dict) else {}
+    proof_status = str(proof_distribution.get("status") or ("unverified" if traction_error else "not_checked"))
+    bottleneck, bottleneck_action = _choose_launch_bottleneck(tag_state, release_state, pypi_status, proof_status)
+    status = "ready" if all([
+        tag_state == "aligned",
+        release_state == "published",
+        pypi_status == "current",
+    ]) else "blocked"
+
+    access_issues = []
+    for label, error in [
+        ("PyPI JSON", pypi_error),
+        ("traction_proof.json", traction_error),
+        ("GitHub main ref", main_error),
+        ("GitHub tag ref", tag_error if tag_state == "unverified" else ""),
+        ("GitHub Release", release_error if release_state == "unverified" else ""),
+    ]:
+        if error:
+            access_issues.append(f"{label}: {error}")
+
+    share_proof_url = first_proof.get("share_proof_form_url") or f"{_repo_url()}/issues/new?template=share-proof.yml"
+    growth_proof_url = first_proof.get("growth_issue_form_url") or f"{_repo_url()}/issues/new?template=growth-proof.yml"
+    release_link = _release_url(tag_name)
+    workflow_link = _workflow_url()
+
+    lines = [
+        "Noosphere launch preflight",
+        f"Status: {status}",
+        f"Target package: {PYPI_PROJECT}=={package_version}",
+        f"- PyPI latest: {pypi_latest or 'unverified'} ({pypi_status})",
+        f"- Main ref: {_short_sha(main_sha)}",
+        f"- Release tag {tag_name}: {tag_state} ({_short_sha(tag_sha)})",
+        f"- GitHub Release {tag_name}: {release_state}",
+        f"- Public traction proof: {proof_status}",
+        f"- Current bottleneck: {bottleneck} - {bottleneck_action}",
+        "",
+        "Closure checklist:",
+        "1. Run local package gates: python -m pytest tests/test_noosphere_mcp.py tests/test_vector_store.py tests/test_preflight.py tests/test_release_boundary.py",
+        "2. Run release verifier tests: python -m unittest scripts.test_verify_pypi_release",
+        "3. Build artifacts: cd sdk && python -m build",
+        f"4. Publish GitHub Release {tag_name}: {release_link}",
+        f"5. Watch Trusted Publishing workflow: {workflow_link}",
+        "6. Verify registry install: python scripts/verify_pypi_release.py --tool-count 40",
+        "7. Rebuild public proof: python scripts/build_traction_proof.py",
+        "",
+        "First public proof routes:",
+        f"- Growth Proof Issue Form: {growth_proof_url}",
+        f"- Share Proof Issue Form: {share_proof_url}",
+        'After submission: record_growth_referral(source_url="<created-growth-issue-url>", campaign="traction-proof")',
+        'After public sharing: record_share_attribution(share_url="<public-post-url>", source_url="<created-share-proof-issue-url>", artifact="Noosphere traction proof")',
+    ]
+
+    if proof_bottleneck:
+        lines.extend([
+            "",
+            f"Live proof bottleneck: {proof_bottleneck.get('stage', 'unknown')} - {proof_bottleneck.get('reason', '')}",
+        ])
+
+    if access_issues:
+        lines.extend([
+            "",
+            "Access issues:",
+            *[f"- {issue}" for issue in access_issues],
+        ])
+
+    lines.extend([
+        "",
+        "Copy-ready maintainer update:",
+        (
+            f"Noosphere launch preflight: {status}. Target {PYPI_PROJECT}=={package_version}; "
+            f"PyPI latest {pypi_latest or 'unverified'}; tag {tag_name} is {tag_state}; "
+            f"current bottleneck is {bottleneck}. Proof: {NOOSPHERE_TRACTION_PROOF_URL}"
+        ),
+        "",
+        GROWTH_NON_FABRICATION_DISCLOSURE,
+    ])
+    return "\n".join(lines)
+
+
 @mcp.tool()
 async def record_growth_referral(
     source_url: str,
@@ -5147,6 +5368,7 @@ async def growth_flywheel(target_contributors: int = 10) -> str:
         "",
         f"Next executable action: {summary['next_command']}",
         "Review ledger: share_attribution_report()",
+        "Check launch readiness: launch_preflight()",
         "",
         "Copy-ready public proof post:",
         (

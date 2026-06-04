@@ -39,6 +39,7 @@ from noosphere.noosphere_mcp import (
     record_share_attribution,
     share_attribution_report,
     growth_flywheel,
+    launch_preflight,
     set_engagement_mode,
     get_engagement_mode,
     _get_engagement_mode,
@@ -60,6 +61,7 @@ from noosphere.noosphere_mcp import (
     _set_tag_subscriptions,
     _invalidate_cache,
     _format_media_preview,
+    _github_headers,
     LABEL_WITHDRAWN,
     TYPE_EMOJIS,
     MEDIA_RESONANCE_DIMENSIONS,
@@ -89,6 +91,14 @@ def test_extract_payload():
     body = f"<!-- CONSCIOUSNESS_PAYLOAD_START -->\n```json\n{json.dumps(payload)}\n```\n<!-- CONSCIOUSNESS_PAYLOAD_END -->"
     extracted = _extract_payload_from_issue_body(body)
     assert extracted == payload
+
+
+def test_github_headers_omit_authorization_without_token():
+    with patch("noosphere.noosphere_mcp.GITHUB_TOKEN", ""):
+        headers = _github_headers()
+
+    assert "Authorization" not in headers
+    assert headers["Accept"] == "application/vnd.github+json"
 
 @pytest.mark.asyncio
 async def test_upload_consciousness_missing_token():
@@ -1556,7 +1566,96 @@ async def test_growth_flywheel_empty_ledger_recruits_first_public_proof(mock_env
     assert "0/5 real contributor identities" in result
     assert "record_growth_referral" in result
     assert "record_share_attribution" in result
+    assert "launch_preflight()" in result
     assert "No downloads, reposts, referrals, retention, rewards, or install counts are inferred" in result
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_launch_preflight_reports_release_and_install_blockers(mock_env):
+    respx.get("https://pypi.org/pypi/noosphere-mcp/json").mock(
+        return_value=Response(200, json={"info": {"version": "0.6.0"}})
+    )
+    respx.get("https://api.github.com/repos/test_owner/test_repo/git/ref/heads/main").mock(
+        return_value=Response(200, json={"object": {"sha": "main-sha-123"}})
+    )
+    respx.get("https://api.github.com/repos/test_owner/test_repo/git/ref/tags/v0.6.2").mock(
+        return_value=Response(404, json={"message": "Not Found"})
+    )
+    respx.get("https://api.github.com/repos/test_owner/test_repo/releases/tags/v0.6.2").mock(
+        return_value=Response(404, json={"message": "Not Found"})
+    )
+    respx.get("https://jinning6.github.io/Noosphere/traction_proof.json").mock(
+        return_value=Response(200, json={
+            "distribution": {
+                "status": "blocked",
+                "local_version": "0.6.2",
+                "registry_latest_version": "0.6.0",
+            },
+            "bottleneck": {
+                "stage": "install-loop launch blocker",
+                "reason": "PyPI latest 0.6.0 does not match local package 0.6.2.",
+            },
+            "first_proof_action": {
+                "share_proof_form_url": "https://github.com/JinNing6/Noosphere/issues/new?template=share-proof.yml",
+                "growth_issue_form_url": "https://github.com/JinNing6/Noosphere/issues/new?template=growth-proof.yml",
+            },
+        })
+    )
+
+    result = await launch_preflight(target_version="0.6.2")
+
+    assert "Noosphere launch preflight" in result
+    assert "Target package: noosphere-mcp==0.6.2" in result
+    assert "PyPI latest: 0.6.0" in result
+    assert "Release tag v0.6.2: missing" in result
+    assert "GitHub Release v0.6.2: missing" in result
+    assert "Current bottleneck: release tag" in result
+    assert "python scripts/verify_pypi_release.py --tool-count 40" in result
+    assert "share-proof.yml" in result
+    assert "No downloads, reposts, referrals, retention, rewards, or install counts are inferred" in result
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_launch_preflight_reports_ready_when_release_and_registry_match(mock_env):
+    respx.get("https://pypi.org/pypi/noosphere-mcp/json").mock(
+        return_value=Response(200, json={"info": {"version": "0.6.2"}})
+    )
+    respx.get("https://api.github.com/repos/test_owner/test_repo/git/ref/heads/main").mock(
+        return_value=Response(200, json={"object": {"sha": "same-sha"}})
+    )
+    respx.get("https://api.github.com/repos/test_owner/test_repo/git/ref/tags/v0.6.2").mock(
+        return_value=Response(200, json={"object": {"sha": "same-sha"}})
+    )
+    respx.get("https://api.github.com/repos/test_owner/test_repo/releases/tags/v0.6.2").mock(
+        return_value=Response(200, json={
+            "tag_name": "v0.6.2",
+            "draft": False,
+            "prerelease": False,
+            "html_url": "https://github.com/JinNing6/Noosphere/releases/tag/v0.6.2",
+        })
+    )
+    respx.get("https://jinning6.github.io/Noosphere/traction_proof.json").mock(
+        return_value=Response(200, json={
+            "distribution": {
+                "status": "ready",
+                "local_version": "0.6.2",
+                "registry_latest_version": "0.6.2",
+            },
+            "bottleneck": {"stage": "public share proof", "reason": "Share proof still needs users."},
+            "first_proof_action": {
+                "share_proof_form_url": "https://github.com/JinNing6/Noosphere/issues/new?template=share-proof.yml",
+                "growth_issue_form_url": "https://github.com/JinNing6/Noosphere/issues/new?template=growth-proof.yml",
+            },
+        })
+    )
+
+    result = await launch_preflight(target_version="0.6.2")
+
+    assert "Status: ready" in result
+    assert "Current bottleneck: first public proof" in result
+    assert "record_share_attribution" in result
 
 
 def test_growth_ledger_tools_are_documented_in_public_surfaces():
@@ -1569,11 +1668,12 @@ def test_growth_ledger_tools_are_documented_in_public_surfaces():
         "record_share_attribution",
         "share_attribution_report",
         "growth_flywheel",
+        "launch_preflight",
     ]:
         assert tool_name in readme
         assert tool_name in mcp_source
 
-    assert "39 MCP tools" in readme
+    assert "40 MCP tools" in readme
     assert "resonate_media" in readme
     assert "First Proof links `growth-proof.yml` + `share-proof.yml`; MCP ledger tools" in readme
     assert "No downloads, reposts, referrals, retention, rewards, or install counts are inferred" in readme

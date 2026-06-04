@@ -442,7 +442,7 @@ def build_distribution_readiness(
     registry_url = f"https://pypi.org/project/{PYPI_PROJECT}/"
     release_url = f"{REPO_URL}/releases/tag/{release_tag}" if release_tag else f"{REPO_URL}/releases"
     workflow_url = f"{REPO_URL}/actions/workflows/publish-pypi.yml"
-    verifier_command = "python scripts/verify_pypi_release.py --tool-count 39"
+    verifier_command = "python scripts/verify_pypi_release.py --tool-count 40"
     publish_workflow = ".github/workflows/publish-pypi.yml"
 
     if pypi_status == "current" and release_status == "published":

@@ -10,7 +10,7 @@ except ModuleNotFoundError:  # pragma: no cover - Python 3.10 release runners
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 SDK_ROOT = REPO_ROOT / "sdk"
-EXPECTED_RELEASE_VERSION = "0.6.1"
+EXPECTED_RELEASE_VERSION = "0.6.2"
 PYPI_BASELINE_VERSION = "0.6.0"
 
 
@@ -62,7 +62,7 @@ def test_publish_workflow_is_release_only_trusted_publishing_with_quality_gates(
     assert "python -m build" in workflow
     assert "verify-pypi:" in workflow
     assert "needs: publish-pypi" in workflow
-    assert "python scripts/verify_pypi_release.py --tool-count 39" in workflow
+    assert "python scripts/verify_pypi_release.py --tool-count 40" in workflow
 
 
 def test_package_release_includes_growth_ledger_tools():
@@ -72,12 +72,13 @@ def test_package_release_includes_growth_ledger_tools():
         source,
     )
 
-    assert len(tool_names) == 39
+    assert len(tool_names) == 40
     for tool_name in [
         "record_growth_referral",
         "record_share_attribution",
         "share_attribution_report",
         "growth_flywheel",
+        "launch_preflight",
     ]:
         assert tool_name in tool_names
 
@@ -85,7 +86,7 @@ def test_package_release_includes_growth_ledger_tools():
 def test_readme_documents_pypi_release_recovery_route():
     readme = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
 
-    assert "v0.6.1" in readme
+    assert "v0.6.2" in readme
     assert ".github/workflows/publish-pypi.yml" in readme
     assert "Trusted Publishing" in readme
-    assert "39 MCP tools" in readme
+    assert "40 MCP tools" in readme
