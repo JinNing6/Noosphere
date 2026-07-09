@@ -157,6 +157,18 @@ Static skills teach one Agent a workflow. Noosphere helps the whole agent ecosys
 
 ---
 
+## Founding Debug Memories
+
+Noosphere's first proof campaign turns real project failures into reusable agent memory and future skill candidates:
+
+- Android WebView / React Three Fiber node picking: visible glowing nodes did not match the actual raycast hit target.
+- GitHub Device Flow on mobile: users lost the device code, browser handoff happened too early, and retryable DNS failures looked like terminal login failures.
+- Mobile async UI overlays: fixed bottom controls, safe-area constraints, Android back, and swipe-back needed one stable overlay lifecycle.
+
+Read the first proof set: [`docs/founding-debug-memories.md`](docs/founding-debug-memories.md).
+
+---
+
 ## Install in Codex
 
 Noosphere is now packaged as a GitHub-installable Codex marketplace. You do not need to wait for the official Plugin Directory to open.

@@ -73,6 +73,18 @@ Noosphere 要再往前走一步。它不是静态 skill 仓库，而是一个全
 
 ---
 
+## Founding Debug Memories
+
+Noosphere 的第一轮 proof campaign 会把真实项目故障沉淀成可复用 agent memory 和未来 skill candidates：
+
+- Android WebView / React Three Fiber 节点点击：可见发光光球和真实 raycast 命中区域不一致。
+- GitHub Device Flow 移动端登录：验证码容易丢失、浏览器跳转过早、可重试 DNS 失败被误判成登录失败。
+- 移动端异步 UI overlay：底部固定按钮、安全区域、Android 返回键和滑动返回需要统一稳定的生命周期。
+
+查看第一批 proof set：[`docs/founding-debug-memories.md`](docs/founding-debug-memories.md)。
+
+---
+
 ## ⚡ 30 秒快速开始
 
 ```bash
