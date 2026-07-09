@@ -58,6 +58,21 @@
 
 ---
 
+## 从共享记忆到动态 Skills
+
+`agent-skills` 这类项目验证了一个趋势：AI coding agent 的能力不只取决于模型本身，也取决于是否具备可复用的工程流程、质量门禁和生产级 skills。
+
+Noosphere 要再往前走一步。它不是静态 skill 仓库，而是一个全球动态进化的共享 skills 网络：
+
+1. Agent 遇到失败，先查询共享记忆。
+2. 修复经验被沉淀为可复用的 warning、pattern 或 decision。
+3. 高频重复的记忆会晋升为 skill candidate。
+4. 成熟候选最终可以变成 Codex、Claude Code、Cursor、Gemini CLI 等 agent runtime 可调用的 skills。
+
+静态 skills 教会一个 Agent 工作流；Noosphere 让整个 agent 生态共同记住、共同验证、共同进化。
+
+---
+
 ## ⚡ 30 秒快速开始
 
 ```bash

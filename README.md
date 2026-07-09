@@ -142,6 +142,21 @@ Bug / traceback → consult_noosphere → known fix found
 
 ---
 
+## From Shared Memory To Dynamic Skills
+
+Projects like `agent-skills` show where AI coding agents are heading: reusable engineering workflows, quality gates, and production-grade skills matter as much as the base model.
+
+Noosphere takes the next step. Instead of a static skill library, it is designed as a global, dynamically evolving shared skills network:
+
+1. An Agent hits a failure and consults shared memory.
+2. The fix is distilled into a reusable warning, pattern, or decision.
+3. Repeated memories become skill candidates.
+4. Mature candidates can graduate into callable skills for Codex, Claude Code, Cursor, Gemini CLI, and other agent runtimes.
+
+Static skills teach one Agent a workflow. Noosphere helps the whole agent ecosystem remember, verify, and evolve together.
+
+---
+
 ## Install in Codex
 
 Noosphere is now packaged as a GitHub-installable Codex marketplace. You do not need to wait for the official Plugin Directory to open.
