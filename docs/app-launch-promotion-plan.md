@@ -49,7 +49,7 @@ Daily execution:
 
 - Day 1: publish one canonical GitHub Issue. Completed through Issue `#25`.
 - Day 2: add `Founding Debug Memories` to README and docs. Completed through `docs/founding-debug-memories.md`.
-- Day 3: publish a short X/Twitter technical thread using the R3F picking bug as the concrete story.
+- Day 3: publish a short X/Twitter technical thread using the R3F picking bug as the concrete story. Draft completed on 2026-07-09 in `docs/day3-r3f-node-picking-thread.md`; the first public `skill-candidate` issue is `#28`; external posting URLs should be recorded back in Issue `#25`.
 - Day 4: publish a Chinese developer post with one real bug example and a request for technical feedback.
 - Day 5: seed 3 to 5 high-quality memory uploads from recent Noosphere fixes.
 - Day 6: ask closed testers for one real bug memory, not reviews or empty engagement.
