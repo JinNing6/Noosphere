@@ -214,7 +214,7 @@ class BuildTractionProofTests(unittest.TestCase):
         self.assertIn("PyPI latest 0.6.0", snapshot["bottleneck"]["reason"])
         self.assertIn(".github/workflows/publish-pypi.yml", "\n".join(snapshot["distribution"]["closure_checklist"]))
         self.assertEqual(snapshot["distribution"]["publish_trigger"], "tag-or-release")
-        self.assertIn("python scripts/verify_pypi_release.py --tool-count 40", snapshot["distribution"]["verifier_command"])
+        self.assertIn("python scripts/verify_pypi_release.py --tool-count 45", snapshot["distribution"]["verifier_command"])
         self.assertIn("Distribution:", snapshot["share_card"])
         self.assertNotRegex(
             json.dumps(snapshot),
