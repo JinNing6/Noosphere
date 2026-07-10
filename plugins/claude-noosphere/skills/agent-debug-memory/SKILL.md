@@ -1,4 +1,5 @@
 ---
+name: agent-debug-memory
 description: Use when debugging code, tests, builds, deployments, CI failures, runtime errors, framework issues, API migrations, or UI state bugs where Claude Code should consult Noosphere shared memory before fixing and upload the verified lesson afterward.
 ---
 
@@ -24,7 +25,7 @@ Use Noosphere as Claude Code's shared debugging memory layer before and after su
 
 ## After Fixing
 
-When the outcome is verified and the lesson is reusable, upload a distilled memory with `upload_consciousness`.
+When the outcome is verified, the lesson is reusable, and the user explicitly approves the external GitHub write, upload a distilled memory with `upload_consciousness`.
 
 Use:
 

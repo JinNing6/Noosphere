@@ -15,6 +15,7 @@ jobs:
     outputs:
       frontend: ${{ steps.filter.outputs.frontend }}
       python: ${{ steps.filter.outputs.python }}
+      shared: ${{ steps.filter.outputs.shared }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -37,6 +38,12 @@ jobs:
             echo "frontend=true" >> "$GITHUB_OUTPUT"
           else
             echo "frontend=false" >> "$GITHUB_OUTPUT"
+          fi
+
+          if grep -Eq '^(\.github/scripts/|\.github/workflows/(consciousness_promote|consciousness_withdraw|skill_publish|skill_withdraw)\.yml|shared_skills/|plugins/(noosphere|claude-noosphere)/skills/|SKILLS_PROTOCOL\.md|scripts/(validate_shared_skills|test_validate_shared_skills|migrate_consciousness_promotions|test_migrate_consciousness_promotions)\.py)' /tmp/changed_files; then
+            echo "shared=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "shared=false" >> "$GITHUB_OUTPUT"
           fi
 
           if grep -Eq '^(sdk/|backend/|pyproject\.toml|ruff\.toml|scripts/.*\.py)' /tmp/changed_files; then
@@ -75,7 +82,7 @@ jobs:
         run: npm run build
 
   python-check:
-    name: Python Lint & Format
+    name: Python Tests & Critical Lint
     runs-on: ubuntu-latest
     needs: detect-changes
     if: needs.detect-changes.outputs.python == 'true'
@@ -89,33 +96,60 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: Install Ruff
-        run: pip install ruff
+      - name: Install SDK development dependencies
+        run: pip install -e "./sdk[dev]"
 
-      - name: Backend lint
+      - name: SDK and repository tests
+        run: |
+          python -m pytest sdk/tests
+          python -m unittest scripts.test_validate_shared_skills scripts.test_migrate_consciousness_promotions
+
+      - name: Syntax and undefined-name gate
         run: |
           if [ -d backend ]; then
             cd backend
-            ruff check .
-          else
-            echo "backend/ directory is not present; skipping backend lint."
+            ruff check . --select E9,F63,F7,F82
+            cd ..
           fi
+          cd sdk
+          ruff check . --select E9,F63,F7,F82
 
-      - name: Backend format
-        run: |
-          if [ -d backend ]; then
-            cd backend
-            ruff format --check .
-          else
-            echo "backend/ directory is not present; skipping backend format check."
-          fi
-
-      - name: SDK lint
+      - name: Shared Skill Python lint
         run: |
           cd sdk
-          ruff check .
+          ruff check noosphere/engine/memory_integrity.py noosphere/engine/shared_skills.py tests/test_memory_integrity.py tests/test_build_consciousness_index.py tests/test_shared_skills.py
+          ruff format --check noosphere/engine/memory_integrity.py noosphere/engine/shared_skills.py tests/test_memory_integrity.py tests/test_build_consciousness_index.py tests/test_shared_skills.py
 
-      - name: SDK format
+      - name: Repository validator lint
         run: |
-          cd sdk
-          ruff format --check .
+          ruff check scripts/validate_shared_skills.py scripts/test_validate_shared_skills.py scripts/migrate_consciousness_promotions.py scripts/test_migrate_consciousness_promotions.py
+          ruff format --check scripts/validate_shared_skills.py scripts/test_validate_shared_skills.py scripts/migrate_consciousness_promotions.py scripts/test_migrate_consciousness_promotions.py
+
+  shared-skill-check:
+    name: Shared Skill Supply Chain
+    runs-on: ubuntu-latest
+    needs: detect-changes
+    if: needs.detect-changes.outputs.shared == 'true'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Workflow unit tests
+        run: node --test .github/scripts/*.test.cjs
+
+      - name: Registry and Agent Skills validation
+        run: |
+          python -m unittest scripts.test_validate_shared_skills scripts.test_migrate_consciousness_promotions
+          python scripts/validate_shared_skills.py
+          python scripts/migrate_consciousness_promotions.py --check

@@ -349,6 +349,7 @@ class BuildTractionProofTests(unittest.TestCase):
             original_fetch_pulls = builder.fetch_repository_pulls
             original_fetch_pypi = builder.fetch_pypi_project
             original_fetch_release = builder.fetch_github_release
+            current_version = builder.read_local_package_version([])
 
             try:
                 builder.CONSCIOUSNESS_INDEX_FILE = memories_file
@@ -364,7 +365,10 @@ class BuildTractionProofTests(unittest.TestCase):
                 }, None)
                 builder.fetch_repository_issues = lambda: ([], None)
                 builder.fetch_repository_pulls = lambda: ([], None)
-                builder.fetch_pypi_project = lambda: ({"info": {"version": "0.6.8"}}, None)
+                builder.fetch_pypi_project = lambda: (
+                    {"info": {"version": current_version}},
+                    None,
+                )
                 builder.fetch_github_release = lambda tag_name: ({
                     "tag_name": tag_name,
                     "draft": False,

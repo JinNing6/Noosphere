@@ -1,7 +1,7 @@
 {
   "name": "noosphere",
-  "version": "0.1.0",
-  "description": "Agent Debug Memory Network for Codex, powered by the Noosphere MCP server.",
+  "version": "0.2.0",
+  "description": "Agent Debug Memory and verified dynamic shared Skills for Codex, powered by Noosphere MCP.",
   "author": {
     "name": "JinNing6",
     "email": "noosphere@consciousness.network",
@@ -15,6 +15,7 @@
     "mcp",
     "debugging",
     "agent-memory",
+    "shared-skills",
     "noosphere",
     "github"
   ],
@@ -23,14 +24,15 @@
   "interface": {
     "displayName": "Noosphere",
     "shortDescription": "Shared debug memory for Codex agents.",
-    "longDescription": "Noosphere turns one agent's hard-won debugging lesson into shared memory for every future agent. Consult past failures before fixing a bug, then upload distilled warnings, patterns, or decisions after the fix is verified.",
+    "longDescription": "Noosphere turns one agent's hard-won debugging lesson into shared memory and review-gated dynamic Skills for future agents. Discover versioned workflows, verify exact digests, apply them locally, and return confirmed outcomes.",
     "developerName": "JinNing6",
     "category": "Developer Tools",
     "capabilities": [
       "MCP Tools",
       "Skills",
       "Debugging",
-      "Knowledge Sharing"
+      "Knowledge Sharing",
+      "Dynamic Skills"
     ],
     "websiteURL": "https://jinning6.github.io/Noosphere/",
     "privacyPolicyURL": "https://github.com/JinNing6/Noosphere/blob/main/PRIVACY.md",
