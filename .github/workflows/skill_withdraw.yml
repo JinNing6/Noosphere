@@ -1,0 +1,145 @@
+name: Withdraw Reviewed Shared Skill
+
+on:
+  issues:
+    types: [labeled]
+
+concurrency:
+  group: shared-skill-registry-main
+  cancel-in-progress: false
+  queue: max
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  withdraw:
+    if: github.event.label.name == 'skill-withdraw-approved'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout latest registry
+        uses: actions/checkout@v4
+
+      - name: Refresh serialized Skill state
+        run: |
+          git fetch origin main
+          git checkout -B skill-withdraw origin/main
+
+      - name: Validate reviewer and stage rollback
+        id: withdrawal
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const crypto = require('node:crypto');
+            const fs = require('node:fs');
+            const path = require('node:path');
+            const {
+              extractSkillWithdrawalRequest,
+              withdrawSkillRelease,
+            } = require(`${process.env.GITHUB_WORKSPACE}/.github/scripts/dynamic-skills.cjs`);
+            const {
+              isTrustedReviewerPermission,
+            } = require(`${process.env.GITHUB_WORKSPACE}/.github/scripts/memory-trust.cjs`);
+
+            const issue = context.payload.issue;
+            const reviewer = context.payload.sender?.login || context.actor;
+            const permissionResponse = await github.rest.repos.getCollaboratorPermissionLevel({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              username: reviewer,
+            });
+            if (!isTrustedReviewerPermission(permissionResponse.data.permission)) {
+              core.setFailed(`Reviewer ${reviewer} does not have repository write permission.`);
+              return;
+            }
+
+            const request = extractSkillWithdrawalRequest(issue.body);
+            if (!request) {
+              core.setFailed('The Issue does not contain a valid structured Skill withdrawal request.');
+              return;
+            }
+            const registryPath = path.join(process.env.GITHUB_WORKSPACE, 'shared_skills', 'registry.json');
+            const registry = JSON.parse(fs.readFileSync(registryPath, 'utf8'));
+            const skill = (registry.skills || []).find((item) => item.name === request.skill_name);
+            const release = skill?.releases?.find((item) => item.version === request.version);
+            if (!release || release.artifact?.sha256 !== request.sha256) {
+              core.setFailed('The withdrawal request does not match the registered immutable artifact.');
+              return;
+            }
+
+            const result = withdrawSkillRelease(
+              registry,
+              request.skill_name,
+              request.version,
+              {
+                reviewer,
+                reason: request.reason,
+                withdrawnAt: new Date().toISOString(),
+                requestIssue: issue.number,
+              },
+            );
+            core.setOutput('skill_name', request.skill_name);
+            core.setOutput('version', request.version);
+            core.setOutput('idempotent', String(result.idempotent));
+            if (result.idempotent) return;
+
+            const activePath = path.join(
+              process.env.GITHUB_WORKSPACE,
+              'shared_skills',
+              'active',
+              request.skill_name,
+              'SKILL.md',
+            );
+            if (result.activeRelease) {
+              const rollbackPath = path.join(
+                process.env.GITHUB_WORKSPACE,
+                result.activeRelease.artifact.path,
+              );
+              const content = fs.readFileSync(rollbackPath);
+              const digest = crypto.createHash('sha256').update(content).digest('hex');
+              if (
+                digest !== result.activeRelease.artifact.sha256 ||
+                content.byteLength !== result.activeRelease.artifact.size_bytes
+              ) {
+                core.setFailed('Rollback artifact failed integrity verification.');
+                return;
+              }
+              fs.mkdirSync(path.dirname(activePath), { recursive: true });
+              fs.writeFileSync(activePath, content);
+            } else if (fs.existsSync(activePath)) {
+              fs.rmSync(activePath);
+            }
+            fs.writeFileSync(registryPath, `${JSON.stringify(result.registry, null, 2)}\n`);
+
+      - name: Commit registry withdrawal atomically
+        if: steps.withdrawal.outputs.idempotent != 'true'
+        run: |
+          git diff --check
+          git config user.name "Noosphere Bot"
+          git config user.email "noosphere@consciousness.network"
+          git add -A shared_skills
+          git commit -m "Withdraw shared Skill ${{ steps.withdrawal.outputs.skill_name }}@${{ steps.withdrawal.outputs.version }}"
+          git push origin HEAD:main
+
+      - name: Record withdrawal decision
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const idempotent = '${{ steps.withdrawal.outputs.idempotent }}' === 'true';
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              labels: ['skill-withdrawn'],
+            });
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: idempotent
+                ? 'This Skill release was already withdrawn.'
+                : 'The Skill release was withdrawn. Clients will reject it after registry refresh; the immutable artifact remains available for audit.',
+            });

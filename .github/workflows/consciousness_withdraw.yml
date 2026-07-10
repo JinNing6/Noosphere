@@ -1,0 +1,159 @@
+name: Consciousness Permanent Withdrawal
+
+on:
+  issues:
+    types: [opened, labeled]
+
+concurrency:
+  group: consciousness-permanent-state-main
+  cancel-in-progress: false
+  queue: max
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  tombstone:
+    if: >-
+      (github.event.action == 'opened' && contains(github.event.issue.body, 'WITHDRAWAL_REQUEST_START')) ||
+      (github.event.action == 'labeled' && github.event.label.name == 'withdrawn')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Persist withdrawal tombstone
+        id: persist
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const {
+              buildTombstoneManifest,
+              extractWithdrawalRequest,
+            } = require(`${process.env.GITHUB_WORKSPACE}/.github/scripts/promotion-integrity.cjs`);
+            const {
+              isTrustedReviewerPermission,
+            } = require(`${process.env.GITHUB_WORKSPACE}/.github/scripts/memory-trust.cjs`);
+
+            const eventIssue = context.payload.issue;
+            const request = extractWithdrawalRequest(eventIssue.body);
+            let targetIssueNumber;
+            let withdrawnBy;
+
+            if (request) {
+              targetIssueNumber = request.target_issue;
+              withdrawnBy = eventIssue.user?.login || 'unknown';
+              const targetResponse = await github.rest.issues.get({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: targetIssueNumber,
+              });
+              const targetAuthor = targetResponse.data.user?.login || '';
+              if (targetAuthor.toLowerCase() !== withdrawnBy.toLowerCase()) {
+                const permissionResponse = await github.rest.repos.getCollaboratorPermissionLevel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  username: withdrawnBy,
+                });
+                if (!isTrustedReviewerPermission(permissionResponse.data.permission)) {
+                  core.setFailed('Withdrawal requester is neither the source Issue author nor a trusted reviewer.');
+                  return;
+                }
+              }
+            } else {
+              targetIssueNumber = eventIssue.number;
+              withdrawnBy = context.payload.sender?.login || context.actor;
+              const permissionResponse = await github.rest.repos.getCollaboratorPermissionLevel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                username: withdrawnBy,
+              });
+              if (!isTrustedReviewerPermission(permissionResponse.data.permission)) {
+                core.setFailed('Only a trusted reviewer can apply a direct withdrawal label.');
+                return;
+              }
+            }
+
+            const manifestPath = 'consciousness_tombstones.json';
+            let current = { version: 1, withdrawn_issues: [] };
+            let sha;
+            try {
+              const existing = await github.rest.repos.getContent({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                path: manifestPath,
+                ref: context.payload.repository.default_branch,
+              });
+              sha = existing.data.sha;
+              current = JSON.parse(Buffer.from(existing.data.content, 'base64').toString('utf8'));
+            } catch (error) {
+              if (error.status !== 404) throw error;
+            }
+
+            const manifest = buildTombstoneManifest(current, {
+              issueNumber: targetIssueNumber,
+              withdrawnAt: new Date().toISOString(),
+              withdrawnBy,
+            });
+            const unchanged = JSON.stringify(manifest) === JSON.stringify(current);
+            if (!unchanged) {
+              await github.rest.repos.createOrUpdateFileContents({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                path: manifestPath,
+                message: `Withdraw permanent consciousness from Issue #${targetIssueNumber}`,
+                content: Buffer.from(`${JSON.stringify(manifest, null, 2)}\n`).toString('base64'),
+                sha,
+                committer: {
+                  name: 'Noosphere Bot',
+                  email: 'noosphere@consciousness.network',
+                },
+              });
+            }
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: eventIssue.number,
+              body: unchanged
+                ? 'Permanent-memory withdrawal was already recorded.'
+                : 'Permanent-memory withdrawal recorded. All clients will exclude the promoted payload after their cache refresh.',
+            });
+            core.setOutput('target_issue', String(targetIssueNumber));
+
+      - name: Rebuild public memory index
+        id: sync_index
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git fetch origin main
+          git checkout -B main origin/main
+          python scripts/build_consciousness_index.py
+          git diff --check
+
+          if git diff --quiet -- frontend/public/consciousness_index.json; then
+            echo "No public memory index changes to commit."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          git config user.name "Noosphere Bot"
+          git config user.email "noosphere@consciousness.network"
+          git add frontend/public/consciousness_index.json
+          git commit -m "Sync public index after consciousness withdrawal"
+          git push origin HEAD:main
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Dispatch Pages deploy
+        if: steps.sync_index.outputs.changed == 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          curl -fsS -X POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/workflows/deploy-pages.yml/dispatches" \
+            -d '{"ref":"main"}'

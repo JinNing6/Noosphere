@@ -184,7 +184,7 @@ test("README exposes the no-install contribution route near the top", () => {
   const readme = fs.readFileSync(path.join(repoRoot, "README.md"), "utf8");
   const firstScreen = readme.slice(0, 6500);
 
-  assert.match(firstScreen, /No MCP yet\? Upload a memory/);
+  assert.match(firstScreen, /Next contribution:/);
   assert.match(firstScreen, /issues\/new\?template=consciousness-upload\.yml/);
   assert.match(firstScreen, /successful promotion comment returns your nearest embedding-backed resonance/i);
   assert.match(firstScreen, /matched historical Issue gets a backlink comment/i);
