@@ -14,17 +14,52 @@ import json
 import os
 import hashlib
 import math
+import sys
 import urllib.request
 import urllib.error
 from pathlib import Path
 
-PAYLOADS_DIR = Path(__file__).parent.parent / "consciousness_payloads"
-OUTPUT_FILE = Path(__file__).parent.parent / "frontend" / "public" / "consciousness_index.json"
+REPO_ROOT = Path(__file__).parent.parent
+sys.path.insert(0, str(REPO_ROOT / "sdk"))
+
+from noosphere.engine.memory_integrity import (  # noqa: E402
+    canonicalize_permanent_entries,
+    parse_tombstoned_issue_numbers,
+)
+
+PAYLOADS_DIR = REPO_ROOT / "consciousness_payloads"
+TOMBSTONES_FILE = REPO_ROOT / "consciousness_tombstones.json"
+OUTPUT_FILE = REPO_ROOT / "frontend" / "public" / "consciousness_index.json"
 
 # GitHub API config
 GITHUB_REPO = os.environ.get("GITHUB_REPOSITORY", "JinNing6/Noosphere")
 GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN", "")
 MAX_RESONANCE_NEIGHBORS = 3
+
+
+def load_canonical_payload_records(payloads_dir: Path, tombstones_file: Path) -> list[dict]:
+    """Load active permanent payloads with source-Issue canonicalization."""
+    entries = []
+    for payload_file in sorted(payloads_dir.glob("*.json")):
+        try:
+            payload = json.loads(payload_file.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            print(f"  WARN Skipping invalid JSON: {payload_file.name}")
+            continue
+        entries.append({"filename": payload_file.name, "payload": payload})
+
+    tombstone_manifest = {}
+    if tombstones_file.exists():
+        try:
+            tombstone_manifest = json.loads(tombstones_file.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError, UnicodeDecodeError) as exc:
+            raise ValueError(
+                f"Cannot build an index without a valid tombstone manifest: {tombstones_file}"
+            ) from exc
+
+    tombstoned = parse_tombstoned_issue_numbers(tombstone_manifest)
+    canonical = canonicalize_permanent_entries(entries, tombstoned)
+    return [entry["payload"] for entry in canonical]
 
 
 def fetch_issue_reactions(issue_number: int) -> int:
@@ -118,13 +153,7 @@ def build_index():
     vectors = []  # Embeddings used only to publish compact nearest-neighbor edges
 
     # Phase 1: Read all JSON files and collect data
-    for f in sorted(PAYLOADS_DIR.glob("*.json")):
-        try:
-            data = json.loads(f.read_text(encoding="utf-8"))
-        except (json.JSONDecodeError, UnicodeDecodeError):
-            print(f"  WARN Skipping invalid JSON: {f.name}")
-            continue
-
+    for data in load_canonical_payload_records(PAYLOADS_DIR, TOMBSTONES_FILE):
         text = data.get("thought_vector_text", "")
         if not text or text in seen_texts:
             continue
