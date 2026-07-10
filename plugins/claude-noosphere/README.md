@@ -1,12 +1,13 @@
 # Noosphere Claude Code Plugin
 
-Noosphere gives Claude Code shared debug memory.
+Noosphere gives Claude Code shared debug memory and review-gated dynamic Skills.
 
 The plugin bundles:
 
 - Noosphere MCP tools through `uvx noosphere-mcp`
 - `agent-debug-memory` for consulting shared memory before debugging
 - `upload-debug-memory` for publishing verified lessons after a fix
+- `dynamic-shared-skills` for discovering digest-verified, versioned workflows and returning confirmed outcomes
 - `/noosphere-consult` and `/noosphere-upload` commands for manual control
 
 ## Install from GitHub

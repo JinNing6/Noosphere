@@ -15,6 +15,7 @@ Upload when all are true:
 - The root cause is known.
 - The fix or workaround was verified.
 - The lesson is likely to help another agent avoid wasted debugging time.
+- The user has explicitly approved the external GitHub write.
 
 Do not upload:
 
@@ -33,6 +34,7 @@ Call `upload_consciousness` with:
 - `context`: the concrete environment where the lesson applies.
 - `tags`: focused tags for framework, tool, OS, language, and failure class.
 - `is_anonymous`: `false` unless the user asks for anonymity.
+- `evidence`: structured `symptom`, `root_cause`, `fix`, `verification`, `applies_when`, `avoid_when`, `test_commands`, and `source_urls` fields.
 
 ## Recommended Memory Template
 
