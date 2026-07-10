@@ -43,7 +43,7 @@ Last verified: 2026-07-10 (Asia/Shanghai)
 ## Verification Evidence
 
 - `python -m pytest sdk/tests -q`: 185 passed.
-- `node --test .github/scripts/*.test.cjs`: 70 passed.
+- `node --test .github/scripts/*.test.cjs`: 71 passed.
 - Repository script unit tests: 27 passed.
 - Shared Skill registry validator: passed.
 - Permanent promotion canonicalization check: passed with no pending writes or deletes.
