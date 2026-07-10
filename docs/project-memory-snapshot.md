@@ -12,6 +12,10 @@ Last verified: 2026-07-10 (Asia/Shanghai)
 - MCP `serverInfo.version` currently reports the underlying `mcp` implementation version because FastMCP supplies its framework default. Distribution version verification is independent and correct; explicitly advertising the Noosphere package version is a non-blocking metadata follow-up.
 - `shared_skills/registry.json` is intentionally empty until a candidate satisfies the evidence and independent-publisher gates and receives maintainer approval.
 - Issue #33 is the public coordination seed for the first real Skill: Android GitHub Device Flow browser handoff and polling recovery. It is explicitly excluded from source evidence and asks two independent developers to submit their own verified records.
+- Three maintainer-authored Skill Seeds were uploaded through the published `noosphere-mcp==0.7.1` `upload_consciousness` tool: R3F dense node picking (#35), dynamic shared Skill supply chain (#36), and public-release runtime smoke gating (#37). A second uploader run detected all three stable markers and created no duplicates.
+- Issues #35-#37 passed a local structured-evidence and unsafe-instruction review, then received `trusted-review`. Remote `main` contains one stable permanent file per Issue; all three records bind publisher `JinNing6`, use `trusted-human-review`, are Skill-eligible evidence records, and have 3072-dimensional `gemini-embedding-2` vectors.
+- The three records remain Seed Memories, not published Skills. They share one publisher, so the independent-publisher gate correctly leaves `shared_skills/registry.json` at revision 0 with zero Skills.
+- Their promotion runs exposed an index-sync dependency boundary: `build_consciousness_index.py` imports a pure engine submodule, but package initialization eagerly imported the HTTP client and failed without `httpx`. The repair uses Python module-level lazy attribute loading so pure engine imports no longer require unrelated client dependencies while preserving `from noosphere import Noosphere`.
 
 ## Dynamic Shared Skill Lifecycle
 
@@ -37,9 +41,9 @@ Last verified: 2026-07-10 (Asia/Shanghai)
 ## Permanent Data State
 
 - Historical migration is merged on remote `main` and remains idempotent on re-check.
-- Physical permanent payload files: 41.
-- Public indexed memories: 38, unchanged after migration.
-- Source-Issue-backed canonical records: 16.
+- Physical permanent payload files: 44.
+- Public indexed memories after the repaired synchronization: 41.
+- Source-Issue-backed canonical records: 19.
 - Legacy records without source Issue metadata left untouched: 25.
 - Duplicate promotion files removed: 20.
 - Active tombstoned Issue records at snapshot time: 0.
@@ -47,7 +51,7 @@ Last verified: 2026-07-10 (Asia/Shanghai)
 
 ## Verification Evidence
 
-- `python -m pytest sdk/tests -q`: 186 passed.
+- `python -m pytest sdk/tests -q`: 188 passed.
 - `node --test .github/scripts/*.test.cjs`: 71 passed.
 - Repository script unit tests: 27 passed.
 - Shared Skill registry validator: passed.
@@ -55,12 +59,14 @@ Last verified: 2026-07-10 (Asia/Shanghai)
 - Critical Ruff gate and focused shared-Skill Ruff/format checks: passed. Windows checks explicitly preserved CRLF checkout line endings; remote CI uses canonical LF.
 - Local and release-workflow builds produced `noosphere_mcp-0.7.1.tar.gz` and `noosphere_mcp-0.7.1-py3-none-any.whl` successfully.
 - Anonymous public-artifact smoke test: MCP initialization succeeded, `tools/list` returned 45 tools, no dynamic Skill tool was missing, and `GITHUB_TOKEN` was absent from the process environment.
+- `python -S scripts/build_consciousness_index.py` passed with site-packages disabled and generated 41 unique public memories, proving the indexer no longer relies on installed `httpx` through package import side effects.
+- The idempotent Seed uploader was run twice: first run created Issues #35-#37; second run returned `existing` for all three and created no additional Issue.
 - Reusable methods are captured in validated global Skills `dynamic-shared-skill-supply-chain` and `release-runtime-smoke-gate`.
 - GitHub Actions currently emits a Node.js 20 deprecation warning for pinned action runtimes that GitHub forces onto Node.js 24. It is non-blocking but should be removed in a maintenance PR.
 
 ## Required Deployment Steps
 
-1. Recruit at least two independent developers through Issue #33 and collect their separately authored, structured memories for GitHub Device Flow browser handoff and polling recovery on Android.
+1. Recruit independent developers through Issue #33 and the three public Seed Memories (#35-#37). At least one other GitHub publisher must submit a separately reproduced, semantically matching evidence record before any Seed can form a candidate.
 2. Let the workflow generate the deterministic candidate, inspect both independent evidence records, and apply `skill-approved` only after the security and applicability review passes.
 3. Demonstrate one third-party Agent discovering and successfully reusing the published Skill; record the outcome through `record_skill_outcome` before large-scale promotion.
 4. Do not describe the registry as having live published Skills until the first approved release appears in `shared_skills/registry.json` on remote `main`.
