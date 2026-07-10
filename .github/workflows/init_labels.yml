@@ -27,6 +27,17 @@ jobs:
               { name: 'type:pattern', color: '1ABC9C', description: '🌌 Pattern / 规律' },
               { name: 'type:warning', color: 'E74C3C', description: '👁️ Warning / 警示' },
               { name: 'share-proof', color: '2EA44F', description: 'Public Noosphere share proof' },
+              { name: 'needs-review', color: 'FBCA04', description: 'Requires trusted maintainer review' },
+              { name: 'trusted-review', color: '0E8A16', description: 'Reviewed by a repository maintainer' },
+              { name: 'skill-candidate', color: '5319E7', description: 'Dynamic shared Skill candidate' },
+              { name: 'skill-approved', color: '0E8A16', description: 'Shared Skill candidate approved for publication' },
+              { name: 'skill-published', color: '1D76DB', description: 'Versioned shared Skill release published' },
+              { name: 'skill-outcome', color: 'BFDADC', description: 'Structured shared Skill execution outcome' },
+              { name: 'skill-withdrawal', color: 'D93F0B', description: 'Shared Skill withdrawal request' },
+              { name: 'skill-withdraw-approved', color: 'B60205', description: 'Shared Skill withdrawal approved by maintainer' },
+              { name: 'skill-withdrawn', color: '000000', description: 'Shared Skill release withdrawn from active use' },
+              { name: 'withdrawal-request', color: 'D93F0B', description: 'Permanent memory withdrawal request' },
+              { name: 'withdrawn', color: '000000', description: 'Memory withdrawn from active indexes' },
               { name: '意识碎片', color: '00CED1', description: '🔮 Consciousness Fragment / 意识碎片' },
             ];
 

@@ -170,7 +170,7 @@ test("serializes promotion workflow runs to prevent main branch write races", ()
 
   assert.match(
     workflow,
-    /concurrency:\s*\r?\n\s*group:\s*consciousness-promotion-main\s*\r?\n\s*cancel-in-progress:\s*false/
+    /concurrency:\s*\r?\n\s*group:\s*consciousness-permanent-state-main\s*\r?\n\s*cancel-in-progress:\s*false\s*\r?\n\s*queue:\s*max/
   );
 });
 
@@ -180,15 +180,15 @@ test("promotion workflow syncs public growth surfaces after successful promotion
 
   assert.match(workflow, /permissions:\s*\r?\n\s*actions:\s*write/);
   assert.match(workflow, /id:\s*promote/);
-  assert.match(workflow, /core\.setOutput\(['"]promoted['"],\s*['"]true['"]\)/);
+  assert.match(workflow, /core\.setOutput\(['"]reconciled['"],\s*['"]true['"]\)/);
   assert.match(workflow, /uses:\s*actions\/setup-node@v4/);
   assert.match(
     workflow,
-    /if:\s*steps\.promote\.outputs\.promoted == 'true'[\s\S]*python scripts\/build_consciousness_index\.py/
+    /if:\s*steps\.promote\.outputs\.reconciled == 'true'[\s\S]*python scripts\/build_consciousness_index\.py/
   );
   assert.match(
     workflow,
-    /if:\s*steps\.promote\.outputs\.promoted == 'true'[\s\S]*node frontend\/scripts\/update_readme_growth_snapshot\.mjs/
+    /if:\s*steps\.promote\.outputs\.reconciled == 'true'[\s\S]*node frontend\/scripts\/update_readme_growth_snapshot\.mjs/
   );
   assert.match(workflow, /id:\s*sync_public_growth/);
   assert.match(
