@@ -137,11 +137,7 @@ def check_env_vars() -> list[CheckItem]:
             name="环境变量: GITHUB_TOKEN",
             name_en="Env: GITHUB_TOKEN",
             passed=False,
-            message="未配置 GITHUB_TOKEN",
-            suggestion=(
-                "在 MCP 配置中设置 env.GITHUB_TOKEN\n"
-                "   获取方式: https://github.com/settings/tokens → 勾选 public_repo"
-            ),
+            message="未配置 GITHUB_TOKEN（匿名只读模式；公开查询限额较低，写操作不可用）",
         ))
 
     # NOOSPHERE_REPO

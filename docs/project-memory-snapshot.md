@@ -4,9 +4,10 @@ Last verified: 2026-07-10 (Asia/Shanghai)
 
 ## Current Engineering State
 
-- The dynamic shared Skills implementation is split into three reviewable local commits on branch `codex/dynamic-shared-skills-v1` in a dedicated worktree.
-- The implementation has not been pushed, merged into remote `main`, or released to PyPI at the time of this snapshot.
-- SDK metadata is prepared as `noosphere-mcp` version `0.7.0` with 45 MCP tools.
+- The dynamic shared Skills implementation was merged through PR #31 as merge commit `48426f7d6fff29e836afc4aab2745d4cbf20516d` after all CLA, Python, Node, registry, migration, and supply-chain checks passed.
+- Tag `v0.7.0` was published to PyPI through Trusted Publishing. A real clean `uvx` MCP handshake then exposed that the preflight gate incorrectly treated a missing optional `GITHUB_TOKEN` as fatal, so anonymous read-only startup was unavailable despite the documented contract.
+- Branch `codex/anonymous-readonly-preflight` prepares version `0.7.1`. Missing credentials now enter degraded anonymous read-only mode, while an explicitly configured invalid token remains fatal.
+- A real local `uvx --from ./sdk noosphere-mcp` process with `GITHUB_TOKEN` removed completed the MCP handshake and returned all 45 tools, including all five dynamic shared Skill tools.
 - `shared_skills/registry.json` is intentionally empty until a candidate satisfies the evidence and independent-publisher gates and receives maintainer approval.
 
 ## Dynamic Shared Skill Lifecycle
@@ -32,30 +33,30 @@ Last verified: 2026-07-10 (Asia/Shanghai)
 
 ## Permanent Data State
 
-- Historical migration was applied locally and is idempotent on re-check.
+- Historical migration is merged on remote `main` and remains idempotent on re-check.
 - Physical permanent payload files: 41.
 - Public indexed memories: 38, unchanged after migration.
 - Source-Issue-backed canonical records: 16.
 - Legacy records without source Issue metadata left untouched: 25.
 - Duplicate promotion files removed: 20.
 - Active tombstoned Issue records at snapshot time: 0.
+- The label initializer completed successfully and all 11 required memory, candidate, approval, outcome, and withdrawal labels exist.
 
 ## Verification Evidence
 
-- `python -m pytest sdk/tests -q`: 185 passed.
+- `python -m pytest sdk/tests -q`: 186 passed.
 - `node --test .github/scripts/*.test.cjs`: 71 passed.
 - Repository script unit tests: 27 passed.
 - Shared Skill registry validator: passed.
 - Permanent promotion canonicalization check: passed with no pending writes or deletes.
-- Critical Ruff gate and focused shared-Skill Ruff/format checks: passed.
-- Seven changed GitHub Actions workflows and six JSON manifests parsed successfully.
-- Package build produced `noosphere_mcp-0.7.0.tar.gz` and `noosphere_mcp-0.7.0-py3-none-any.whl` successfully.
+- Critical Ruff gate and focused shared-Skill Ruff/format checks: passed. Windows checks explicitly preserved CRLF checkout line endings; remote CI uses canonical LF.
+- Local package build produced `noosphere_mcp-0.7.1.tar.gz` and `noosphere_mcp-0.7.1-py3-none-any.whl` successfully.
+- Anonymous runtime smoke test: MCP initialization succeeded, `tools/list` returned 45 tools, no dynamic Skill tool was missing, and `GITHUB_TOKEN` was absent from the process environment.
 - Reusable supply-chain review method was captured and validated as global Skill `dynamic-shared-skill-supply-chain`.
 
 ## Required Deployment Steps
 
-1. Review and merge or push `codex/dynamic-shared-skills-v1` to remote `main`.
-2. Run `.github/workflows/init_labels.yml` once so all candidate, review, outcome, and withdrawal labels exist.
-3. Publish tag or GitHub Release `v0.7.0`; Trusted Publishing will run all SDK, workflow, migration, and registry gates before PyPI publication.
-4. Collect at least two independently authored, structured memories for one repeated failure pattern; review the generated candidate and apply `skill-approved` only after evidence inspection.
-5. Do not describe the registry as having live published Skills until the first approved release appears in `shared_skills/registry.json` on remote `main`.
+1. Push `codex/anonymous-readonly-preflight`, review the exact runtime regression evidence in CI, and merge it through a PR.
+2. Publish tag `v0.7.1` through Trusted Publishing, then repeat the clean exact-version PyPI smoke test with `uvx --from noosphere-mcp==0.7.1 noosphere-mcp` and no `GITHUB_TOKEN`.
+3. Collect at least two independently authored, structured memories for one repeated failure pattern; review the generated candidate and apply `skill-approved` only after evidence inspection.
+4. Do not describe the registry as having live published Skills until the first approved release appears in `shared_skills/registry.json` on remote `main`.
