@@ -10,7 +10,6 @@ except ModuleNotFoundError:  # pragma: no cover - Python 3.10 release runners
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 SDK_ROOT = REPO_ROOT / "sdk"
-EXPECTED_RELEASE_VERSION = "0.7.0"
 PYPI_BASELINE_VERSION = "0.6.0"
 
 
@@ -33,13 +32,13 @@ def test_release_versions_are_synchronized_and_newer_than_pypi_baseline():
     project_version = _project_metadata()["project"]["version"]
     sdk_server_manifest = json.loads((SDK_ROOT / "server.json").read_text(encoding="utf-8"))
     root_server_manifest = json.loads((REPO_ROOT / "server.json").read_text(encoding="utf-8"))
+    expected_release_version = _package_version()
 
-    assert project_version == EXPECTED_RELEASE_VERSION
-    assert _package_version() == EXPECTED_RELEASE_VERSION
-    assert sdk_server_manifest["version"] == EXPECTED_RELEASE_VERSION
-    assert sdk_server_manifest["packages"][0]["version"] == EXPECTED_RELEASE_VERSION
-    assert root_server_manifest["version"] == EXPECTED_RELEASE_VERSION
-    assert root_server_manifest["packages"][0]["version"] == EXPECTED_RELEASE_VERSION
+    assert project_version == expected_release_version
+    assert sdk_server_manifest["version"] == expected_release_version
+    assert sdk_server_manifest["packages"][0]["version"] == expected_release_version
+    assert root_server_manifest["version"] == expected_release_version
+    assert root_server_manifest["packages"][0]["version"] == expected_release_version
     assert _version_tuple(project_version) > _version_tuple(PYPI_BASELINE_VERSION)
 
 
@@ -103,7 +102,7 @@ def test_package_release_includes_growth_ledger_tools():
 def test_readme_documents_pypi_release_recovery_route():
     readme = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
 
-    assert "v0.7.0" in readme
+    assert f"v{_package_version()}" in readme
     assert ".github/workflows/publish-pypi.yml" in readme
     assert "Trusted Publishing" in readme
     assert "45 MCP tools" in readme

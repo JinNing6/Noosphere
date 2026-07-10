@@ -109,7 +109,8 @@ def test_check_env_vars_no_token():
     token_check = [r for r in results if "GITHUB_TOKEN" in r.name][0]
     assert not token_check.passed
     assert "未配置" in token_check.message
-    assert "github.com/settings/tokens" in token_check.suggestion
+    assert "匿名只读模式" in token_check.message
+    assert token_check.suggestion == ""
 
 
 def test_check_env_vars_invalid_token_format():
@@ -280,6 +281,21 @@ def test_run_preflight_skip_network():
     check_names = [c.name_en for c in result.checks]
     assert not any("Network" in n for n in check_names)
     assert result.passed
+
+
+def test_run_preflight_without_token_allows_anonymous_read_only_start():
+    """A missing token is a degraded-mode warning, not a startup blocker."""
+    env = os.environ.copy()
+    env.pop("GITHUB_TOKEN", None)
+    env.pop("NOOSPHERE_REPO", None)
+
+    with patch.dict(os.environ, env, clear=True):
+        result = run_preflight()
+
+    assert result.passed
+    assert not result.all_clear
+    assert result.errors == []
+    assert any("匿名只读模式" in warning.message for warning in result.warnings)
 
 
 def test_run_preflight_with_dep_error():
