@@ -10,7 +10,7 @@ except ModuleNotFoundError:  # pragma: no cover - Python 3.10 release runners
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 SDK_ROOT = REPO_ROOT / "sdk"
-EXPECTED_RELEASE_VERSION = "0.6.8"
+EXPECTED_RELEASE_VERSION = "0.7.0"
 PYPI_BASELINE_VERSION = "0.6.0"
 
 
@@ -58,13 +58,17 @@ def test_publish_workflow_uses_release_or_tag_trusted_publishing_with_quality_ga
     assert "environment:" in workflow and "name: pypi" in workflow
     assert "pypa/gh-action-pypi-publish@release/v1" in workflow
 
-    assert "python -m pytest tests/test_noosphere_mcp.py tests/test_vector_store.py tests/test_preflight.py tests/test_release_boundary.py" in workflow
+    assert "python -m pytest tests" in workflow
+    assert "node --test .github/scripts/*.test.cjs" in workflow
+    assert "python scripts/validate_shared_skills.py" in workflow
+    assert "scripts.test_migrate_consciousness_promotions" in workflow
+    assert "python scripts/migrate_consciousness_promotions.py --check" in workflow
     assert "python -m unittest scripts.test_verify_pypi_release" in workflow
     assert "import noosphere.noosphere_mcp" in workflow
     assert "python -m build" in workflow
     assert "verify-pypi:" in workflow
     assert "needs: publish-pypi" in workflow
-    assert "python scripts/verify_pypi_release.py --tool-count 40" in workflow
+    assert "python scripts/verify_pypi_release.py --tool-count 45" in workflow
     assert "refresh-pages-proof:" in workflow
     assert "needs: verify-pypi" in workflow
     assert "actions: write" in workflow
@@ -80,13 +84,18 @@ def test_package_release_includes_growth_ledger_tools():
         source,
     )
 
-    assert len(tool_names) == 40
+    assert len(tool_names) == 45
     for tool_name in [
         "record_growth_referral",
         "record_share_attribution",
         "share_attribution_report",
         "growth_flywheel",
         "launch_preflight",
+        "list_shared_skills",
+        "get_shared_skill",
+        "check_skill_updates",
+        "record_skill_outcome",
+        "request_shared_skill_withdrawal",
     ]:
         assert tool_name in tool_names
 
@@ -94,7 +103,7 @@ def test_package_release_includes_growth_ledger_tools():
 def test_readme_documents_pypi_release_recovery_route():
     readme = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
 
-    assert "v0.6.8" in readme
+    assert "v0.7.0" in readme
     assert ".github/workflows/publish-pypi.yml" in readme
     assert "Trusted Publishing" in readme
-    assert "40 MCP tools" in readme
+    assert "45 MCP tools" in readme

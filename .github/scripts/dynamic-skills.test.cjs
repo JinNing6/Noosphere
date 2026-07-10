@@ -185,6 +185,18 @@ test("Skill registry publication and withdrawal preserve every queued decision",
   }
 });
 
+test("the isolated shared Skill CI job installs the SDK dependency boundary", () => {
+  const workflow = fs.readFileSync(
+    path.join(__dirname, "..", "workflows", "ci.yml"),
+    "utf8",
+  );
+
+  assert.match(
+    workflow,
+    /shared-skill-check:[\s\S]*Install SDK development dependencies[\s\S]*pip install -e "\.\/sdk\[dev\]"/,
+  );
+});
+
 test("withdrawal disables a release and rolls latest back without deleting evidence", () => {
   const cluster = clusterEligibleMemories([
     memory({ issue: 1, publisher: "alice", embedding: [1, 0] }),

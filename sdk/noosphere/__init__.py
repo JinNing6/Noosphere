@@ -2,4 +2,4 @@
 from noosphere.client import Noosphere
 
 __all__ = ["Noosphere"]
-__version__ = "0.6.8"
+__version__ = "0.7.0"

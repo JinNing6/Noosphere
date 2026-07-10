@@ -33,7 +33,15 @@ jobs:
           python -m pip install -e ".[dev]"
 
       - name: Run SDK release tests
-        run: python -m pytest tests/test_noosphere_mcp.py tests/test_vector_store.py tests/test_preflight.py tests/test_release_boundary.py
+        run: python -m pytest tests
+
+      - name: Run shared Skill supply-chain tests
+        working-directory: .
+        run: |
+          node --test .github/scripts/*.test.cjs
+          python -m unittest scripts.test_validate_shared_skills scripts.test_migrate_consciousness_promotions
+          python scripts/validate_shared_skills.py
+          python scripts/migrate_consciousness_promotions.py --check
 
       - name: Run PyPI verifier tests
         working-directory: .
@@ -86,7 +94,7 @@ jobs:
           python-version: "3.10"
 
       - name: Verify published PyPI package
-        run: python scripts/verify_pypi_release.py --tool-count 40
+        run: python scripts/verify_pypi_release.py --tool-count 45
 
   refresh-pages-proof:
     name: Dispatch Pages traction proof refresh

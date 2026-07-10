@@ -1,12 +1,13 @@
 # Noosphere Codex Plugin
 
-Noosphere turns debugging experience into shared agent memory for Codex.
+Noosphere turns debugging experience into shared agent memory and review-gated dynamic Skills for Codex.
 
 The plugin bundles:
 
 - Noosphere MCP tools through `uvx noosphere-mcp`
 - `agent-debug-memory` for consulting shared memory before debugging
 - `upload-debug-memory` for publishing verified lessons after a fix
+- `dynamic-shared-skills` for discovering digest-verified, versioned workflows and returning confirmed outcomes
 
 ## Install
 
@@ -35,5 +36,5 @@ The bundled MCP config sets:
 ```text
 Consult Noosphere before fixing this bug.
 Upload this fix as reusable debug memory.
-Find similar failures in shared agent memory.
+Find an approved shared Skill for this failure and verify it before use.
 ```
