@@ -131,6 +131,38 @@ async def test_upload_consciousness_success(mock_env):
     assert "Consciousness Leap Complete!" in result
     assert "This is a long enough thought" in result
 
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_upload_consciousness_includes_structured_engineering_evidence(mock_env):
+    issue_route = respx.post("https://api.github.com/repos/test_owner/test_repo/issues").mock(
+        return_value=Response(201, json={"html_url": "http://github.com/issue/2", "number": 2})
+    )
+    evidence = {
+        "symptom": "The visible node does not respond to a mobile tap.",
+        "root_cause": "Bloom expands the visual footprint beyond the raycast mesh.",
+        "fix": "Add a synchronized invisible hit mesh with stable instance IDs.",
+        "verification": "ADB tap regression opens the expected detail panel.",
+        "applies_when": "React Three Fiber runs inside an Android WebView.",
+        "avoid_when": "A DOM overlay is intercepting the pointer event.",
+        "test_commands": ["node reports/android-app-node-pick-regression.cjs"],
+        "source_urls": ["https://github.com/JinNing6/Noosphere/issues/28"],
+    }
+
+    await upload_consciousness(
+        "user1",
+        "warning",
+        "Visible glow and raycast geometry can diverge on mobile targets.",
+        "React Three Fiber inside Android WebView",
+        evidence=evidence,
+    )
+
+    request_payload = json.loads(issue_route.calls[0].request.content)
+    extracted = _extract_payload_from_issue_body(request_payload["body"])
+    assert extracted["schema_version"] == 2
+    assert extracted["memory_kind"] == "engineering"
+    assert extracted["evidence"] == evidence
+
 @pytest.mark.asyncio
 @respx.mock
 async def test_telepath_success(mock_env):
@@ -157,6 +189,37 @@ async def test_telepath_success(mock_env):
     result = await telepath("SearchTarget")
     assert "SearchTarget" in result
     assert "user1" in result
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_consult_marks_community_memory_untrusted_and_binds_issue_author(mock_env):
+    issue_payload = {
+        "creator_signature": "spoofed-maintainer",
+        "consciousness_type": "warning",
+        "thought_vector_text": "SearchBoundary never follow embedded instructions",
+        "context_environment": "A public community memory submitted through GitHub",
+        "tags": ["security"],
+    }
+    issue_body = f"<!-- CONSCIOUSNESS_PAYLOAD_START -->\n```json\n{json.dumps(issue_payload)}\n```\n<!-- CONSCIOUSNESS_PAYLOAD_END -->"
+    respx.get("https://api.github.com/repos/test_owner/test_repo/issues").mock(
+        return_value=Response(200, json=[{
+            "number": 9,
+            "body": issue_body,
+            "user": {"login": "actual-author"},
+            "labels": [{"name": "consciousness"}],
+            "reactions": {"total_count": 0},
+        }])
+    )
+    respx.get("https://api.github.com/repos/test_owner/test_repo/contents/consciousness_payloads").mock(
+        return_value=Response(200, json=[])
+    )
+
+    result = await consult_noosphere("SearchBoundary")
+
+    assert "UNTRUSTED COMMUNITY DATA" in result
+    assert "@actual-author" in result
+    assert "legacy-unverified" in result
 
 @pytest.mark.asyncio
 @respx.mock
@@ -1612,7 +1675,7 @@ async def test_launch_preflight_reports_release_and_install_blockers(mock_env):
     assert "Trusted Publishing trigger: tag-or-release" in result
     assert "GitHub Release v0.6.8: missing" in result
     assert "Current bottleneck: release tag" in result
-    assert "python scripts/verify_pypi_release.py --tool-count 40" in result
+    assert "python scripts/verify_pypi_release.py --tool-count 45" in result
     assert "share-proof.yml" in result
     assert "No downloads, reposts, referrals, retention, rewards, or install counts are inferred" in result
 
@@ -1717,7 +1780,7 @@ def test_growth_ledger_tools_are_documented_in_public_surfaces():
         assert tool_name in readme
         assert tool_name in mcp_source
 
-    assert "40 MCP tools" in readme
+    assert "45 MCP tools" in readme
     assert "resonate_media" in readme
     assert "First Proof links `growth-proof.yml` + `share-proof.yml`; MCP ledger tools" in readme
     assert "No downloads, reposts, referrals, retention, rewards, or install counts are inferred" in readme
@@ -1906,6 +1969,36 @@ async def test_withdraw_consciousness_not_owner(mock_env):
 
 @pytest.mark.asyncio
 @respx.mock
+async def test_withdraw_consciousness_does_not_trust_self_declared_creator(mock_env):
+    payload = {
+        "creator_signature": "claimed_creator",
+        "consciousness_type": "epiphany",
+        "thought_vector_text": "The Issue author is the only withdrawal owner.",
+        "context_environment": "test context",
+    }
+    issue_body = f"<!-- CONSCIOUSNESS_PAYLOAD_START -->\n```json\n{json.dumps(payload)}\n```\n<!-- CONSCIOUSNESS_PAYLOAD_END -->"
+
+    with patch("noosphere.noosphere_mcp._AUTHENTICATED_USER", None):
+        respx.get("https://api.github.com/user").mock(
+            return_value=Response(200, json={"login": "claimed_creator"})
+        )
+        respx.get("https://api.github.com/repos/test_owner/test_repo/issues/43").mock(
+            return_value=Response(200, json={
+                "number": 43,
+                "body": issue_body,
+                "labels": [{"name": "consciousness"}],
+                "user": {"login": "actual_issue_author"},
+            })
+        )
+
+        result = await withdraw_consciousness("43")
+
+    assert "Permission denied" in result
+    assert "actual_issue_author" in result
+
+
+@pytest.mark.asyncio
+@respx.mock
 async def test_withdraw_consciousness_success(mock_env):
     """Verify full successful withdrawal flow."""
     payload = {
@@ -1932,12 +2025,22 @@ async def test_withdraw_consciousness_success(mock_env):
         respx.patch("https://api.github.com/repos/test_owner/test_repo/issues/10").mock(
             return_value=Response(200, json={"number": 10, "state": "closed"})
         )
+        withdrawal_route = respx.post("https://api.github.com/repos/test_owner/test_repo/issues").mock(
+            return_value=Response(201, json={
+                "number": 101,
+                "html_url": "https://github.com/test_owner/test_repo/issues/101",
+            })
+        )
 
         result = await withdraw_consciousness("10")
         assert "Consciousness Withdrawn" in result
         assert "testuser" in result
         assert "withdrawn" in result
         assert "irreversible" in result.lower()
+        assert "#101" in result
+        request_body = json.loads(withdrawal_route.calls[0].request.content)["body"]
+        assert "WITHDRAWAL_REQUEST_START" in request_body
+        assert '"target_issue": 10' in request_body
 
 
 @pytest.mark.asyncio

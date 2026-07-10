@@ -7,8 +7,9 @@ on:
     types: [opened, labeled]
 
 concurrency:
-  group: consciousness-promotion-main
+  group: consciousness-permanent-state-main
   cancel-in-progress: false
+  queue: max
 
 permissions:
   actions: write
@@ -24,6 +25,11 @@ jobs:
     steps:
       - name: 🌐 Checkout Repository
         uses: actions/checkout@v4
+
+      - name: Refresh serialized promotion state
+        run: |
+          git fetch origin main
+          git checkout --detach origin/main
 
       - name: ⚙️ Set up Python 3.10
         uses: actions/setup-python@v5
@@ -88,8 +94,8 @@ jobs:
             echo "✅ Content is SAFE"
             echo "safe=true" >> $GITHUB_OUTPUT
           else
-            echo "⚠️ Moderation error (fail-open, proceeding)"
-            echo "safe=true" >> $GITHUB_OUTPUT
+            echo "Moderation unavailable; the payload requires trusted review."
+            echo "safe=unknown" >> $GITHUB_OUTPUT
           fi
 
       - name: 🚫 Reject Unsafe Content
@@ -137,12 +143,13 @@ jobs:
 
       - name: 👁️ Extract, Validate & Promote Consciousness
         id: promote
-        if: steps.content_safety.outputs.result != 'CHECK' || steps.nudenet_check.outputs.safe == 'true'
+        if: steps.content_safety.outputs.result != 'CHECK' || steps.nudenet_check.outputs.safe != 'false'
         uses: actions/github-script@v7
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GEMINI_EMBEDDING_MODEL: gemini-embedding-2
+          MEDIA_SAFETY_RESULT: ${{ steps.nudenet_check.outputs.safe }}
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
@@ -163,6 +170,27 @@ jobs:
               buildResonanceBacklinkComment,
               hasResonanceBacklinkComment,
             } = require(`${process.env.GITHUB_WORKSPACE}/.github/scripts/consciousness-share-card.cjs`);
+            const {
+              canonicalPromotionPath,
+              findExistingPromotion,
+              hasPromotionComment,
+              isIssueTombstoned,
+              promotionCommentMarker,
+            } = require(`${process.env.GITHUB_WORKSPACE}/.github/scripts/promotion-integrity.cjs`);
+            const {
+              assessSkillEligibility,
+              bindVerifiedPublisher,
+              isTrustedReviewerPermission,
+              normalizeEngineeringEvidence,
+            } = require(`${process.env.GITHUB_WORKSPACE}/.github/scripts/memory-trust.cjs`);
+            const {
+              buildSkillCandidate,
+              clusterEligibleMemories,
+              extractSkillCandidate,
+              renderSkillCandidateBody,
+            } = require(`${process.env.GITHUB_WORKSPACE}/.github/scripts/dynamic-skills.cjs`);
+            const fs = require('node:fs');
+            const path = require('node:path');
 
             // ── Step 1: Extract payload from Issue body ──
             const extracted = extractConsciousnessPayload(body);
@@ -171,8 +199,73 @@ jobs:
               return;
             }
 
-            const payload = extracted.payload;
+            const payload = bindVerifiedPublisher(extracted.payload, issue);
             console.log(`Noosphere payload found via ${extracted.source}.`);
+
+            const tombstonesPath = `${process.env.GITHUB_WORKSPACE}/consciousness_tombstones.json`;
+            const tombstones = fs.existsSync(tombstonesPath)
+              ? JSON.parse(fs.readFileSync(tombstonesPath, 'utf8'))
+              : { version: 1, withdrawn_issues: [] };
+            if (isIssueTombstoned(tombstones, issue.number)) {
+              core.setFailed(`Issue #${issue.number} was permanently withdrawn and cannot be promoted again.`);
+              return;
+            }
+
+            const issueLabels = (issue.labels || []).map((label) => (
+              typeof label === 'string' ? label : label.name
+            ));
+            let trustedReview = null;
+            if (issueLabels.includes('trusted-review')) {
+              const reviewer = context.payload.sender?.login || context.actor;
+              const permissionResponse = await github.rest.repos.getCollaboratorPermissionLevel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                username: reviewer,
+              });
+              if (!isTrustedReviewerPermission(permissionResponse.data.permission)) {
+                core.setFailed(`Reviewer ${reviewer} does not have repository write permission.`);
+                return;
+              }
+              trustedReview = reviewer;
+            }
+
+            async function quarantineForReview(reason) {
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                labels: ['needs-review'],
+              });
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                body: `Promotion paused: ${reason}. A repository maintainer must review the payload and add the trusted-review label.`,
+              });
+              core.setOutput('promoted', 'false');
+            }
+
+            const promotionDir = `${process.env.GITHUB_WORKSPACE}/consciousness_payloads`;
+            const promotionRecords = fs.readdirSync(promotionDir)
+              .filter((name) => name.endsWith('.json'))
+              .map((name) => {
+                try {
+                  return {
+                    path: path.posix.join('consciousness_payloads', name),
+                    payload: JSON.parse(fs.readFileSync(path.join(promotionDir, name), 'utf8')),
+                  };
+                } catch {
+                  return null;
+                }
+              })
+              .filter(Boolean);
+            const existingPromotion = findExistingPromotion(promotionRecords, issue.number);
+            if (existingPromotion) {
+              console.log(`Issue #${issue.number} already has ${existingPromotion?.path}; reconciling remaining state.`);
+              Object.assign(payload, existingPromotion.payload);
+              Object.assign(payload, bindVerifiedPublisher(payload, issue));
+            }
+            const hasVerifiedExisting = existingPromotion?.payload?.trust?.status === 'verified';
 
             // ── Step 2: Validate payload fields ──
             const VALID_TYPES = ['epiphany', 'decision', 'pattern', 'warning', 'image', 'video', 'voice'];
@@ -246,9 +339,20 @@ jobs:
               return;
             }
 
+            if (
+              ['image', 'video'].includes(payload.consciousness_type) &&
+              process.env.MEDIA_SAFETY_RESULT !== 'true' &&
+              !trustedReview &&
+              !hasVerifiedExisting
+            ) {
+              await quarantineForReview('visual-media moderation was unavailable');
+              return;
+            }
+
             // ── Step 3: Content Safety Check (OpenAI Moderation API) ──
             const openaiKey = process.env.OPENAI_API_KEY;
-            if (openaiKey) {
+            let textModerationPassed = Boolean(trustedReview || hasVerifiedExisting);
+            if (openaiKey && !trustedReview && !hasVerifiedExisting) {
               const textToModerate = `${payload.thought_vector_text}\n\n${payload.context_environment}`;
               try {
                 const modResponse = await fetch('https://api.openai.com/v1/moderations', {
@@ -296,22 +400,50 @@ jobs:
                     return;
                   }
                   console.log('✅ Content safety check passed');
+                  textModerationPassed = true;
                 } else {
-                  console.log(`⚠️ Moderation API returned ${modResponse.status}, proceeding anyway (fail-open)`);
+                  console.log(`Moderation API returned ${modResponse.status}; trusted review required.`);
                 }
               } catch (modErr) {
-                console.log(`⚠️ Moderation API error: ${modErr.message}, proceeding anyway (fail-open)`);
+                console.log(`Moderation API error: ${modErr.message}; trusted review required.`);
               }
-            } else {
-              console.log('ℹ️ OPENAI_API_KEY not configured, skipping content safety check');
+            }
+            if (!textModerationPassed) {
+              await quarantineForReview(
+                openaiKey ? 'text moderation did not complete successfully' : 'text moderation is not configured'
+              );
+              return;
             }
 
+            payload.evidence = normalizeEngineeringEvidence(payload.evidence);
+            if (trustedReview) {
+              payload.trust = {
+                status: 'verified',
+                method: 'trusted-human-review',
+                reviewer: trustedReview,
+                verified_at: new Date().toISOString(),
+              };
+            } else if (!hasVerifiedExisting) {
+              payload.trust = {
+                status: 'verified',
+                method: 'automated-content-screening',
+                reviewer: null,
+                verified_at: new Date().toISOString(),
+              };
+            }
+            payload.skill_candidate = assessSkillEligibility(payload);
+
             // ── Step 3.5: Gemini Embedding Generation ──
-            const embeddingResult = await applyEmbeddingToPayload(payload, {
-              apiKey: process.env.GEMINI_API_KEY,
-              model: process.env.GEMINI_EMBEDDING_MODEL,
-              fetchImpl: fetch,
-            });
+            const hasExistingEmbedding = Boolean(
+              Array.isArray(payload.embedding) && payload.embedding.length && payload.embedding_model
+            );
+            const embeddingResult = hasExistingEmbedding
+              ? { status: 'existing', embedding: payload.embedding, model: payload.embedding_model }
+              : await applyEmbeddingToPayload(payload, {
+                  apiKey: process.env.GEMINI_API_KEY,
+                  model: process.env.GEMINI_EMBEDDING_MODEL,
+                  fetchImpl: fetch,
+                });
 
             if (embeddingResult.status === 'ok') {
               console.log(`Gemini embedding generated: ${embeddingResult.embedding.length} dimensions via ${embeddingResult.model}`);
@@ -344,35 +476,99 @@ jobs:
 
             // ── Step 4: Promote — commit file to main branch ──
             const now = new Date();
-            const timestamp = now.toISOString().replace(/[-:T]/g, '').substring(0, 15);
-            const shortId = issue.number.toString().padStart(4, '0');
-            const fileName = `${payload.consciousness_type}_${timestamp}_issue${shortId}.json`;
-            const filePath = `consciousness_payloads/${fileName}`;
+            const filePath = existingPromotion?.path || canonicalPromotionPath(payload, issue.number);
 
-            // Add promotion metadata
+            // Add stable promotion metadata without changing prior timestamps.
+            payload.memory_id = payload.memory_id || `memory-issue-${issue.number}`;
             payload.promoted_from_issue = issue.number;
-            payload.promoted_at = now.toISOString();
+            payload.promoted_at = payload.promoted_at || now.toISOString();
+            payload.schema_version = Math.max(Number(payload.schema_version || 1), 1);
 
-            const content = Buffer.from(
-              JSON.stringify(payload, null, 2),
-              'utf-8'
-            ).toString('base64');
+            const serializedContent = JSON.stringify(payload, null, 2);
+            const content = Buffer.from(serializedContent, 'utf-8').toString('base64');
 
             const creator = payload.is_anonymous ? 'Anonymous Stalker' : payload.creator_signature;
             const typeEmojis = { epiphany: '💠', decision: '⚖️', pattern: '🌌', warning: '👁️', image: '🖼️', video: '🎬', voice: '🎵' };
             const emoji = typeEmojis[payload.consciousness_type] || '🧠';
 
-            await github.rest.repos.createOrUpdateFileContents({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              path: filePath,
-              message: `${emoji} Promote Consciousness: [${payload.consciousness_type}] by ${creator} (Issue #${issue.number})`,
-              content: content,
-              committer: {
-                name: 'Noosphere Bot',
-                email: 'noosphere@consciousness.network'
+            if (!existingPromotion) {
+              await github.rest.repos.createOrUpdateFileContents({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                path: filePath,
+                message: `${emoji} Promote Consciousness: [${payload.consciousness_type}] by ${creator} (Issue #${issue.number})`,
+                content: content,
+                committer: {
+                  name: 'Noosphere Bot',
+                  email: 'noosphere@consciousness.network'
+                }
+              });
+            } else {
+              const existingFileResponse = await github.rest.repos.getContent({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                path: filePath,
+                ref: context.payload.repository.default_branch,
+              });
+              const existingFile = existingFileResponse.data;
+              const existingContent = Buffer.from(existingFile.content, 'base64').toString('utf8');
+              if (existingContent.trimEnd() !== serializedContent) {
+                await github.rest.repos.createOrUpdateFileContents({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  path: filePath,
+                  message: `Reconcile verified consciousness from Issue #${issue.number}`,
+                  content,
+                  sha: existingFile.sha,
+                  committer: {
+                    name: 'Noosphere Bot',
+                    email: 'noosphere@consciousness.network',
+                  },
+                });
               }
-            });
+            }
+
+            if (payload.skill_candidate?.eligible && ['ok', 'existing'].includes(embeddingResult.status)) {
+              const activeMemories = loadCandidatePayloads(promotionDir).filter((memory) => (
+                !isIssueTombstoned(tombstones, memory.promoted_from_issue) &&
+                Number(memory.promoted_from_issue) !== Number(issue.number)
+              ));
+              const clusters = clusterEligibleMemories([...activeMemories, payload]);
+              const cluster = clusters.find((item) => (
+                item.members.some((memory) => memory.memory_id === payload.memory_id)
+              ));
+              if (cluster) {
+                const candidate = buildSkillCandidate(cluster);
+                const candidateIssues = await github.paginate(github.rest.issues.listForRepo, {
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  state: 'all',
+                  labels: 'skill-candidate',
+                  per_page: 100,
+                });
+                const existingCandidateIssue = candidateIssues.find((candidateIssue) => (
+                  extractSkillCandidate(candidateIssue.body)?.id === candidate.id
+                ));
+                const candidateBody = renderSkillCandidateBody(candidate);
+                if (existingCandidateIssue) {
+                  await github.rest.issues.update({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: existingCandidateIssue.number,
+                    title: `Skill candidate: ${candidate.name}`,
+                    body: candidateBody,
+                  });
+                } else {
+                  await github.rest.issues.create({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    title: `Skill candidate: ${candidate.name}`,
+                    body: candidateBody,
+                    labels: ['skill-candidate', 'needs-review'],
+                  });
+                }
+              }
+            }
 
             // ── Step 5: Close Issue with 'promoted' label ──
             // Remove 'ephemeral' label, add 'promoted'
@@ -394,20 +590,28 @@ jobs:
               labels: ['consciousness', 'promoted']
             });
 
-            await github.rest.issues.createComment({
+            const promotionComments = await github.rest.issues.listComments({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: issue.number,
-              body: buildPromotionComment({
-                payload,
-                issueNumber: issue.number,
-                issueUrl: issue.html_url,
-                filePath,
-                promotedAt: now.toISOString(),
-                emoji,
-                resonanceMatch,
-              })
+              per_page: 100,
             });
+            if (!hasPromotionComment(promotionComments.data, issue.number)) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                body: `${buildPromotionComment({
+                  payload,
+                  issueNumber: issue.number,
+                  issueUrl: issue.html_url,
+                  filePath,
+                  promotedAt: payload.promoted_at || now.toISOString(),
+                  emoji,
+                  resonanceMatch,
+                })}\n\n${promotionCommentMarker(issue.number)}`
+              });
+            }
 
             if (resonanceMatch?.issue_number && resonanceMatch.issue_number !== issue.number) {
               try {
@@ -449,12 +653,13 @@ jobs:
               state: 'closed'
             });
 
-            core.setOutput('promoted', 'true');
-            console.log(`✅ Consciousness promoted: ${filePath} (Issue #${issue.number})`);
+            core.setOutput('promoted', existingPromotion ? 'false' : 'true');
+            core.setOutput('reconciled', 'true');
+            console.log(`Consciousness state reconciled: ${filePath} (Issue #${issue.number})`);
 
       - name: 📈 Sync public growth snapshot
         id: sync_public_growth
-        if: steps.promote.outputs.promoted == 'true'
+        if: steps.promote.outputs.reconciled == 'true'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
