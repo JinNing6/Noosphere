@@ -102,7 +102,7 @@ jobs:
       - name: SDK and repository tests
         run: |
           python -m pytest sdk/tests
-          python -m unittest scripts.test_validate_shared_skills scripts.test_migrate_consciousness_promotions
+          python -m unittest scripts.test_validate_shared_skills scripts.test_migrate_consciousness_promotions scripts.test_launch_surface
 
       - name: Syntax and undefined-name gate
         run: |
