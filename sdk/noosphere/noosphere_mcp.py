@@ -70,6 +70,13 @@ GROWTH_LEDGER_VERSION = 1
 PYPI_PROJECT = "noosphere-mcp"
 PYPI_JSON_URL = f"https://pypi.org/pypi/{PYPI_PROJECT}/json"
 NOOSPHERE_TRACTION_PROOF_URL = "https://jinning6.github.io/Noosphere/traction_proof.json"
+NOOSPHERE_PUBLIC_INDEX_URL = os.environ.get(
+    "NOOSPHERE_PUBLIC_INDEX_URL",
+    (
+        f"https://raw.githubusercontent.com/{GITHUB_REPO}/{GITHUB_BRANCH}/"
+        "frontend/public/consciousness_index.json"
+    ),
+)
 GROWTH_NON_FABRICATION_DISCLOSURE = (
     "No downloads, reposts, referrals, retention, rewards, or install counts are "
     "inferred from public URLs or the local growth ledger."
@@ -294,7 +301,12 @@ def _get_parsed_payload(issue: dict) -> dict | None:
     return payload
 
 
-def _build_search_index(issues: list[dict], file_entries: list[dict]) -> None:
+def _build_search_index(
+    issues: list[dict],
+    file_entries: list[dict],
+    *,
+    enable_local_embeddings: bool = True,
+) -> None:
     """Build inverted index from issues and file entries for fast text search.
 
     Only rebuilds if the index is stale (older than cache TTL).
@@ -394,8 +406,8 @@ def _build_search_index(issues: list[dict], file_entries: list[dict]) -> None:
     _index_built_ts = now
 
     # ── Build embedding cache (async-safe: runs in same thread) ──
-    engine = _EmbeddingEngine.get()
-    if engine.available:
+    engine = _EmbeddingEngine.get() if enable_local_embeddings else None
+    if engine is not None and engine.available:
         # Collect doc texts that need embedding
         doc_ids_to_embed: list[str] = []
         texts_to_embed: list[str] = []
@@ -476,6 +488,7 @@ def _search_by_index(
     since: str | None = None,
     until: str | None = None,
     exclude_creator: str | None = None,
+    enable_local_embeddings: bool = True,
 ) -> list[tuple[float, int, dict, str, str]]:
     """Hybrid search: inverted index recall + BM25 + semantic cosine similarity.
 
@@ -499,16 +512,16 @@ def _search_by_index(
 
     if not candidate_ids:
         # If keyword recall fails but we have embeddings, search ALL docs
-        engine = _EmbeddingEngine.get()
-        if engine.available and query_text:
+        engine = _EmbeddingEngine.get() if enable_local_embeddings else None
+        if engine is not None and engine.available and query_text:
             candidate_ids = set(_index_doc_data.keys())
         else:
             return []
 
     # Pre-compute query embedding
     query_embedding = None
-    engine = _EmbeddingEngine.get()
-    if engine.available and query_text:
+    engine = _EmbeddingEngine.get() if enable_local_embeddings else None
+    if engine is not None and engine.available and query_text:
         query_embedding = engine.encode_query(query_text)
 
     # Compute average document length for BM25
@@ -662,6 +675,81 @@ async def _fetch_file_payloads(
     canonical = canonicalize_permanent_entries(results, tombstoned_issue_numbers)
     _set_cached("file_payloads", canonical)
     return canonical
+
+
+async def _fetch_public_index_payloads(client: httpx.AsyncClient) -> list[dict]:
+    """Fetch the canonical public repository index for anonymous read-only search.
+
+    GitHub permits unauthenticated public API reads, but the primary limit is low.
+    The generated index collapses the permanent layer into one cacheable request while
+    preserving the same internal payload shape used by the authenticated search.
+    """
+    cached = _get_cached("public_index_payloads")
+    if cached is not None:
+        return [{**entry, "payload": {**entry["payload"]}} for entry in cached]
+
+    response = await client.get(NOOSPHERE_PUBLIC_INDEX_URL)
+    if response.status_code != 200:
+        raise RuntimeError(f"Public index returned HTTP {response.status_code}")
+
+    try:
+        public_records = response.json()
+    except ValueError as exc:
+        raise ValueError("Public index returned malformed JSON") from exc
+    if not isinstance(public_records, list):
+        raise ValueError("Public index must contain a JSON array")
+
+    owner, repo = _parse_repo()
+    entries: list[dict] = []
+    for record in public_records:
+        if not isinstance(record, dict):
+            continue
+        thought = record.get("text")
+        if not isinstance(thought, str) or not thought.strip():
+            continue
+        issue_number = record.get("issue_number")
+        source_url = (
+            f"https://github.com/{owner}/{repo}/issues/{issue_number}"
+            if isinstance(issue_number, int) and issue_number > 0
+            else NOOSPHERE_PUBLIC_INDEX_URL
+        )
+        creator = record.get("creator", "unknown")
+        context = record.get("context", "")
+        consciousness_type = record.get("type", "unknown")
+        tags = record.get("tags", [])
+        publisher = record.get("publisher", {})
+        trust = record.get("trust", {})
+        evidence = record.get("evidence", {})
+        payload = {
+            "creator_signature": creator if isinstance(creator, str) else "unknown",
+            "is_anonymous": bool(record.get("anonymous", False)),
+            "consciousness_type": (
+                consciousness_type if isinstance(consciousness_type, str) else "unknown"
+            ),
+            "thought_vector_text": thought,
+            "context_environment": context if isinstance(context, str) else "",
+            "tags": [tag for tag in tags if isinstance(tag, str)] if isinstance(tags, list) else [],
+            "publisher": publisher if isinstance(publisher, dict) else {},
+            "trust": trust if isinstance(trust, dict) else {},
+            "evidence": evidence if isinstance(evidence, dict) else {},
+            "resonance_score": record.get("resonance_count", 0),
+            "promoted_from_issue": issue_number,
+        }
+        source_name = (
+            f"Issue #{issue_number}"
+            if isinstance(issue_number, int) and issue_number > 0
+            else str(record.get("id", f"public-memory-{len(entries) + 1}"))
+        )
+        entries.append(
+            {
+                "payload": payload,
+                "filename": source_name,
+                "html_url": source_url,
+            }
+        )
+
+    _set_cached("public_index_payloads", entries)
+    return entries
 
 
 async def _fetch_tombstoned_issue_numbers(
@@ -1599,30 +1687,27 @@ async def consult_noosphere(
         question: 用户的问题或话题 / The user's question or topic being discussed
         topic_tags: 可选的主题标签用于精炼搜索 / Optional topic tags to refine the search (e.g. ["philosophy", "consciousness"])
     """
-    if not GITHUB_TOKEN:
-        return (
-            "❌ GITHUB_TOKEN not configured. Please set the environment variable in MCP config:\n"
-            "```json\n"
-            "{\n"
-            '  "env": {\n'
-            '    "GITHUB_TOKEN": "ghp_your_token"\n'
-            "  }\n"
-            "}\n"
-            "```\n"
-            "Token only requires basic `public_repo` scope — no write access needed!"
-        )
-
     try:
         owner, repo = _parse_repo()
         query_tokens = _tokenize(question)
 
         client = await _get_client()
-        # ── Fetch both layers ── [CACHED]
-        issues = await _fetch_all_issues_cached(client, owner, repo)
-        file_entries = await _fetch_file_payloads(client, owner, repo)
+        if GITHUB_TOKEN:
+            # Authenticated mode includes fresh Issues and canonical permanent files.
+            issues = await _fetch_all_issues_cached(client, owner, repo)
+            file_entries = await _fetch_file_payloads(client, owner, repo)
+        else:
+            # Anonymous mode uses one cacheable Pages request instead of consuming
+            # nearly the entire unauthenticated GitHub API budget per consultation.
+            issues = []
+            file_entries = await _fetch_public_index_payloads(client)
 
         # Build unified search index (includes BM25 + embeddings)
-        _build_search_index(issues, file_entries)
+        _build_search_index(
+            issues,
+            file_entries,
+            enable_local_embeddings=bool(GITHUB_TOKEN),
+        )
 
         # Use hybrid search (BM25 + semantic cosine similarity)
         tag_filter_val = topic_tags[0] if topic_tags and len(topic_tags) == 1 else None
@@ -1630,6 +1715,7 @@ async def consult_noosphere(
             query_tokens,
             query_text=question,
             tag_filter=tag_filter_val,
+            enable_local_embeddings=bool(GITHUB_TOKEN),
         )
 
         # Multi-tag filter (if more than one tag provided)
@@ -1666,6 +1752,18 @@ async def consult_noosphere(
                     f"@{publisher}" if publisher else "unavailable (legacy record)"
                 )
                 trust_status = payload.get("trust", {}).get("status", "legacy-unverified")
+                evidence = payload.get("evidence", {})
+                evidence_preview = ""
+                if isinstance(evidence, dict) and trust_status == "verified":
+                    root_cause = evidence.get("root_cause", "")
+                    fix = evidence.get("fix", "")
+                    verification = evidence.get("verification", "")
+                    if root_cause:
+                        evidence_preview += f"**Root cause**: {root_cause}\n"
+                    if fix:
+                        evidence_preview += f"**Fix**: {fix}\n"
+                    if verification:
+                        evidence_preview += f"**Verification**: {verification}\n"
 
                 media_preview = _format_media_preview(payload)
                 lines.append(
@@ -1674,6 +1772,7 @@ async def consult_noosphere(
                     f"**🛡️ Trust**: `{trust_status}`\n"
                     f"**💭 Thought**: {thought}\n"
                     f"**🌍 Context**: {context}\n"
+                    f"{evidence_preview}"
                     f"{media_preview}"
                     f"**🏷️ Tags**: {', '.join(f'`{t}`' for t in tags) if tags else 'None'}\n"
                     f"**💖 Resonance**: {resonance}\n"

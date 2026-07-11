@@ -62,6 +62,7 @@ from noosphere.noosphere_mcp import (
     _invalidate_cache,
     _format_media_preview,
     _github_headers,
+    _close_client,
     LABEL_WITHDRAWN,
     TYPE_EMOJIS,
     MEDIA_RESONANCE_DIMENSIONS,
@@ -99,6 +100,79 @@ def test_github_headers_omit_authorization_without_token():
 
     assert "Authorization" not in headers
     assert headers["Accept"] == "application/vnd.github+json"
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_consult_anonymous_uses_single_public_index_request():
+    public_index_url = (
+        "https://raw.githubusercontent.com/JinNing6/Noosphere/main/"
+        "frontend/public/consciousness_index.json"
+    )
+    public_route = respx.get(public_index_url).mock(
+        return_value=Response(
+            200,
+            json=[
+                {
+                    "id": "soul-d7e31532",
+                    "creator": "JinNing6",
+                    "type": "pattern",
+                    "text": "Decouple visual geometry from touch geometry for dense R3F nodes.",
+                    "context": "Android WebView node picking regression.",
+                    "tags": ["react-three-fiber", "node-picking"],
+                    "issue_number": 35,
+                    "publisher": {"github_login": "JinNing6"},
+                    "trust": {"status": "verified"},
+                    "evidence": {
+                        "root_cause": "Bloom exceeded the compact raycast geometry.",
+                        "fix": "Add a synchronized invisible hit layer.",
+                        "verification": "ADB tap selected the expected instance.",
+                    },
+                }
+            ],
+        )
+    )
+
+    _invalidate_cache()
+    await _close_client()
+    with (
+        patch("noosphere.noosphere_mcp.GITHUB_TOKEN", ""),
+        patch("noosphere.noosphere_mcp.GITHUB_REPO", "JinNing6/Noosphere"),
+        patch("noosphere.noosphere_mcp._EmbeddingEngine.get") as embedding_get,
+    ):
+        result = await consult_noosphere("R3F Android node picking")
+
+    await _close_client()
+    _invalidate_cache()
+    assert public_route.call_count == 1
+    assert "Decouple visual geometry" in result
+    assert "@JinNing6" in result
+    assert "`verified`" in result
+    assert "Issue #35" in result
+    assert "**Root cause**: Bloom exceeded" in result
+    assert "**Fix**: Add a synchronized invisible hit layer." in result
+    assert "**Verification**: ADB tap selected the expected instance." in result
+    embedding_get.assert_not_called()
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_consult_anonymous_fails_clearly_when_public_index_is_unavailable():
+    respx.get(
+        "https://raw.githubusercontent.com/JinNing6/Noosphere/main/"
+        "frontend/public/consciousness_index.json"
+    ).mock(
+        return_value=Response(503)
+    )
+
+    _invalidate_cache()
+    await _close_client()
+    with patch("noosphere.noosphere_mcp.GITHUB_TOKEN", ""):
+        result = await consult_noosphere("R3F Android node picking")
+
+    await _close_client()
+    _invalidate_cache()
+    assert "Public index returned HTTP 503" in result
 
 @pytest.mark.asyncio
 async def test_upload_consciousness_missing_token():
@@ -712,11 +786,24 @@ async def test_consult_noosphere_with_topic_tags(mock_env):
 
 
 @pytest.mark.asyncio
-async def test_consult_noosphere_missing_token():
-    """Verify consult_noosphere returns token error when not configured."""
+@respx.mock
+async def test_consult_noosphere_missing_token_enters_anonymous_read_only_mode():
+    """A missing token must use the public index instead of rejecting the query."""
+    respx.get(
+        "https://raw.githubusercontent.com/JinNing6/Noosphere/main/"
+        "frontend/public/consciousness_index.json"
+    ).mock(
+        return_value=Response(200, json=[])
+    )
+    _invalidate_cache()
+    await _close_client()
     with patch("noosphere.noosphere_mcp.GITHUB_TOKEN", ""):
         result = await consult_noosphere("What is the meaning of life?")
-        assert "GITHUB_TOKEN not configured" in result
+
+    await _close_client()
+    _invalidate_cache()
+    assert "GITHUB_TOKEN not configured" not in result
+    assert "0 related consciousness fragments found" in result
 
 
 # ────────────────── Tests: philosophical_reflection prompt ──────────────────

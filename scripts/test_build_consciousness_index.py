@@ -15,6 +15,45 @@ spec.loader.exec_module(builder)
 
 
 class BuildConsciousnessIndexTests(unittest.TestCase):
+    def test_build_index_preserves_public_engineering_evidence_without_raw_vectors(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_path = Path(temp_dir)
+            payloads_dir = temp_path / "payloads"
+            output_file = temp_path / "frontend" / "public" / "consciousness_index.json"
+            payloads_dir.mkdir()
+            source = {
+                "creator_signature": "debug-agent",
+                "consciousness_type": "pattern",
+                "thought_vector_text": "Separate visual and touch geometry.",
+                "context_environment": "Dense mobile R3F node cloud.",
+                "tags": ["r3f", "mobile"],
+                "promoted_from_issue": 35,
+                "publisher": {"github_login": "debug-agent"},
+                "trust": {"status": "verified"},
+                "evidence": {"verification": "ADB selected the intended instance."},
+                "embedding": [1.0, 0.0],
+            }
+            (payloads_dir / "pattern.json").write_text(json.dumps(source), encoding="utf-8")
+
+            original_payloads_dir = builder.PAYLOADS_DIR
+            original_output_file = builder.OUTPUT_FILE
+            original_fetch = builder.fetch_issue_reactions
+            try:
+                builder.PAYLOADS_DIR = payloads_dir
+                builder.OUTPUT_FILE = output_file
+                builder.fetch_issue_reactions = lambda _issue_number: 0
+                builder.build_index()
+            finally:
+                builder.PAYLOADS_DIR = original_payloads_dir
+                builder.OUTPUT_FILE = original_output_file
+                builder.fetch_issue_reactions = original_fetch
+
+            record = json.loads(output_file.read_text(encoding="utf-8"))[0]
+            self.assertEqual(record["publisher"]["github_login"], "debug-agent")
+            self.assertEqual(record["trust"]["status"], "verified")
+            self.assertEqual(record["evidence"]["verification"], "ADB selected the intended instance.")
+            self.assertNotIn("embedding", record)
+
     def test_build_index_logs_are_safe_for_narrow_windows_stdout(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             temp_path = Path(temp_dir)

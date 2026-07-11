@@ -180,6 +180,15 @@ def build_index():
             "media_category": None,
         }
 
+        # Preserve review evidence in the public index for verified engineering
+        # memories. The index never publishes private credentials or raw vectors.
+        if data.get("publisher"):
+            payload["publisher"] = data["publisher"]
+        if data.get("trust"):
+            payload["trust"] = data["trust"]
+        if data.get("evidence"):
+            payload["evidence"] = data["evidence"]
+
         embedding = normalized_embedding(data.get("embedding"))
         if embedding:
             payload["embedding_model"] = data.get("embedding_model")
