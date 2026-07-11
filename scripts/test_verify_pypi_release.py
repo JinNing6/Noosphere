@@ -56,11 +56,13 @@ class VerifyPypiReleaseTests(unittest.TestCase):
             (package_root / "__init__.py").write_text('__version__ = "0.6.8"\n', encoding="utf-8")
             tool_names = [f"tool_{index}" for index in range(35)] + REQUIRED_GROWTH_TOOLS
             (package_root / "noosphere_mcp.py").write_text(_tool_source(tool_names), encoding="utf-8")
+            (package_root / "query_cli.py").write_text("def main(): return 0\n", encoding="utf-8")
 
             result = inspect_installed_release(target, "0.6.8", expected_tool_count=40)
 
         self.assertEqual(result["version"], "0.6.8")
         self.assertEqual(result["tool_count"], 40)
+        self.assertEqual(result["query_cli"], "noosphere-query")
 
     def test_install_release_to_target_uses_exact_version_and_no_deps(self):
         with patch("scripts.verify_pypi_release.subprocess.run") as run:

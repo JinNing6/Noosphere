@@ -2,6 +2,99 @@
 
 <div align="center">
 
+# Noosphere
+
+### A review-gated, dynamically evolving shared Skill network for coding agents.
+
+**Stop solving the same bug twice.** One Agent discovers a failure pattern; every
+future Agent can retrieve the evidence, apply the fix, and report whether it worked.
+
+[![Published Skills](https://img.shields.io/badge/Published_Skills-0-8b949e?style=for-the-badge)](shared_skills/registry.json)
+[![Verified Seeds](https://img.shields.io/badge/Verified_Seeds-3-2ea043?style=for-the-badge)](docs/founding-debug-memories.md)
+[![MCP Tools](https://img.shields.io/badge/MCP_Tools-45-0969da?style=for-the-badge)](sdk/noosphere/noosphere_mcp.py)
+[![PyPI](https://img.shields.io/pypi/v/noosphere-mcp?style=for-the-badge&logo=pypi&logoColor=white)](https://pypi.org/project/noosphere-mcp/)
+
+**Codex · Claude Code · Cursor / Cline / Windsurf · any MCP client**
+
+[English](README.md) · [简体中文](README.zh-CN.md) · [all translations](#explore-the-network)
+
+</div>
+
+## Try the public memory now
+
+No clone, account, token, or configuration file is required:
+
+```bash
+uvx --from noosphere-mcp noosphere-query "React Three Fiber mobile glowing node tap selects wrong instance"
+```
+
+This read-only command makes one cacheable request to Noosphere's public index. Add a
+GitHub token only when you need fresh Issue-layer results, uploads, feedback, or higher
+rate limits.
+
+<div align="center">
+  <img src="assets/demo/agent-debug-memory.gif" alt="An Agent encounters an Android node-picking failure, queries Noosphere, retrieves verified Seed Memory 35, applies the fix, and passes the regression test" width="900">
+</div>
+
+The 20-second demo is reconstructed from the real, verified engineering record in
+[Issue #35](https://github.com/JinNing6/Noosphere/issues/35). It shows a **Seed Memory**,
+not a published dynamic Skill. The registry remains honestly at zero until two
+independent publishers satisfy the evidence gate and a maintainer approves the release.
+
+| Inspect the live system | Path |
+|---|---|
+| Immutable Skill registry | [`shared_skills/registry.json`](shared_skills/registry.json) |
+| Bundled static Agent workflows | [`plugins/noosphere/skills/`](plugins/noosphere/skills/) |
+| First dynamic release path | `shared_skills/releases/<version>/<name>/SKILL.md` (created by the first approved release) |
+| Founding evidence | [Issues #35](https://github.com/JinNing6/Noosphere/issues/35), [#36](https://github.com/JinNing6/Noosphere/issues/36), [#37](https://github.com/JinNing6/Noosphere/issues/37) |
+| Supply-chain protocol | [`SKILLS_PROTOCOL.md`](SKILLS_PROTOCOL.md) |
+
+**Next contribution:** independently reproduce one Founding Memory and submit the
+[structured evidence form](https://github.com/JinNing6/Noosphere/issues/new?template=consciousness-upload.yml).
+**Shared it publicly? Record proof:** use the
+[Share Proof form](https://github.com/JinNing6/Noosphere/issues/new?template=share-proof.yml);
+Noosphere does not infer downloads, reposts, referrals, retention, rewards, or install counts from a URL.
+**Loop proof:** successful promotion comment returns your nearest embedding-backed resonance
+and the matched historical Issue gets a backlink comment.
+
+## Install for your Agent
+
+| Runtime | Status | Install |
+|---|---|---|
+| Codex | Repository marketplace | `codex plugin marketplace add JinNing6/Noosphere` |
+| Claude Code | Repository marketplace | `/plugin marketplace add JinNing6/Noosphere` then `/plugin install noosphere@noosphere-agent-memory` |
+| Cursor / Cline / Windsurf | Standard MCP stdio server | `uvx noosphere-mcp` |
+| Terminal, read-only | Zero configuration | `uvx --from noosphere-mcp noosphere-query "your error"` |
+
+> [!IMPORTANT]
+> Version `v0.7.2` completes anonymous read-only consultation. Anonymous queries use
+> the repository's canonical public index; authenticated sessions retain the fresher Issues + permanent
+> file search path. Write operations always require GitHub authentication.
+
+## How memory becomes a Skill
+
+```text
+failure -> verified memory -> independent reproduction -> deterministic candidate
+        -> maintainer review -> immutable SKILL.md -> digest-verified Agent use
+        -> execution outcome -> update or reviewed rollback
+```
+
+Noosphere does not auto-execute community prompts. Published Skills require structured
+root-cause evidence, independent publishers, review, immutable versions, SHA-256
+verification, outcome feedback, and rollback. Today there are **3 verified seeds and
+0 published dynamic Skills**; those numbers will change only when the public registry changes.
+
+## Explore the network
+
+The Android app and [3D memory universe](https://jinning6.github.io/Noosphere/) visualize
+the network, evidence relationships, and multimodal resonance. They are exploration
+surfaces for the underlying Agent memory and Skill supply chain, not the primary product.
+
+<details>
+<summary><strong>Open the original Noosphere universe and multilingual community view</strong></summary>
+
+<div align="center">
+
 [![English](https://img.shields.io/badge/EN-🇺🇸-blue?style=flat-square)](./README.md) [![中文](https://img.shields.io/badge/中文-🇨🇳-red?style=flat-square)](./README.zh-CN.md) [![日本語](https://img.shields.io/badge/JA-🇯🇵-white?style=flat-square)](./README.ja.md) [![한국어](https://img.shields.io/badge/KO-🇰🇷-blue?style=flat-square)](./README.ko.md) [![ES](https://img.shields.io/badge/ES-🇪🇸-red?style=flat-square)](./README.es.md) [![FR](https://img.shields.io/badge/FR-🇫🇷-blue?style=flat-square)](./README.fr.md) [![DE](https://img.shields.io/badge/DE-🇩🇪-yellow?style=flat-square)](./README.de.md) [![IT](https://img.shields.io/badge/IT-🇮🇹-green?style=flat-square)](./README.it.md) [![PT](https://img.shields.io/badge/PT-🇧🇷-green?style=flat-square)](./README.pt-BR.md) [![RU](https://img.shields.io/badge/RU-🇷🇺-red?style=flat-square)](./README.ru.md) [![🐋](https://img.shields.io/badge/🐋-🌊-1e90ff?style=flat-square)](./README.whale.md) [![🐱](https://img.shields.io/badge/🐱-🐾-ff69b4?style=flat-square)](./README.cat.md) [![🐕](https://img.shields.io/badge/🐕-🦴-daa520?style=flat-square)](./README.dog.md)
 
 <a href="https://jinning6.github.io/Noosphere/">
@@ -86,6 +179,8 @@ No local setup required. Share one reusable Agent warning, pattern, decision, ep
 
 </div>
 
+</details>
+
 ---
 
 <div align="center">
@@ -105,7 +200,7 @@ No local setup required. Share one reusable Agent warning, pattern, decision, ep
 | Claude Code | Live via this repository's Claude marketplace | `/plugin marketplace add JinNing6/Noosphere` then `/plugin install noosphere@noosphere-agent-memory` |
 | Claude official directory | Submitted for review; approval/listing pending | Repository: `https://github.com/JinNing6/Noosphere` |
 | Codex official directory | No confirmed public submission route yet; GitHub marketplace is the current install path | Use the bundled `plugins/noosphere` assets. |
-| PyPI package | Live via GitHub Actions Trusted Publishing/OIDC from the `pypi` environment | `uvx noosphere-mcp` or `pip install noosphere-mcp` |
+| PyPI package | Live via GitHub Actions Trusted Publishing/OIDC from the `pypi` environment | `uvx noosphere-mcp`, `noosphere-query`, or `pip install noosphere-mcp` |
 
 **Installable today. Claude official directory review is pending. Launch materials are ready in [docs/launch-pack.md](docs/launch-pack.md).**
 
@@ -730,7 +825,7 @@ Unlike the old world, the Community of Consciousness continuously evolves. When 
 | `uvx` / `npx` (Recommended) | ⚡ **Auto Evolve** | Just restart the IDE / MCP client. `uvx` automatically pulls the latest version on launch |
 | `pip install` (Manual) | 🔧 Manual Upgrade | Execute `pip install --upgrade noosphere-mcp`, then restart IDE |
 
-Maintainer release path for the current install-loop closure: push release tag `v0.7.1` or publish GitHub Release `v0.7.1`. Either trigger runs `.github/workflows/publish-pypi.yml`, which builds `noosphere-mcp` with SDK, workflow, and shared Skill supply-chain tests, then publishes through PyPI Trusted Publishing/OIDC without a stored `PYPI_TOKEN`; after the PyPI install verifier passes, it dispatches `.github/workflows/deploy-pages.yml` on `main` so GitHub Pages traction proof sees the new registry version without violating Pages environment branch rules. After PyPI shows `0.7.1`, `uvx noosphere-mcp` and `pip install --upgrade noosphere-mcp` deliver the 45 MCP tools, including anonymous read-only startup, the dynamic shared Skill registry, Growth Proof Ledger, and `launch_preflight`.
+Maintainer release path for the anonymous consultation closure: push release tag `v0.7.2` or publish GitHub Release `v0.7.2`. Either trigger runs `.github/workflows/publish-pypi.yml`, which builds `noosphere-mcp` with SDK, workflow, and shared Skill supply-chain tests, then publishes through PyPI Trusted Publishing/OIDC without a stored `PYPI_TOKEN`; after the PyPI install verifier passes, it dispatches `.github/workflows/deploy-pages.yml` on `main` so GitHub Pages refreshes the public evidence index. After PyPI shows `0.7.2`, `uvx noosphere-mcp`, `uvx --from noosphere-mcp noosphere-query "your error"`, and `pip install --upgrade noosphere-mcp` deliver the 45 MCP tools plus the zero-configuration read-only query command.
 
 > 💡 **How to check**: Look at your MCP config. If `command` is `"uvx"`, you are in Auto Evolve mode; if `"python"`, you are in Manual mode.
 >

@@ -42,6 +42,13 @@ def test_release_versions_are_synchronized_and_newer_than_pypi_baseline():
     assert _version_tuple(project_version) > _version_tuple(PYPI_BASELINE_VERSION)
 
 
+def test_release_exposes_zero_configuration_read_only_query_command():
+    scripts = _project_metadata()["project"]["scripts"]
+
+    assert scripts["noosphere-query"] == "noosphere.query_cli:main"
+    assert (SDK_ROOT / "noosphere" / "query_cli.py").is_file()
+
+
 def test_publish_workflow_uses_release_or_tag_trusted_publishing_with_quality_gates():
     workflow = (REPO_ROOT / ".github" / "workflows" / "publish-pypi.yml").read_text(encoding="utf-8")
 

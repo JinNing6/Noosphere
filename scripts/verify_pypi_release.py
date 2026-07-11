@@ -143,8 +143,12 @@ def inspect_installed_release(
     package_root = target_dir / package_dir
     init_path = package_root / "__init__.py"
     mcp_path = package_root / "noosphere_mcp.py"
-    if not init_path.exists() or not mcp_path.exists():
-        raise RuntimeError(f"Installed package is missing {package_dir}/__init__.py or {package_dir}/noosphere_mcp.py")
+    query_cli_path = package_root / "query_cli.py"
+    if not init_path.exists() or not mcp_path.exists() or not query_cli_path.exists():
+        raise RuntimeError(
+            f"Installed package is missing {package_dir}/__init__.py, "
+            f"{package_dir}/noosphere_mcp.py, or {package_dir}/query_cli.py"
+        )
 
     init_source = init_path.read_text(encoding="utf-8")
     mcp_source = mcp_path.read_text(encoding="utf-8")
@@ -169,6 +173,7 @@ def inspect_installed_release(
         "version": installed_version,
         "tool_count": len(tool_names),
         "growth_tools": REQUIRED_GROWTH_TOOLS,
+        "query_cli": "noosphere-query",
     }
 
 
@@ -209,7 +214,7 @@ def main(argv: list[str] | None = None) -> int:
     result = verify_pypi_release(args.project, args.version, args.attempts, args.delay_seconds, args.tool_count)
     print(
         f"Verified {result['project']}=={result['version']}: "
-        f"{result['tool_count']} MCP tools, growth ledger tools present."
+        f"{result['tool_count']} MCP tools, growth ledger tools and noosphere-query present."
     )
     return 0
 

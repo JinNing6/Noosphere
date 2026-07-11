@@ -1,8 +1,16 @@
 # Noosphere Project Memory Snapshot
 
-Last verified: 2026-07-10 (Asia/Shanghai)
+Last verified: 2026-07-11 (Asia/Shanghai)
 
 ## Current Engineering State
+
+- Branch `codex/launch-proof-readme` prepares the `v0.7.2` release candidate. It is not published until the branch is merged and the `v0.7.2` GitHub Release or tag completes Trusted Publishing.
+- Anonymous startup and anonymous consultation are now separate tested contracts. `consult_noosphere` uses the generated repository public index in anonymous mode, completing a read-only search in one cacheable request without consuming the unauthenticated GitHub REST API budget across dozens of permanent files.
+- Authenticated consultation retains the existing fresh-Issue plus canonical-permanent-file path and local hybrid semantic search. Anonymous consultation deliberately uses lightweight BM25 and does not initialize or download the local sentence-transformer model.
+- The release candidate adds `noosphere-query`, exposed by the wheel as `uvx --from noosphere-mcp noosphere-query "your error"`. A real local command completed in about 1.2 seconds after the environment was available; a separate end-to-end test against the generated public index returned verified Issue #35 with root cause, fix, and verification evidence.
+- The generated public index now carries public publisher, trust, and structured engineering-evidence fields while continuing to omit raw embedding vectors and credentials.
+- English and Chinese README first screens now lead with the dynamic shared Skill thesis, honest registry state, supported Agent runtimes, one read-only command, and real registry/evidence paths. The Android App and 3D universe are explicitly positioned as second-layer network visualization.
+- A reproducible 20.00-second Agent Debug Memory demo now shows the Issue #35 failure, Noosphere query, evidence-backed fix, and passing regression. The GIF is 159,984 bytes and the MP4 is 98,387 bytes; source and regeneration instructions live in `docs/demo-script-20s.md` and `scripts/render-launch-demo.ps1`.
 
 - The dynamic shared Skills implementation was merged through PR #31 as merge commit `48426f7d6fff29e836afc4aab2745d4cbf20516d` after all CLA, Python, Node, registry, migration, and supply-chain checks passed.
 - Tag `v0.7.0` was published to PyPI through Trusted Publishing. A real clean `uvx` MCP handshake then exposed that the preflight gate incorrectly treated a missing optional `GITHUB_TOKEN` as fatal, so anonymous read-only startup was unavailable despite the documented contract.
@@ -51,6 +59,14 @@ Last verified: 2026-07-10 (Asia/Shanghai)
 
 ## Verification Evidence
 
+- `python -m pytest sdk/tests -q`: 194 passed for the `v0.7.2` release candidate.
+- `node --test .github/scripts/*.test.cjs`: 71 passed after preserving the first-screen contribution, resonance-loop, and Share Proof contracts.
+- Repository script tests: 18 passed, including launch-surface truthfulness, generated evidence projection, PyPI verifier, migration, and registry validation.
+- Frontend `npm run lint` and `npm run build`: passed; Vite retains its existing large-chunk warning and npm reports 2 low plus 1 moderate dependency advisories.
+- Built `noosphere_mcp-0.7.2.tar.gz` and `noosphere_mcp-0.7.2-py3-none-any.whl`; wheel inspection confirmed both `noosphere-mcp` and `noosphere-query` console entry points and the packaged `query_cli.py` module.
+- Anonymous query regression: the generated canonical index returned `verified`, `Root cause`, `Fix`, `Verification`, and `Issue #35`; the temporary local HTTP server was shut down after the test.
+- The reusable Windows CLI Unicode failure pattern is captured in the validated global Skill `python-cli-windows-console-encoding`: preserve the negotiated console encoding, replace unsupported glyphs, and avoid forcing UTF-8 when the parent decoder still uses a legacy code page.
+
 - `python -m pytest sdk/tests -q`: 188 passed.
 - `node --test .github/scripts/*.test.cjs`: 71 passed.
 - Repository script unit tests: 27 passed.
@@ -66,8 +82,9 @@ Last verified: 2026-07-10 (Asia/Shanghai)
 
 ## Required Deployment Steps
 
-1. Recruit independent developers through Issue #33 and the three public Seed Memories (#35-#37). At least one other GitHub publisher must submit a separately reproduced, semantically matching evidence record before any Seed can form a candidate.
-2. Let the workflow generate the deterministic candidate, inspect both independent evidence records, and apply `skill-approved` only after the security and applicability review passes.
-3. Demonstrate one third-party Agent discovering and successfully reusing the published Skill; record the outcome through `record_skill_outcome` before large-scale promotion.
-4. Do not describe the registry as having live published Skills until the first approved release appears in `shared_skills/registry.json` on remote `main`.
-5. Handle MCP implementation-version metadata and GitHub Actions Node runtime deprecation in a separate maintenance PR; neither blocks the first real Skill.
+1. Merge the `v0.7.2` release-candidate PR only after the same CI gates pass remotely, then publish tag or GitHub Release `v0.7.2` and verify the exact public `noosphere-query` artifact.
+2. Recruit independent developers through Issue #33 and the three public Seed Memories (#35-#37). At least one other GitHub publisher must submit a separately reproduced, semantically matching evidence record before any Seed can form a candidate.
+3. Let the workflow generate the deterministic candidate, inspect both independent evidence records, and apply `skill-approved` only after the security and applicability review passes.
+4. Demonstrate one third-party Agent discovering and successfully reusing the published Skill; record the outcome through `record_skill_outcome` before large-scale promotion.
+5. Do not describe the registry as having live published Skills until the first approved release appears in `shared_skills/registry.json` on remote `main`.
+6. Handle MCP implementation-version metadata, the existing Vite chunk warning, npm dependency advisories, and GitHub Actions Node runtime deprecation in separate maintenance work; none changes the honest zero-Skill registry state.
