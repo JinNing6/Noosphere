@@ -20,6 +20,11 @@ VERIFICATION_LEVELS = {
 }
 
 
+def _canonical_artifact_bytes(path: Path) -> bytes:
+    """Return the LF-normalized bytes stored by Git for text Skill artifacts."""
+    return path.read_bytes().replace(b"\r\n", b"\n")
+
+
 def _frontmatter_value(frontmatter: str, key: str) -> str:
     match = re.search(rf"^{re.escape(key)}:\s*(.+)$", frontmatter, re.MULTILINE)
     if not match:
@@ -132,7 +137,7 @@ def validate_registry(root: Path, registry: dict) -> list[str]:
             errors.extend(validate_skill_file(artifact_path, name))
             if not artifact_path.is_file():
                 continue
-            data = artifact_path.read_bytes()
+            data = _canonical_artifact_bytes(artifact_path)
             if hashlib.sha256(data).hexdigest() != artifact.get("sha256"):
                 errors.append(f"Artifact SHA-256 mismatch: {name}@{version}")
             if len(data) != artifact.get("size_bytes"):
@@ -150,7 +155,8 @@ def validate_registry(root: Path, registry: dict) -> list[str]:
                     errors.append(f"Missing active Skill mirror: {name}")
                 elif (
                     release_path.is_file()
-                    and active_path.read_bytes() != release_path.read_bytes()
+                    and _canonical_artifact_bytes(active_path)
+                    != _canonical_artifact_bytes(release_path)
                 ):
                     errors.append(f"Active Skill mirror drift: {name}")
         else:

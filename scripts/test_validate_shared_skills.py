@@ -88,6 +88,46 @@ class SharedSkillValidationTests(unittest.TestCase):
 
         self.assertTrue(any("SHA-256 mismatch" in error for error in errors))
 
+    def test_registry_digest_is_stable_across_crlf_worktrees(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            release_path = root / "shared_skills/releases/1.0.0/test-recovery/SKILL.md"
+            active_path = root / "shared_skills/active/test-recovery/SKILL.md"
+            release_path.parent.mkdir(parents=True)
+            active_path.parent.mkdir(parents=True)
+            canonical = SKILL.encode()
+            release_path.write_bytes(canonical.replace(b"\n", b"\r\n"))
+            active_path.write_bytes(canonical)
+            registry = {
+                "schema_version": "1.0",
+                "revision": 1,
+                "skills": [
+                    {
+                        "name": "test-recovery",
+                        "description": "Recover a verified test failure.",
+                        "latest": "1.0.0",
+                        "releases": [
+                            {
+                                "version": "1.0.0",
+                                "status": "active",
+                                "publisher_count": 1,
+                                "verification": {"level": "maintainer-validated"},
+                                "provenance": {"kind": "maintainer-authored"},
+                                "artifact": {
+                                    "path": "shared_skills/releases/1.0.0/test-recovery/SKILL.md",
+                                    "sha256": hashlib.sha256(canonical).hexdigest(),
+                                    "size_bytes": len(canonical),
+                                },
+                            }
+                        ],
+                    }
+                ],
+            }
+
+            errors = validate_registry(root, registry)
+
+        self.assertEqual(errors, [])
+
     def test_withdrawn_only_skill_has_no_active_mirror(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)

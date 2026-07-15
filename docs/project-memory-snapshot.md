@@ -77,7 +77,7 @@ Last verified: 2026-07-15 (Asia/Shanghai)
 ## Verification Evidence
 
 - All 13 immutable releases and active mirrors pass the Agent Skills and registry validators. `npx skills add . --list` discovers exactly 13 Skills from the repository without plugin-local copies.
-- `python -m pytest sdk/tests -q`: 195 passed. GitHub workflow tests: 73 passed. Repository script tests: 33 passed. Frontend lint, production build, and Skill Tree contract checks pass with `13 live, 3 verified Seeds`.
+- `python -m pytest sdk/tests -q`: 195 passed. GitHub workflow tests: 73 passed. Repository script tests: 34 passed. Frontend lint, production build, and Skill Tree contract checks pass with `13 live, 3 verified Seeds`.
 - The generated frontend index contains no parallel static collection. Skill details expose immutable version, SHA-256, originator, and an honest lifecycle state: maintainer validated, independently reproduced, outcome proven, established, or Seed.
 
 - `python -m pytest sdk/tests -q`: 194 passed for the published `v0.7.2` release.
@@ -94,7 +94,7 @@ Last verified: 2026-07-15 (Asia/Shanghai)
 - Repository script unit tests: 27 passed.
 - Shared Skill registry validator: passed.
 - Permanent promotion canonicalization check: passed with no pending writes or deletes.
-- Critical Ruff gate and focused shared-Skill Ruff/format checks: passed. Windows checks explicitly preserved CRLF checkout line endings; remote CI uses canonical LF.
+- Critical Ruff gate and focused shared-Skill Ruff/format checks: passed. Skill artifact digests are defined over Git-canonical LF bytes, enforced by `.gitattributes` and a CRLF/LF regression test so Windows validation matches Linux CI and GitHub raw artifacts.
 - Local and release-workflow builds produced `noosphere_mcp-0.7.1.tar.gz` and `noosphere_mcp-0.7.1-py3-none-any.whl` successfully.
 - Anonymous public-artifact smoke test: MCP initialization succeeded, `tools/list` returned 45 tools, no dynamic Skill tool was missing, and `GITHUB_TOKEN` was absent from the process environment.
 - `python -S scripts/build_consciousness_index.py` passed with site-packages disabled and generated 41 unique public memories, proving the indexer no longer relies on installed `httpx` through package import side effects.

@@ -38,8 +38,8 @@
           },
           "artifact": {
             "path": "shared_skills/releases/1.0.0/agent-debug-memory/SKILL.md",
-            "sha256": "49f4a78209ad392441bcf476942d7e8b8e6964afd4ba661c532c4a2f1214600e",
-            "size_bytes": 2501
+            "sha256": "d15ebefd3fa20411c1f2b1202191adcd9fdc0bb2b92761543587bf1bbf81bb4e",
+            "size_bytes": 2456
           },
           "withdrawal": null
         }
@@ -290,8 +290,8 @@
           },
           "artifact": {
             "path": "shared_skills/releases/1.0.0/dynamic-shared-skills/SKILL.md",
-            "sha256": "ecb8cfe56224f1239e06e2cb48b064ece4b46084653bf5c9a718dd04b52b4be1",
-            "size_bytes": 2016
+            "sha256": "7b35eb7800cb2c6f149d04cbd2bf9fb39ea1e103f9bf6a523c4d3aa1ef9304f0",
+            "size_bytes": 1982
           },
           "withdrawal": null
         }
@@ -458,8 +458,8 @@
           },
           "artifact": {
             "path": "shared_skills/releases/1.0.0/upload-debug-memory/SKILL.md",
-            "sha256": "431fee2f804c11ae28e2adace7d63b3770c2c8926062f8e051f73dd4a32fb79a",
-            "size_bytes": 2072
+            "sha256": "ce1b63f83959f3102f866d20fd152b4b984bdf364cb436ae24712bd561b036f7",
+            "size_bytes": 2020
           },
           "withdrawal": null
         }
