@@ -50,6 +50,7 @@ node_modules/
 
 # Frontend build output
 frontend/dist/
+frontend/public/skill-tree-index.json
 scripts/generate_300_seeds.py
 record_terminal.py
 docs/terminal_demo/demo.cast

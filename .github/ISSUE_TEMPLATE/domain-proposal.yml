@@ -1,0 +1,30 @@
+name: Propose a Skill domain branch
+description: Request taxonomy review when no existing branch accurately fits a reusable Skill.
+title: "Domain proposal: "
+labels:
+  - skill-candidate
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Domain branches are review-gated to prevent duplicate names from fragmenting the shared network.
+  - type: input
+    id: domain_name
+    attributes:
+      label: Proposed domain name
+    validations:
+      required: true
+  - type: textarea
+    id: reason
+    attributes:
+      label: Why existing branches do not fit
+      description: Compare this proposal with the nearest existing domains.
+    validations:
+      required: true
+  - type: textarea
+    id: initial_skills
+    attributes:
+      label: Representative Skills or evidence
+      description: Link at least one real reusable Skill candidate that needs this branch.
+    validations:
+      required: true

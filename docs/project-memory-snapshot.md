@@ -1,6 +1,16 @@
 # Noosphere Project Memory Snapshot
 
-Last verified: 2026-07-11 (Asia/Shanghai)
+Last verified: 2026-07-15 (Asia/Shanghai)
+
+## Living Skill Tree Frontend
+
+- Branch `codex/living-skill-tree-v1` replaces the frontend default route with an operational Living Skill Tree while preserving the complete existing 3D universe behind `?view=universe` and a persistent Universe navigation entry. Existing Issue, playground, and profile routes continue to resolve through the preserved universe application.
+- The default surface is a workbench, not a marketing landing page: global search, Tree and Directory views, eight deterministic engineering domains, Skill details, version history, Agent connection guidance, and structured contribution entry points are available in English and Chinese.
+- The tree index is generated only from repository truth. At verification time it contains 0 published dynamic Skills, 3 bundled repository Skills, and 3 verified Skill Seeds. Seed ingestion requires trusted review, Skill eligibility, complete symptom/root-cause/fix/verification evidence, and at least one test command; a Seed is excluded when a same-name published Skill exists.
+- Community actions remain review-gated. Creating a Skill, proposing a domain, or submitting a new version opens a structured GitHub Issue; the browser never writes directly to the immutable Skill registry or claims that an unreviewed proposal is published.
+- The WebGL tree uses responsive node spacing and dedicated transparent hit geometry on mobile. Playwright checks at a 390 x 844 viewport selected two vertically adjacent Skill nodes independently, and the directory search for `runtime smoke` returned the single matching verified Seed without horizontal overflow.
+- Vite was upgraded to 8.1.4 and the React plugin to 6.0.3. The default entry is 211.14 kB (65.50 kB gzip); Three.js and the former universe remain lazy-loaded. Frontend lint, production build, all ten repository frontend contract checks, both production and full dependency audits, DesignMD lint, and Git diff whitespace checks passed locally.
+- This frontend is implemented and locally verified but is not yet merged or deployed. The shared Skill registry remains honestly empty until independent evidence and maintainer approval publish the first immutable dynamic Skill.
 
 ## Current Engineering State
 

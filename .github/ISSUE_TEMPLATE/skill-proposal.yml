@@ -1,0 +1,101 @@
+name: Propose or update an Agent Skill
+description: Submit a reproducible engineering failure, reusable fix, and verification evidence.
+title: "Skill proposal: "
+labels:
+  - skill-candidate
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This form creates review input, not an immediately executable Skill. Publication requires independent evidence and maintainer approval.
+  - type: input
+    id: skill_name
+    attributes:
+      label: Skill name
+      description: Use a stable lowercase kebab-case name.
+      placeholder: public-artifact-runtime-smoke-gate
+    validations:
+      required: true
+  - type: dropdown
+    id: domain
+    attributes:
+      label: Domain branch
+      options:
+        - Agent Runtime
+        - MCP & Tools
+        - Build & Release
+        - Testing & Reliability
+        - Security & Trust
+        - Frontend & Mobile
+        - Data & Infrastructure
+        - Languages & Frameworks
+    validations:
+      required: true
+  - type: textarea
+    id: summary
+    attributes:
+      label: What this Skill solves
+      description: State the reusable engineering outcome, not a product claim.
+    validations:
+      required: true
+  - type: textarea
+    id: symptom
+    attributes:
+      label: Reproducible failure symptom
+      description: Include the observed failure and the environment in which it occurs.
+    validations:
+      required: true
+  - type: textarea
+    id: root_cause
+    attributes:
+      label: Root cause
+      description: Explain the mechanism that produces the failure.
+    validations:
+      required: true
+  - type: textarea
+    id: fix
+    attributes:
+      label: Reusable fix
+      description: Describe the minimal, generalizable correction and important boundaries.
+    validations:
+      required: true
+  - type: textarea
+    id: verification
+    attributes:
+      label: Verification evidence
+      description: Provide public source URLs, commits, logs, or independently reproducible artifacts.
+    validations:
+      required: true
+  - type: textarea
+    id: applies_when
+    attributes:
+      label: Applies when
+      description: Define the environments and failure boundaries where this Skill is appropriate.
+    validations:
+      required: true
+  - type: textarea
+    id: avoid_when
+    attributes:
+      label: Do not apply when
+      description: Identify similar-looking cases where this fix would be unsafe or irrelevant.
+  - type: textarea
+    id: test_commands
+    attributes:
+      label: Test commands
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: source_urls
+    attributes:
+      label: Public evidence URLs
+      description: Provide public Issues, commits, logs, or reproducible artifacts, one URL per line.
+    validations:
+      required: true
+  - type: checkboxes
+    id: declaration
+    attributes:
+      label: Evidence declaration
+      options:
+        - label: I have reproduced this behavior and the evidence does not contain credentials or private data.
+          required: true

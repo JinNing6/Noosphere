@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
-const appSource = await readFile(new URL('../src/App.tsx', import.meta.url), 'utf8');
+const appSource = await readFile(new URL('../src/UniverseApp.tsx', import.meta.url), 'utf8');
 const componentSource = await readFile(new URL('../src/components/TractionProofPanel.tsx', import.meta.url), 'utf8');
 const dataSource = await readFile(new URL('../src/utils/tractionProof.ts', import.meta.url), 'utf8');
 const cssSource = await readFile(new URL('../src/index.css', import.meta.url), 'utf8');
@@ -13,12 +13,12 @@ const growthProofIssueForm = await readFile(new URL('../../.github/ISSUE_TEMPLAT
 assert.match(
   appSource,
   /import\s+TractionProofPanel\s+from\s+'\.\/components\/TractionProofPanel'/,
-  'homepage should import the public traction proof panel',
+  'Universe surface should import the public traction proof panel',
 );
 assert.match(
   appSource,
   /<TractionProofPanel\s+onOpenUploader=\{handleOpenUploader\}\s*\/>/,
-  'homepage should render traction proof with the upload recovery action',
+  'Universe surface should render traction proof with the upload recovery action',
 );
 
 assert.match(dataSource, /traction_proof\.json/, 'traction proof data should load the generated public JSON');
@@ -79,15 +79,14 @@ assert.match(growthProofIssueForm, /id:\s+target_contributors/, 'Growth Issue Fo
 assert.match(growthProofIssueForm, /record_growth_referral/, 'Growth Issue Form should show the next ledger command');
 assert.doesNotMatch(growthProofIssueForm, /\b(downloads|reposts|referrals|retention|rewards|installs)\s*[:=]\s*\d+/i, 'Growth Issue Form must not define fake adoption counters');
 
-const firstScreen = readmeSource.slice(0, 7200);
-assert.match(firstScreen, /Traction Proof/i, 'README first screen should announce the public traction proof surface');
-assert.match(firstScreen, /traction_proof\.json/, 'README should document the real public traction artifact');
-assert.match(firstScreen, /traction_history\.json/, 'README should document the append-only traction history artifact');
-assert.match(firstScreen, /First Proof/i, 'README first screen should expose the first proof action kit');
-assert.match(firstScreen, /growth-proof\.yml/, 'README should link the Growth Proof Issue Form');
-assert.match(firstScreen, /share-proof\.yml/, 'README should link the Share Proof Issue Form');
-assert.match(firstScreen, /velocity/i, 'README should explain that historical velocity comes from real snapshots');
-assert.match(firstScreen, /GitHub REST API/i, 'README should state public repo metrics come from GitHub REST API');
-assert.match(firstScreen, /No downloads, reposts, referrals, retention, rewards, or install counts are inferred/, 'README should disclose traction proof limits');
+assert.match(readmeSource, /Traction Proof/i, 'README should retain documentation for the Universe traction proof surface');
+assert.match(readmeSource, /traction_proof\.json/, 'README should document the real public traction artifact');
+assert.match(readmeSource, /traction_history\.json/, 'README should document the append-only traction history artifact');
+assert.match(readmeSource, /First Proof/i, 'README should document the first proof action kit');
+assert.match(readmeSource, /growth-proof\.yml/, 'README should link the Growth Proof Issue Form');
+assert.match(readmeSource, /share-proof\.yml/, 'README should link the Share Proof Issue Form');
+assert.match(readmeSource, /velocity/i, 'README should explain that historical velocity comes from real snapshots');
+assert.match(readmeSource, /GitHub REST API/i, 'README should state public repo metrics come from GitHub REST API');
+assert.match(readmeSource, /No downloads, reposts, referrals, retention, rewards, or install counts are inferred/, 'README should disclose traction proof limits');
 
-console.log('traction proof ok: homepage exposes real public repository and IssueOps proof data');
+console.log('traction proof ok: Universe exposes real public repository and IssueOps proof data');
