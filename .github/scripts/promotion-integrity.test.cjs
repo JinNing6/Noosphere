@@ -130,7 +130,7 @@ test("promotion and withdrawal serialize the same permanent-memory state", () =>
   );
 
   for (const workflow of [promotion, withdrawal]) {
-    assert.match(workflow, /group: consciousness-permanent-state-main/);
+    assert.match(workflow, /group: noosphere-main-writer/);
     assert.match(workflow, /queue: max/);
   }
 });

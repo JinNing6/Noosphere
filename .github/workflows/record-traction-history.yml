@@ -14,8 +14,9 @@ permissions:
   pull-requests: read
 
 concurrency:
-  group: traction-history-record-main
+  group: noosphere-main-writer
   cancel-in-progress: false
+  queue: max
 
 jobs:
   record:

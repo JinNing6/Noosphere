@@ -208,16 +208,17 @@ function SkillNode({
 }) {
   const [hovered, setHovered] = useState(false);
   const domain = domainById(record.domainId);
+  const withdrawn = record.lifecycle === 'withdrawn';
   const emphasized = selected || hovered || matching;
   const scale = (emphasized ? 1.34 : 1) * (compact ? 1.28 : 1);
   const material = (
     <meshStandardMaterial
-      color={domain.color}
-      emissive={domain.color}
-      emissiveIntensity={emphasized ? 0.8 : 0.16}
+      color={withdrawn ? '#555B61' : domain.color}
+      emissive={withdrawn ? '#111418' : domain.color}
+      emissiveIntensity={withdrawn ? 0.05 : emphasized ? 0.8 : 0.16}
       roughness={record.kind === 'seed' ? 0.68 : 0.34}
       metalness={record.kind === 'seed' ? 0.1 : 0.42}
-      wireframe={record.kind === 'seed'}
+      wireframe={record.kind === 'seed' || withdrawn}
     />
   );
 
@@ -242,7 +243,7 @@ function SkillNode({
         {record.kind === 'published' && <dodecahedronGeometry args={[0.16, 0]} />}
         {material}
       </mesh>
-      {record.kind === 'published' && (
+      {record.kind === 'published' && !withdrawn && (
         <mesh rotation={[Math.PI / 2, 0, 0]}>
           <torusGeometry args={[0.24, 0.018, 8, 48]} />
           <meshBasicMaterial color={domain.color} transparent opacity={0.86} />

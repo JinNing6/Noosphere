@@ -100,6 +100,7 @@ function lifecycleForVerification(level?: string): SkillRecord['lifecycle'] {
 export function normalizeSkillIndex(index: SkillTreeIndex): SkillRecord[] {
   const published = index.published_skills.map((skill): SkillRecord => {
     const activeRelease = skill.releases.find((release) => release.version === skill.latest && release.status === 'active');
+    const displayRelease = activeRelease || [...skill.releases].reverse().find((release) => release.status === 'withdrawn');
     const tags = skill.tags || [];
     const domains = assignDomains(skill.name, skill.description, tags, skill.domain);
     const verificationLevel = activeRelease?.verification?.level;
@@ -108,16 +109,16 @@ export function normalizeSkillIndex(index: SkillTreeIndex): SkillRecord[] {
       name: skill.name,
       description: skill.description,
       kind: 'published',
-      lifecycle: lifecycleForVerification(verificationLevel),
+      lifecycle: activeRelease ? lifecycleForVerification(verificationLevel) : 'withdrawn',
       domainId: domains.primary,
       secondaryDomainIds: domains.secondary,
       tags,
-      version: skill.latest,
-      digest: activeRelease?.artifact?.sha256,
-      sourceUrl: `https://github.com/JinNing6/Noosphere/blob/main/${activeRelease?.artifact?.path || 'shared_skills/registry.json'}`,
-      sourcePath: activeRelease?.artifact?.path || 'shared_skills/registry.json',
-      sourceCount: activeRelease?.source_count,
-      publisherCount: activeRelease?.publisher_count,
+      version: displayRelease?.version,
+      digest: displayRelease?.artifact?.sha256,
+      sourceUrl: `https://github.com/JinNing6/Noosphere/blob/main/${displayRelease?.artifact?.path || 'shared_skills/registry.json'}`,
+      sourcePath: displayRelease?.artifact?.path || 'shared_skills/registry.json',
+      sourceCount: displayRelease?.source_count,
+      publisherCount: displayRelease?.publisher_count,
       creator: skill.originators?.[0],
       verificationLevel,
     };

@@ -252,7 +252,7 @@ Noosphere takes the next step. Instead of automatically publishing community pro
 
 Ordinary Skill files teach one Agent a workflow. Noosphere gives every Skill one live identity, immutable versions, explicit trust levels, outcome feedback, and reviewed evolution across Agents.
 
-The public MCP surface is `list_shared_skills`, `get_shared_skill`, and `check_skill_updates`. Authenticated users can submit verified execution feedback through `record_skill_outcome` or request a reviewed rollback through `request_shared_skill_withdrawal`. See [the protocol and trust boundary](SKILLS_PROTOCOL.md).
+The public MCP surface is `list_shared_skills`, `get_shared_skill`, and `check_skill_updates`. Authenticated users can submit idempotent execution feedback through `record_skill_outcome`; trusted review records it in the public outcome ledger. Only an independent success with public evidence advances proven reuse; partial or failed outcomes mark an update-needed boundary without rewriting immutable instructions. Rollback requests remain separately review-gated through `request_shared_skill_withdrawal`. See [the protocol and trust boundary](SKILLS_PROTOCOL.md).
 
 The registry starts with 13 maintainer-authored foundational Skills at `maintainer-validated`. Noosphere will not claim independent reproduction until two independent publishers provide structured evidence, a deterministic candidate is generated, and a maintainer approves the immutable next release.
 

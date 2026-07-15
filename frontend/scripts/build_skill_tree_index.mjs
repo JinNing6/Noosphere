@@ -1,6 +1,7 @@
 import { readFile, readdir, mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { validateRegistry } from './skill_tree_registry_contract.mjs';
 
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
 const frontendDirectory = path.resolve(scriptDirectory, '..');
@@ -70,17 +71,6 @@ async function readVerifiedSeeds() {
   }
 
   return seeds.sort((a, b) => a.source_issue - b.source_issue);
-}
-
-function validateRegistry(registry) {
-  if (registry?.schema_version !== '1.0' || !Number.isInteger(registry?.revision) || !Array.isArray(registry?.skills)) {
-    throw new Error('shared_skills/registry.json does not match schema version 1.0');
-  }
-  for (const skill of registry.skills) {
-    if (!skill?.name || !skill?.latest || !Array.isArray(skill?.releases)) {
-      throw new Error(`Malformed published Skill registry entry: ${skill?.name || 'unknown'}`);
-    }
-  }
 }
 
 const registryPath = path.join(repositoryRoot, 'shared_skills', 'registry.json');

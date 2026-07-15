@@ -2,9 +2,34 @@ import { execFileSync } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { validateRegistry } from './skill_tree_registry_contract.mjs';
 
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
 const frontendDirectory = path.resolve(scriptDirectory, '..');
+
+validateRegistry({
+  schema_version: '1.0',
+  revision: 2,
+  skills: [{
+    name: 'withdrawn-audit-record',
+    latest: null,
+    releases: [{ version: '1.0.0', status: 'withdrawn' }],
+  }],
+});
+try {
+  validateRegistry({
+    schema_version: '1.0',
+    revision: 2,
+    skills: [{
+      name: 'invalid-active-record',
+      latest: null,
+      releases: [{ version: '1.0.0', status: 'active' }],
+    }],
+  });
+  throw new Error('Registry contract accepted an active release with latest: null');
+} catch (error) {
+  if (!String(error.message).includes('still has active releases')) throw error;
+}
 
 execFileSync(process.execPath, [path.join(scriptDirectory, 'build_skill_tree_index.mjs')], {
   cwd: frontendDirectory,
@@ -73,8 +98,8 @@ if (!appSource.includes("lazy(() => import('./UniverseApp'))") || !appSource.inc
 }
 
 const detailSource = await readFile(path.join(frontendDirectory, 'src', 'features', 'skill-tree', 'SkillDetailPanel.tsx'), 'utf8');
-if (!detailSource.includes("record.kind === 'published'")) {
-  throw new Error('Seed install honesty gate is missing');
+if (!detailSource.includes("record.kind === 'published' && record.lifecycle !== 'withdrawn'")) {
+  throw new Error('Seed and withdrawn release install honesty gate is missing');
 }
 
 const treeAppSource = await readFile(path.join(frontendDirectory, 'src', 'features', 'skill-tree', 'SkillTreeApp.tsx'), 'utf8');

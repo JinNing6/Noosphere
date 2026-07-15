@@ -150,6 +150,7 @@ async def test_check_updates_and_record_outcome_use_structured_issue_payload():
     registry_url = "https://api.github.com/repos/test_owner/test_repo/contents/shared_skills/registry.json"
     issue_url = "https://api.github.com/repos/test_owner/test_repo/issues"
     respx.get(registry_url).mock(return_value=Response(200, json={"content": encoded(REGISTRY)}))
+    respx.get(issue_url).mock(return_value=Response(200, json=[]))
     issue_route = respx.post(issue_url).mock(
         return_value=Response(
             201,
@@ -188,6 +189,124 @@ async def test_check_updates_and_record_outcome_use_structured_issue_payload():
     request_body = json.loads(issue_route.calls[0].request.content)["body"]
     assert "SKILL_OUTCOME_START" in request_body
     assert '"outcome_id": "outcome-test-001"' in request_body
+    assert "SKILL_OUTCOME_ID:outcome-test-001" in request_body
+    request_payload = json.loads(issue_route.calls[0].request.content)
+    assert "labels" not in request_payload
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_record_outcome_retry_reuses_existing_issue():
+    registry_url = "https://api.github.com/repos/test_owner/test_repo/contents/shared_skills/registry.json"
+    issue_url = "https://api.github.com/repos/test_owner/test_repo/issues"
+    marker = "<!-- SKILL_OUTCOME_ID:outcome-test-duplicate -->"
+    existing_payload = {
+        "schema_version": "1.0",
+        "outcome_id": "outcome-test-duplicate",
+        "skill_name": "android-node-picking-recovery",
+        "skill_version": "1.0.0",
+        "skill_sha256": SKILL_SHA,
+        "outcome": "success",
+        "task_summary": "Fixed the mobile node selection regression.",
+        "verification_summary": "ADB tap selected the projected instance and opened detail.",
+        "evidence_urls": [],
+    }
+    existing_body = (
+        f"{marker}\n<!-- SKILL_OUTCOME_START -->\n```json\n"
+        f"{json.dumps(existing_payload)}\n```\n<!-- SKILL_OUTCOME_END -->"
+    )
+    respx.get(registry_url).mock(return_value=Response(200, json={"content": encoded(REGISTRY)}))
+    respx.get(issue_url).mock(
+        return_value=Response(
+            200,
+            json=[
+                {
+                    "number": 55,
+                    "html_url": "https://github.com/test_owner/test_repo/issues/55",
+                    "body": existing_body,
+                }
+            ],
+        )
+    )
+    post_route = respx.post(issue_url).mock(return_value=Response(500, json={"message": "must not post"}))
+
+    _invalidate_cache()
+    await _close_client()
+    with (
+        patch("noosphere.noosphere_mcp.GITHUB_TOKEN", "token"),
+        patch("noosphere.noosphere_mcp.GITHUB_REPO", "test_owner/test_repo"),
+        patch("noosphere.noosphere_mcp.GITHUB_BRANCH", "main"),
+    ):
+        result = await record_skill_outcome(
+            skill_name="android-node-picking-recovery",
+            version="1.0.0",
+            outcome="success",
+            task_summary="Fixed the mobile node selection regression.",
+            verification_summary="ADB tap selected the projected instance and opened detail.",
+            outcome_id="outcome-test-duplicate",
+        )
+
+    await _close_client()
+    _invalidate_cache()
+    assert "already recorded as #55" in result
+    assert not post_route.called
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_record_outcome_does_not_reuse_a_conflicting_marker():
+    registry_url = "https://api.github.com/repos/test_owner/test_repo/contents/shared_skills/registry.json"
+    issue_url = "https://api.github.com/repos/test_owner/test_repo/issues"
+    marker = "<!-- SKILL_OUTCOME_ID:outcome-test-conflict -->"
+    conflicting_payload = {
+        "schema_version": "1.0",
+        "outcome_id": "outcome-test-conflict",
+        "skill_name": "android-node-picking-recovery",
+        "skill_version": "1.0.0",
+        "skill_sha256": SKILL_SHA,
+        "outcome": "failure",
+        "task_summary": "Different task",
+        "verification_summary": "Different result",
+        "evidence_urls": [],
+    }
+    conflicting_body = (
+        f"{marker}\n<!-- SKILL_OUTCOME_START -->\n```json\n"
+        f"{json.dumps(conflicting_payload)}\n```\n<!-- SKILL_OUTCOME_END -->"
+    )
+    respx.get(registry_url).mock(return_value=Response(200, json={"content": encoded(REGISTRY)}))
+    respx.get(issue_url).mock(
+        return_value=Response(
+            200,
+            json=[{"number": 55, "html_url": "https://example.com/55", "body": conflicting_body}],
+        )
+    )
+    post_route = respx.post(issue_url).mock(
+        return_value=Response(
+            201,
+            json={"number": 57, "html_url": "https://github.com/test_owner/test_repo/issues/57"},
+        )
+    )
+
+    _invalidate_cache()
+    await _close_client()
+    with (
+        patch("noosphere.noosphere_mcp.GITHUB_TOKEN", "token"),
+        patch("noosphere.noosphere_mcp.GITHUB_REPO", "test_owner/test_repo"),
+        patch("noosphere.noosphere_mcp.GITHUB_BRANCH", "main"),
+    ):
+        result = await record_skill_outcome(
+            skill_name="android-node-picking-recovery",
+            version="1.0.0",
+            outcome="success",
+            task_summary="Fixed the mobile node selection regression.",
+            verification_summary="ADB tap selected the projected instance and opened detail.",
+            outcome_id="outcome-test-conflict",
+        )
+
+    await _close_client()
+    _invalidate_cache()
+    assert "recorded as #57" in result
+    assert post_route.called
 
 
 @pytest.mark.asyncio

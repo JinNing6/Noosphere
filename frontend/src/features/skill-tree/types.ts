@@ -1,5 +1,5 @@
 export type SkillKind = 'published' | 'seed';
-export type SkillLifecycle = 'maintainer' | 'reproduced' | 'proven' | 'established' | 'seed';
+export type SkillLifecycle = 'maintainer' | 'reproduced' | 'proven' | 'established' | 'withdrawn' | 'seed';
 
 export interface SkillEvidence {
   symptom: string;
@@ -39,7 +39,7 @@ export interface RegistrySkill {
   id?: string;
   name: string;
   description: string;
-  latest: string;
+  latest: string | null;
   domain?: string;
   tags?: string[];
   originators?: string[];

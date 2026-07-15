@@ -29,23 +29,24 @@ Configuration (in your IDE's MCP settings):
 }
 """
 
+import asyncio
+import hashlib
 import json
 import logging
 import math
 import os
-import re
-from base64 import b64decode, b64encode
-from datetime import datetime, timezone
-
-import httpx
 import platform
+import re
 import subprocess
 import threading
 import time
-from mcp.server.fastmcp import FastMCP
-import asyncio
+from base64 import b64decode, b64encode
+from datetime import datetime, timezone
 from typing import TYPE_CHECKING
-from urllib.parse import urlsplit
+from urllib.parse import parse_qsl, urlsplit
+
+import httpx
+from mcp.server.fastmcp import FastMCP
 
 from noosphere.engine.memory_integrity import (
     canonicalize_permanent_entries,
@@ -60,6 +61,69 @@ from noosphere.engine.shared_skills import (
 
 if TYPE_CHECKING:
     import numpy
+
+
+def _is_public_https_evidence_url(value: str) -> bool:
+    parsed = urlsplit(value)
+    sensitive_query = any(
+        re.search(r"(?:token|secret|signature|credential|auth|api[_-]?key)", key, re.IGNORECASE)
+        for key, _ in parse_qsl(parsed.query, keep_blank_values=True)
+    )
+    return bool(
+        parsed.scheme == "https"
+        and parsed.netloc
+        and parsed.username is None
+        and parsed.password is None
+        and not sensitive_query
+    )
+
+
+def _skill_outcome_identity(payload: dict) -> str | None:
+    evidence_urls = payload.get("evidence_urls")
+    if not isinstance(evidence_urls, list) or not all(
+        isinstance(value, str) for value in evidence_urls
+    ):
+        return None
+    required = (
+        "skill_name",
+        "skill_version",
+        "skill_sha256",
+        "outcome",
+        "task_summary",
+        "verification_summary",
+    )
+    if not all(isinstance(payload.get(field), str) for field in required):
+        return None
+    return json.dumps(
+        {
+            "skill_name": payload["skill_name"],
+            "skill_version": payload["skill_version"],
+            "skill_sha256": payload["skill_sha256"],
+            "outcome": payload["outcome"],
+            "task_summary": payload["task_summary"].strip(),
+            "verification_summary": payload["verification_summary"].strip(),
+            "evidence_urls": sorted(evidence_urls),
+        },
+        sort_keys=True,
+        ensure_ascii=False,
+        separators=(",", ":"),
+    )
+
+
+def _extract_skill_outcome_payload(body: str) -> dict | None:
+    match = re.search(
+        r"<!-- SKILL_OUTCOME_START -->\s*```json\s*([\s\S]*?)\s*```\s*"
+        r"<!-- SKILL_OUTCOME_END -->",
+        body,
+    )
+    if not match:
+        return None
+    try:
+        payload = json.loads(match.group(1))
+    except json.JSONDecodeError:
+        return None
+    return payload if isinstance(payload, dict) else None
+
 
 # ── Configuration ──
 GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN", "")
@@ -1451,6 +1515,9 @@ async def upload_consciousness(
                 ))[:12]
                 if normalized:
                     normalized_evidence[field] = normalized
+        for source_url in normalized_evidence.get("source_urls", []):
+            if not _is_public_https_evidence_url(source_url):
+                return f"❌ Invalid public HTTPS evidence URL: {source_url}"
 
     # ── Build Payload ──
     payload = {
@@ -6196,8 +6263,7 @@ async def record_skill_outcome(
 
     clean_urls = []
     for value in evidence_urls or []:
-        parsed = urlsplit(value)
-        if parsed.scheme not in {"http", "https"} or not parsed.netloc:
+        if not _is_public_https_evidence_url(value):
             return f"❌ Invalid evidence URL: {value}"
         clean_urls.append(value)
     if len(clean_urls) > 10:
@@ -6206,9 +6272,20 @@ async def record_skill_outcome(
     try:
         registry = await _fetch_shared_skill_registry(force_refresh=True)
         release = select_skill_release(registry, skill_name, version)
-        stable_outcome_id = outcome_id or (
-            f"outcome-{int(time.time())}-{release['artifact']['sha256'][:12]}"
+        identity_material = _skill_outcome_identity(
+            {
+                "skill_name": skill_name,
+                "skill_version": version,
+                "skill_sha256": release["artifact"]["sha256"],
+                "outcome": outcome,
+                "task_summary": task_summary,
+                "verification_summary": verification_summary,
+                "evidence_urls": clean_urls,
+            }
         )
+        if identity_material is None:
+            return "❌ Unable to construct a stable Skill outcome identity."
+        stable_outcome_id = outcome_id or f"outcome-{hashlib.sha256(identity_material.encode('utf-8')).hexdigest()[:24]}"
         payload = {
             "schema_version": "1.0",
             "outcome_id": stable_outcome_id,
@@ -6223,6 +6300,7 @@ async def record_skill_outcome(
         }
         body = (
             "## Shared Skill execution outcome\n\n"
+            f"<!-- SKILL_OUTCOME_ID:{stable_outcome_id} -->\n"
             "<!-- SKILL_OUTCOME_START -->\n"
             "```json\n"
             f"{json.dumps(payload, ensure_ascii=False, indent=2)}\n"
@@ -6232,12 +6310,41 @@ async def record_skill_outcome(
         )
         owner, repo = _parse_repo()
         client = await _get_client()
+        marker = f"<!-- SKILL_OUTCOME_ID:{stable_outcome_id} -->"
+        for page in range(1, 6):
+            existing_response = await client.get(
+                f"/repos/{owner}/{repo}/issues",
+                params={"state": "all", "per_page": 100, "page": page},
+            )
+            if existing_response.status_code != 200:
+                message = existing_response.json().get("message", "Unknown error")
+                return f"❌ Unable to check existing Skill outcomes: {message}"
+            existing_issues = existing_response.json()
+            existing = next(
+                (
+                    issue
+                    for issue in existing_issues
+                    if marker in str(issue.get("body", ""))
+                    and _skill_outcome_identity(
+                        _extract_skill_outcome_payload(str(issue.get("body", ""))) or {}
+                    )
+                    == identity_material
+                ),
+                None,
+            )
+            if existing:
+                return (
+                    f"✅ Skill outcome already recorded as #{existing['number']}\n"
+                    f"{existing.get('html_url', '')}\n"
+                    f"Outcome ID: {stable_outcome_id}"
+                )
+            if len(existing_issues) < 100:
+                break
         response = await client.post(
             f"/repos/{owner}/{repo}/issues",
             json={
                 "title": f"Skill outcome: {skill_name}@{version} [{outcome}]",
                 "body": body,
-                "labels": ["skill-outcome"],
             },
         )
         if response.status_code != 201:
@@ -6276,8 +6383,7 @@ async def request_shared_skill_withdrawal(
 
     clean_urls = []
     for value in evidence_urls or []:
-        parsed = urlsplit(value)
-        if parsed.scheme not in {"http", "https"} or not parsed.netloc:
+        if not _is_public_https_evidence_url(value):
             return f"❌ Invalid evidence URL: {value}"
         clean_urls.append(value)
     if len(clean_urls) > 10:

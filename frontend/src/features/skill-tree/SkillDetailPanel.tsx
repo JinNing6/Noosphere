@@ -15,7 +15,7 @@ export default function SkillDetailPanel({ record, onClose, onContributeVersion 
   const [copied, setCopied] = useState(false);
   const domain = domainById(record.domainId);
   const command = `npx skills add JinNing6/Noosphere --skill ${record.name}`;
-  const isInstallable = record.kind === 'published';
+  const isInstallable = record.kind === 'published' && record.lifecycle !== 'withdrawn';
 
   const copyCommand = async () => {
     await navigator.clipboard.writeText(command);
@@ -107,6 +107,9 @@ export default function SkillDetailPanel({ record, onClose, onContributeVersion 
 
         {record.kind === 'seed' && (
           <p className="skill-honesty-note"><Sprout size={16} aria-hidden="true" />{t('skills.seedNotice')}</p>
+        )}
+        {record.lifecycle === 'withdrawn' && (
+          <p className="skill-honesty-note"><ShieldCheck size={16} aria-hidden="true" />{t('skills.withdrawnNotice')}</p>
         )}
       </div>
 

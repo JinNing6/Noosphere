@@ -1,0 +1,162 @@
+name: Review Shared Skill Outcome
+
+on:
+  issues:
+    types: [opened, labeled]
+
+concurrency:
+  group: noosphere-main-writer
+  cancel-in-progress: false
+  queue: max
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  triage:
+    if: github.event.action == 'opened'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Validate and queue structured outcome
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('node:fs');
+            const {
+              extractSkillOutcome,
+              validateSkillOutcome,
+            } = require(`${process.env.GITHUB_WORKSPACE}/.github/scripts/skill-outcomes.cjs`);
+            const payload = extractSkillOutcome(context.payload.issue.body);
+            if (!payload) {
+              console.log('Issue is not a structured Skill outcome.');
+              return;
+            }
+            const registry = JSON.parse(fs.readFileSync(
+              `${process.env.GITHUB_WORKSPACE}/shared_skills/registry.json`,
+              'utf8',
+            ));
+            const validation = validateSkillOutcome(payload, registry);
+            if (!validation.valid) {
+              await github.rest.issues.addLabels({
+                ...context.repo,
+                issue_number: context.issue.number,
+                labels: ['skill-outcome-invalid'],
+              });
+              await github.rest.issues.createComment({
+                ...context.repo,
+                issue_number: context.issue.number,
+                body: `Outcome validation failed:\n\n- ${validation.errors.join('\n- ')}`,
+              });
+              return;
+            }
+            await github.rest.issues.addLabels({
+              ...context.repo,
+              issue_number: context.issue.number,
+              labels: ['skill-outcome', 'needs-outcome-review'],
+            });
+            await github.rest.issues.createComment({
+              ...context.repo,
+              issue_number: context.issue.number,
+              body: 'Outcome matches the current immutable Skill release. A trusted maintainer must add `skill-outcome-approved` before it affects public verification metrics.',
+            });
+
+  record:
+    if: github.event.action == 'labeled' && github.event.label.name == 'skill-outcome-approved'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Refresh serialized Skill state
+        run: |
+          git fetch origin main
+          git checkout -B skill-outcome origin/main
+
+      - name: Verify reviewer and record approved outcome
+        id: outcome
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('node:fs');
+            const {
+              extractSkillOutcome,
+              recordApprovedSkillOutcome,
+            } = require(`${process.env.GITHUB_WORKSPACE}/.github/scripts/skill-outcomes.cjs`);
+            const { isTrustedReviewerPermission } = require(
+              `${process.env.GITHUB_WORKSPACE}/.github/scripts/memory-trust.cjs`,
+            );
+            const reviewer = context.payload.sender?.login || context.actor;
+            const permission = await github.rest.repos.getCollaboratorPermissionLevel({
+              ...context.repo,
+              username: reviewer,
+            });
+            if (!isTrustedReviewerPermission(permission.data.permission)) {
+              core.setFailed(`Reviewer ${reviewer} does not have repository write permission.`);
+              return;
+            }
+            const payload = extractSkillOutcome(context.payload.issue.body);
+            if (!payload) {
+              core.setFailed('The Issue does not contain a valid structured Skill outcome.');
+              return;
+            }
+            const registryPath = `${process.env.GITHUB_WORKSPACE}/shared_skills/registry.json`;
+            const ledgerPath = `${process.env.GITHUB_WORKSPACE}/shared_skills/outcomes.json`;
+            const registry = JSON.parse(fs.readFileSync(registryPath, 'utf8'));
+            const ledger = JSON.parse(fs.readFileSync(ledgerPath, 'utf8'));
+            const result = recordApprovedSkillOutcome(
+              registry,
+              ledger,
+              payload,
+              context.payload.issue,
+              { reviewer, approvedAt: new Date().toISOString() },
+            );
+            core.setOutput('idempotent', String(result.idempotent));
+            core.setOutput('update_needed', String(result.updateNeeded));
+            core.setOutput('outcome_id', result.record.outcome_id);
+            if (!result.idempotent) {
+              fs.writeFileSync(registryPath, `${JSON.stringify(result.registry, null, 2)}\n`);
+              fs.writeFileSync(ledgerPath, `${JSON.stringify(result.ledger, null, 2)}\n`);
+            }
+
+      - name: Validate updated Skill state
+        if: steps.outcome.outputs.idempotent != 'true'
+        run: python scripts/validate_shared_skills.py
+
+      - name: Commit approved outcome atomically
+        if: steps.outcome.outputs.idempotent != 'true'
+        run: |
+          git diff --check
+          git config user.name "Noosphere Bot"
+          git config user.email "noosphere-bot@users.noreply.github.com"
+          git add shared_skills/registry.json shared_skills/outcomes.json
+          git commit -m "Record shared Skill outcome ${{ steps.outcome.outputs.outcome_id }}"
+          git push origin HEAD:main
+
+      - name: Record review decision
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const labels = ['skill-outcome-recorded'];
+            if ('${{ steps.outcome.outputs.update_needed }}' === 'true') labels.push('skill-update-needed');
+            await github.rest.issues.addLabels({ ...context.repo, issue_number: context.issue.number, labels });
+            try {
+              await github.rest.issues.removeLabel({
+                ...context.repo,
+                issue_number: context.issue.number,
+                name: 'needs-outcome-review',
+              });
+            } catch (error) {
+              if (error.status !== 404) throw error;
+            }
+            await github.rest.issues.createComment({
+              ...context.repo,
+              issue_number: context.issue.number,
+              body: 'Approved outcome recorded in the public ledger and reflected in the Skill verification state.',
+            });

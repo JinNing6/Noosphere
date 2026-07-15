@@ -5,6 +5,8 @@ const REQUIRED_EVIDENCE_FIELDS = [
   "fix",
   "verification",
   "applies_when",
+  "test_commands",
+  "source_urls",
 ];
 const TRUSTED_REVIEWER_PERMISSIONS = new Set(["admin", "maintain", "write"]);
 
@@ -32,6 +34,37 @@ function normalizeEngineeringEvidence(value) {
   };
 }
 
+function isPublicEvidenceUrl(value) {
+  try {
+    const url = new URL(String(value || ""));
+    const sensitiveQuery = [...url.searchParams.keys()].some((key) => (
+      /(?:token|secret|signature|credential|auth|api[_-]?key)/i.test(key)
+    ));
+    return url.protocol === "https:" && !url.username && !url.password && !sensitiveQuery;
+  } catch {
+    return false;
+  }
+}
+
+function buildModerationText(payload) {
+  const evidence = normalizeEngineeringEvidence(payload?.evidence);
+  return [
+    ["thought", compactText(payload?.thought_vector_text)],
+    ["context", compactText(payload?.context_environment)],
+    ["symptom", evidence.symptom],
+    ["root_cause", evidence.root_cause],
+    ["fix", evidence.fix],
+    ["verification", evidence.verification],
+    ["applies_when", evidence.applies_when],
+    ["avoid_when", evidence.avoid_when],
+    ["test_commands", evidence.test_commands.join("\n")],
+    ["source_urls", evidence.source_urls.join("\n")],
+  ]
+    .filter(([, value]) => value)
+    .map(([label, value]) => `${label}: ${value}`)
+    .join("\n");
+}
+
 function bindVerifiedPublisher(payload, issue) {
   return {
     ...payload,
@@ -45,14 +78,20 @@ function bindVerifiedPublisher(payload, issue) {
 
 function assessSkillEligibility(payload) {
   const evidence = normalizeEngineeringEvidence(payload?.evidence);
-  const missing = REQUIRED_EVIDENCE_FIELDS.filter((field) => !evidence[field]);
+  const missing = REQUIRED_EVIDENCE_FIELDS.filter((field) => (
+    Array.isArray(evidence[field]) ? evidence[field].length === 0 : !evidence[field]
+  ));
+  if (evidence.source_urls.length && !evidence.source_urls.every(isPublicEvidenceUrl)) {
+    missing.push("public_https_source_urls");
+  }
   const publisher = compactText(payload?.publisher?.github_login, 64).toLowerCase();
   const hasPublisher = Boolean(publisher && publisher !== "unknown");
   const isVerified = payload?.trust?.status === "verified";
+  const isScreened = payload?.trust?.status === "screened" && payload?.content_safety?.status === "passed";
   const isEngineeringMemory = ENGINEERING_MEMORY_TYPES.has(payload?.consciousness_type);
 
   return {
-    eligible: isEngineeringMemory && isVerified && hasPublisher && missing.length === 0,
+    eligible: isEngineeringMemory && (isVerified || isScreened) && hasPublisher && missing.length === 0,
     missing,
   };
 }
@@ -66,6 +105,8 @@ module.exports = {
   REQUIRED_EVIDENCE_FIELDS,
   assessSkillEligibility,
   bindVerifiedPublisher,
+  buildModerationText,
+  isPublicEvidenceUrl,
   isTrustedReviewerPermission,
   normalizeEngineeringEvidence,
 };

@@ -66,3 +66,49 @@ def test_load_canonical_payload_records_rejects_malformed_tombstones(tmp_path):
 
     with pytest.raises(ValueError, match="valid tombstone manifest"):
         MODULE.load_canonical_payload_records(payloads_dir, tombstones_file)
+
+
+def test_public_index_does_not_project_screened_evidence(tmp_path, monkeypatch):
+    payloads_dir = tmp_path / "consciousness_payloads"
+    payloads_dir.mkdir()
+    tombstones_file = tmp_path / "consciousness_tombstones.json"
+    tombstones_file.write_text('{"version": 1, "withdrawn_issues": []}', encoding="utf-8")
+    output_file = tmp_path / "consciousness_index.json"
+    common = {
+        "consciousness_type": "pattern",
+        "context_environment": "public package runtime",
+        "evidence": {"fix": "Agent-facing instruction"},
+    }
+    (payloads_dir / "memory_issue0001.json").write_text(
+        json.dumps(
+            {
+                **common,
+                "promoted_from_issue": 1,
+                "thought_vector_text": "screened memory",
+                "trust": {"status": "screened"},
+                "content_safety": {"status": "passed"},
+            }
+        ),
+        encoding="utf-8",
+    )
+    (payloads_dir / "memory_issue0002.json").write_text(
+        json.dumps(
+            {
+                **common,
+                "promoted_from_issue": 2,
+                "thought_vector_text": "human verified memory",
+                "trust": {"status": "verified"},
+            }
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(MODULE, "PAYLOADS_DIR", payloads_dir)
+    monkeypatch.setattr(MODULE, "TOMBSTONES_FILE", tombstones_file)
+    monkeypatch.setattr(MODULE, "OUTPUT_FILE", output_file)
+    monkeypatch.setattr(MODULE, "fetch_issue_reactions", lambda _issue: 0)
+
+    MODULE.build_index()
+    records = {item["text"]: item for item in json.loads(output_file.read_text(encoding="utf-8"))}
+
+    assert "evidence" not in records["screened memory"]
+    assert records["human verified memory"]["evidence"]["fix"] == "Agent-facing instruction"

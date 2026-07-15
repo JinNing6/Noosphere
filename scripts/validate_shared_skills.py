@@ -8,6 +8,7 @@ import hashlib
 import json
 import re
 from pathlib import Path
+from urllib.parse import parse_qsl, urlsplit
 
 
 NAME_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
@@ -117,12 +118,17 @@ def validate_registry(root: Path, registry: dict) -> list[str]:
             )
             if level not in VERIFICATION_LEVELS:
                 errors.append(f"Invalid verification level: {name}@{version}")
-            if (
-                level in {"independently-reproduced", "outcome-proven", "established"}
-                and int(release.get("publisher_count") or 0) < 2
+            if level in {
+                "independently-reproduced",
+                "outcome-proven",
+                "established",
+            } and (
+                int(release.get("source_count") or 0) < 2
+                or int(release.get("publisher_count") or 0) < 2
+                or int(verification.get("independent_reproductions") or 0) < 2
             ):
                 errors.append(
-                    f"Independently verified release lacks publishers: {name}@{version}"
+                    f"Independently verified release lacks source reproduction: {name}@{version}"
                 )
             if not isinstance(release.get("provenance"), dict):
                 errors.append(f"Release lacks provenance metadata: {name}@{version}")
@@ -173,6 +179,130 @@ def validate_registry(root: Path, registry: dict) -> list[str]:
     return errors
 
 
+def validate_outcomes(registry: dict, ledger: dict) -> list[str]:
+    errors: list[str] = []
+    if ledger.get("schema_version") != "1.0" or not isinstance(
+        ledger.get("outcomes"), list
+    ):
+        return ["Outcome ledger must use schema version 1.0 and an outcomes array"]
+    releases = {
+        (
+            skill.get("name"),
+            release.get("version"),
+            release.get("artifact", {}).get("sha256"),
+        ): (
+            skill,
+            release,
+        )
+        for skill in registry.get("skills", [])
+        for release in skill.get("releases", [])
+    }
+    seen: set[str] = set()
+    grouped: dict[tuple[str, str, str], list[dict]] = {}
+    for outcome in ledger["outcomes"]:
+        if not isinstance(outcome, dict):
+            errors.append("Outcome ledger entries must be objects")
+            continue
+        outcome_id = outcome.get("outcome_id")
+        if not isinstance(outcome_id, str) or not re.fullmatch(
+            r"[A-Za-z0-9][A-Za-z0-9._:-]{0,127}", outcome_id
+        ):
+            errors.append(f"Invalid outcome_id: {outcome_id!r}")
+            continue
+        if outcome_id in seen:
+            errors.append(f"Duplicate outcome_id: {outcome_id}")
+        seen.add(outcome_id)
+        key = (
+            outcome.get("skill_name"),
+            outcome.get("skill_version"),
+            outcome.get("skill_sha256"),
+        )
+        if key not in releases:
+            errors.append(
+                f"Outcome references an unknown immutable release: {outcome_id}"
+            )
+        grouped.setdefault(key, []).append(outcome)
+        if outcome.get("outcome") not in {"success", "partial", "failure"}:
+            errors.append(f"Invalid outcome value: {outcome_id}")
+        for field in (
+            "reporter",
+            "approved_by",
+            "approved_at",
+            "task_summary",
+            "verification_summary",
+        ):
+            if not isinstance(outcome.get(field), str) or not outcome[field].strip():
+                errors.append(f"Outcome {outcome_id} lacks {field}")
+        if (
+            not isinstance(outcome.get("issue_number"), int)
+            or outcome["issue_number"] <= 0
+        ):
+            errors.append(f"Outcome {outcome_id} lacks a valid issue_number")
+        issue_url = outcome.get("issue_url")
+        if not isinstance(issue_url, str) or not issue_url.strip():
+            errors.append(f"Outcome {outcome_id} lacks issue_url")
+        evidence_urls = outcome.get("evidence_urls")
+        if not isinstance(evidence_urls, list):
+            errors.append(f"Outcome {outcome_id} evidence_urls must be an array")
+            evidence_urls = []
+        for value in [issue_url, *evidence_urls]:
+            parsed = urlsplit(str(value))
+            sensitive_query = any(
+                re.search(
+                    r"(?:token|secret|signature|credential|auth|api[_-]?key)",
+                    key,
+                    re.IGNORECASE,
+                )
+                for key, _ in parse_qsl(parsed.query, keep_blank_values=True)
+            )
+            if (
+                parsed.scheme != "https"
+                or not parsed.netloc
+                or parsed.username
+                or parsed.password
+                or sensitive_query
+            ):
+                errors.append(f"Outcome {outcome_id} has a non-public evidence URL")
+
+    for key, (skill, release) in releases.items():
+        outcomes = grouped.get(key, [])
+        successes = [item for item in outcomes if item.get("outcome") == "success"]
+        failures = [item for item in outcomes if item.get("outcome") != "success"]
+        verification = release.get("verification", {})
+        if int(verification.get("verified_outcomes") or 0) != len(successes):
+            errors.append(
+                f"Outcome success count drift: {skill['name']}@{release['version']}"
+            )
+        if int(verification.get("failed_outcomes") or 0) != len(failures):
+            errors.append(
+                f"Outcome failure count drift: {skill['name']}@{release['version']}"
+            )
+        if bool(verification.get("update_needed")) != bool(failures):
+            errors.append(
+                f"Outcome update-needed drift: {skill['name']}@{release['version']}"
+            )
+        if verification.get("level") in {"outcome-proven", "established"}:
+            authors = {
+                str(value).lower()
+                for value in [
+                    *(skill.get("originators") or []),
+                    *(release.get("provenance", {}).get("authors") or []),
+                    release.get("provenance", {}).get("author"),
+                ]
+                if value
+            }
+            if not any(
+                str(item.get("reporter", "")).lower() not in authors
+                and bool(item.get("evidence_urls"))
+                for item in successes
+            ):
+                errors.append(
+                    "Outcome-proven release lacks independent success with public evidence: "
+                    f"{skill['name']}@{release['version']}"
+                )
+    return errors
+
+
 def validate_repository(root: Path) -> list[str]:
     errors: list[str] = []
     registry_path = root / "shared_skills" / "registry.json"
@@ -181,6 +311,13 @@ def validate_repository(root: Path) -> list[str]:
     except (OSError, json.JSONDecodeError) as exc:
         return [f"Cannot read shared Skill registry: {exc}"]
     errors.extend(validate_registry(root, registry))
+    outcomes_path = root / "shared_skills" / "outcomes.json"
+    try:
+        outcomes = json.loads(outcomes_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        errors.append(f"Cannot read shared Skill outcome ledger: {exc}")
+    else:
+        errors.extend(validate_outcomes(registry, outcomes))
     manifest_paths = [
         root / "plugins" / "noosphere" / ".codex-plugin" / "plugin.json",
         root / "plugins" / "claude-noosphere" / ".claude-plugin" / "plugin.json",

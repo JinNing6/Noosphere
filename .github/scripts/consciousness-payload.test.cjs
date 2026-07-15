@@ -170,7 +170,7 @@ test("serializes promotion workflow runs to prevent main branch write races", ()
 
   assert.match(
     workflow,
-    /concurrency:\s*\r?\n\s*group:\s*consciousness-permanent-state-main\s*\r?\n\s*cancel-in-progress:\s*false\s*\r?\n\s*queue:\s*max/
+    /concurrency:\s*\r?\n\s*group:\s*noosphere-main-writer\s*\r?\n\s*cancel-in-progress:\s*false\s*\r?\n\s*queue:\s*max/
   );
 });
 

@@ -5,7 +5,7 @@ on:
     types: [opened, labeled]
 
 concurrency:
-  group: consciousness-permanent-state-main
+  group: noosphere-main-writer
   cancel-in-progress: false
   queue: max
 

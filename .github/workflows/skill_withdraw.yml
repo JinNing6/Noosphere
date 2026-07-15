@@ -5,7 +5,7 @@ on:
     types: [labeled]
 
 concurrency:
-  group: shared-skill-registry-main
+  group: noosphere-main-writer
   cancel-in-progress: false
   queue: max
 

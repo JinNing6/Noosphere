@@ -5,6 +5,7 @@ import unittest
 from pathlib import Path
 
 from scripts.validate_shared_skills import (
+    validate_outcomes,
     validate_registry,
     validate_repository,
     validate_skill_file,
@@ -21,6 +22,118 @@ description: Recover a verified test failure.
 
 
 class SharedSkillValidationTests(unittest.TestCase):
+    def test_outcome_ledger_counts_and_independent_proof_must_match_registry(self):
+        digest = "a" * 64
+        registry = {
+            "schema_version": "1.0",
+            "revision": 2,
+            "skills": [
+                {
+                    "name": "test-recovery",
+                    "originators": ["originator"],
+                    "latest": "1.0.0",
+                    "releases": [
+                        {
+                            "version": "1.0.0",
+                            "status": "active",
+                            "artifact": {"sha256": digest},
+                            "provenance": {"authors": ["originator", "validator"]},
+                            "verification": {
+                                "level": "outcome-proven",
+                                "verified_outcomes": 1,
+                                "failed_outcomes": 0,
+                                "update_needed": False,
+                            },
+                        }
+                    ],
+                }
+            ],
+        }
+        ledger = {
+            "schema_version": "1.0",
+            "outcomes": [
+                {
+                    "outcome_id": "outcome-1",
+                    "skill_name": "test-recovery",
+                    "skill_version": "1.0.0",
+                    "skill_sha256": digest,
+                    "outcome": "success",
+                    "task_summary": "Clean reproduction",
+                    "verification_summary": "Regression passed",
+                    "evidence_urls": ["https://example.com/evidence"],
+                    "reporter": "external-user",
+                    "issue_number": 10,
+                    "issue_url": "https://github.com/example/noosphere/issues/10",
+                    "approved_by": "maintainer",
+                    "approved_at": "2026-07-15T00:00:00Z",
+                }
+            ],
+        }
+
+        self.assertEqual(validate_outcomes(registry, ledger), [])
+        registry["skills"][0]["releases"][0]["verification"]["verified_outcomes"] = 0
+        self.assertTrue(
+            any(
+                "success count drift" in error
+                for error in validate_outcomes(registry, ledger)
+            )
+        )
+
+    def test_outcome_proven_requires_public_external_evidence(self):
+        digest = "a" * 64
+        registry = {
+            "schema_version": "1.0",
+            "revision": 2,
+            "skills": [
+                {
+                    "name": "test-recovery",
+                    "originators": ["originator"],
+                    "latest": "1.0.0",
+                    "releases": [
+                        {
+                            "version": "1.0.0",
+                            "status": "active",
+                            "artifact": {"sha256": digest},
+                            "provenance": {"authors": ["originator"]},
+                            "verification": {
+                                "level": "outcome-proven",
+                                "verified_outcomes": 1,
+                                "failed_outcomes": 0,
+                                "update_needed": False,
+                            },
+                        }
+                    ],
+                }
+            ],
+        }
+        ledger = {
+            "schema_version": "1.0",
+            "outcomes": [
+                {
+                    "outcome_id": "outcome-without-proof",
+                    "skill_name": "test-recovery",
+                    "skill_version": "1.0.0",
+                    "skill_sha256": digest,
+                    "outcome": "success",
+                    "task_summary": "Clean reproduction",
+                    "verification_summary": "Regression passed",
+                    "evidence_urls": [],
+                    "reporter": "external-user",
+                    "issue_number": 10,
+                    "issue_url": "https://github.com/example/noosphere/issues/10",
+                    "approved_by": "maintainer",
+                    "approved_at": "2026-07-15T00:00:00Z",
+                }
+            ],
+        }
+
+        self.assertTrue(
+            any(
+                "public evidence" in error
+                for error in validate_outcomes(registry, ledger)
+            )
+        )
+
     def test_skill_frontmatter_name_must_match_parent_directory(self):
         with tempfile.TemporaryDirectory() as temp:
             skill_path = Path(temp) / "wrong-name" / "SKILL.md"
@@ -65,8 +178,12 @@ class SharedSkillValidationTests(unittest.TestCase):
                             {
                                 "version": "1.0.0",
                                 "status": "active",
+                                "source_count": 2,
                                 "publisher_count": 2,
-                                "verification": {"level": "independently-reproduced"},
+                                "verification": {
+                                    "level": "independently-reproduced",
+                                    "independent_reproductions": 2,
+                                },
                                 "provenance": {"kind": "community-evidence"},
                                 "artifact": {
                                     "path": "shared_skills/releases/1.0.0/test-recovery/SKILL.md",

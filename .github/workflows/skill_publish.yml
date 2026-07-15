@@ -5,7 +5,7 @@ on:
     types: [labeled]
 
 concurrency:
-  group: shared-skill-registry-main
+  group: noosphere-main-writer
   cancel-in-progress: false
   queue: max
 
@@ -37,13 +37,26 @@ jobs:
             const {
               extractSkillCandidate,
               publishCandidate,
+              rebuildCandidateFromCanonicalEvidence,
             } = require(`${process.env.GITHUB_WORKSPACE}/.github/scripts/dynamic-skills.cjs`);
+            const {
+              loadCandidatePayloads,
+            } = require(`${process.env.GITHUB_WORKSPACE}/.github/scripts/resonance-neighbors.cjs`);
             const {
               isTrustedReviewerPermission,
             } = require(`${process.env.GITHUB_WORKSPACE}/.github/scripts/memory-trust.cjs`);
 
             const issue = context.payload.issue;
             const reviewer = context.payload.sender?.login || context.actor;
+            const issueLabels = (issue.labels || []).map((label) => typeof label === 'string' ? label : label.name);
+            if (!issueLabels.includes('skill-candidate')) {
+              core.setFailed('Only an Issue labeled skill-candidate can be published.');
+              return;
+            }
+            if (issue.user?.login !== 'github-actions[bot]') {
+              core.setFailed(`Skill candidate Issue must be created by github-actions[bot], not ${issue.user?.login || 'unknown'}.`);
+              return;
+            }
             const permissionResponse = await github.rest.repos.getCollaboratorPermissionLevel({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -54,9 +67,25 @@ jobs:
               return;
             }
 
-            const candidate = extractSkillCandidate(issue.body);
-            if (!candidate) {
+            const reviewedCandidate = extractSkillCandidate(issue.body);
+            if (!reviewedCandidate) {
               core.setFailed('The Issue does not contain a valid structured Skill candidate.');
+              return;
+            }
+            const memories = loadCandidatePayloads(path.join(process.env.GITHUB_WORKSPACE, 'consciousness_payloads'));
+            const tombstonesPath = path.join(process.env.GITHUB_WORKSPACE, 'consciousness_tombstones.json');
+            const tombstones = fs.existsSync(tombstonesPath)
+              ? JSON.parse(fs.readFileSync(tombstonesPath, 'utf8'))
+              : { version: 1, withdrawn_issues: [] };
+            let candidate;
+            try {
+              candidate = rebuildCandidateFromCanonicalEvidence(
+                reviewedCandidate,
+                memories,
+                tombstones,
+              );
+            } catch (error) {
+              core.setFailed(`Canonical Skill evidence validation failed: ${error.message}`);
               return;
             }
             const registryPath = path.join(process.env.GITHUB_WORKSPACE, 'shared_skills', 'registry.json');
