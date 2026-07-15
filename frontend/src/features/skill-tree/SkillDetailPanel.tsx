@@ -15,7 +15,7 @@ export default function SkillDetailPanel({ record, onClose, onContributeVersion 
   const [copied, setCopied] = useState(false);
   const domain = domainById(record.domainId);
   const command = `npx skills add JinNing6/Noosphere --skill ${record.name}`;
-  const isInstallable = record.kind === 'published' || record.kind === 'bundled';
+  const isInstallable = record.kind === 'published';
 
   const copyCommand = async () => {
     await navigator.clipboard.writeText(command);
@@ -52,7 +52,7 @@ export default function SkillDetailPanel({ record, onClose, onContributeVersion 
           </div>
           <div>
             <dt>{record.version ? t('skills.version') : t('skills.source')}</dt>
-            <dd>{record.version || (record.sourceIssue ? `GitHub Issue #${record.sourceIssue}` : 'Repository Skill')}</dd>
+            <dd>{record.version || (record.sourceIssue ? `GitHub Issue #${record.sourceIssue}` : 'Live registry')}</dd>
           </div>
           {record.creator && (
             <div>

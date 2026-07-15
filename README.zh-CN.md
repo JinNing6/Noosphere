@@ -9,8 +9,7 @@
 **不要让每个 Agent 重复解决同一个 Bug。** 一个 Agent 发现失败模式，后续 Agent
 可以检索证据、应用修复，并反馈这次复用是否真的有效。
 
-[![已发布 Skills](https://img.shields.io/badge/已发布_Skills-0-8b949e?style=for-the-badge)](shared_skills/registry.json)
-[![内置 Skills](https://img.shields.io/badge/内置_Skills-13-8d7cff?style=for-the-badge)](docs/bundled-skills.md)
+[![实时 Skills](https://img.shields.io/badge/实时_Skills-13-8d7cff?style=for-the-badge)](docs/live-skills.md)
 [![已验证种子](https://img.shields.io/badge/已验证种子-3-2ea043?style=for-the-badge)](docs/founding-debug-memories.md)
 [![MCP 工具](https://img.shields.io/badge/MCP_工具-45-0969da?style=for-the-badge)](sdk/noosphere/noosphere_mcp.py)
 [![PyPI](https://img.shields.io/pypi/v/noosphere-mcp?style=for-the-badge&logo=pypi&logoColor=white)](https://pypi.org/project/noosphere-mcp/)
@@ -37,14 +36,14 @@ uvx --from noosphere-mcp noosphere-query "React Three Fiber mobile glowing node 
 </div>
 
 这段 20 秒演示严格来自真实的[第 35 号工程记录](https://github.com/JinNing6/Noosphere/issues/35)。
-它展示的是**已验证 Seed Memory**，不是已发布的动态 Skill。只有两个独立发布者
-通过证据门禁并经维护者审核后，注册表才会从 `0` 变为 `1`。
+它展示的是尚未达到独立复现等级的**已验证 Seed Memory**。注册表同时已有 13 个
+基础实时 Skills，并明确标记为 `maintainer-validated`（维护者验证）。
 
 | 检查真实系统 | 路径 |
 |---|---|
 | 不可变 Skill 注册表 | [`shared_skills/registry.json`](shared_skills/registry.json) |
-| 13 个随插件发布的工程 Skills | [目录](docs/bundled-skills.md) · [规范制品](plugins/noosphere/skills/) |
-| 首个动态 Skill 的目标路径 | `shared_skills/releases/<version>/<name>/SKILL.md`（首次审核发布时创建） |
+| 13 个实时工程 Skills | [目录](docs/live-skills.md) · [当前版本镜像](shared_skills/active/) |
+| 不可变版本 | [`shared_skills/releases/<version>/<name>/SKILL.md`](shared_skills/releases/) |
 | 首批真实证据 | [#35](https://github.com/JinNing6/Noosphere/issues/35)、[#36](https://github.com/JinNing6/Noosphere/issues/36)、[#37](https://github.com/JinNing6/Noosphere/issues/37) |
 | 供应链协议 | [`SKILLS_PROTOCOL.md`](SKILLS_PROTOCOL.md) |
 
@@ -63,7 +62,7 @@ uvx --from noosphere-mcp noosphere-query "React Three Fiber mobile glowing node 
 | 终端只读体验 | 零配置 | `uvx --from noosphere-mcp noosphere-query "你的报错"` |
 
 > [!IMPORTANT]
-> `v0.7.2` 补全匿名只读查询：匿名模式读取仓库内的规范公共索引；认证模式继续
+> `v0.8.0` 将所有 Skill 统一到实时版本注册表，并保留匿名只读查询：匿名模式读取仓库内的规范公共索引；认证模式继续
 > 查询更新的 Issues + 永久文件。所有写操作始终要求 GitHub 身份认证。
 
 ## 记忆如何进化成 Skill
@@ -73,12 +72,10 @@ uvx --from noosphere-mcp noosphere-query "React Three Fiber mobile glowing node 
      -> 不可变 SKILL.md -> 摘要校验后调用 -> 结果反馈 -> 更新或审核回滚
 ```
 
-Noosphere 不会直接执行社区提示词。动态 Skill 必须具备结构化根因证据、独立发布者、
-人工审核、不可变版本、SHA-256 校验、结果反馈和回滚能力。当前真实状态是
-**3 个已验证种子，0 个已发布动态 Skills**。
-
-插件同时提供 [13 个维护者内置工程 Skills](docs/bundled-skills.md)，可立即安装使用；
-它们与需要独立复现的动态注册表分开计数，不会被宣传为社区验证结果。
+Noosphere 不会直接执行社区提示词。13 个基础 Skills 已作为不可变 `1.0.0` 版本进入
+同一个实时注册表，带维护者来源和 SHA-256 校验。新的社区 Skill 或更新版本仍必须具备
+结构化根因证据、两个独立发布者、人工审核、结果反馈和回滚能力。3 个已验证 Seeds
+尚未跨过独立复现门禁，因此不会被宣传为社区验证版本。
 
 ## 探索网络
 

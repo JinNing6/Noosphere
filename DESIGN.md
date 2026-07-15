@@ -204,7 +204,7 @@ Noosphere Universe is available through a persistent but secondary navigation it
 ## Do's and Don'ts
 
 - Do make the first useful result reachable in under one minute.
-- Do show real registry, static Skill, and Founding Seed data with explicit source labels.
+- Do show real live-registry and Founding Seed data with explicit verification levels and source labels.
 - Do keep branch positions deterministic so returning users build spatial memory.
 - Do provide Tree and Directory parity for every domain and Skill.
 - Do provide keyboard navigation, visible focus, reduced motion, and non-color status cues.

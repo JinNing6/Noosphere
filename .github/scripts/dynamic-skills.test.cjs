@@ -79,6 +79,66 @@ test("candidate identity is deterministic regardless of input order", () => {
   assert.deepEqual(validateSkillCandidate(first), { valid: true, errors: [] });
 });
 
+test("targeted version evidence keeps the existing Skill identity and does not cross-cluster", () => {
+  const left = {
+    ...memory({ issue: 1, publisher: "alice", embedding: [1, 0], tags: ["async-ui"] }),
+    target_skill: "debug-async-ui",
+  };
+  const right = {
+    ...memory({ issue: 2, publisher: "bob", embedding: [0.99, 0.01], tags: ["async-ui"] }),
+    target_skill: "debug-async-ui",
+  };
+  const unrelated = {
+    ...memory({ issue: 3, publisher: "carol", embedding: [1, 0], tags: ["browser"] }),
+    target_skill: "browser-actionability-debug",
+  };
+
+  const clusters = clusterEligibleMemories([left, right, unrelated]);
+  const candidate = buildSkillCandidate(clusters[0]);
+
+  assert.equal(clusters.length, 1);
+  assert.equal(candidate.name, "debug-async-ui");
+  assert.equal(candidate.target_skill, "debug-async-ui");
+  assert.deepEqual(candidate.source_issues, [1, 2]);
+});
+
+test("targeted evidence publishes the next immutable version and preserves registry identity", () => {
+  const left = {
+    ...memory({ issue: 1, publisher: "alice", embedding: [1, 0], tags: ["frontend-mobile", "async-ui"] }),
+    target_skill: "debug-async-ui",
+  };
+  const right = {
+    ...memory({ issue: 2, publisher: "bob", embedding: [0.99, 0.01], tags: ["frontend-mobile", "async-ui"] }),
+    target_skill: "debug-async-ui",
+  };
+  const candidate = buildSkillCandidate(clusterEligibleMemories([left, right])[0]);
+  const registry = {
+    schema_version: "1.0",
+    revision: 1,
+    generated_at: "2026-07-15T00:00:00Z",
+    skills: [{
+      id: "noosphere:debug-async-ui",
+      name: "debug-async-ui",
+      description: "Original description",
+      domain: "frontend-mobile",
+      tags: ["frontend-mobile", "live-skill"],
+      originators: ["JinNing6"],
+      latest: null,
+      releases: [{ version: "1.0.0", status: "withdrawn", candidate_sha256: "old" }],
+    }],
+  };
+
+  const published = publishCandidate(registry, candidate, {
+    reviewer: "maintainer",
+    publishedAt: "2026-07-16T00:00:00Z",
+  });
+
+  assert.equal(published.release.version, "1.0.1");
+  assert.equal(published.registry.skills[0].domain, "frontend-mobile");
+  assert.deepEqual(published.registry.skills[0].originators, ["JinNing6", "alice", "bob"]);
+  assert.ok(published.registry.skills[0].tags.includes("async-ui"));
+});
+
 test("candidate marker round-trips through a review Issue body", () => {
   const cluster = clusterEligibleMemories([
     memory({ issue: 1, publisher: "alice", embedding: [1, 0] }),
@@ -105,6 +165,9 @@ test("publisher emits an immutable standards-compliant release and registry dige
 
   assert.equal(published.release.version, "1.0.0");
   assert.equal(published.release.status, "active");
+  assert.equal(published.release.verification.level, "independently-reproduced");
+  assert.equal(published.release.verification.independent_reproductions, 2);
+  assert.equal(published.release.provenance.kind, "community-evidence");
   assert.equal(published.release.artifact.sha256.length, 64);
   assert.equal(
     published.release.artifact.path,

@@ -8,13 +8,13 @@
     "source": "github",
     "id": "JinNing6/Noosphere"
   },
-  "version": "0.7.2",
+  "version": "0.8.0",
   "packages": [
     {
       "registryType": "pypi",
       "registryBaseUrl": "https://pypi.org",
       "identifier": "noosphere-mcp",
-      "version": "0.7.2",
+      "version": "0.8.0",
       "runtimeHint": "uvx",
       "transport": {
         "type": "stdio"
@@ -22,8 +22,8 @@
       "environmentVariables": [
         {
           "name": "GITHUB_TOKEN",
-          "description": "GitHub Personal Access Token with public_repo scope. Required for uploading consciousness and accessing the collective consciousness network.",
-          "isRequired": true,
+          "description": "Optional GitHub Personal Access Token. Required for uploads and outcome reports; anonymous registry and public-memory reads work without it.",
+          "isRequired": false,
           "isSecret": true
         },
         {

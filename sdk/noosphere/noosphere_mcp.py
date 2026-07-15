@@ -118,6 +118,7 @@ async def _close_client() -> None:
 # ── Process-Level TTL Cache (Multi-Layer) ──
 _CACHE_TTL = 180  # seconds — raised from 90s; Issues/files rarely change within 3 min
 _TOOL_CACHE_TTL = 120  # seconds — for compute-intensive tool results
+_SHARED_SKILL_REGISTRY_TTL = 30  # near-real-time pull updates; force_refresh bypasses it
 _cache: dict[str, dict] = {}
 _tool_cache: dict[str, dict] = {}
 
@@ -201,10 +202,11 @@ class _EmbeddingEngine:
 
 
 
-def _get_cached(key: str) -> object | None:
+def _get_cached(key: str, ttl: int | None = None) -> object | None:
     """Return cached data if still valid, else None."""
     entry = _cache.get(key)
-    if entry and (time.time() - entry["ts"]) < _CACHE_TTL:
+    effective_ttl = _CACHE_TTL if ttl is None else ttl
+    if entry and (time.time() - entry["ts"]) < effective_ttl:
         return entry["data"]
     return None
 
@@ -1140,12 +1142,17 @@ def _parse_repo() -> tuple[str, str]:
     return parts[0], parts[1]
 
 
-async def _fetch_repo_text(path: str, *, force_refresh: bool = False) -> str:
+async def _fetch_repo_text(
+    path: str,
+    *,
+    force_refresh: bool = False,
+    cache_ttl: int | None = None,
+) -> str:
     """Fetch a registry-whitelisted text artifact from GitHub Contents API."""
     cache_key = f"repo_text:{GITHUB_REPO}:{GITHUB_BRANCH}:{path}"
     if force_refresh:
         _invalidate_cache(cache_key)
-    cached = _get_cached(cache_key)
+    cached = _get_cached(cache_key, cache_ttl)
     if isinstance(cached, str):
         return cached
 
@@ -1172,6 +1179,7 @@ async def _fetch_shared_skill_registry(
     raw = await _fetch_repo_text(
         "shared_skills/registry.json",
         force_refresh=force_refresh,
+        cache_ttl=_SHARED_SKILL_REGISTRY_TTL,
     )
     try:
         registry = json.loads(raw)
@@ -1365,6 +1373,7 @@ async def upload_consciousness(
     is_anonymous: bool = False,
     parent_id: str | None = None,
     evidence: dict | None = None,
+    target_skill: str | None = None,
 ) -> str:
     """
     🧠 Upload consciousness fragments to the Noosphere Community of Consciousness (GitHub repository)
@@ -1388,6 +1397,8 @@ async def upload_consciousness(
         parent_id: Optional ID (Issue # or file name) of a previous thought being evolved from
         evidence: Optional structured engineering evidence with symptom, root_cause,
             fix, verification, applies_when, avoid_when, test_commands, and source_urls.
+        target_skill: Optional existing lowercase kebab-case Skill name. When supplied,
+            the evidence is evaluated as a candidate update to that live Skill.
     """
     # ── Validation ──
     if not GITHUB_TOKEN:
@@ -1414,6 +1425,10 @@ async def upload_consciousness(
 
     if not creator.strip():
         return "❌ Creator signature cannot be empty."
+
+    normalized_target_skill = target_skill.strip() if target_skill else ""
+    if normalized_target_skill and not validate_skill_name(normalized_target_skill):
+        return "❌ Invalid target_skill. Use a lowercase kebab-case registry name."
 
     normalized_evidence: dict[str, str | list[str]] = {}
     if isinstance(evidence, dict):
@@ -1452,6 +1467,8 @@ async def upload_consciousness(
     if normalized_evidence:
         payload["memory_kind"] = "engineering"
         payload["evidence"] = normalized_evidence
+    if normalized_target_skill:
+        payload["target_skill"] = normalized_target_skill
 
     # ── Create GitHub Issue (Ephemeral Consciousness) ──
     try:
@@ -1470,12 +1487,18 @@ async def upload_consciousness(
         # Build Issue body with embedded JSON payload
         tag_str = ", ".join(f"`{t}`" for t in (tags or [])) or "None"
         parent_str = f"**🧬 Evolved From**: `{parent_id}`\n" if parent_id else ""
+        target_str = (
+            f"**🎯 Target Skill**: `{normalized_target_skill}`\n"
+            if normalized_target_skill
+            else ""
+        )
         issue_body = (
             f"## {emoji} Consciousness Leap Payload\n\n"
             f"**Creator**: {display_creator}\n"
             f"**Type**: `{consciousness_type}` ({type_name})\n"
             f"**Tags**: {tag_str}\n"
             f"{parent_str}\n"
+            f"{target_str}\n"
             f"---\n\n"
             f"### 💭 Thought Vector\n\n> {thought.strip()}\n\n"
             f"### 🌍 Context Environment\n\n> {context.strip()}\n\n"
@@ -6078,6 +6101,9 @@ async def list_shared_skills(
                 "sha256": release["artifact"]["sha256"],
                 "source_count": release.get("source_count"),
                 "publisher_count": release.get("publisher_count"),
+                "verification_level": release.get("verification", {}).get(
+                    "level", "unclassified"
+                ),
             })
         return json.dumps({
             "registry_revision": registry.get("revision", 0),
@@ -6110,8 +6136,10 @@ async def get_shared_skill(
                 "The artifact was not returned to the Agent."
             )
         return (
-            f"VERIFIED SHARED SKILL: {skill_name}@{release['version']}\n"
+            f"SHARED SKILL: {skill_name}@{release['version']}\n"
             f"SHA-256: {artifact['sha256']}\n"
+            f"Verification level: "
+            f"{release.get('verification', {}).get('level', 'unclassified')}\n"
             f"Registry revision: {registry.get('revision', 0)}\n\n"
             f"{content}"
         )

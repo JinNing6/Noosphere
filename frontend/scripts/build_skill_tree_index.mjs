@@ -1,4 +1,3 @@
-import { createHash } from 'node:crypto';
 import { readFile, readdir, mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -7,49 +6,6 @@ const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
 const frontendDirectory = path.resolve(scriptDirectory, '..');
 const repositoryRoot = path.resolve(frontendDirectory, '..');
 const outputPath = path.join(frontendDirectory, 'public', 'skill-tree-index.json');
-
-function parseFrontMatter(content, sourcePath) {
-  const match = content.match(/^---\r?\n([\s\S]*?)\r?\n---/);
-  if (!match) {
-    throw new Error(`Missing front matter: ${sourcePath}`);
-  }
-
-  const fields = {};
-  for (const line of match[1].split(/\r?\n/)) {
-    const separator = line.indexOf(':');
-    if (separator < 1) continue;
-    const key = line.slice(0, separator).trim();
-    const value = line.slice(separator + 1).trim().replace(/^['"]|['"]$/g, '');
-    fields[key] = value;
-  }
-
-  if (!fields.name || !fields.description) {
-    throw new Error(`Skill front matter requires name and description: ${sourcePath}`);
-  }
-  return fields;
-}
-
-async function readStaticSkills() {
-  const skillsRoot = path.join(repositoryRoot, 'plugins', 'noosphere', 'skills');
-  const entries = await readdir(skillsRoot, { withFileTypes: true });
-  const skills = [];
-
-  for (const entry of entries.filter((item) => item.isDirectory()).sort((a, b) => a.name.localeCompare(b.name))) {
-    const sourcePath = path.join(skillsRoot, entry.name, 'SKILL.md');
-    const artifact = await readFile(sourcePath);
-    const content = artifact.toString('utf8');
-    const frontMatter = parseFrontMatter(content, sourcePath);
-    skills.push({
-      name: frontMatter.name,
-      description: frontMatter.description,
-      source_path: path.relative(repositoryRoot, sourcePath).replaceAll('\\', '/'),
-      sha256: createHash('sha256').update(artifact).digest('hex'),
-      size_bytes: artifact.byteLength,
-    });
-  }
-
-  return skills;
-}
 
 function seedNameFromPayload(payload, sourcePath) {
   const contextMatch = String(payload.context_environment || '').match(/seed-skill:([a-z0-9-]+)/i);
@@ -131,14 +87,11 @@ const registryPath = path.join(repositoryRoot, 'shared_skills', 'registry.json')
 const registry = JSON.parse(await readFile(registryPath, 'utf8'));
 validateRegistry(registry);
 
-const [staticSkills, verifiedSeeds] = await Promise.all([
-  readStaticSkills(),
-  readVerifiedSeeds(),
-]);
+const verifiedSeeds = await readVerifiedSeeds();
 const publishedNames = new Set(registry.skills.map((skill) => skill.name));
 const unpublishedSeeds = verifiedSeeds.filter((seed) => !publishedNames.has(seed.name));
 
-for (const [kind, records] of [['published', registry.skills], ['static', staticSkills], ['seed', unpublishedSeeds]]) {
+for (const [kind, records] of [['published', registry.skills], ['seed', unpublishedSeeds]]) {
   const names = records.map((record) => record.name);
   if (new Set(names).size !== names.length) {
     throw new Error(`Duplicate ${kind} Skill names would make the tree ambiguous`);
@@ -154,15 +107,13 @@ const index = {
     registry_revision: registry.revision,
   },
   published_skills: registry.skills,
-  static_skills: staticSkills,
   verified_seeds: unpublishedSeeds,
   counts: {
     published: registry.skills.length,
-    static: staticSkills.length,
     seeds: unpublishedSeeds.length,
   },
 };
 
 await mkdir(path.dirname(outputPath), { recursive: true });
 await writeFile(outputPath, `${JSON.stringify(index, null, 2)}\n`, 'utf8');
-console.log(`Built ${path.relative(repositoryRoot, outputPath)}: ${index.counts.published} published, ${index.counts.static} static, ${index.counts.seeds} verified Seeds.`);
+console.log(`Built ${path.relative(repositoryRoot, outputPath)}: ${index.counts.published} live, ${index.counts.seeds} verified Seeds.`);

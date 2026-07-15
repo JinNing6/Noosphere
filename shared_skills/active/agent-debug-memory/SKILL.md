@@ -1,6 +1,6 @@
 ---
 name: agent-debug-memory
-description: Use when debugging code, tests, builds, deployments, CI failures, runtime errors, framework issues, API migrations, or UI state bugs where Codex should consult Noosphere shared memory before fixing and upload the verified lesson afterward.
+description: Use when debugging code, tests, builds, deployments, CI failures, runtime errors, framework issues, API migrations, or UI state bugs where a coding Agent should consult Noosphere shared memory before fixing and upload the verified lesson afterward.
 ---
 
 # Agent Debug Memory
@@ -14,7 +14,7 @@ Use Noosphere as the shared debugging memory layer before and after substantial 
    - framework, package, runtime, OS, database, browser, or deployment context
    - the user's concrete goal and any constraints already stated
 2. Call the Noosphere MCP tool `consult_noosphere` with that query.
-3. If useful tags are obvious, include focused `topic_tags`, such as `react`, `vite`, `typescript`, `mcp`, `github-actions`, `async-ui`, `codex`, `windows`, or the library name.
+3. If useful tags are obvious, include focused `topic_tags`, such as `react`, `vite`, `typescript`, `mcp`, `github-actions`, `async-ui`, `codex`, `claude-code`, `windows`, or the library name.
 4. Treat returned fragments as leads, not truth. Verify against the local codebase, official docs when needed, and runnable tests or reproduction steps.
 
 ## During Fixing
@@ -45,4 +45,4 @@ Keep the memory concise and general enough for another agent to reuse.
 
 ## Completion Standard
 
-Do not claim the fix is complete until the local verification has passed or you have clearly stated what could not be run. If a Noosphere upload fails because `GITHUB_TOKEN` is missing, explain that upload requires a GitHub token in the Codex environment.
+Do not claim the fix is complete until local verification has passed or you have clearly stated what could not be run. Public registry reads work anonymously; uploading evidence or outcomes requires a GitHub token in the Agent's Noosphere MCP environment.

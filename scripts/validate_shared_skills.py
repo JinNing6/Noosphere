@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Validate Noosphere plugin Skills and the versioned shared Skill registry."""
+"""Validate the versioned Noosphere Skill registry and MCP-only plugins."""
 
 from __future__ import annotations
 
@@ -12,6 +12,12 @@ from pathlib import Path
 
 NAME_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 VERSION_RE = re.compile(r"^\d+\.\d+\.\d+$")
+VERIFICATION_LEVELS = {
+    "maintainer-validated",
+    "independently-reproduced",
+    "outcome-proven",
+    "established",
+}
 
 
 def _frontmatter_value(frontmatter: str, key: str) -> str:
@@ -100,6 +106,22 @@ def validate_registry(root: Path, registry: dict) -> list[str]:
                     f"Withdrawn release lacks audit metadata: {name}@{version}"
                 )
 
+            verification = release.get("verification")
+            level = (
+                verification.get("level") if isinstance(verification, dict) else None
+            )
+            if level not in VERIFICATION_LEVELS:
+                errors.append(f"Invalid verification level: {name}@{version}")
+            if (
+                level in {"independently-reproduced", "outcome-proven", "established"}
+                and int(release.get("publisher_count") or 0) < 2
+            ):
+                errors.append(
+                    f"Independently verified release lacks publishers: {name}@{version}"
+                )
+            if not isinstance(release.get("provenance"), dict):
+                errors.append(f"Release lacks provenance metadata: {name}@{version}")
+
             artifact = release.get("artifact")
             expected = f"shared_skills/releases/{version}/{name}/SKILL.md"
             if not isinstance(artifact, dict) or artifact.get("path") != expected:
@@ -155,35 +177,18 @@ def validate_repository(root: Path) -> list[str]:
     except (OSError, json.JSONDecodeError) as exc:
         return [f"Cannot read shared Skill registry: {exc}"]
     errors.extend(validate_registry(root, registry))
-    plugin_roots = [
-        root / "plugins" / "noosphere" / "skills",
-        root / "plugins" / "claude-noosphere" / "skills",
-    ]
-    skill_sets: list[set[str]] = []
-    for plugin_root in plugin_roots:
-        skill_names = {path.name for path in plugin_root.iterdir() if path.is_dir()}
-        skill_sets.append(skill_names)
-        for skill_dir in sorted(plugin_root.iterdir()):
-            if skill_dir.is_dir():
-                errors.extend(
-                    validate_skill_file(skill_dir / "SKILL.md", skill_dir.name)
-                )
-    if len(skill_sets) == 2 and skill_sets[0] != skill_sets[1]:
-        only_codex = sorted(skill_sets[0] - skill_sets[1])
-        only_claude = sorted(skill_sets[1] - skill_sets[0])
-        errors.append(
-            "Codex and Claude bundled Skill sets diverge: "
-            f"only Codex={only_codex}, only Claude={only_claude}"
-        )
     manifest_paths = [
         root / "plugins" / "noosphere" / ".codex-plugin" / "plugin.json",
         root / "plugins" / "claude-noosphere" / ".claude-plugin" / "plugin.json",
         root / ".claude-plugin" / "marketplace.json",
     ]
     if all(path.is_file() for path in manifest_paths):
-        manifests = [
-            json.loads(path.read_text(encoding="utf-8")) for path in manifest_paths
-        ]
+        try:
+            manifests = [
+                json.loads(path.read_text(encoding="utf-8")) for path in manifest_paths
+            ]
+        except json.JSONDecodeError as exc:
+            return [*errors, f"Cannot parse plugin manifest: {exc}"]
         versions = {
             manifests[0].get("version"),
             manifests[1].get("version"),
@@ -194,6 +199,11 @@ def validate_repository(root: Path) -> list[str]:
             errors.append(
                 f"Plugin manifest versions diverge: {sorted(str(value) for value in versions)}"
             )
+        for path, manifest in zip(manifest_paths[:2], manifests[:2], strict=True):
+            if manifest.get("skills"):
+                errors.append(
+                    f"Plugin must load live Skills through MCP, not bundle static copies: {path}"
+                )
     return errors
 
 

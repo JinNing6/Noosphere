@@ -51,7 +51,7 @@ export const SKILL_DOMAINS: SkillDomain[] = [
   },
 ];
 
-const STATIC_DOMAIN_OVERRIDES: Record<string, string> = {
+const SKILL_DOMAIN_OVERRIDES: Record<string, string> = {
   'agent-debug-memory': 'testing-reliability',
   'binary-credential-format-boundary': 'security-trust',
   'browser-actionability-debug': 'frontend-mobile',
@@ -77,8 +77,10 @@ function scoreDomains(text: string): Array<{ id: string; score: number }> {
     .sort((a, b) => b.score - a.score || a.id.localeCompare(b.id));
 }
 
-function assignDomains(name: string, description: string, tags: string[], kind: SkillRecord['kind']) {
-  const override = kind === 'bundled' ? STATIC_DOMAIN_OVERRIDES[name] : undefined;
+function assignDomains(name: string, description: string, tags: string[], declaredDomain?: string) {
+  const override = declaredDomain && SKILL_DOMAINS.some((domain) => domain.id === declaredDomain)
+    ? declaredDomain
+    : SKILL_DOMAIN_OVERRIDES[name];
   const scores = scoreDomains([name, description, ...tags].join(' '));
   const primary = override || scores.find((entry) => entry.score > 0)?.id || 'agent-runtime';
   const secondary = scores
@@ -88,17 +90,25 @@ function assignDomains(name: string, description: string, tags: string[], kind: 
   return { primary, secondary };
 }
 
+function lifecycleForVerification(level?: string): SkillRecord['lifecycle'] {
+  if (level === 'established') return 'established';
+  if (level === 'outcome-proven') return 'proven';
+  if (level === 'independently-reproduced') return 'reproduced';
+  return 'maintainer';
+}
+
 export function normalizeSkillIndex(index: SkillTreeIndex): SkillRecord[] {
   const published = index.published_skills.map((skill): SkillRecord => {
     const activeRelease = skill.releases.find((release) => release.version === skill.latest && release.status === 'active');
     const tags = skill.tags || [];
-    const domains = assignDomains(skill.name, skill.description, tags, 'published');
+    const domains = assignDomains(skill.name, skill.description, tags, skill.domain);
+    const verificationLevel = activeRelease?.verification?.level;
     return {
       id: `published:${skill.name}`,
       name: skill.name,
       description: skill.description,
       kind: 'published',
-      lifecycle: 'established',
+      lifecycle: lifecycleForVerification(verificationLevel),
       domainId: domains.primary,
       secondaryDomainIds: domains.secondary,
       tags,
@@ -108,28 +118,13 @@ export function normalizeSkillIndex(index: SkillTreeIndex): SkillRecord[] {
       sourcePath: activeRelease?.artifact?.path || 'shared_skills/registry.json',
       sourceCount: activeRelease?.source_count,
       publisherCount: activeRelease?.publisher_count,
-    };
-  });
-
-  const bundled = index.static_skills.map((skill): SkillRecord => {
-    const domains = assignDomains(skill.name, skill.description, [], 'bundled');
-    return {
-      id: `bundled:${skill.name}`,
-      name: skill.name,
-      description: skill.description,
-      kind: 'bundled',
-      lifecycle: 'proven',
-      domainId: domains.primary,
-      secondaryDomainIds: domains.secondary,
-      tags: [],
-      digest: skill.sha256,
-      sourceUrl: `https://github.com/JinNing6/Noosphere/blob/main/${skill.source_path}`,
-      sourcePath: skill.source_path,
+      creator: skill.originators?.[0],
+      verificationLevel,
     };
   });
 
   const seeds = index.verified_seeds.map((seed): SkillRecord => {
-    const domains = assignDomains(seed.name, seed.description, seed.tags, 'seed');
+    const domains = assignDomains(seed.name, seed.description, seed.tags);
     return {
       id: `seed:${seed.name}`,
       name: seed.name,
@@ -147,7 +142,7 @@ export function normalizeSkillIndex(index: SkillTreeIndex): SkillRecord[] {
     };
   });
 
-  return [...published, ...bundled, ...seeds].sort((a, b) => a.name.localeCompare(b.name));
+  return [...published, ...seeds].sort((a, b) => a.name.localeCompare(b.name));
 }
 
 export function domainById(domainId: string): SkillDomain {

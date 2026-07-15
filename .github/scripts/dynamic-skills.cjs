@@ -7,6 +7,16 @@ const CANDIDATE_END = "<!-- SKILL_CANDIDATE_END -->";
 const WITHDRAWAL_START = "<!-- SKILL_WITHDRAWAL_START -->";
 const WITHDRAWAL_END = "<!-- SKILL_WITHDRAWAL_END -->";
 const DEFAULT_SIMILARITY_THRESHOLD = 0.9;
+const SKILL_DOMAINS = new Set([
+  "agent-runtime",
+  "mcp-tools",
+  "build-release",
+  "testing-reliability",
+  "security-trust",
+  "frontend-mobile",
+  "data-infrastructure",
+  "languages-frameworks",
+]);
 const UNSAFE_INSTRUCTION = /ignore\s+(?:all\s+)?previous\s+instructions|system\s+prompt|rm\s+-rf|curl[^\n|]*\|\s*(?:sh|bash)|powershell[^\n]*-enc|BEGIN\s+(?:RSA\s+)?PRIVATE\s+KEY|api[_ -]?key\s*[:=]|token\s*[:=]/i;
 
 function sha256(value) {
@@ -27,6 +37,11 @@ function issueNumber(memory) {
   return Number.isFinite(value) && value > 0 ? value : null;
 }
 
+function targetSkillName(memory) {
+  const value = compactText(memory?.target_skill, 64);
+  return /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value) ? value : null;
+}
+
 function eligibleMemory(memory) {
   return Boolean(
     memory?.skill_candidate?.eligible === true &&
@@ -42,9 +57,12 @@ function eligibleMemory(memory) {
 function sameEmbeddingSpace(left, right) {
   const leftEmbedding = normalizedEmbedding(left?.embedding);
   const rightEmbedding = normalizedEmbedding(right?.embedding);
+  const leftTarget = targetSkillName(left);
+  const rightTarget = targetSkillName(right);
   return Boolean(
     leftEmbedding &&
     rightEmbedding &&
+    ((!leftTarget && !rightTarget) || leftTarget === rightTarget) &&
     left.embedding_model === right.embedding_model &&
     leftEmbedding.length === rightEmbedding.length,
   );
@@ -105,6 +123,8 @@ function slugify(value) {
 }
 
 function candidateName(members, clusterId) {
+  const targetNames = uniqueStrings(members.map(targetSkillName), 3, 64).filter(Boolean);
+  if (targetNames.length === 1) return targetNames[0];
   const tags = uniqueStrings(members.flatMap((memory) => memory.tags || []), 3, 32)
     .map(slugify)
     .filter(Boolean)
@@ -120,6 +140,7 @@ function buildSkillCandidate(cluster) {
   const name = candidateName(members, cluster.id);
   const appliesWhen = uniqueStrings(evidence.map((item) => item.applies_when));
   const sourceUrls = uniqueStrings(evidence.flatMap((item) => item.source_urls || []), 80, 500).sort();
+  const tags = uniqueStrings(members.flatMap((memory) => memory.tags || []), 40, 64).sort();
   const candidate = {
     schema_version: 1,
     id: `skill-candidate-${sha256(cluster.id).slice(0, 16)}`,
@@ -136,6 +157,9 @@ function buildSkillCandidate(cluster) {
     source_memories: members.map((memory) => memory.memory_id),
     source_issues: members.map(issueNumber),
     publishers: uniqueStrings(members.map((memory) => memory.publisher.github_login), 40, 64).sort(),
+    target_skill: targetSkillName(members[0]),
+    domain: tags.find((tag) => SKILL_DOMAINS.has(tag)) || null,
+    tags,
     triggers: uniqueStrings(evidence.map((item) => item.symptom)),
     diagnosis: uniqueStrings(evidence.map((item) => item.root_cause)),
     fixes: uniqueStrings(evidence.map((item) => item.fix)),
@@ -326,7 +350,11 @@ function publishCandidate(registryInput, candidate, options) {
     };
   }
 
-  const version = skill ? bumpPatch(skill.latest) : "1.0.0";
+  const highestExistingVersion = skill?.releases
+    ?.map((item) => item.version)
+    .filter((value) => /^\d+\.\d+\.\d+$/.test(String(value || "")))
+    .sort((left, right) => compareVersions(right, left))[0];
+  const version = skill ? bumpPatch(highestExistingVersion) : "1.0.0";
   const skillMarkdown = renderSkillMarkdown(candidate, version, options.reviewer);
   const artifactPath = `shared_skills/releases/${version}/${candidate.name}/SKILL.md`;
   const release = {
@@ -340,6 +368,16 @@ function publishCandidate(registryInput, candidate, options) {
     source_count: new Set(candidate.source_issues).size,
     publisher_count: new Set(candidate.publishers.map((publisher) => publisher.toLowerCase())).size,
     evidence: candidate.evidence_urls,
+    verification: {
+      level: "independently-reproduced",
+      independent_reproductions: new Set(candidate.publishers.map((publisher) => publisher.toLowerCase())).size,
+      verified_outcomes: 0,
+    },
+    provenance: {
+      kind: "community-evidence",
+      repository: "JinNing6/Noosphere",
+      authors: candidate.publishers,
+    },
     artifact: {
       path: artifactPath,
       sha256: sha256(skillMarkdown),
@@ -353,12 +391,17 @@ function publishCandidate(registryInput, candidate, options) {
       id: `noosphere:${candidate.name}`,
       name: candidate.name,
       description: candidate.description,
+      domain: candidate.domain || undefined,
+      tags: uniqueStrings([...(candidate.tags || []), "live-skill"], 40, 64),
+      originators: candidate.publishers,
       latest: version,
       releases: [],
     };
     registry.skills.push(skill);
   }
   skill.description = candidate.description;
+  skill.tags = uniqueStrings([...(skill.tags || []), ...(candidate.tags || []), "live-skill"], 40, 64);
+  skill.originators = uniqueStrings([...(skill.originators || []), ...candidate.publishers], 40, 64);
   skill.latest = version;
   skill.releases.push(release);
   registry.skills.sort((left, right) => left.name.localeCompare(right.name));

@@ -262,7 +262,6 @@
 .skill-tree-legend span { display: flex; align-items: center; gap: 5px; }
 .skill-tree-legend i { display: block; width: 8px; height: 8px; border: 1px solid var(--skill-branch); }
 .legend-seed { transform: rotate(45deg); background: transparent; }
-.legend-bundled { border-radius: 50%; background: #8d7cff; }
 .legend-published { border-radius: 2px; background: var(--skill-green); box-shadow: 0 0 8px var(--skill-green); }
 .skill-tree-hint { position: absolute; left: 16px; bottom: 14px; z-index: 12; margin: 0; color: var(--skill-faint); font-size: 9px; pointer-events: none; }
 
@@ -283,7 +282,6 @@
 
 .skill-kind-label { display: inline-flex; align-items: center; width: fit-content; min-height: 20px; padding: 2px 6px; border: 1px solid var(--skill-line); border-radius: 5px; color: var(--skill-muted); font-size: 9px; font-weight: 650; white-space: nowrap; }
 .skill-kind-seed { border-style: dashed; color: #f0c75e; }
-.skill-kind-bundled { color: #8d7cff; }
 .skill-kind-published { color: var(--skill-green); }
 
 .skill-no-results { position: absolute; inset: 0; z-index: 11; display: grid; place-content: center; justify-items: center; gap: 8px; color: var(--skill-muted); background: rgba(9, 11, 13, 0.78); text-align: center; pointer-events: none; }

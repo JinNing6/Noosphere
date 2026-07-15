@@ -1,5 +1,5 @@
-export type SkillKind = 'published' | 'bundled' | 'seed';
-export type SkillLifecycle = 'established' | 'proven' | 'seed';
+export type SkillKind = 'published' | 'seed';
+export type SkillLifecycle = 'maintainer' | 'reproduced' | 'proven' | 'established' | 'seed';
 
 export interface SkillEvidence {
   symptom: string;
@@ -17,6 +17,17 @@ export interface RegistryRelease {
   status: string;
   source_count?: number;
   publisher_count?: number;
+  verification?: {
+    level?: 'maintainer-validated' | 'independently-reproduced' | 'outcome-proven' | 'established';
+    independent_reproductions?: number;
+    verified_outcomes?: number;
+  };
+  provenance?: {
+    kind?: string;
+    repository?: string;
+    author?: string;
+    authors?: string[];
+  };
   artifact?: {
     path?: string;
     sha256?: string;
@@ -29,16 +40,10 @@ export interface RegistrySkill {
   name: string;
   description: string;
   latest: string;
+  domain?: string;
   tags?: string[];
+  originators?: string[];
   releases: RegistryRelease[];
-}
-
-export interface StaticSkillSource {
-  name: string;
-  description: string;
-  source_path: string;
-  sha256: string;
-  size_bytes: number;
 }
 
 export interface VerifiedSeedSource {
@@ -63,11 +68,9 @@ export interface SkillTreeIndex {
     registry_revision: number;
   };
   published_skills: RegistrySkill[];
-  static_skills: StaticSkillSource[];
   verified_seeds: VerifiedSeedSource[];
   counts: {
     published: number;
-    static: number;
     seeds: number;
   };
 }
@@ -97,6 +100,7 @@ export interface SkillRecord {
   evidence?: SkillEvidence;
   sourceCount?: number;
   publisherCount?: number;
+  verificationLevel?: string;
 }
 
 export interface SkillTreeData {

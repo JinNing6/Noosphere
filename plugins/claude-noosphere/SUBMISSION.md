@@ -23,7 +23,7 @@ Stop solving the same bug twice. Noosphere lets Claude Code consult and publish 
 Long description:
 
 ```text
-Noosphere turns verified debugging lessons into shared agent memory. Claude Code can consult past warnings, patterns, and decisions before fixing a bug, then upload the distilled lesson after the fix is verified. The plugin bundles the noosphere-mcp server, 13 maintainer-authored engineering Skills, and manual slash commands for explicit memory search and upload.
+Noosphere turns verified debugging lessons into shared agent memory and live, review-gated Agent Skills. Claude Code can discover 13 versioned foundational Skills, verify exact digests, check updates, report execution outcomes, and upload reproducible evidence for a new version through MCP. The plugin contains the MCP connection and manual slash commands, while Skills remain in one public immutable registry.
 ```
 
 ## Review Notes
@@ -47,7 +47,6 @@ claude --plugin-dir ./plugins/claude-noosphere
 Inside Claude Code:
 
 ```text
-/noosphere:agent-debug-memory
 /noosphere:noosphere-consult <paste an error>
 /noosphere:noosphere-upload <summarize a verified fix>
 ```
@@ -66,7 +65,6 @@ Do this in order:
 1. Confirm the plugin is a public repo.
 2. Confirm manifest and package structure:
    - `plugins/claude-noosphere/.claude-plugin/plugin.json`
-   - `plugins/claude-noosphere/skills/*`
    - `plugins/claude-noosphere/commands/*`
    - `plugins/claude-noosphere/.mcp.json`
 3. Validate locally:

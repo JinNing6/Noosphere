@@ -1,4 +1,4 @@
-import { CheckCircle2, PackageCheck, Sprout } from 'lucide-react';
+import { CheckCircle2, Sprout } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { domainById, SKILL_DOMAINS } from './taxonomy';
 import type { SkillRecord } from './types';
@@ -12,7 +12,6 @@ interface SkillDirectoryProps {
 
 const KIND_ICONS = {
   published: CheckCircle2,
-  bundled: PackageCheck,
   seed: Sprout,
 };
 

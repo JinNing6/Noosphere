@@ -239,7 +239,6 @@ function SkillNode({
       </mesh>
       <mesh scale={scale}>
         {record.kind === 'seed' && <octahedronGeometry args={[0.16, 0]} />}
-        {record.kind === 'bundled' && <icosahedronGeometry args={[0.15, 0]} />}
         {record.kind === 'published' && <dodecahedronGeometry args={[0.16, 0]} />}
         {material}
       </mesh>

@@ -14,20 +14,24 @@ execFileSync(process.execPath, [path.join(scriptDirectory, 'build_skill_tree_ind
 const index = JSON.parse(await readFile(path.join(frontendDirectory, 'public', 'skill-tree-index.json'), 'utf8'));
 const expectedCounts = {
   published: index.published_skills.length,
-  static: index.static_skills.length,
   seeds: index.verified_seeds.length,
 };
 if (JSON.stringify(index.counts) !== JSON.stringify(expectedCounts)) {
   throw new Error(`Skill index counts do not match source arrays: ${JSON.stringify(index.counts)}`);
 }
 
-const records = [...index.published_skills, ...index.static_skills, ...index.verified_seeds];
+if ('static_skills' in index) {
+  throw new Error('Skill Tree index must use the single live registry, not static plugin copies');
+}
+
+const records = [...index.published_skills, ...index.verified_seeds];
 const identities = records.map((record) => `${record.name}:${record.source_path || record.latest || ''}`);
 if (new Set(identities).size !== identities.length) {
   throw new Error('Skill Tree index contains duplicate identities');
 }
 
-const foundingBundledSkills = [
+const foundingLiveSkills = [
+  'agent-debug-memory',
   'binary-credential-format-boundary',
   'browser-actionability-debug',
   'cloudflare-pages-stale-assets',
@@ -36,15 +40,21 @@ const foundingBundledSkills = [
   'fastapi-response-contract-boundary',
   'frontend-layering-specificity-debug',
   'github-actions-public-ci-diagnostics',
+  'upload-debug-memory',
   'windows-child-process-lifecycle',
   'windows-npm-run-script-shell',
+  'dynamic-shared-skills',
 ];
-const bundledByName = new Map(index.static_skills.map((skill) => [skill.name, skill]));
-for (const name of foundingBundledSkills) {
-  const skill = bundledByName.get(name);
-  if (!skill) throw new Error(`Missing founding bundled Skill: ${name}`);
-  if (!/^[a-f0-9]{64}$/.test(skill.sha256) || !Number.isInteger(skill.size_bytes) || skill.size_bytes <= 0) {
-    throw new Error(`Bundled Skill lacks immutable artifact metadata: ${name}`);
+const liveByName = new Map(index.published_skills.map((skill) => [skill.name, skill]));
+for (const name of foundingLiveSkills) {
+  const skill = liveByName.get(name);
+  if (!skill) throw new Error(`Missing founding live Skill: ${name}`);
+  const release = skill.releases?.find((item) => item.version === skill.latest && item.status === 'active');
+  if (!release || !/^[a-f0-9]{64}$/.test(release.artifact?.sha256 || '') || !Number.isInteger(release.artifact?.size_bytes) || release.artifact.size_bytes <= 0) {
+    throw new Error(`Live Skill lacks immutable artifact metadata: ${name}`);
+  }
+  if (!['maintainer-validated', 'independently-reproduced', 'outcome-proven', 'established'].includes(release.verification?.level)) {
+    throw new Error(`Live Skill lacks an explicit verification level: ${name}`);
   }
 }
 
@@ -63,7 +73,7 @@ if (!appSource.includes("lazy(() => import('./UniverseApp'))") || !appSource.inc
 }
 
 const detailSource = await readFile(path.join(frontendDirectory, 'src', 'features', 'skill-tree', 'SkillDetailPanel.tsx'), 'utf8');
-if (!detailSource.includes("record.kind === 'published' || record.kind === 'bundled'")) {
+if (!detailSource.includes("record.kind === 'published'")) {
   throw new Error('Seed install honesty gate is missing');
 }
 
@@ -101,8 +111,11 @@ const contributionSource = await readFile(path.join(frontendDirectory, 'src', 'f
 for (const field of ['applies_when', 'avoid_when', 'test_commands', 'source_urls']) {
   if (!contributionSource.includes(field)) throw new Error(`Contribution flow is missing ${field}`);
 }
+if (!contributionSource.includes('CONSCIOUSNESS_PAYLOAD_START') || !contributionSource.includes('target_skill: skillName')) {
+  throw new Error('Skill contributions must enter the live evidence pipeline with an explicit target Skill');
+}
 if (!contributionSource.includes("/^https:\\/\\//i.test(value.trim())")) {
   throw new Error('Contribution flow must require at least one public HTTPS evidence URL');
 }
 
-console.log(`Skill Tree checks passed: ${expectedCounts.published} published, ${expectedCounts.static} bundled, ${expectedCounts.seeds} verified Seeds.`);
+console.log(`Skill Tree checks passed: ${expectedCounts.published} live, ${expectedCounts.seeds} verified Seeds.`);

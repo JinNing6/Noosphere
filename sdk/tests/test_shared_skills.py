@@ -50,6 +50,18 @@ REGISTRY = {
                         "sha256": SKILL_SHA,
                         "size_bytes": len(SKILL_CONTENT.encode()),
                     },
+                    "source_count": 2,
+                    "publisher_count": 2,
+                    "verification": {
+                        "level": "independently-reproduced",
+                        "independent_reproductions": 2,
+                        "verified_outcomes": 0,
+                    },
+                    "provenance": {
+                        "kind": "community-evidence",
+                        "repository": "test_owner/test_repo",
+                        "authors": ["validator-a", "validator-b"],
+                    },
                     "withdrawal": None,
                 }
             ],
@@ -125,7 +137,9 @@ async def test_list_and_get_shared_skills_allow_anonymous_verified_reads():
     await _close_client()
     _invalidate_cache()
     assert "android-node-picking-recovery" in listed
+    assert '"verification_level": "independently-reproduced"' in listed
     assert SKILL_SHA in fetched
+    assert "Verification level: independently-reproduced" in fetched
     assert SKILL_CONTENT in fetched
     assert "Invalid Skill name" in rejected
 

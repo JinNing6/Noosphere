@@ -193,8 +193,7 @@ const zh = {
     proposeDomain: '申请新建领域分支',
     networkStatus: '实时注册表状态',
     metrics: {
-      published: '已发布',
-      bundled: '内置 Skill',
+      published: '实时 Skill',
       seeds: '已验证 Seed',
       registry: '注册表',
     },
@@ -224,15 +223,16 @@ const zh = {
       languagesFrameworks: '特定语言和框架的工程实践',
     },
     kinds: {
-      published: '已发布',
-      bundled: '仓库内置',
+      published: '实时共享',
       seed: '候选 Seed',
     },
     detailTitle: 'Skill 验证证据',
     lifecycle: '成熟度',
     lifecycleStates: {
+      maintainer: '维护者验证',
+      reproduced: '已独立复现',
       established: '已建立',
-      proven: '仓库可验证',
+      proven: '执行结果已证明',
       seed: '已验证 Seed',
     },
     version: '版本',
@@ -269,8 +269,8 @@ const zh = {
       sourceUrls: '公开证据链接，每行一条',
     },
     domainReviewNotice: '新分支需要经过分类审核，避免相近名称将共享网络割裂。',
-    skillReviewNotice: 'GitHub 会记录提案；正式发布前仍需独立证据和维护者审核。',
-    continueOnGitHub: '前往 GitHub 审核提案',
+    skillReviewNotice: 'GitHub 会记录可复现证据；发布实时新版本前仍需第二个独立来源和维护者审核。',
+    continueOnGitHub: '在 GitHub 提交证据',
   },
 
   // ─── 个人意识星球 ───

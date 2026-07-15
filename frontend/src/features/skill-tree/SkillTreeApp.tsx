@@ -276,7 +276,6 @@ export default function SkillTreeApp() {
         <section className="skill-main-surface">
           <div className="skill-network-summary" aria-label={t('skills.networkStatus')}>
             <span><strong>{data.index.counts.published}</strong>{t('skills.metrics.published')}</span>
-            <span><strong>{data.index.counts.static}</strong>{t('skills.metrics.bundled')}</span>
             <span><strong>{data.index.counts.seeds}</strong>{t('skills.metrics.seeds')}</span>
             <span><strong>r{data.index.source.registry_revision}</strong>{t('skills.metrics.registry')}</span>
           </div>
@@ -306,7 +305,6 @@ export default function SkillTreeApp() {
               </Suspense>
               <div className="skill-tree-legend" aria-label={t('skills.legend')}>
                 <span><i className="legend-seed" />{t('skills.kinds.seed')}</span>
-                <span><i className="legend-bundled" />{t('skills.kinds.bundled')}</span>
                 <span><i className="legend-published" />{t('skills.kinds.published')}</span>
               </div>
               <p className="skill-tree-hint">{t('skills.treeHint')}</p>

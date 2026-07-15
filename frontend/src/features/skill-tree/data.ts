@@ -6,7 +6,6 @@ function validateIndex(value: unknown): asserts value is SkillTreeIndex {
   if (!index
     || index.schema_version !== '1.0'
     || !Array.isArray(index.published_skills)
-    || !Array.isArray(index.static_skills)
     || !Array.isArray(index.verified_seeds)
     || !index.counts
     || !index.source) {

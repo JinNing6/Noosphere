@@ -65,6 +65,9 @@ class SharedSkillValidationTests(unittest.TestCase):
                             {
                                 "version": "1.0.0",
                                 "status": "active",
+                                "publisher_count": 2,
+                                "verification": {"level": "independently-reproduced"},
+                                "provenance": {"kind": "community-evidence"},
                                 "artifact": {
                                     "path": "shared_skills/releases/1.0.0/test-recovery/SKILL.md",
                                     "sha256": hashlib.sha256(
@@ -103,6 +106,9 @@ class SharedSkillValidationTests(unittest.TestCase):
                             {
                                 "version": "1.0.0",
                                 "status": "withdrawn",
+                                "publisher_count": 1,
+                                "verification": {"level": "maintainer-validated"},
+                                "provenance": {"kind": "maintainer-authored"},
                                 "artifact": {
                                     "path": "shared_skills/releases/1.0.0/test-recovery/SKILL.md",
                                     "sha256": hashlib.sha256(
@@ -121,7 +127,7 @@ class SharedSkillValidationTests(unittest.TestCase):
 
         self.assertEqual(errors, [])
 
-    def test_plugin_skill_sets_must_stay_in_sync(self):
+    def test_plugins_must_not_bundle_static_skill_copies(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
             (root / "shared_skills").mkdir()
@@ -129,15 +135,31 @@ class SharedSkillValidationTests(unittest.TestCase):
                 json.dumps({"schema_version": "1.0", "revision": 0, "skills": []}),
                 encoding="utf-8",
             )
-            codex_skill = root / "plugins/noosphere/skills/test-recovery/SKILL.md"
-            claude_root = root / "plugins/claude-noosphere/skills"
-            codex_skill.parent.mkdir(parents=True)
-            claude_root.mkdir(parents=True)
-            codex_skill.write_text(SKILL, encoding="utf-8")
+            codex_manifest = root / "plugins/noosphere/.codex-plugin/plugin.json"
+            claude_manifest = (
+                root / "plugins/claude-noosphere/.claude-plugin/plugin.json"
+            )
+            marketplace = root / ".claude-plugin/marketplace.json"
+            codex_manifest.parent.mkdir(parents=True)
+            claude_manifest.parent.mkdir(parents=True)
+            marketplace.parent.mkdir(parents=True)
+            codex_manifest.write_text(
+                json.dumps({"version": "0.4.0", "skills": "./skills/"}),
+                encoding="utf-8",
+            )
+            claude_manifest.write_text(
+                json.dumps({"version": "0.4.0"}), encoding="utf-8"
+            )
+            marketplace.write_text(
+                json.dumps({"version": "0.4.0", "plugins": [{"version": "0.4.0"}]}),
+                encoding="utf-8",
+            )
 
             errors = validate_repository(root)
 
-        self.assertTrue(any("Skill sets diverge" in error for error in errors))
+        self.assertTrue(
+            any("must load live Skills through MCP" in error for error in errors)
+        )
 
 
 if __name__ == "__main__":

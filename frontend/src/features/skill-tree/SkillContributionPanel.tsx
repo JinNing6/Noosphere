@@ -42,7 +42,7 @@ export default function SkillContributionPanel({
 
   const valid = useMemo(() => {
     if (mode === 'domain') return name.trim().length >= 3 && summary.trim().length >= 20;
-    return name.trim().length >= 3
+    return /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(name.trim())
       && summary.trim().length >= 20
       && symptom.trim().length >= 20
       && rootCause.trim().length >= 20
@@ -71,36 +71,49 @@ export default function SkillContributionPanel({
       return;
     }
 
+    const skillName = name.trim();
+    const evidence = {
+      symptom: symptom.trim(),
+      root_cause: rootCause.trim(),
+      fix: fix.trim(),
+      verification: verification.trim(),
+      applies_when: appliesWhen.trim(),
+      avoid_when: avoidWhen.trim(),
+      test_commands: testCommands.split(/\r?\n/).map((value) => value.trim()).filter(Boolean),
+      source_urls: sourceUrls.split(/\r?\n/).map((value) => value.trim()).filter(Boolean),
+    };
     const payload = {
-      schema_version: '1.0',
-      skill_name: name.trim(),
-      domain: domainId,
-      parent_skill: parentSkill?.name || null,
-      summary: summary.trim(),
+      creator_signature: 'GitHub Issue author',
+      is_anonymous: false,
+      consciousness_type: 'pattern',
+      thought_vector_text: summary.trim(),
+      context_environment: `target-skill:${skillName}\ndomain:${domainId}\n${appliesWhen.trim()}`,
+      tags: [domainId, 'skill-evidence', skillName],
+      parent_id: parentSkill ? `${parentSkill.name}@${parentSkill.version || 'latest'}` : null,
+      uploaded_at: new Date().toISOString(),
+      schema_version: 2,
+      memory_kind: 'engineering',
+      target_skill: skillName,
       evidence: {
-        symptom: symptom.trim(),
-        root_cause: rootCause.trim(),
-        fix: fix.trim(),
-        verification: verification.trim(),
-        applies_when: appliesWhen.trim(),
-        avoid_when: avoidWhen.trim(),
-        test_commands: testCommands.split(/\r?\n/).map((value) => value.trim()).filter(Boolean),
-        source_urls: sourceUrls.split(/\r?\n/).map((value) => value.trim()).filter(Boolean),
+        ...evidence,
       },
     };
     const body = [
-      '## Agent Skill proposal',
+      '## Reproducible evidence for a live Agent Skill',
       '',
-      '<!-- SKILL_PROPOSAL_START -->',
+      `**Target Skill:** \`${skillName}\``,
+      `**Domain:** \`${domainId}\``,
+      '',
+      '<!-- CONSCIOUSNESS_PAYLOAD_START -->',
       '```json',
       JSON.stringify(payload, null, 2),
       '```',
-      '<!-- SKILL_PROPOSAL_END -->',
+      '<!-- CONSCIOUSNESS_PAYLOAD_END -->',
       '',
-      'This proposal is review input. It cannot publish or replace a Skill without independent evidence and maintainer approval.',
+      'This evidence enters the same review-gated pipeline used by Agents. It cannot publish or replace a Skill without an independent reproduction and maintainer approval.',
     ].join('\n');
-    const titlePrefix = parentSkill ? `Skill version proposal: ${parentSkill.name}` : `Skill proposal: ${name.trim()}`;
-    window.open(createIssueUrl(titlePrefix, body, ['skill-candidate']), '_blank', 'noopener,noreferrer');
+    const titlePrefix = parentSkill ? `Skill update evidence: ${parentSkill.name}` : `New Skill evidence: ${skillName}`;
+    window.open(createIssueUrl(titlePrefix, body, ['consciousness', 'ephemeral', 'type:pattern']), '_blank', 'noopener,noreferrer');
   };
 
   return (

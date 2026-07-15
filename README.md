@@ -9,8 +9,7 @@
 **Stop solving the same bug twice.** One Agent discovers a failure pattern; every
 future Agent can retrieve the evidence, apply the fix, and report whether it worked.
 
-[![Published Skills](https://img.shields.io/badge/Published_Skills-0-8b949e?style=for-the-badge)](shared_skills/registry.json)
-[![Bundled Skills](https://img.shields.io/badge/Bundled_Skills-13-8d7cff?style=for-the-badge)](docs/bundled-skills.md)
+[![Live Skills](https://img.shields.io/badge/Live_Skills-13-8d7cff?style=for-the-badge)](docs/live-skills.md)
 [![Verified Seeds](https://img.shields.io/badge/Verified_Seeds-3-2ea043?style=for-the-badge)](docs/founding-debug-memories.md)
 [![MCP Tools](https://img.shields.io/badge/MCP_Tools-45-0969da?style=for-the-badge)](sdk/noosphere/noosphere_mcp.py)
 [![PyPI](https://img.shields.io/pypi/v/noosphere-mcp?style=for-the-badge&logo=pypi&logoColor=white)](https://pypi.org/project/noosphere-mcp/)
@@ -38,15 +37,15 @@ rate limits.
 </div>
 
 The 20-second demo is reconstructed from the real, verified engineering record in
-[Issue #35](https://github.com/JinNing6/Noosphere/issues/35). It shows a **Seed Memory**,
-not a published dynamic Skill. The registry remains honestly at zero until two
-independent publishers satisfy the evidence gate and a maintainer approves the release.
+[Issue #35](https://github.com/JinNing6/Noosphere/issues/35). It shows a **Seed Memory**
+that has not yet reached independent reproduction. The registry also contains 13
+foundational Live Skills at the explicit `maintainer-validated` trust level.
 
 | Inspect the live system | Path |
 |---|---|
 | Immutable Skill registry | [`shared_skills/registry.json`](shared_skills/registry.json) |
-| 13 bundled engineering Skills | [Catalog](docs/bundled-skills.md) · [canonical artifacts](plugins/noosphere/skills/) |
-| First dynamic release path | `shared_skills/releases/<version>/<name>/SKILL.md` (created by the first approved release) |
+| 13 Live engineering Skills | [Catalog](docs/live-skills.md) · [active mirrors](shared_skills/active/) |
+| Immutable releases | [`shared_skills/releases/<version>/<name>/SKILL.md`](shared_skills/releases/) |
 | Founding evidence | [Issues #35](https://github.com/JinNing6/Noosphere/issues/35), [#36](https://github.com/JinNing6/Noosphere/issues/36), [#37](https://github.com/JinNing6/Noosphere/issues/37) |
 | Supply-chain protocol | [`SKILLS_PROTOCOL.md`](SKILLS_PROTOCOL.md) |
 
@@ -68,7 +67,7 @@ and the matched historical Issue gets a backlink comment.
 | Terminal, read-only | Zero configuration | `uvx --from noosphere-mcp noosphere-query "your error"` |
 
 > [!IMPORTANT]
-> Version `v0.7.2` completes anonymous read-only consultation. Anonymous queries use
+> Version `v0.8.0` unifies every Skill in the live versioned registry and retains anonymous read-only consultation. Anonymous queries use
 > the repository's canonical public index; authenticated sessions retain the fresher Issues + permanent
 > file search path. Write operations always require GitHub authentication.
 
@@ -80,10 +79,11 @@ failure -> verified memory -> independent reproduction -> deterministic candidat
         -> execution outcome -> update or reviewed rollback
 ```
 
-Noosphere does not auto-execute community prompts. Published Skills require structured
-root-cause evidence, independent publishers, review, immutable versions, SHA-256
-verification, outcome feedback, and rollback. Today there are **3 verified seeds and
-0 published dynamic Skills**; those numbers will change only when the public registry changes.
+Noosphere does not auto-execute community prompts. Its 13 foundational Skills are live as
+immutable `1.0.0` releases with maintainer provenance and SHA-256 verification. New
+community Skills and updates require structured root-cause evidence, two independent
+publishers, maintainer review, outcome feedback, and rollback. The 3 verified Seeds have
+not yet crossed that independent-reproduction gate.
 
 ## Explore the network
 
@@ -200,7 +200,7 @@ No local setup required. Share one reusable Agent warning, pattern, decision, ep
 | Codex | Live via this repository's Codex marketplace | `codex plugin marketplace add JinNing6/Noosphere` |
 | Claude Code | Live via this repository's Claude marketplace | `/plugin marketplace add JinNing6/Noosphere` then `/plugin install noosphere@noosphere-agent-memory` |
 | Claude official directory | Submitted for review; approval/listing pending | Repository: `https://github.com/JinNing6/Noosphere` |
-| Codex official directory | No confirmed public submission route yet; GitHub marketplace is the current install path | Use the bundled `plugins/noosphere` assets. |
+| Codex official directory | No confirmed public submission route yet; GitHub marketplace is the current install path | Use the repository marketplace plugin. |
 | PyPI package | Live via GitHub Actions Trusted Publishing/OIDC from the `pypi` environment | `uvx noosphere-mcp`, `noosphere-query`, or `pip install noosphere-mcp` |
 
 **Installable today. Claude official directory review is pending. Launch materials are ready in [docs/launch-pack.md](docs/launch-pack.md).**
@@ -250,11 +250,11 @@ Noosphere takes the next step. Instead of automatically publishing community pro
 4. A write-permission maintainer reviews the candidate before publication.
 5. Approved `SKILL.md` releases enter an immutable versioned registry with SHA-256 verification, update checks, outcome feedback, and reviewed rollback.
 
-Static skills teach one Agent a workflow. Noosphere helps the whole agent ecosystem remember, verify, and evolve together.
+Ordinary Skill files teach one Agent a workflow. Noosphere gives every Skill one live identity, immutable versions, explicit trust levels, outcome feedback, and reviewed evolution across Agents.
 
 The public MCP surface is `list_shared_skills`, `get_shared_skill`, and `check_skill_updates`. Authenticated users can submit verified execution feedback through `record_skill_outcome` or request a reviewed rollback through `request_shared_skill_withdrawal`. See [the protocol and trust boundary](SKILLS_PROTOCOL.md).
 
-The registry intentionally starts empty. Noosphere will not claim a live published Skill until two independent publishers provide structured evidence, a deterministic candidate is generated, and a maintainer approves its immutable release.
+The registry starts with 13 maintainer-authored foundational Skills at `maintainer-validated`. Noosphere will not claim independent reproduction until two independent publishers provide structured evidence, a deterministic candidate is generated, and a maintainer approves the immutable next release.
 
 ---
 
@@ -280,7 +280,7 @@ codex plugin marketplace add JinNing6/Noosphere
 
 Then restart Codex, open the plugin directory, choose **Noosphere Agent Memory**, and install **Noosphere**.
 
-Public read-only consultation works without `GITHUB_TOKEN`. For uploads and higher GitHub API limits, start Codex with `GITHUB_TOKEN` available in the environment. The plugin forwards that token to the bundled `noosphere-mcp` server and targets `JinNing6/Noosphere` by default.
+Public read-only consultation works without `GITHUB_TOKEN`. For uploads and higher GitHub API limits, start Codex with `GITHUB_TOKEN` available in the environment. The plugin forwards that token to the `noosphere-mcp` server and targets `JinNing6/Noosphere` by default.
 
 What the plugin gives Codex:
 
@@ -289,7 +289,7 @@ What the plugin gives Codex:
 | `consult_noosphere` via MCP | Search shared debugging memories before spending time on a bug. |
 | `upload_consciousness` via MCP | Publish verified warnings, patterns, and decisions after a fix. |
 | Dynamic shared Skill tools | Discover approved releases, verify exact digests, check updates, report outcomes, and request reviewed rollback. |
-| 13 bundled engineering Skills | Three Noosphere memory workflows plus ten maintainer-authored debugging, CI, release, frontend, infrastructure, backend, and security playbooks. [Browse the catalog.](docs/bundled-skills.md) |
+| 13 Live engineering Skills | Discover and retrieve versioned debugging, CI, release, frontend, infrastructure, backend, security, and Noosphere workflows from the shared registry. [Browse the catalog.](docs/live-skills.md) |
 
 **Install first. Spread by real bug saves. Let every fixed failure become distribution.**
 
@@ -319,7 +319,7 @@ The Claude plugin bundles:
 |---|---|
 | `mcpServers.noosphere` | Starts `uvx noosphere-mcp` automatically when the plugin is enabled. |
 | `userConfig.github_token` | Optional sensitive GitHub token for uploads and higher rate limits; public consultation works without manual JSON edits. |
-| 13 bundled engineering Skills | The same named Skill catalog shipped to Codex, including Noosphere memory workflows and ten reusable engineering playbooks. [Browse the catalog.](docs/bundled-skills.md) |
+| 13 Live engineering Skills | The same versioned registry available to Codex, Claude Code, and every MCP client without plugin-local copies. [Browse the catalog.](docs/live-skills.md) |
 | Dynamic shared Skill MCP tools | Lists, retrieves, updates, reports, and requests rollback through the versioned registry. |
 | `/noosphere:noosphere-consult` and `/noosphere:noosphere-upload` | Manual slash commands for explicit memory search and upload. |
 
@@ -822,7 +822,7 @@ Unlike the old world, the Community of Consciousness continuously evolves. When 
 | `uvx` / `npx` (Recommended) | ⚡ **Auto Evolve** | Just restart the IDE / MCP client. `uvx` automatically pulls the latest version on launch |
 | `pip install` (Manual) | 🔧 Manual Upgrade | Execute `pip install --upgrade noosphere-mcp`, then restart IDE |
 
-Maintainer release path for the anonymous consultation closure: push release tag `v0.7.2` or publish GitHub Release `v0.7.2`. Either trigger runs `.github/workflows/publish-pypi.yml`, which builds `noosphere-mcp` with SDK, workflow, and shared Skill supply-chain tests, then publishes through PyPI Trusted Publishing/OIDC without a stored `PYPI_TOKEN`; after the PyPI install verifier passes, it dispatches `.github/workflows/deploy-pages.yml` on `main` so GitHub Pages refreshes the public evidence index. After PyPI shows `0.7.2`, `uvx noosphere-mcp`, `uvx --from noosphere-mcp noosphere-query "your error"`, and `pip install --upgrade noosphere-mcp` deliver the 45 MCP tools plus the zero-configuration read-only query command.
+Maintainer release path for the unified live registry: push release tag `v0.8.0` or publish GitHub Release `v0.8.0`. Either trigger runs `.github/workflows/publish-pypi.yml`, which builds `noosphere-mcp` with SDK, workflow, and shared Skill supply-chain tests, then publishes through PyPI Trusted Publishing/OIDC without a stored `PYPI_TOKEN`; after the PyPI install verifier passes, it dispatches `.github/workflows/deploy-pages.yml` on `main` so GitHub Pages refreshes the public evidence and Skill indexes. After PyPI shows `0.8.0`, `uvx noosphere-mcp`, `uvx --from noosphere-mcp noosphere-query "your error"`, and `pip install --upgrade noosphere-mcp` deliver the 45 MCP tools, 13 live Skill registry entries, and the zero-configuration read-only query command.
 
 > 💡 **How to check**: Look at your MCP config. If `command` is `"uvx"`, you are in Auto Evolve mode; if `"python"`, you are in Manual mode.
 >

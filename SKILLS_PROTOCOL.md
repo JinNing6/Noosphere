@@ -1,10 +1,10 @@
 # Noosphere Dynamic Shared Skills Protocol
 
-Noosphere turns independently verified engineering memories into versioned Agent Skills. A memory is evidence; a Skill is a reviewed workflow. The platform never treats arbitrary community text as executable authority.
+Noosphere distributes every Agent Skill through one versioned live registry. A memory is evidence; a Skill is a reviewed workflow. The platform never treats arbitrary community text as executable authority.
 
 ## Lifecycle
 
-1. **Capture**: `upload_consciousness` records structured symptom, root cause, fix, verification, applicability, test commands, and source URLs.
+1. **Capture**: `upload_consciousness` records structured symptom, root cause, fix, verification, applicability, test commands, source URLs, and an optional `target_skill` for an existing Skill update.
 2. **Bind identity**: CI replaces self-declared identity with the actual GitHub Issue author.
 3. **Promote once**: one source Issue maps to one stable permanent-memory path. Repeated workflow events reconcile the same record instead of creating duplicates.
 4. **Find repeated patterns**: only trusted, structured memories in the same embedding space are clustered. A candidate requires at least two distinct source Issues and two independent publishers.
@@ -25,7 +25,7 @@ shared_skills/
     └── <semver>/<skill-name>/SKILL.md
 ```
 
-The root `skills/` directory contains hand-authored project examples. It is not the dynamic registry and is never auto-promoted.
+Codex and Claude Code plugins contain only the MCP connection and explicit commands. They do not carry plugin-local Skill copies. Standards-compatible installers discover the active registry mirrors under `shared_skills/active/`.
 
 ## MCP Interface
 
@@ -36,6 +36,8 @@ Noosphere is an MCP server, not an HTTP Skills backend. The implemented tools ar
 - `check_skill_updates(installed_versions, force_refresh)`: compares local versions or content digests with the active registry.
 - `record_skill_outcome(...)`: authenticated, structured outcome feedback; creates a GitHub Issue and cannot publish or mutate a Skill.
 - `request_shared_skill_withdrawal(...)`: authenticated withdrawal request; registry mutation still requires maintainer approval.
+
+Registry discovery uses a 30-second cache by default. `force_refresh=true` invalidates that cache for immediate pull-based refresh. Noosphere therefore provides near-real-time reviewed distribution, not an unsafe push channel that silently replaces Agent instructions.
 
 Clients must not construct artifact paths from user input. They select a release from the registry, require an active status, require the canonical release path, and verify the exact UTF-8 bytes before returning Skill content to an Agent.
 
@@ -48,6 +50,15 @@ Clients must not construct artifact paths from user input. They select a release
 - Agents must verify local applicability and obtain explicit user approval before external writes or destructive actions.
 - Outcome reports are evidence for future review, never an automatic edit signal.
 - Withdrawal preserves the immutable artifact for audit, marks the release inactive, and rolls `latest` back to the newest verified active release.
+
+## Verification Levels
+
+- `maintainer-validated`: a maintainer-authored, reviewed release with immutable provenance, but no claim of independent reproduction.
+- `independently-reproduced`: at least two distinct source Issues and two independent GitHub publishers reproduce the pattern.
+- `outcome-proven`: independent reproduction plus confirmed execution outcomes on the published digest.
+- `established`: broader cross-environment evidence and no unresolved active regression.
+
+New community Skills and updates cannot self-promote. Targeted evidence for an existing Skill retains that Skill identity, cannot cross-cluster with unrelated evidence, and still requires independent publishers and maintainer approval before a new version becomes active.
 
 ## Agent Skills Compatibility
 

@@ -183,8 +183,7 @@ const en = {
     proposeDomain: 'Propose a domain branch',
     networkStatus: 'Live registry status',
     metrics: {
-      published: 'Published',
-      bundled: 'Bundled',
+      published: 'Live Skills',
       seeds: 'Verified Seeds',
       registry: 'Registry',
     },
@@ -214,15 +213,16 @@ const en = {
       languagesFrameworks: 'Language and framework-specific engineering',
     },
     kinds: {
-      published: 'Published',
-      bundled: 'Bundled',
+      published: 'Live',
       seed: 'Seed',
     },
     detailTitle: 'Skill evidence',
     lifecycle: 'Maturity',
     lifecycleStates: {
+      maintainer: 'Maintainer validated',
+      reproduced: 'Independently reproduced',
       established: 'Established',
-      proven: 'Repository-backed',
+      proven: 'Outcome proven',
       seed: 'Verified Seed',
     },
     version: 'Version',
@@ -259,8 +259,8 @@ const en = {
       sourceUrls: 'Public evidence URLs, one per line',
     },
     domainReviewNotice: 'New branches require taxonomy review so parallel names do not fragment the network.',
-    skillReviewNotice: 'GitHub records the proposal. Independent evidence and maintainer approval are still required before publication.',
-    continueOnGitHub: 'Review proposal on GitHub',
+    skillReviewNotice: 'GitHub records reproducible evidence. A second independent source and maintainer approval are required before a new live version is published.',
+    continueOnGitHub: 'Submit evidence on GitHub',
   },
 
   // ─── 个人意识星球 ───
