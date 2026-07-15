@@ -153,11 +153,9 @@ def validate_registry(root: Path, registry: dict) -> list[str]:
                 active_path = root / f"shared_skills/active/{name}/SKILL.md"
                 if not active_path.is_file():
                     errors.append(f"Missing active Skill mirror: {name}")
-                elif (
-                    release_path.is_file()
-                    and _canonical_artifact_bytes(active_path)
-                    != _canonical_artifact_bytes(release_path)
-                ):
+                elif release_path.is_file() and _canonical_artifact_bytes(
+                    active_path
+                ) != _canonical_artifact_bytes(release_path):
                     errors.append(f"Active Skill mirror drift: {name}")
         else:
             if any(release.get("status") == "active" for release in releases):
