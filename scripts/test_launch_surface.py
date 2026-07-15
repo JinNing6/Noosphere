@@ -16,6 +16,8 @@ class LaunchSurfaceTests(unittest.TestCase):
 
         self.assertEqual(registry["skills"], [])
         self.assertIn("Published_Skills-0", readme)
+        self.assertIn("Bundled_Skills-13", readme)
+        self.assertIn("docs/bundled-skills.md", readme)
         self.assertIn("3 verified seeds and\n0 published dynamic Skills", readme)
 
     def test_english_and_chinese_first_screens_lead_with_the_query_not_the_3d_app(self):

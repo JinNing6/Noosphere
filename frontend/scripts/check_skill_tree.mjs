@@ -27,6 +27,27 @@ if (new Set(identities).size !== identities.length) {
   throw new Error('Skill Tree index contains duplicate identities');
 }
 
+const foundingBundledSkills = [
+  'binary-credential-format-boundary',
+  'browser-actionability-debug',
+  'cloudflare-pages-stale-assets',
+  'debug-async-ui',
+  'docker-git-bind-mount-push-debug',
+  'fastapi-response-contract-boundary',
+  'frontend-layering-specificity-debug',
+  'github-actions-public-ci-diagnostics',
+  'windows-child-process-lifecycle',
+  'windows-npm-run-script-shell',
+];
+const bundledByName = new Map(index.static_skills.map((skill) => [skill.name, skill]));
+for (const name of foundingBundledSkills) {
+  const skill = bundledByName.get(name);
+  if (!skill) throw new Error(`Missing founding bundled Skill: ${name}`);
+  if (!/^[a-f0-9]{64}$/.test(skill.sha256) || !Number.isInteger(skill.size_bytes) || skill.size_bytes <= 0) {
+    throw new Error(`Bundled Skill lacks immutable artifact metadata: ${name}`);
+  }
+}
+
 for (const seed of index.verified_seeds) {
   for (const field of ['symptom', 'root_cause', 'fix', 'verification']) {
     if (seed.evidence?.[field]?.trim().length < 20) throw new Error(`${seed.name} lacks ${field} evidence`);
@@ -61,6 +82,9 @@ const sceneSource = await readFile(path.join(frontendDirectory, 'src', 'features
 if (!sceneSource.includes('zIndexRange={TREE_LABEL_Z_RANGE}')) {
   throw new Error('Projected tree labels must remain below DOM drawers');
 }
+if (!sceneSource.includes("skill-tree-skill-label-compact")) {
+  throw new Error('Compact tree labels must expand inward from right-edge nodes');
+}
 
 const styleSource = await readFile(path.join(frontendDirectory, 'src', 'features', 'skill-tree', 'skill-tree.css'), 'utf8');
 if (styleSource.includes('.skill-app select { font: inherit;')) {
@@ -68,6 +92,9 @@ if (styleSource.includes('.skill-app select { font: inherit;')) {
 }
 if (!styleSource.includes('.skill-app select { font-family: inherit; letter-spacing: 0; }')) {
   throw new Error('Skill controls must inherit the product typeface without overriding component sizes');
+}
+if (!styleSource.includes('.skill-tree-skill-label-compact > span { transform: translateX(-100%); text-align: right; }')) {
+  throw new Error('Compact Skill labels must remain inside the mobile viewport');
 }
 
 const contributionSource = await readFile(path.join(frontendDirectory, 'src', 'features', 'skill-tree', 'SkillContributionPanel.tsx'), 'utf8');

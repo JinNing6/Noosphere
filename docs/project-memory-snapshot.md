@@ -6,13 +6,17 @@ Last verified: 2026-07-15 (Asia/Shanghai)
 
 - Branch `codex/living-skill-tree-v1` replaces the frontend default route with an operational Living Skill Tree while preserving the complete existing 3D universe behind `?view=universe` and a persistent Universe navigation entry. Existing Issue, playground, and profile routes continue to resolve through the preserved universe application.
 - The default surface is a workbench, not a marketing landing page: global search, Tree and Directory views, eight deterministic engineering domains, Skill details, version history, Agent connection guidance, and structured contribution entry points are available in English and Chinese.
-- The tree index is generated only from repository truth. At verification time it contains 0 published dynamic Skills, 3 bundled repository Skills, and 3 verified Skill Seeds. Seed ingestion requires trusted review, Skill eligibility, complete symptom/root-cause/fix/verification evidence, and at least one test command; a Seed is excluded when a same-name published Skill exists.
+- The tree index is generated only from repository truth. At verification time it contains 0 published dynamic Skills, 13 bundled repository Skills, and 3 verified Skill Seeds. Seed ingestion requires trusted review, Skill eligibility, complete symptom/root-cause/fix/verification evidence, and at least one test command; a Seed is excluded when a same-name published Skill exists.
+- Ten maintainer-authored, locally validated engineering Skills were added to the original three Noosphere workflows: async UI lifecycle, browser actionability, CSS/R3F layering, public GitHub Actions diagnostics, Windows npm shell recovery, Windows child-process lifecycle, Cloudflare Pages stale assets, Docker/Git bind mounts, FastAPI response contracts, and binary credential parsing. They are explicitly classified as bundled Skills, not independently reproduced dynamic releases.
+- Codex and Claude Code now expose the same 13-name bundled catalog. Plugin and marketplace manifests are aligned at version `0.3.0`; the repository validator rejects name-set drift, private Windows user paths, invalid Agent Skills names/descriptions, and manifest version divergence.
+- Every bundled artifact receives a generated SHA-256 and byte-size record in `frontend/public/skill-tree-index.json`. The Skill detail surface shows the digest and standard single-Skill installation command without changing the honest revision-0 dynamic registry.
 - Community actions remain review-gated. Creating a Skill, proposing a domain, or submitting a new version opens a structured GitHub Issue; the browser never writes directly to the immutable Skill registry or claims that an unreviewed proposal is published.
 - The WebGL tree uses responsive node spacing and dedicated transparent hit geometry on mobile. Playwright checks at a 390 x 844 viewport selected two vertically adjacent Skill nodes independently, and the directory search for `runtime smoke` returned the single matching verified Seed without horizontal overflow.
 - The polished responsive shell fixes a CSS specificity bug where a scoped `font` shorthand overrode component button sizes, reserves real canvas width for the desktop detail drawer, and renders mobile details as content-sized bottom work sheets. At 1280 px, secondary action labels collapse without horizontal overflow while the primary Create Skill command remains visible.
 - Tree labels now use semantic zoom: overview mode shows domain structure, while Skill names appear only for a selected domain, selected Skill, hover, or real search match. An empty query no longer highlights every Skill.
 - Drei-projected `<Html>` labels are constrained to z-index range 1-8, below the detail and contribution drawers at z-index 50. Mobile browser verification found zero projected labels intercepting or painting over the open drawer.
-- Vite was upgraded to 8.1.4 and the React plugin to 6.0.3. The default entry is 211.66 kB (65.61 kB gzip); Three.js and the former universe remain lazy-loaded. Frontend lint, production build, all ten repository frontend contract checks, both production and full dependency audits, DesignMD lint, and Git diff whitespace checks passed locally.
+- Compact mobile Skill labels expand inward from right-edge nodes. At 390 x 844, all four Build and Release labels remained inside the viewport and a real canvas click selected `windows-npm-run-script-shell` exactly.
+- Vite was upgraded to 8.1.4 and the React plugin to 6.0.3. The default entry is 212.19 kB (65.81 kB gzip); Three.js and the former universe remain lazy-loaded. Frontend lint, production build, all ten repository frontend contract checks, both production and full dependency audits, DesignMD lint, and Git diff whitespace checks passed locally.
 - This frontend is implemented and locally verified but is not yet merged or deployed. The shared Skill registry remains honestly empty until independent evidence and maintainer approval publish the first immutable dynamic Skill.
 
 ## Current Engineering State
@@ -71,6 +75,10 @@ Last verified: 2026-07-15 (Asia/Shanghai)
 - The label initializer completed successfully and all 11 required memory, candidate, approval, outcome, and withdrawal labels exist.
 
 ## Verification Evidence
+
+- All 13 canonical bundled Skill directories passed the Agent Skills quick validator; the Codex and Claude catalogs contain the same names and the ten new generic artifact mirrors have matching SHA-256 values.
+- `python -m pytest sdk/tests -q`: 194 passed after the bundled catalog change. Repository validator, migration, and launch-surface unit tests: 10 passed. GitHub workflow tests: 71 passed.
+- The generated frontend index reports `0 published, 13 bundled, 3 verified Seeds`; desktop and mobile browser checks found zero horizontal overflow, displayed a 64-character bundled Skill digest, and verified real WebGL selection for a newly added mobile node.
 
 - `python -m pytest sdk/tests -q`: 194 passed for the published `v0.7.2` release.
 - `node --test .github/scripts/*.test.cjs`: 71 passed after preserving the first-screen contribution, resonance-loop, and Share Proof contracts.

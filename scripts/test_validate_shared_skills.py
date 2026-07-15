@@ -4,7 +4,11 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from scripts.validate_shared_skills import validate_registry, validate_skill_file
+from scripts.validate_shared_skills import (
+    validate_registry,
+    validate_repository,
+    validate_skill_file,
+)
 
 
 SKILL = """---
@@ -26,6 +30,19 @@ class SharedSkillValidationTests(unittest.TestCase):
             errors = validate_skill_file(skill_path, "wrong-name")
 
         self.assertTrue(any("frontmatter name" in error for error in errors))
+
+    def test_skill_rejects_private_windows_user_paths(self):
+        with tempfile.TemporaryDirectory() as temp:
+            skill_path = Path(temp) / "test-recovery" / "SKILL.md"
+            skill_path.parent.mkdir()
+            skill_path.write_text(
+                SKILL + "\nRead C:\\Users\\PrivateName\\secret.txt\n",
+                encoding="utf-8",
+            )
+
+            errors = validate_skill_file(skill_path, "test-recovery")
+
+        self.assertTrue(any("private Windows user path" in error for error in errors))
 
     def test_registry_requires_canonical_verified_artifact_and_active_mirror(self):
         with tempfile.TemporaryDirectory() as temp:
@@ -103,6 +120,24 @@ class SharedSkillValidationTests(unittest.TestCase):
             errors = validate_registry(root, json.loads(json.dumps(registry)))
 
         self.assertEqual(errors, [])
+
+    def test_plugin_skill_sets_must_stay_in_sync(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            (root / "shared_skills").mkdir()
+            (root / "shared_skills/registry.json").write_text(
+                json.dumps({"schema_version": "1.0", "revision": 0, "skills": []}),
+                encoding="utf-8",
+            )
+            codex_skill = root / "plugins/noosphere/skills/test-recovery/SKILL.md"
+            claude_root = root / "plugins/claude-noosphere/skills"
+            codex_skill.parent.mkdir(parents=True)
+            claude_root.mkdir(parents=True)
+            codex_skill.write_text(SKILL, encoding="utf-8")
+
+            errors = validate_repository(root)
+
+        self.assertTrue(any("Skill sets diverge" in error for error in errors))
 
 
 if __name__ == "__main__":

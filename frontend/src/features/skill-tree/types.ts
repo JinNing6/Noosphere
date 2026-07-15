@@ -37,6 +37,8 @@ export interface StaticSkillSource {
   name: string;
   description: string;
   source_path: string;
+  sha256: string;
+  size_bytes: number;
 }
 
 export interface VerifiedSeedSource {

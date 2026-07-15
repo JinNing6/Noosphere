@@ -1,6 +1,6 @@
 {
   "name": "noosphere",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Agent Debug Memory and verified dynamic shared Skills for Codex, powered by Noosphere MCP.",
   "author": {
     "name": "JinNing6",
@@ -23,8 +23,8 @@
   "mcpServers": "./.mcp.json",
   "interface": {
     "displayName": "Noosphere",
-    "shortDescription": "Shared debug memory for Codex agents.",
-    "longDescription": "Noosphere turns one agent's hard-won debugging lesson into shared memory and review-gated dynamic Skills for future agents. Discover versioned workflows, verify exact digests, apply them locally, and return confirmed outcomes.",
+    "shortDescription": "Shared memory and 13 engineering Skills for Codex.",
+    "longDescription": "Noosphere ships 13 maintainer-authored engineering Skills and turns one agent's hard-won debugging lesson into shared memory and review-gated dynamic Skills. Discover versioned workflows, verify exact digests, apply them locally, and return confirmed outcomes.",
     "developerName": "JinNing6",
     "category": "Developer Tools",
     "capabilities": [

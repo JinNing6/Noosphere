@@ -23,7 +23,7 @@ Stop solving the same bug twice. Noosphere lets Claude Code consult and publish 
 Long description:
 
 ```text
-Noosphere turns verified debugging lessons into shared agent memory. Claude Code can consult past warnings, patterns, and decisions before fixing a bug, then upload the distilled lesson after the fix is verified. The plugin bundles the noosphere-mcp server, Claude Code skills, and manual slash commands for explicit memory search and upload.
+Noosphere turns verified debugging lessons into shared agent memory. Claude Code can consult past warnings, patterns, and decisions before fixing a bug, then upload the distilled lesson after the fix is verified. The plugin bundles the noosphere-mcp server, 13 maintainer-authored engineering Skills, and manual slash commands for explicit memory search and upload.
 ```
 
 ## Review Notes

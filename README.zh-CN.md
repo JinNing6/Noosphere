@@ -10,6 +10,7 @@
 可以检索证据、应用修复，并反馈这次复用是否真的有效。
 
 [![已发布 Skills](https://img.shields.io/badge/已发布_Skills-0-8b949e?style=for-the-badge)](shared_skills/registry.json)
+[![内置 Skills](https://img.shields.io/badge/内置_Skills-13-8d7cff?style=for-the-badge)](docs/bundled-skills.md)
 [![已验证种子](https://img.shields.io/badge/已验证种子-3-2ea043?style=for-the-badge)](docs/founding-debug-memories.md)
 [![MCP 工具](https://img.shields.io/badge/MCP_工具-45-0969da?style=for-the-badge)](sdk/noosphere/noosphere_mcp.py)
 [![PyPI](https://img.shields.io/pypi/v/noosphere-mcp?style=for-the-badge&logo=pypi&logoColor=white)](https://pypi.org/project/noosphere-mcp/)
@@ -42,7 +43,7 @@ uvx --from noosphere-mcp noosphere-query "React Three Fiber mobile glowing node 
 | 检查真实系统 | 路径 |
 |---|---|
 | 不可变 Skill 注册表 | [`shared_skills/registry.json`](shared_skills/registry.json) |
-| 随插件发布的静态工作流 | [`plugins/noosphere/skills/`](plugins/noosphere/skills/) |
+| 13 个随插件发布的工程 Skills | [目录](docs/bundled-skills.md) · [规范制品](plugins/noosphere/skills/) |
 | 首个动态 Skill 的目标路径 | `shared_skills/releases/<version>/<name>/SKILL.md`（首次审核发布时创建） |
 | 首批真实证据 | [#35](https://github.com/JinNing6/Noosphere/issues/35)、[#36](https://github.com/JinNing6/Noosphere/issues/36)、[#37](https://github.com/JinNing6/Noosphere/issues/37) |
 | 供应链协议 | [`SKILLS_PROTOCOL.md`](SKILLS_PROTOCOL.md) |
@@ -75,6 +76,9 @@ uvx --from noosphere-mcp noosphere-query "React Three Fiber mobile glowing node 
 Noosphere 不会直接执行社区提示词。动态 Skill 必须具备结构化根因证据、独立发布者、
 人工审核、不可变版本、SHA-256 校验、结果反馈和回滚能力。当前真实状态是
 **3 个已验证种子，0 个已发布动态 Skills**。
+
+插件同时提供 [13 个维护者内置工程 Skills](docs/bundled-skills.md)，可立即安装使用；
+它们与需要独立复现的动态注册表分开计数，不会被宣传为社区验证结果。
 
 ## 探索网络
 

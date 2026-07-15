@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { readFile, readdir, mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -35,12 +36,15 @@ async function readStaticSkills() {
 
   for (const entry of entries.filter((item) => item.isDirectory()).sort((a, b) => a.name.localeCompare(b.name))) {
     const sourcePath = path.join(skillsRoot, entry.name, 'SKILL.md');
-    const content = await readFile(sourcePath, 'utf8');
+    const artifact = await readFile(sourcePath);
+    const content = artifact.toString('utf8');
     const frontMatter = parseFrontMatter(content, sourcePath);
     skills.push({
       name: frontMatter.name,
       description: frontMatter.description,
       source_path: path.relative(repositoryRoot, sourcePath).replaceAll('\\', '/'),
+      sha256: createHash('sha256').update(artifact).digest('hex'),
+      size_bytes: artifact.byteLength,
     });
   }
 

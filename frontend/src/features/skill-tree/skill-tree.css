@@ -257,6 +257,7 @@
 .skill-tree-root-label > span { color: var(--skill-branch); font-size: 9px; }
 .skill-tree-domain-label > span { max-width: 110px; font-size: 9px; }
 .skill-tree-skill-label > span { max-width: 150px; font-size: 8px; font-weight: 500; text-align: left; }
+.skill-tree-skill-label-compact > span { transform: translateX(-100%); text-align: right; }
 .skill-tree-legend { position: absolute; right: 16px; bottom: 16px; z-index: 12; gap: 12px; color: var(--skill-muted); font-size: 9px; pointer-events: none; }
 .skill-tree-legend span { display: flex; align-items: center; gap: 5px; }
 .skill-tree-legend i { display: block; width: 8px; height: 8px; border: 1px solid var(--skill-branch); }

@@ -53,8 +53,18 @@ export const SKILL_DOMAINS: SkillDomain[] = [
 
 const STATIC_DOMAIN_OVERRIDES: Record<string, string> = {
   'agent-debug-memory': 'testing-reliability',
+  'binary-credential-format-boundary': 'security-trust',
+  'browser-actionability-debug': 'frontend-mobile',
+  'cloudflare-pages-stale-assets': 'build-release',
+  'debug-async-ui': 'frontend-mobile',
+  'docker-git-bind-mount-push-debug': 'data-infrastructure',
   'dynamic-shared-skills': 'agent-runtime',
+  'fastapi-response-contract-boundary': 'languages-frameworks',
+  'frontend-layering-specificity-debug': 'frontend-mobile',
+  'github-actions-public-ci-diagnostics': 'build-release',
   'upload-debug-memory': 'agent-runtime',
+  'windows-child-process-lifecycle': 'testing-reliability',
+  'windows-npm-run-script-shell': 'build-release',
 };
 
 function scoreDomains(text: string): Array<{ id: string; score: number }> {
@@ -112,6 +122,7 @@ export function normalizeSkillIndex(index: SkillTreeIndex): SkillRecord[] {
       domainId: domains.primary,
       secondaryDomainIds: domains.secondary,
       tags: [],
+      digest: skill.sha256,
       sourceUrl: `https://github.com/JinNing6/Noosphere/blob/main/${skill.source_path}`,
       sourcePath: skill.source_path,
     };

@@ -10,6 +10,7 @@
 future Agent can retrieve the evidence, apply the fix, and report whether it worked.
 
 [![Published Skills](https://img.shields.io/badge/Published_Skills-0-8b949e?style=for-the-badge)](shared_skills/registry.json)
+[![Bundled Skills](https://img.shields.io/badge/Bundled_Skills-13-8d7cff?style=for-the-badge)](docs/bundled-skills.md)
 [![Verified Seeds](https://img.shields.io/badge/Verified_Seeds-3-2ea043?style=for-the-badge)](docs/founding-debug-memories.md)
 [![MCP Tools](https://img.shields.io/badge/MCP_Tools-45-0969da?style=for-the-badge)](sdk/noosphere/noosphere_mcp.py)
 [![PyPI](https://img.shields.io/pypi/v/noosphere-mcp?style=for-the-badge&logo=pypi&logoColor=white)](https://pypi.org/project/noosphere-mcp/)
@@ -44,7 +45,7 @@ independent publishers satisfy the evidence gate and a maintainer approves the r
 | Inspect the live system | Path |
 |---|---|
 | Immutable Skill registry | [`shared_skills/registry.json`](shared_skills/registry.json) |
-| Bundled static Agent workflows | [`plugins/noosphere/skills/`](plugins/noosphere/skills/) |
+| 13 bundled engineering Skills | [Catalog](docs/bundled-skills.md) · [canonical artifacts](plugins/noosphere/skills/) |
 | First dynamic release path | `shared_skills/releases/<version>/<name>/SKILL.md` (created by the first approved release) |
 | Founding evidence | [Issues #35](https://github.com/JinNing6/Noosphere/issues/35), [#36](https://github.com/JinNing6/Noosphere/issues/36), [#37](https://github.com/JinNing6/Noosphere/issues/37) |
 | Supply-chain protocol | [`SKILLS_PROTOCOL.md`](SKILLS_PROTOCOL.md) |
@@ -288,9 +289,7 @@ What the plugin gives Codex:
 | `consult_noosphere` via MCP | Search shared debugging memories before spending time on a bug. |
 | `upload_consciousness` via MCP | Publish verified warnings, patterns, and decisions after a fix. |
 | Dynamic shared Skill tools | Discover approved releases, verify exact digests, check updates, report outcomes, and request reviewed rollback. |
-| `agent-debug-memory` skill | Makes Codex consult Noosphere before debugging and verify before acting. |
-| `upload-debug-memory` skill | Turns solved bugs into reusable Agent memory without leaking secrets. |
-| `dynamic-shared-skills` skill | Applies registry Skills through progressive disclosure and explicit trust boundaries. |
+| 13 bundled engineering Skills | Three Noosphere memory workflows plus ten maintainer-authored debugging, CI, release, frontend, infrastructure, backend, and security playbooks. [Browse the catalog.](docs/bundled-skills.md) |
 
 **Install first. Spread by real bug saves. Let every fixed failure become distribution.**
 
@@ -320,9 +319,7 @@ The Claude plugin bundles:
 |---|---|
 | `mcpServers.noosphere` | Starts `uvx noosphere-mcp` automatically when the plugin is enabled. |
 | `userConfig.github_token` | Optional sensitive GitHub token for uploads and higher rate limits; public consultation works without manual JSON edits. |
-| `/noosphere:agent-debug-memory` | Claude Code consults shared debugging memory before fixing. |
-| `/noosphere:upload-debug-memory` | Claude Code publishes verified lessons after a fix. |
-| `/noosphere:dynamic-shared-skills` | Claude Code discovers only approved releases and requires digest verification before use. |
+| 13 bundled engineering Skills | The same named Skill catalog shipped to Codex, including Noosphere memory workflows and ten reusable engineering playbooks. [Browse the catalog.](docs/bundled-skills.md) |
 | Dynamic shared Skill MCP tools | Lists, retrieves, updates, reports, and requests rollback through the versioned registry. |
 | `/noosphere:noosphere-consult` and `/noosphere:noosphere-upload` | Manual slash commands for explicit memory search and upload. |
 

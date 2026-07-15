@@ -40,7 +40,7 @@ def validate_skill_file(path: Path, expected_name: str) -> list[str]:
     frontmatter = content.split("\n---\n", 1)[0][4:]
     name = _frontmatter_value(frontmatter, "name")
     description = _frontmatter_value(frontmatter, "description")
-    if not NAME_RE.fullmatch(expected_name):
+    if len(expected_name) > 64 or not NAME_RE.fullmatch(expected_name):
         errors.append(f"Invalid expected Skill name: {expected_name}")
     if name != expected_name:
         errors.append(
@@ -48,6 +48,8 @@ def validate_skill_file(path: Path, expected_name: str) -> list[str]:
         )
     if not description or len(description) > 1024:
         errors.append(f"Skill description must contain 1-1024 characters: {path}")
+    if re.search(r"[A-Za-z]:\\+Users\\+", content):
+        errors.append(f"Skill artifact contains a private Windows user path: {path}")
     return errors
 
 
@@ -153,15 +155,45 @@ def validate_repository(root: Path) -> list[str]:
     except (OSError, json.JSONDecodeError) as exc:
         return [f"Cannot read shared Skill registry: {exc}"]
     errors.extend(validate_registry(root, registry))
-    for plugin_root in [
+    plugin_roots = [
         root / "plugins" / "noosphere" / "skills",
         root / "plugins" / "claude-noosphere" / "skills",
-    ]:
+    ]
+    skill_sets: list[set[str]] = []
+    for plugin_root in plugin_roots:
+        skill_names = {path.name for path in plugin_root.iterdir() if path.is_dir()}
+        skill_sets.append(skill_names)
         for skill_dir in sorted(plugin_root.iterdir()):
             if skill_dir.is_dir():
                 errors.extend(
                     validate_skill_file(skill_dir / "SKILL.md", skill_dir.name)
                 )
+    if len(skill_sets) == 2 and skill_sets[0] != skill_sets[1]:
+        only_codex = sorted(skill_sets[0] - skill_sets[1])
+        only_claude = sorted(skill_sets[1] - skill_sets[0])
+        errors.append(
+            "Codex and Claude bundled Skill sets diverge: "
+            f"only Codex={only_codex}, only Claude={only_claude}"
+        )
+    manifest_paths = [
+        root / "plugins" / "noosphere" / ".codex-plugin" / "plugin.json",
+        root / "plugins" / "claude-noosphere" / ".claude-plugin" / "plugin.json",
+        root / ".claude-plugin" / "marketplace.json",
+    ]
+    if all(path.is_file() for path in manifest_paths):
+        manifests = [
+            json.loads(path.read_text(encoding="utf-8")) for path in manifest_paths
+        ]
+        versions = {
+            manifests[0].get("version"),
+            manifests[1].get("version"),
+            manifests[2].get("version"),
+            manifests[2].get("plugins", [{}])[0].get("version"),
+        }
+        if len(versions) != 1:
+            errors.append(
+                f"Plugin manifest versions diverge: {sorted(str(value) for value in versions)}"
+            )
     return errors
 
 

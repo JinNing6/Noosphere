@@ -250,7 +250,11 @@ function SkillNode({
         </mesh>
       )}
       {(showLabel || hovered) && (
-        <Html position={[0.34, 0.08, 0]} zIndexRange={TREE_LABEL_Z_RANGE} className="skill-tree-label skill-tree-skill-label">
+        <Html
+          position={compact ? [-0.34, 0.08, 0] : [0.34, 0.08, 0]}
+          zIndexRange={TREE_LABEL_Z_RANGE}
+          className={`skill-tree-label skill-tree-skill-label ${compact ? 'skill-tree-skill-label-compact' : ''}`}
+        >
           <span>{record.name}</span>
         </Html>
       )}
