@@ -103,6 +103,16 @@ export default function SkillTreeApp() {
   }, []);
 
   useEffect(() => {
+    const closePanel = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      setSelectedSkill(null);
+      setContribution(null);
+    };
+    window.addEventListener('keydown', closePanel);
+    return () => window.removeEventListener('keydown', closePanel);
+  }, []);
+
+  useEffect(() => {
     const controller = new AbortController();
     loadSkillTreeData(controller.signal)
       .then(setData)
@@ -117,7 +127,10 @@ export default function SkillTreeApp() {
     if (!data) return [];
     return data.records.filter((record) => matchesSkillQuery(record, query));
   }, [data, query]);
-  const matchingSkillIds = useMemo(() => new Set(matchingRecords.map((record) => record.id)), [matchingRecords]);
+  const hasQuery = Boolean(query.trim());
+  const matchingSkillIds = useMemo(() => (
+    hasQuery ? new Set(matchingRecords.map((record) => record.id)) : new Set<string>()
+  ), [hasQuery, matchingRecords]);
   const directoryRecords = useMemo(() => {
     if (!selectedDomainId) return matchingRecords;
     return matchingRecords.filter((record) => record.domainId === selectedDomainId);
@@ -174,7 +187,7 @@ export default function SkillTreeApp() {
   if (!data) return null;
 
   return (
-    <div className="skill-app" data-testid="skill-app">
+    <div className={`skill-app ${selectedSkill || contribution ? 'skill-app-panel-open' : ''}`} data-testid="skill-app">
       <header className="skill-topbar">
         <div className="skill-brand" aria-label="Noosphere Skills">
           <span className="skill-brand-mark">N</span>
@@ -201,10 +214,10 @@ export default function SkillTreeApp() {
 
         <div className="skill-topbar-actions">
           <div className="skill-view-switch" aria-label={t('skills.viewMode')}>
-            <button className={viewMode === 'tree' ? 'active' : ''} onClick={() => setViewMode('tree')} aria-pressed={viewMode === 'tree'}>
+            <button className={viewMode === 'tree' ? 'active' : ''} onClick={() => setViewMode('tree')} aria-label={t('skills.tree')} aria-pressed={viewMode === 'tree'}>
               <GitBranch size={17} aria-hidden="true" /><span>{t('skills.tree')}</span>
             </button>
-            <button className={viewMode === 'directory' ? 'active' : ''} onClick={() => setViewMode('directory')} aria-pressed={viewMode === 'directory'}>
+            <button className={viewMode === 'directory' ? 'active' : ''} onClick={() => setViewMode('directory')} aria-label={t('skills.directory')} aria-pressed={viewMode === 'directory'}>
               <List size={17} aria-hidden="true" /><span>{t('skills.directory')}</span>
             </button>
           </div>
@@ -212,13 +225,13 @@ export default function SkillTreeApp() {
           <a className="skill-icon-button skill-topbar-icon" href="https://github.com/JinNing6/Noosphere" target="_blank" rel="noreferrer" aria-label="GitHub" title="GitHub">
             <GitFork size={18} aria-hidden="true" />
           </a>
-          <a className="skill-button skill-button-secondary skill-connect-button" href="https://github.com/JinNing6/Noosphere#install-for-your-agent" target="_blank" rel="noreferrer">
+          <a className="skill-button skill-button-secondary skill-connect-button" href="https://github.com/JinNing6/Noosphere#install-for-your-agent" target="_blank" rel="noreferrer" aria-label={t('skills.connectAgent')} title={t('skills.connectAgent')}>
             <SquareTerminal size={16} aria-hidden="true" /><span>{t('skills.connectAgent')}</span>
           </a>
-          <button className="skill-button skill-button-secondary skill-universe-button" onClick={navigateToUniverse}>
+          <button className="skill-button skill-button-secondary skill-universe-button" onClick={navigateToUniverse} aria-label={t('skills.universe')} title={t('skills.universe')}>
             <Sparkles size={16} aria-hidden="true" /><span>{t('skills.universe')}</span>
           </button>
-          <button className="skill-button skill-button-primary" onClick={() => setContribution({ mode: 'skill' })}>
+          <button className="skill-button skill-button-primary" onClick={() => setContribution({ mode: 'skill' })} aria-label={t('skills.createSkill')} title={t('skills.createSkill')}>
             <Plus size={17} aria-hidden="true" /><span>{t('skills.createSkill')}</span>
           </button>
         </div>

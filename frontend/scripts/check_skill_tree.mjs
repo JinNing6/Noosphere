@@ -50,6 +50,25 @@ const treeAppSource = await readFile(path.join(frontendDirectory, 'src', 'featur
 if (!treeAppSource.includes('if (nextQuery.trim()) setSelectedDomainId(null)')) {
   throw new Error('Global search must clear a stale domain filter');
 }
+if (!treeAppSource.includes("hasQuery ? new Set(matchingRecords.map((record) => record.id)) : new Set<string>()")) {
+  throw new Error('An empty query must not visually promote every Skill as a match');
+}
+if (!treeAppSource.includes('skill-app-panel-open')) {
+  throw new Error('Wide layouts must reserve the tree surface for an open detail panel');
+}
+
+const sceneSource = await readFile(path.join(frontendDirectory, 'src', 'features', 'skill-tree', 'SkillTreeScene.tsx'), 'utf8');
+if (!sceneSource.includes('zIndexRange={TREE_LABEL_Z_RANGE}')) {
+  throw new Error('Projected tree labels must remain below DOM drawers');
+}
+
+const styleSource = await readFile(path.join(frontendDirectory, 'src', 'features', 'skill-tree', 'skill-tree.css'), 'utf8');
+if (styleSource.includes('.skill-app select { font: inherit;')) {
+  throw new Error('A high-specificity font shorthand would override component button sizes');
+}
+if (!styleSource.includes('.skill-app select { font-family: inherit; letter-spacing: 0; }')) {
+  throw new Error('Skill controls must inherit the product typeface without overriding component sizes');
+}
 
 const contributionSource = await readFile(path.join(frontendDirectory, 'src', 'features', 'skill-tree', 'SkillContributionPanel.tsx'), 'utf8');
 for (const field of ['applies_when', 'avoid_when', 'test_commands', 'source_urls']) {

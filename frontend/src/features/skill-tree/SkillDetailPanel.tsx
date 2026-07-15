@@ -1,5 +1,5 @@
 import { Check, Clipboard, ExternalLink, GitFork, ShieldCheck, Sprout, X } from 'lucide-react';
-import { useState } from 'react';
+import { useState, type CSSProperties } from 'react';
 import { useTranslation } from 'react-i18next';
 import { domainById } from './taxonomy';
 import type { SkillRecord } from './types';
@@ -24,7 +24,12 @@ export default function SkillDetailPanel({ record, onClose, onContributeVersion 
   };
 
   return (
-    <aside className="skill-detail-panel" aria-label={t('skills.detailTitle')} data-testid="skill-detail-panel">
+    <aside
+      className="skill-detail-panel"
+      aria-label={t('skills.detailTitle')}
+      data-testid="skill-detail-panel"
+      style={{ '--skill-detail-accent': domain.color } as CSSProperties}
+    >
       <header className="skill-detail-header">
         <div className="skill-detail-status">
           <span className="skill-domain-swatch" style={{ background: domain.color }} />

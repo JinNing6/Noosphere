@@ -32,6 +32,8 @@ interface SkillTreeSceneProps {
   reducedMotion: boolean;
 }
 
+const TREE_LABEL_Z_RANGE: [number, number] = [8, 1];
+
 function createTree(records: SkillRecord[]): TreeDatum {
   return {
     id: 'noosphere-root',
@@ -128,7 +130,7 @@ function RootNode() {
         <torusGeometry args={[0.48, 0.018, 10, 72]} />
         <meshBasicMaterial color="#D9D1C2" transparent opacity={0.62} />
       </mesh>
-      <Html center position={[0, -0.66, 0]} className="skill-tree-label skill-tree-root-label">
+      <Html center position={[0, -0.66, 0]} zIndexRange={TREE_LABEL_Z_RANGE} className="skill-tree-label skill-tree-root-label">
         <span>NOOSPHERE</span>
       </Html>
     </group>
@@ -181,7 +183,7 @@ function DomainNode({
         <torusGeometry args={[0.28, 0.012, 8, 48]} />
         <meshBasicMaterial color={domain.color} transparent opacity={active ? 0.9 : 0.32} />
       </mesh>
-      <Html center position={[0, 0.54, 0]} className="skill-tree-label skill-tree-domain-label">
+      <Html center position={[0, 0.54, 0]} zIndexRange={TREE_LABEL_Z_RANGE} className="skill-tree-label skill-tree-domain-label">
         <span data-domain-label={domain.translationKey}>{t(`skills.domains.${domain.translationKey}`)}</span>
         <small>{count}</small>
       </Html>
@@ -193,12 +195,14 @@ function SkillNode({
   record,
   selected,
   matching,
+  showLabel,
   compact,
   onSelect,
 }: {
   record: SkillRecord;
   selected: boolean;
   matching: boolean;
+  showLabel: boolean;
   compact: boolean;
   onSelect: () => void;
 }) {
@@ -245,9 +249,11 @@ function SkillNode({
           <meshBasicMaterial color={domain.color} transparent opacity={0.86} />
         </mesh>
       )}
-      <Html position={[0.34, 0.08, 0]} className="skill-tree-label skill-tree-skill-label">
-        <span>{record.name}</span>
-      </Html>
+      {(showLabel || hovered) && (
+        <Html position={[0.34, 0.08, 0]} zIndexRange={TREE_LABEL_Z_RANGE} className="skill-tree-label skill-tree-skill-label">
+          <span>{record.name}</span>
+        </Html>
+      )}
     </group>
   );
 }
@@ -324,6 +330,9 @@ function TreeContent({
               record={node.datum.record}
               selected={node.datum.record.id === selectedSkillId}
               matching={matchingSkillIds.has(node.datum.record.id)}
+              showLabel={node.datum.record.id === selectedSkillId
+                || matchingSkillIds.has(node.datum.record.id)
+                || node.datum.record.domainId === selectedDomainId}
               compact={compact}
               onSelect={() => onSelectSkill(node.datum.record as SkillRecord)}
             />
@@ -358,7 +367,7 @@ export default function SkillTreeScene(props: SkillTreeSceneProps) {
     <>
       <div className="skill-tree-canvas" data-testid="skill-tree-canvas" aria-hidden="true">
         <Canvas
-        dpr={[1, 1.5]}
+          dpr={[1, 1.5]}
           gl={{ antialias: true, alpha: false, powerPreference: 'high-performance' }}
           onPointerMissed={props.onClearSelection}
           fallback={<div className="skill-tree-webgl-fallback">WebGL is required for Tree view. Directory view remains available.</div>}
