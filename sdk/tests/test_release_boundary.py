@@ -49,14 +49,13 @@ def test_release_exposes_zero_configuration_read_only_query_command():
     assert (SDK_ROOT / "noosphere" / "query_cli.py").is_file()
 
 
-def test_publish_workflow_uses_release_or_tag_trusted_publishing_with_quality_gates():
+def test_publish_workflow_uses_single_release_trigger_with_trusted_publishing_quality_gates():
     workflow = (REPO_ROOT / ".github" / "workflows" / "publish-pypi.yml").read_text(encoding="utf-8")
 
     assert "release:" in workflow
     assert "types: [published]" in workflow
-    assert "push:" in workflow
-    assert "tags:" in workflow
-    assert '"v*"' in workflow
+    assert "push:" not in workflow
+    assert "tags:" not in workflow
     assert "workflow_dispatch" not in workflow
     assert "PYPI_TOKEN" not in workflow
     assert "password:" not in workflow
