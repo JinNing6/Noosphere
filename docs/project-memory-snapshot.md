@@ -1,6 +1,6 @@
 # Noosphere Project Memory Snapshot
 
-Last verified: 2026-07-15 (Asia/Shanghai)
+Last verified: 2026-07-16 (Asia/Shanghai)
 
 ## Living Skill Tree Frontend
 
@@ -17,9 +17,16 @@ Last verified: 2026-07-15 (Asia/Shanghai)
 - Drei-projected `<Html>` labels are constrained to z-index range 1-8, below the detail and contribution drawers at z-index 50. Mobile browser verification found zero projected labels intercepting or painting over the open drawer.
 - Compact mobile Skill labels expand inward from right-edge nodes. At 390 x 844, all four Build and Release labels remained inside the viewport and a real canvas click selected `windows-npm-run-script-shell` exactly.
 - Vite was upgraded to 8.1.4 and the React plugin to 6.0.3. The default entry is 212.19 kB (65.81 kB gzip); Three.js and the former universe remain lazy-loaded. Frontend lint, production build, all ten repository frontend contract checks, both production and full dependency audits, DesignMD lint, and Git diff whitespace checks passed locally.
-- This frontend and registry migration are implemented and locally verified on `codex/living-skill-tree-v1` but are not yet merged or deployed. PR #41 is the release boundary for the new default Skill Tree and unified live registry.
+- PR #41 merged the frontend and registry migration into `main` as commit `3bf3611124d3464b66715fada88f2861ed065f6b`. The default Skill Tree and unified live registry are now the released `v0.8.0` source state.
 
 ## Current Engineering State
+
+- GitHub Release `v0.8.0` was published on 2026-07-16 from merge commit `3bf3611124d3464b66715fada88f2861ed065f6b`. Trusted Publishing run `29475218973` passed package and supply-chain tests, built wheel and sdist, published through PyPI OIDC, verified a public exact-version install, and dispatched the Pages refresh.
+- PyPI reports `noosphere-mcp==0.8.0` as the latest version. The Release publishes the 45-tool MCP server and the unified registry containing 13 active maintainer-validated Skills plus 3 verified Seeds.
+- A separate token-free post-release check installed the exact public package, read registry revision 1 with 13 Skills, digest-verified `agent-debug-memory@1.0.0`, and detected `update-available` from an older installed version. `npx --yes skills add JinNing6/Noosphere --list` independently discovered the same 13 public Skills.
+- Label initialization run `29475143610` completed successfully on `main`; all 27 required memory, review, candidate, outcome, update, and withdrawal labels are present.
+- Pages deployment runs `29475130777` and `29475326752` both completed successfully from merge commit `3bf3611124d3464b66715fada88f2861ed065f6b`.
+- Creating the `v0.8.0` GitHub Release emitted both `release` and automatic tag `push` events because the workflow accepted both. Duplicate run `29475218962` was canceled before any PyPI upload. The release workflow is being restricted to the single `release.published` entry point so future immutable versions cannot race.
 
 - PR #39 merged the launch-proof work as commit `384d1e18ff7452236aeb80cd4705e0de83fee53e`. Tag `v0.7.2` is published on PyPI; Trusted Publishing run `29139140157` completed the build, OIDC publish, exact PyPI install verification, and Pages refresh dispatch successfully.
 - Anonymous startup and anonymous consultation are now separate tested contracts. `consult_noosphere` uses the generated repository public index in anonymous mode, completing a read-only search in one cacheable request without consuming the unauthenticated GitHub REST API budget across dozens of permanent files.
@@ -35,7 +42,7 @@ Last verified: 2026-07-15 (Asia/Shanghai)
 - Tag `v0.7.1` was published successfully through Trusted Publishing run `29085299535`; build, OIDC publish, exact PyPI install verification, and Pages refresh dispatch all passed.
 - A public-index-only environment reported `noosphere.__version__ == 0.7.1`. A separate exact-version `uvx --from noosphere-mcp==0.7.1 noosphere-mcp` process with `GITHUB_TOKEN` removed completed the MCP handshake and returned all 45 tools, including all five dynamic shared Skill tools.
 - MCP `serverInfo.version` currently reports the underlying `mcp` implementation version because FastMCP supplies its framework default. Distribution version verification is independent and correct; explicitly advertising the Noosphere package version is a non-blocking metadata follow-up.
-- The working branch migrates the 13 foundational Skills into `shared_skills/registry.json` revision 1. The last published `main`/PyPI state remains `v0.7.2` until PR #41 merges and `v0.8.0` is released.
+- The 13 foundational Skills are live in `shared_skills/registry.json` revision 1 and distributed by `noosphere-mcp==0.8.0`.
 - Issue #33 is the public coordination seed for the first real Skill: Android GitHub Device Flow browser handoff and polling recovery. It is explicitly excluded from source evidence and asks two independent developers to submit their own verified records.
 - Three maintainer-authored Skill Seeds were uploaded through the published `noosphere-mcp==0.7.1` `upload_consciousness` tool: R3F dense node picking (#35), dynamic shared Skill supply chain (#36), and public-release runtime smoke gating (#37). A second uploader run detected all three stable markers and created no duplicates.
 - Issues #35-#37 passed a local structured-evidence and unsafe-instruction review, then received `trusted-review`. Remote `main` contains one stable permanent file per Issue; all three records bind publisher `JinNing6`, use `trusted-human-review`, are Skill-eligible evidence records, and have 3072-dimensional `gemini-embedding-2` vectors.
@@ -105,8 +112,6 @@ Last verified: 2026-07-15 (Asia/Shanghai)
 
 ## Required Deployment Steps
 
-1. Merge PR #41 after all remote checks pass, then publish tag/Release `v0.8.0` through Trusted Publishing.
-2. Verify the public branch and PyPI artifact with anonymous `list_shared_skills`, digest-checked `get_shared_skill`, `check_skill_updates`, and standard `skills` CLI discovery of all 13 entries.
-3. Recruit independent developers through Issue #33 and Seeds #35-#37. A second GitHub publisher must submit separately reproduced evidence before a Seed or targeted update can become independently reproduced.
-4. Demonstrate one third-party Agent successfully reusing a Live Skill and record the exact-version outcome before claiming `outcome-proven`.
-5. Handle MCP implementation-version metadata, the existing Vite chunk warning, npm dependency advisories, and GitHub Actions Node runtime deprecation in separate maintenance work; none blocks the unified registry release.
+1. Recruit independent developers through Issue #33 and Seeds #35-#37. A second GitHub publisher must submit separately reproduced evidence before a Seed or targeted update can become independently reproduced.
+2. Demonstrate one third-party Agent successfully reusing a Live Skill and record the exact-version outcome before claiming `outcome-proven`.
+3. Handle MCP implementation-version metadata, the existing Vite chunk warning, npm dependency advisories, and GitHub Actions Node runtime deprecation in separate maintenance work; none blocks the unified registry release.
