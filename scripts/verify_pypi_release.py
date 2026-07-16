@@ -6,12 +6,15 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import queue
 import re
 import shutil
 import subprocess
 import sys
 import tempfile
+import threading
 import time
+from collections.abc import Sequence
 from pathlib import Path
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
@@ -30,7 +33,9 @@ REQUIRED_GROWTH_TOOLS = [
 MCP_PROBE_PROTOCOL_VERSION = "2024-11-05"
 
 
-def read_project_version(pyproject_path: Path = REPO_ROOT / "sdk" / "pyproject.toml") -> str:
+def read_project_version(
+    pyproject_path: Path = REPO_ROOT / "sdk" / "pyproject.toml",
+) -> str:
     text = pyproject_path.read_text(encoding="utf-8")
     match = re.search(r'^version\s*=\s*"([^"]+)"', text, re.MULTILINE)
     if not match:
@@ -39,7 +44,13 @@ def read_project_version(pyproject_path: Path = REPO_ROOT / "sdk" / "pyproject.t
 
 
 def fetch_json(url: str, timeout: float = 20.0) -> dict:
-    request = Request(url, headers={"Accept": "application/json", "User-Agent": "noosphere-release-verifier"})
+    request = Request(
+        url,
+        headers={
+            "Accept": "application/json",
+            "User-Agent": "noosphere-release-verifier",
+        },
+    )
     with urlopen(request, timeout=timeout) as response:
         return json.loads(response.read().decode("utf-8"))
 
@@ -47,19 +58,31 @@ def fetch_json(url: str, timeout: float = 20.0) -> dict:
 def validate_release_json(data: dict, expected_version: str) -> list[str]:
     actual_version = str(data.get("info", {}).get("version", ""))
     if actual_version != expected_version:
-        raise RuntimeError(f"PyPI reports version {actual_version!r}, expected {expected_version!r}")
+        raise RuntimeError(
+            f"PyPI reports version {actual_version!r}, expected {expected_version!r}"
+        )
 
-    filenames = [str(item.get("filename", "")) for item in data.get("urls", []) if isinstance(item, dict)]
+    filenames = [
+        str(item.get("filename", ""))
+        for item in data.get("urls", [])
+        if isinstance(item, dict)
+    ]
     expected_wheel = f"noosphere_mcp-{expected_version}-py3-none-any.whl"
     expected_sdist = f"noosphere_mcp-{expected_version}.tar.gz"
-    missing = [name for name in [expected_wheel, expected_sdist] if name not in filenames]
+    missing = [
+        name for name in [expected_wheel, expected_sdist] if name not in filenames
+    ]
     if missing:
-        raise RuntimeError(f"PyPI release {expected_version} is missing distribution(s): {', '.join(missing)}")
+        raise RuntimeError(
+            f"PyPI release {expected_version} is missing distribution(s): {', '.join(missing)}"
+        )
 
     return filenames
 
 
-def wait_for_pypi_release(project: str, version: str, attempts: int, delay_seconds: float) -> dict:
+def wait_for_pypi_release(
+    project: str, version: str, attempts: int, delay_seconds: float
+) -> dict:
     url = f"https://pypi.org/pypi/{project}/{version}/json"
     last_error = ""
 
@@ -72,13 +95,20 @@ def wait_for_pypi_release(project: str, version: str, attempts: int, delay_secon
             last_error = str(exc)
             if attempt == attempts:
                 break
-            print(f"PyPI release not ready yet ({attempt}/{attempts}): {last_error}", flush=True)
+            print(
+                f"PyPI release not ready yet ({attempt}/{attempts}): {last_error}",
+                flush=True,
+            )
             time.sleep(delay_seconds)
 
-    raise RuntimeError(f"PyPI release {project}=={version} did not become verifiable: {last_error}")
+    raise RuntimeError(
+        f"PyPI release {project}=={version} did not become verifiable: {last_error}"
+    )
 
 
-def wait_for_pypi_project_latest(project: str, version: str, attempts: int, delay_seconds: float) -> dict:
+def wait_for_pypi_project_latest(
+    project: str, version: str, attempts: int, delay_seconds: float
+) -> dict:
     url = f"https://pypi.org/pypi/{project}/json"
     last_error = ""
 
@@ -91,13 +121,23 @@ def wait_for_pypi_project_latest(project: str, version: str, attempts: int, dela
             last_error = str(exc)
             if attempt == attempts:
                 break
-            print(f"PyPI project latest not ready yet ({attempt}/{attempts}): {last_error}", flush=True)
+            print(
+                f"PyPI project latest not ready yet ({attempt}/{attempts}): {last_error}",
+                flush=True,
+            )
             time.sleep(delay_seconds)
 
-    raise RuntimeError(f"PyPI project {project} latest did not become {version}: {last_error}")
+    raise RuntimeError(
+        f"PyPI project {project} latest did not become {version}: {last_error}"
+    )
 
 
-def install_release_to_target(project: str, version: str, target_dir: Path, python_executable: str = sys.executable) -> None:
+def install_release_to_target(
+    project: str,
+    version: str,
+    target_dir: Path,
+    python_executable: str = sys.executable,
+) -> None:
     command = [
         python_executable,
         "-m",
@@ -124,16 +164,23 @@ def wait_for_installable_release(
 
     for attempt in range(1, attempts + 1):
         try:
-            install_release_to_target(project, version, target_dir, python_executable=python_executable)
+            install_release_to_target(
+                project, version, target_dir, python_executable=python_executable
+            )
             return
         except subprocess.CalledProcessError as exc:
             last_error = str(exc)
             if attempt == attempts:
                 break
-            print(f"PyPI pip install not ready yet ({attempt}/{attempts}): {last_error}", flush=True)
+            print(
+                f"PyPI pip install not ready yet ({attempt}/{attempts}): {last_error}",
+                flush=True,
+            )
             time.sleep(delay_seconds)
 
-    raise RuntimeError(f"PyPI release {project}=={version} did not become pip-installable: {last_error}")
+    raise RuntimeError(
+        f"PyPI release {project}=={version} did not become pip-installable: {last_error}"
+    )
 
 
 def runtime_python_command(runtime_dir: Path) -> Path:
@@ -172,8 +219,8 @@ def install_runtime_environment(
     )
 
 
-def build_mcp_probe_input() -> str:
-    messages = [
+def build_mcp_probe_messages() -> list[dict]:
+    return [
         {
             "jsonrpc": "2.0",
             "id": 1,
@@ -199,7 +246,141 @@ def build_mcp_probe_input() -> str:
             "params": {},
         },
     ]
-    return "".join(json.dumps(message, separators=(",", ":")) + "\n" for message in messages)
+
+
+def build_mcp_probe_input() -> str:
+    messages = build_mcp_probe_messages()
+    return "".join(
+        json.dumps(message, separators=(",", ":")) + "\n" for message in messages
+    )
+
+
+def probe_mcp_subprocess(
+    command: Sequence[str],
+    *,
+    env: dict[str, str] | None = None,
+    timeout_seconds: float = 30.0,
+) -> dict:
+    started = time.monotonic()
+    process = subprocess.Popen(
+        list(command),
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        env=env,
+        bufsize=1,
+    )
+    if process.stdin is None or process.stdout is None or process.stderr is None:
+        process.kill()
+        raise RuntimeError("MCP probe could not open subprocess stdio pipes")
+
+    stdout_lines: list[str] = []
+    stderr_lines: list[str] = []
+    stdout_queue: queue.Queue[str] = queue.Queue()
+
+    def read_stdout() -> None:
+        for line in process.stdout:
+            stdout_lines.append(line)
+            stdout_queue.put(line)
+
+    def read_stderr() -> None:
+        stderr_lines.extend(process.stderr)
+
+    stdout_thread = threading.Thread(
+        target=read_stdout, name="mcp-probe-stdout", daemon=True
+    )
+    stderr_thread = threading.Thread(
+        target=read_stderr, name="mcp-probe-stderr", daemon=True
+    )
+    stdout_thread.start()
+    stderr_thread.start()
+    deadline = started + timeout_seconds
+
+    def stderr_tail() -> str:
+        return "".join(stderr_lines)[-1000:]
+
+    def send(payload: dict) -> None:
+        process.stdin.write(json.dumps(payload, separators=(",", ":")) + "\n")
+        process.stdin.flush()
+
+    def wait_for_response(request_id: int) -> dict:
+        while True:
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                raise RuntimeError(
+                    f"MCP request {request_id} timed out after {timeout_seconds:.1f}s: "
+                    f"{stderr_tail()}"
+                )
+            try:
+                line = stdout_queue.get(timeout=min(remaining, 0.1))
+            except queue.Empty:
+                if process.poll() is not None:
+                    stdout_thread.join(timeout=0.2)
+                    if stdout_queue.empty():
+                        raise RuntimeError(
+                            f"MCP process exited with {process.returncode} before response "
+                            f"{request_id}: {stderr_tail()}"
+                        )
+                continue
+
+            try:
+                payload = json.loads(line)
+            except json.JSONDecodeError as exc:
+                raise RuntimeError(
+                    f"MCP process wrote non-JSON data to stdout: {line!r}"
+                ) from exc
+            if isinstance(payload, dict) and payload.get("id") == request_id:
+                return payload
+
+    messages = build_mcp_probe_messages()
+    try:
+        send(messages[0])
+        wait_for_response(1)
+        send(messages[1])
+        send(messages[2])
+        wait_for_response(2)
+        process.stdin.close()
+
+        remaining = max(0.1, deadline - time.monotonic())
+        try:
+            returncode = process.wait(timeout=remaining)
+        except subprocess.TimeoutExpired as exc:
+            raise RuntimeError(
+                f"MCP process did not exit after stdin closed within {timeout_seconds:.1f}s: "
+                f"{stderr_tail()}"
+            ) from exc
+
+        stdout_thread.join(timeout=1)
+        stderr_thread.join(timeout=1)
+        if returncode != 0:
+            raise RuntimeError(f"MCP process exited with {returncode}: {stderr_tail()}")
+
+        return {
+            "stdout": "".join(stdout_lines),
+            "stderr": "".join(stderr_lines),
+            "returncode": returncode,
+            "runtime_seconds": round(time.monotonic() - started, 3),
+        }
+    finally:
+        if not process.stdin.closed:
+            try:
+                process.stdin.close()
+            except OSError:
+                pass
+        if process.poll() is None:
+            process.terminate()
+            try:
+                process.wait(timeout=2)
+            except subprocess.TimeoutExpired:
+                process.kill()
+                process.wait(timeout=2)
+        stdout_thread.join(timeout=1)
+        stderr_thread.join(timeout=1)
+        process.stdout.close()
+        process.stderr.close()
 
 
 def parse_mcp_probe_output(
@@ -219,7 +400,9 @@ def parse_mcp_probe_output(
 
     initialize = next((payload for payload in payloads if payload.get("id") == 1), None)
     if not initialize:
-        raise RuntimeError("Published MCP runtime did not return an initialize response")
+        raise RuntimeError(
+            "Published MCP runtime did not return an initialize response"
+        )
     if "error" in initialize:
         raise RuntimeError(f"Published MCP initialize failed: {initialize['error']}")
 
@@ -230,7 +413,9 @@ def parse_mcp_probe_output(
             f"Published MCP serverInfo.version {server_version!r}, expected {expected_version!r}"
         )
 
-    tool_response = next((payload for payload in payloads if payload.get("id") == 2), None)
+    tool_response = next(
+        (payload for payload in payloads if payload.get("id") == 2), None
+    )
     if not tool_response:
         raise RuntimeError("Published MCP runtime did not return a tools/list response")
     if "error" in tool_response:
@@ -238,7 +423,9 @@ def parse_mcp_probe_output(
 
     tools = tool_response.get("result", {}).get("tools")
     if not isinstance(tools, list):
-        raise RuntimeError("Published MCP tools/list response did not contain a tools array")
+        raise RuntimeError(
+            "Published MCP tools/list response did not contain a tools array"
+        )
     if len(tools) != expected_tool_count:
         raise RuntimeError(
             f"Published MCP runtime exposed {len(tools)} tools, expected {expected_tool_count}"
@@ -265,37 +452,18 @@ def probe_installed_mcp_runtime(
     env.pop("GITHUB_TOKEN", None)
     env.pop("GH_TOKEN", None)
 
-    started = time.monotonic()
-    try:
-        completed = subprocess.run(
-            [str(command)],
-            input=build_mcp_probe_input(),
-            capture_output=True,
-            text=True,
-            encoding="utf-8",
-            errors="replace",
-            env=env,
-            timeout=timeout_seconds,
-            check=False,
-        )
-    except subprocess.TimeoutExpired as exc:
-        stderr = exc.stderr if isinstance(exc.stderr, str) else ""
-        raise RuntimeError(
-            f"Published MCP initialize + tools/list timed out after {timeout_seconds:.1f}s: "
-            f"{stderr[-500:]}"
-        ) from exc
-
-    if completed.returncode != 0:
-        raise RuntimeError(
-            f"Published MCP runtime exited with {completed.returncode}: {completed.stderr[-1000:]}"
-        )
+    completed = probe_mcp_subprocess(
+        [str(command)],
+        env=env,
+        timeout_seconds=timeout_seconds,
+    )
 
     result = parse_mcp_probe_output(
-        completed.stdout,
+        completed["stdout"],
         expected_version=expected_version,
         expected_tool_count=expected_tool_count,
     )
-    result["runtime_seconds"] = round(time.monotonic() - started, 3)
+    result["runtime_seconds"] = completed["runtime_seconds"]
     return result
 
 
@@ -310,8 +478,12 @@ def inspect_installed_release(
     mcp_path = package_root / "noosphere_mcp.py"
     query_cli_path = package_root / "query_cli.py"
     validation_cli_path = package_root / "validation_cli.py"
-    validation_kit_path = package_root / "validation_kits" / "public_artifact_runtime_smoke_gate.py"
-    entry_points_path = target_dir / f"noosphere_mcp-{expected_version}.dist-info" / "entry_points.txt"
+    validation_kit_path = (
+        package_root / "validation_kits" / "public_artifact_runtime_smoke_gate.py"
+    )
+    entry_points_path = (
+        target_dir / f"noosphere_mcp-{expected_version}.dist-info" / "entry_points.txt"
+    )
     required_paths = [
         init_path,
         mcp_path,
@@ -320,10 +492,15 @@ def inspect_installed_release(
         validation_kit_path,
         entry_points_path,
     ]
-    missing_paths = [path.relative_to(target_dir).as_posix() for path in required_paths if not path.exists()]
+    missing_paths = [
+        path.relative_to(target_dir).as_posix()
+        for path in required_paths
+        if not path.exists()
+    ]
     if missing_paths:
         raise RuntimeError(
-            "Installed package is missing required release files: " + ", ".join(missing_paths)
+            "Installed package is missing required release files: "
+            + ", ".join(missing_paths)
         )
 
     init_source = init_path.read_text(encoding="utf-8")
@@ -333,18 +510,26 @@ def inspect_installed_release(
     version_match = re.search(r'__version__\s*=\s*"([^"]+)"', init_source)
     installed_version = version_match.group(1) if version_match else ""
     if installed_version != expected_version:
-        raise RuntimeError(f"Installed package version {installed_version!r}, expected {expected_version!r}")
+        raise RuntimeError(
+            f"Installed package version {installed_version!r}, expected {expected_version!r}"
+        )
 
     tool_names = re.findall(
         r"@mcp\.tool\(\)\s*(?:\n[^\n]*)*?\n(?:async\s+def|def)\s+([a-zA-Z_][a-zA-Z0-9_]*)",
         mcp_source,
     )
     if len(tool_names) != expected_tool_count:
-        raise RuntimeError(f"Installed MCP tool count {len(tool_names)}, expected {expected_tool_count}")
+        raise RuntimeError(
+            f"Installed MCP tool count {len(tool_names)}, expected {expected_tool_count}"
+        )
 
-    missing_tools = [tool_name for tool_name in REQUIRED_GROWTH_TOOLS if tool_name not in tool_names]
+    missing_tools = [
+        tool_name for tool_name in REQUIRED_GROWTH_TOOLS if tool_name not in tool_names
+    ]
     if missing_tools:
-        raise RuntimeError(f"Installed package is missing growth tool(s): {', '.join(missing_tools)}")
+        raise RuntimeError(
+            f"Installed package is missing growth tool(s): {', '.join(missing_tools)}"
+        )
 
     required_entry_points = {
         "noosphere-mcp = noosphere.server:main",
@@ -352,11 +537,14 @@ def inspect_installed_release(
         "noosphere-validate = noosphere.validation_cli:main",
     }
     missing_entry_points = sorted(
-        entry_point for entry_point in required_entry_points if entry_point not in entry_points
+        entry_point
+        for entry_point in required_entry_points
+        if entry_point not in entry_points
     )
     if missing_entry_points:
         raise RuntimeError(
-            "Installed package is missing console entry point(s): " + ", ".join(missing_entry_points)
+            "Installed package is missing console entry point(s): "
+            + ", ".join(missing_entry_points)
         )
 
     return {
@@ -368,17 +556,29 @@ def inspect_installed_release(
     }
 
 
-def verify_pypi_release(project: str, version: str, attempts: int, delay_seconds: float, expected_tool_count: int) -> dict:
+def verify_pypi_release(
+    project: str,
+    version: str,
+    attempts: int,
+    delay_seconds: float,
+    expected_tool_count: int,
+) -> dict:
     release_json = wait_for_pypi_release(project, version, attempts, delay_seconds)
     filenames = validate_release_json(release_json, version)
-    project_json = wait_for_pypi_project_latest(project, version, attempts, delay_seconds)
+    project_json = wait_for_pypi_project_latest(
+        project, version, attempts, delay_seconds
+    )
     latest_filenames = validate_release_json(project_json, version)
 
     temp_dir = Path(tempfile.mkdtemp(prefix="noosphere-pypi-verify-"))
     try:
         inspect_dir = temp_dir / "inspect"
-        wait_for_installable_release(project, version, inspect_dir, attempts, delay_seconds)
-        installed = inspect_installed_release(inspect_dir, version, expected_tool_count=expected_tool_count)
+        wait_for_installable_release(
+            project, version, inspect_dir, attempts, delay_seconds
+        )
+        installed = inspect_installed_release(
+            inspect_dir, version, expected_tool_count=expected_tool_count
+        )
 
         runtime_dir = temp_dir / "runtime"
         install_runtime_environment(project, version, runtime_dir)
@@ -401,7 +601,9 @@ def verify_pypi_release(project: str, version: str, attempts: int, delay_seconds
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Verify a published noosphere-mcp PyPI release.")
+    parser = argparse.ArgumentParser(
+        description="Verify a published noosphere-mcp PyPI release."
+    )
     parser.add_argument("--project", default=DEFAULT_PROJECT)
     parser.add_argument("--version", default=read_project_version())
     parser.add_argument("--attempts", type=int, default=24)
@@ -412,7 +614,9 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
 
 def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
-    result = verify_pypi_release(args.project, args.version, args.attempts, args.delay_seconds, args.tool_count)
+    result = verify_pypi_release(
+        args.project, args.version, args.attempts, args.delay_seconds, args.tool_count
+    )
     print(
         f"Verified {result['project']}=={result['version']}: "
         f"{result['runtime_tool_count']} MCP tools via initialize + tools/list in "

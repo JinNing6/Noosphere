@@ -16,6 +16,7 @@ jobs:
       frontend: ${{ steps.filter.outputs.frontend }}
       python: ${{ steps.filter.outputs.python }}
       shared: ${{ steps.filter.outputs.shared }}
+      glama: ${{ steps.filter.outputs.glama }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -50,6 +51,12 @@ jobs:
             echo "python=true" >> "$GITHUB_OUTPUT"
           else
             echo "python=false" >> "$GITHUB_OUTPUT"
+          fi
+
+          if grep -Eq '^(Dockerfile|\.dockerignore|glama\.json|server\.json|smithery\.yaml|sdk/)' /tmp/changed_files; then
+            echo "glama=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "glama=false" >> "$GITHUB_OUTPUT"
           fi
 
   frontend-check:
@@ -156,3 +163,62 @@ jobs:
           python -m unittest scripts.test_validate_shared_skills scripts.test_migrate_consciousness_promotions
           python scripts/validate_shared_skills.py
           python scripts/migrate_consciousness_promotions.py --check
+
+  glama-container-check:
+    name: Glama Container MCP Discovery
+    runs-on: ubuntu-latest
+    needs: detect-changes
+    if: needs.detect-changes.outputs.glama == 'true'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Build Glama source container
+        run: docker build --pull --tag noosphere-glama:ci .
+
+      - name: Verify anonymous initialize and tools/list
+        shell: bash
+        run: |
+          python - <<'PY'
+          import re
+          from pathlib import Path
+
+          from scripts.verify_pypi_release import (
+              parse_mcp_probe_output,
+              probe_mcp_subprocess,
+          )
+
+          pyproject = Path("sdk/pyproject.toml").read_text(encoding="utf-8")
+          version_match = re.search(r'^version\s*=\s*"([^"]+)"', pyproject, re.MULTILINE)
+          if not version_match:
+              raise RuntimeError("Could not determine Noosphere version")
+
+          completed = probe_mcp_subprocess(
+              [
+                  "docker",
+                  "run",
+                  "--rm",
+                  "--interactive",
+                  "--network",
+                  "none",
+                  "noosphere-glama:ci",
+              ],
+              timeout_seconds=30,
+          )
+
+          result = parse_mcp_probe_output(
+              completed["stdout"],
+              expected_version=version_match.group(1),
+              expected_tool_count=45,
+          )
+          print(
+              f"Verified Glama source container: {result['runtime_tool_count']} tools, "
+              f"serverInfo.version={result['server_version']}"
+          )
+          PY

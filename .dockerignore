@@ -1,0 +1,9 @@
+*
+!README.md
+!LICENSE
+!sdk/
+!sdk/pyproject.toml
+!sdk/noosphere/
+!sdk/noosphere/**
+**/__pycache__/
+**/*.py[cod]

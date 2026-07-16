@@ -45,6 +45,31 @@ class LaunchSurfaceTests(unittest.TestCase):
         self.assertTrue((REPO_ROOT / "docs" / "demo-script-20s.md").is_file())
         self.assertTrue((REPO_ROOT / "scripts" / "render-launch-demo.ps1").is_file())
 
+    def test_glama_has_a_deterministic_anonymous_source_container(self):
+        dockerfile = (REPO_ROOT / "Dockerfile").read_text(encoding="utf-8")
+        dockerignore = (REPO_ROOT / ".dockerignore").read_text(encoding="utf-8")
+        smithery = (REPO_ROOT / "smithery.yaml").read_text(encoding="utf-8")
+        registry_manifests = [
+            json.loads((REPO_ROOT / path).read_text(encoding="utf-8"))
+            for path in ("server.json", "sdk/server.json")
+        ]
+
+        self.assertIn("COPY sdk/pyproject.toml ./sdk/pyproject.toml", dockerfile)
+        self.assertIn("COPY sdk/noosphere ./sdk/noosphere", dockerfile)
+        self.assertIn("python -m pip install --disable-pip-version-check --no-cache-dir ./sdk", dockerfile)
+        self.assertIn("USER noosphere", dockerfile)
+        self.assertIn('CMD ["noosphere-mcp"]', dockerfile)
+        self.assertIn("!sdk/noosphere/**", dockerignore)
+        self.assertNotIn("required:\n      - githubToken", smithery)
+        self.assertIn("config.githubToken ? { GITHUB_TOKEN: config.githubToken } : {}", smithery)
+        for manifest in registry_manifests:
+            environment = {
+                item["name"]: item
+                for item in manifest["packages"][0]["environmentVariables"]
+            }
+            self.assertFalse(environment["GITHUB_TOKEN"]["isRequired"])
+            self.assertFalse(environment["NOOSPHERE_REPO"]["isRequired"])
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -29,7 +29,8 @@
         {
           "name": "NOOSPHERE_REPO",
           "description": "GitHub repository for consciousness storage (owner/repo format).",
-          "default": "JinNing6/Noosphere"
+          "default": "JinNing6/Noosphere",
+          "isRequired": false
         }
       ]
     }
