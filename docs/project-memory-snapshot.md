@@ -1,6 +1,23 @@
 # Noosphere Project Memory Snapshot
 
-Last verified: 2026-07-11 (Asia/Shanghai)
+Last verified: 2026-07-15 (Asia/Shanghai)
+
+## Living Skill Tree Frontend
+
+- Branch `codex/living-skill-tree-v1` replaces the frontend default route with an operational Living Skill Tree while preserving the complete existing 3D universe behind `?view=universe` and a persistent Universe navigation entry. Existing Issue, playground, and profile routes continue to resolve through the preserved universe application.
+- The default surface is a workbench, not a marketing landing page: global search, Tree and Directory views, eight deterministic engineering domains, Skill details, version history, Agent connection guidance, and structured contribution entry points are available in English and Chinese.
+- The tree index is generated only from repository truth. At verification time it contains 13 Live Skills from `shared_skills/registry.json` revision 1 and 3 verified Skill Seeds. Seed ingestion requires trusted review, Skill eligibility, complete symptom/root-cause/fix/verification evidence, and at least one test command; a Seed is excluded when a same-name Live Skill exists.
+- The original three Noosphere workflows plus ten maintainer-authored engineering playbooks now have immutable `1.0.0` releases, active mirrors, exact SHA-256 and byte-size records, provenance, reviewers, and rollback state. Their explicit trust level is `maintainer-validated`; they are usable but are not claimed as independently reproduced.
+- Codex and Claude Code plugins contain no Skill copies. Plugin and marketplace manifests are aligned at version `0.4.0`; Agents discover the same registry through MCP, while standards-compatible installers discover all 13 active mirrors under `shared_skills/active/`.
+- The SDK is prepared as `0.8.0`. Registry reads use a 30-second cache with explicit `force_refresh`, and `upload_consciousness` accepts `target_skill` so an Agent can submit evidence for an existing Skill version without crossing identity boundaries.
+- Community actions remain review-gated. Creating or updating a Skill emits the same structured `CONSCIOUSNESS_PAYLOAD` used by MCP, including `target_skill` and engineering evidence; the browser never writes directly to the immutable registry. Two independent GitHub publishers, claim-level agreement, shared executable verification, canonical evidence rehydration, and maintainer approval are mandatory for a community release.
+- The WebGL tree uses responsive node spacing and dedicated transparent hit geometry on mobile. Playwright checks at a 390 x 844 viewport selected two vertically adjacent Skill nodes independently, and the directory search for `runtime smoke` returned the single matching verified Seed without horizontal overflow.
+- The polished responsive shell fixes a CSS specificity bug where a scoped `font` shorthand overrode component button sizes, reserves real canvas width for the desktop detail drawer, and renders mobile details as content-sized bottom work sheets. At 1280 px, secondary action labels collapse without horizontal overflow while the primary Create Skill command remains visible.
+- Tree labels now use semantic zoom: overview mode shows domain structure, while Skill names appear only for a selected domain, selected Skill, hover, or real search match. An empty query no longer highlights every Skill.
+- Drei-projected `<Html>` labels are constrained to z-index range 1-8, below the detail and contribution drawers at z-index 50. Mobile browser verification found zero projected labels intercepting or painting over the open drawer.
+- Compact mobile Skill labels expand inward from right-edge nodes. At 390 x 844, all four Build and Release labels remained inside the viewport and a real canvas click selected `windows-npm-run-script-shell` exactly.
+- Vite was upgraded to 8.1.4 and the React plugin to 6.0.3. The default entry is 212.19 kB (65.81 kB gzip); Three.js and the former universe remain lazy-loaded. Frontend lint, production build, all ten repository frontend contract checks, both production and full dependency audits, DesignMD lint, and Git diff whitespace checks passed locally.
+- This frontend and registry migration are implemented and locally verified on `codex/living-skill-tree-v1` but are not yet merged or deployed. PR #41 is the release boundary for the new default Skill Tree and unified live registry.
 
 ## Current Engineering State
 
@@ -18,31 +35,32 @@ Last verified: 2026-07-11 (Asia/Shanghai)
 - Tag `v0.7.1` was published successfully through Trusted Publishing run `29085299535`; build, OIDC publish, exact PyPI install verification, and Pages refresh dispatch all passed.
 - A public-index-only environment reported `noosphere.__version__ == 0.7.1`. A separate exact-version `uvx --from noosphere-mcp==0.7.1 noosphere-mcp` process with `GITHUB_TOKEN` removed completed the MCP handshake and returned all 45 tools, including all five dynamic shared Skill tools.
 - MCP `serverInfo.version` currently reports the underlying `mcp` implementation version because FastMCP supplies its framework default. Distribution version verification is independent and correct; explicitly advertising the Noosphere package version is a non-blocking metadata follow-up.
-- `shared_skills/registry.json` is intentionally empty until a candidate satisfies the evidence and independent-publisher gates and receives maintainer approval.
+- The working branch migrates the 13 foundational Skills into `shared_skills/registry.json` revision 1. The last published `main`/PyPI state remains `v0.7.2` until PR #41 merges and `v0.8.0` is released.
 - Issue #33 is the public coordination seed for the first real Skill: Android GitHub Device Flow browser handoff and polling recovery. It is explicitly excluded from source evidence and asks two independent developers to submit their own verified records.
 - Three maintainer-authored Skill Seeds were uploaded through the published `noosphere-mcp==0.7.1` `upload_consciousness` tool: R3F dense node picking (#35), dynamic shared Skill supply chain (#36), and public-release runtime smoke gating (#37). A second uploader run detected all three stable markers and created no duplicates.
 - Issues #35-#37 passed a local structured-evidence and unsafe-instruction review, then received `trusted-review`. Remote `main` contains one stable permanent file per Issue; all three records bind publisher `JinNing6`, use `trusted-human-review`, are Skill-eligible evidence records, and have 3072-dimensional `gemini-embedding-2` vectors.
-- The three records remain Seed Memories, not published Skills. They share one publisher, so the independent-publisher gate correctly leaves `shared_skills/registry.json` at revision 0 with zero Skills.
+- The three records remain Seed Memories and do not count as independent community releases. They share one publisher; the independent-publisher gate remains unsatisfied even though the registry now also contains 13 separately labeled maintainer-validated foundational Skills.
 - Their promotion runs exposed an index-sync dependency boundary: `build_consciousness_index.py` imports a pure engine submodule, but package initialization eagerly imported the HTTP client and failed without `httpx`. The repair uses Python module-level lazy attribute loading so pure engine imports no longer require unrelated client dependencies while preserving `from noosphere import Noosphere`.
 
 ## Dynamic Shared Skill Lifecycle
 
-1. `upload_consciousness` accepts structured engineering evidence: symptom, root cause, fix, verification, applicability, exclusions, test commands, and source URLs.
+1. `upload_consciousness` accepts structured engineering evidence: symptom, root cause, fix, verification, applicability, exclusions, test commands, source URLs, and an optional existing `target_skill` identity.
 2. Promotion binds publisher identity to the actual GitHub Issue author. Self-declared `creator_signature` is display metadata and grants no withdrawal or publication authority.
 3. One source Issue maps to `consciousness_payloads/memory_issueNNNN.json`. Repeated Issue events reconcile the existing record with GitHub blob SHA instead of creating a new file.
-4. Moderation failures are fail-closed for Skill candidacy. Unverified historical promotions must pass current moderation or trusted maintainer review before trust can be upgraded.
-5. Candidate clustering requires structured verified memories, a shared embedding space, all-pairs similarity of at least 0.9, two source Issues, and two independent GitHub publishers.
-6. CI opens a deterministic `skill-candidate` Issue. Publication requires a write-permission maintainer applying `skill-approved`.
+4. Moderation failures are fail-closed for Skill candidacy. Automated checks cover thought, context, every engineering-evidence field, commands, and URLs, but grant only `screened`; only trusted human review grants `verified`. Public consultation and the generated memory index withhold Agent-facing evidence from `screened` records.
+5. Candidate clustering uses embedding similarity only for retrieval. A second deterministic gate requires claim-level agreement across symptom, root cause, fix, verification, and applicability, plus at least one normalized test command shared by two independent GitHub publishers and public HTTPS evidence URLs.
+6. CI opens a deterministic `skill-candidate` Issue. Publication requires a write-permission maintainer applying `skill-approved`, a workflow-created `skill-candidate` Issue, and exact reconstruction from non-tombstoned canonical memory files before the reviewed digest can publish.
 7. Published artifacts are immutable Agent Skills releases under `shared_skills/releases/<version>/<name>/SKILL.md`, with active mirrors and registry SHA-256 plus byte-size metadata.
-8. Agents use `list_shared_skills`, `get_shared_skill`, and `check_skill_updates` for pull-based near-real-time discovery. Exact artifact bytes are verified before Skill content is returned.
-9. Authenticated feedback uses `record_skill_outcome`. `request_shared_skill_withdrawal` only opens a request; a trusted maintainer must approve withdrawal. Withdrawal preserves the immutable artifact and rolls `latest` back atomically.
+8. Agents use `list_shared_skills`, `get_shared_skill`, and `check_skill_updates` for pull-based near-real-time discovery. The registry cache is 30 seconds and can be force-refreshed; exact artifact bytes and verification levels are returned only after SHA-256 checks.
+9. Authenticated feedback uses deterministic Outcome IDs and reuses an existing Issue only when its full structured payload matches exactly; marker-only or conflicting Issues cannot spoof idempotency. Approved outcomes enter `shared_skills/outcomes.json`; only an independent success with public HTTPS evidence can advance a release to `outcome-proven`, while partial/failure outcomes set `update_needed` without mutating immutable instructions. `request_shared_skill_withdrawal` remains separately review-gated.
 
 ## Trust And Safety Boundaries
 
 - Ordinary community memories are returned with an explicit untrusted-data warning.
 - Candidate text is rejected for instruction-override, destructive command, encoded shell, private-key, and secret-like patterns; the candidate digest must match the reviewed body.
-- Publish and withdrawal workflows serialize through one concurrency group and commit release, active mirror, and registry changes atomically.
-- Permanent-memory promotion and withdrawal share one serialized workflow group, and both persistent-state groups use full queues so rapid events are not silently replaced while pending.
+- Every workflow that writes persistent state to `main` uses the shared `noosphere-main-writer` queue, covering promotion, memory withdrawal, embedding backfill, Skill publication/withdrawal, approved Outcomes, traction snapshots, and contributor rankings.
+- Embedding backfill rebuilds the complete canonical candidate set, creates missing review Issues, updates drifted candidates, and closes stale candidates as superseded.
+- Withdrawal of the final active release sets `latest: null`; the frontend retains a withdrawn audit record, removes the install command, and the Pages build remains valid.
 - Plugin instructions require local applicability checks, local verification, and explicit user approval before public GitHub writes or destructive operations.
 - Permanent-memory withdrawal uses an author-bound request plus `consciousness_tombstones.json`; the SDK and public index both exclude tombstoned records and fail closed when an existing tombstone manifest cannot be read safely.
 
@@ -55,9 +73,13 @@ Last verified: 2026-07-11 (Asia/Shanghai)
 - Legacy records without source Issue metadata left untouched: 25.
 - Duplicate promotion files removed: 20.
 - Active tombstoned Issue records at snapshot time: 0.
-- The label initializer completed successfully and all 11 required memory, candidate, approval, outcome, and withdrawal labels exist.
+- The label initializer defines 27 repository labels in total, including every memory, candidate, approval, Outcome review, update-needed, supersession, and withdrawal state. The six new Outcome/candidate-state labels must be initialized on remote `main` after PR #41 merges.
 
 ## Verification Evidence
+
+- All 13 immutable releases and active mirrors pass the Agent Skills and registry validators. `npx skills add . --list` discovers exactly 13 Skills from the repository without plugin-local copies.
+- `python -m pytest sdk/tests -q`: 198 passed. GitHub workflow and supply-chain tests: 91 passed. Repository unit tests: 13 passed. Shared Skill registry and Outcome ledger validation passed. Frontend lint, production build, and Skill Tree contract checks pass with `13 live, 3 verified Seeds`.
+- The generated frontend index contains no parallel static collection. Skill details expose immutable version, SHA-256, originator, and an honest lifecycle state: maintainer validated, independently reproduced, outcome proven, established, withdrawn, or Seed. A withdrawn-only Skill remains auditable but cannot be installed.
 
 - `python -m pytest sdk/tests -q`: 194 passed for the published `v0.7.2` release.
 - `node --test .github/scripts/*.test.cjs`: 71 passed after preserving the first-screen contribution, resonance-loop, and Share Proof contracts.
@@ -73,7 +95,7 @@ Last verified: 2026-07-11 (Asia/Shanghai)
 - Repository script unit tests: 27 passed.
 - Shared Skill registry validator: passed.
 - Permanent promotion canonicalization check: passed with no pending writes or deletes.
-- Critical Ruff gate and focused shared-Skill Ruff/format checks: passed. Windows checks explicitly preserved CRLF checkout line endings; remote CI uses canonical LF.
+- Critical Ruff gate and focused shared-Skill Ruff/format checks: passed. Skill artifact digests are defined over Git-canonical LF bytes, enforced by `.gitattributes` and a CRLF/LF regression test so Windows validation matches Linux CI and GitHub raw artifacts.
 - Local and release-workflow builds produced `noosphere_mcp-0.7.1.tar.gz` and `noosphere_mcp-0.7.1-py3-none-any.whl` successfully.
 - Anonymous public-artifact smoke test: MCP initialization succeeded, `tools/list` returned 45 tools, no dynamic Skill tool was missing, and `GITHUB_TOKEN` was absent from the process environment.
 - `python -S scripts/build_consciousness_index.py` passed with site-packages disabled and generated 41 unique public memories, proving the indexer no longer relies on installed `httpx` through package import side effects.
@@ -83,8 +105,8 @@ Last verified: 2026-07-11 (Asia/Shanghai)
 
 ## Required Deployment Steps
 
-1. Recruit independent developers through Issue #33 and the three public Seed Memories (#35-#37). At least one other GitHub publisher must submit a separately reproduced, semantically matching evidence record before any Seed can form a candidate.
-2. Let the workflow generate the deterministic candidate, inspect both independent evidence records, and apply `skill-approved` only after the security and applicability review passes.
-3. Demonstrate one third-party Agent discovering and successfully reusing the published Skill; record the outcome through `record_skill_outcome` before large-scale promotion.
-4. Do not describe the registry as having live published Skills until the first approved release appears in `shared_skills/registry.json` on remote `main`.
-5. Handle MCP implementation-version metadata, the existing Vite chunk warning, npm dependency advisories, and GitHub Actions Node runtime deprecation in separate maintenance work; none changes the honest zero-Skill registry state.
+1. Merge PR #41 after all remote checks pass, then publish tag/Release `v0.8.0` through Trusted Publishing.
+2. Verify the public branch and PyPI artifact with anonymous `list_shared_skills`, digest-checked `get_shared_skill`, `check_skill_updates`, and standard `skills` CLI discovery of all 13 entries.
+3. Recruit independent developers through Issue #33 and Seeds #35-#37. A second GitHub publisher must submit separately reproduced evidence before a Seed or targeted update can become independently reproduced.
+4. Demonstrate one third-party Agent successfully reusing a Live Skill and record the exact-version outcome before claiming `outcome-proven`.
+5. Handle MCP implementation-version metadata, the existing Vite chunk warning, npm dependency advisories, and GitHub Actions Node runtime deprecation in separate maintenance work; none blocks the unified registry release.

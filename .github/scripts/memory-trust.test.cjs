@@ -6,6 +6,7 @@ const test = require("node:test");
 const {
   assessSkillEligibility,
   bindVerifiedPublisher,
+  buildModerationText,
   isTrustedReviewerPermission,
 } = require("./memory-trust.cjs");
 
@@ -62,6 +63,8 @@ test("requires structured engineering evidence before a memory can become a Skil
     "fix",
     "verification",
     "applies_when",
+    "test_commands",
+    "source_urls",
   ]);
 });
 
@@ -74,6 +77,50 @@ test("marks verified engineering memories with complete evidence as candidate el
   });
 
   assert.deepEqual(assessment, { eligible: true, missing: [] });
+});
+
+test("screened evidence is candidate-eligible without being marked human-verified", () => {
+  const assessment = assessSkillEligibility({
+    consciousness_type: "pattern",
+    trust: { status: "screened" },
+    content_safety: { status: "passed" },
+    publisher: { github_login: "author" },
+    evidence: completeEvidence,
+  });
+
+  assert.deepEqual(assessment, { eligible: true, missing: [] });
+});
+
+test("requires public HTTPS evidence URLs", () => {
+  const assessment = assessSkillEligibility({
+    consciousness_type: "pattern",
+    trust: { status: "verified" },
+    publisher: { github_login: "author" },
+    evidence: { ...completeEvidence, source_urls: ["http://example.com/private"] },
+  });
+
+  assert.equal(assessment.eligible, false);
+  assert.ok(assessment.missing.includes("public_https_source_urls"));
+
+  const credentialed = assessSkillEligibility({
+    consciousness_type: "pattern",
+    trust: { status: "verified" },
+    publisher: { github_login: "author" },
+    evidence: { ...completeEvidence, source_urls: ["https://example.com/evidence?token=secret"] },
+  });
+  assert.equal(credentialed.eligible, false);
+});
+
+test("moderation text includes every Agent-facing evidence field", () => {
+  const text = buildModerationText({
+    thought_vector_text: "Reusable lesson",
+    context_environment: "Public package runtime",
+    evidence: completeEvidence,
+  });
+
+  for (const value of Object.values(completeEvidence).flat()) {
+    assert.match(text, new RegExp(String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+  }
 });
 
 test("only repository write-level permissions can perform a trusted review", () => {
@@ -92,6 +139,9 @@ test("promotion workflow binds publisher, evaluates evidence, and fails closed",
 
   assert.match(workflow, /bindVerifiedPublisher/);
   assert.match(workflow, /assessSkillEligibility/);
+  assert.match(workflow, /buildModerationText/);
+  assert.match(workflow, /status: 'screened'/);
+  assert.match(workflow, /status: 'passed'/);
   assert.match(workflow, /isTrustedReviewerPermission/);
   assert.match(workflow, /needs-review/);
   assert.match(workflow, /hasVerifiedExisting/);
@@ -100,4 +150,5 @@ test("promotion workflow binds publisher, evaluates evidence, and fails closed",
   assert.doesNotMatch(workflow, /Boolean\(trustedReview \|\| existingPromotion\)/);
   assert.doesNotMatch(workflow, /!existingPromotion && payload\.skill_candidate/);
   assert.doesNotMatch(workflow, /fail-open/);
+  assert.doesNotMatch(workflow, /method: 'automated-content-screening'/);
 });

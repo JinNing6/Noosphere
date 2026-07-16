@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
-const appSource = await readFile(new URL('../src/App.tsx', import.meta.url), 'utf8');
+const appSource = await readFile(new URL('../src/UniverseApp.tsx', import.meta.url), 'utf8');
 const componentSource = await readFile(new URL('../src/components/LaunchKit.tsx', import.meta.url), 'utf8');
 const launchKitSource = await readFile(new URL('../src/utils/launchKit.ts', import.meta.url), 'utf8');
 const cssSource = await readFile(new URL('../src/index.css', import.meta.url), 'utf8');
@@ -11,12 +11,12 @@ const readmeSource = await readFile(new URL('../../README.md', import.meta.url),
 assert.match(
   appSource,
   /import\s+LaunchKit\s+from\s+'\.\/components\/LaunchKit'/,
-  'homepage should import the launch kit',
+  'Universe surface should import the launch kit',
 );
 assert.match(
   appSource,
   /<LaunchKit\s+dynamicNodes=\{dynamicNodes\}\s+onOpenUploader=\{handleOpenUploader\}\s*\/>/,
-  'homepage should render the launch kit with real dynamic payload nodes and upload action',
+  'Universe surface should render the launch kit with real dynamic payload nodes and upload action',
 );
 
 assert.match(launchKitSource, /summarizeResonanceBoard/, 'launch kit should reuse the real live memory summary');
@@ -57,9 +57,8 @@ assert.match(cssSource, /@media \(max-width: 1180px\)[\s\S]*\.launch-kit/, 'laun
 
 assert.match(packageSource, /"test:launch-kit":\s*"node scripts\/check_launch_kit\.mjs"/, 'frontend package should expose the launch kit check');
 
-const firstScreen = readmeSource.slice(0, 6500);
-assert.match(firstScreen, /Launch Kit/i, 'README first screen should announce the launch kit');
-assert.match(firstScreen, /copy-ready/i, 'README should explain the launch kit output');
-assert.match(firstScreen, /Share Proof/i, 'README launch note should route back to share proof');
+assert.match(readmeSource, /Launch Kit/i, 'README should retain documentation for the Universe launch kit');
+assert.match(readmeSource, /copy-ready/i, 'README should explain the launch kit output');
+assert.match(readmeSource, /Share Proof/i, 'README launch note should route back to share proof');
 
-console.log('launch kit ok: homepage exposes real-data copy-ready campaign posts');
+console.log('launch kit ok: Universe exposes real-data copy-ready campaign posts');

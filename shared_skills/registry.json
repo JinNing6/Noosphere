@@ -1,6 +1,553 @@
 {
   "schema_version": "1.0",
-  "revision": 0,
-  "generated_at": null,
-  "skills": []
+  "revision": 1,
+  "generated_at": "2026-07-15T05:57:32.045Z",
+  "skills": [
+    {
+      "id": "noosphere:agent-debug-memory",
+      "name": "agent-debug-memory",
+      "description": "Use when debugging code, tests, builds, deployments, CI failures, runtime errors, framework issues, API migrations, or UI state bugs where a coding Agent should consult Noosphere shared memory before fixing and upload the verified lesson afterward.",
+      "domain": "testing-reliability",
+      "tags": [
+        "testing-reliability",
+        "live-skill"
+      ],
+      "originators": [
+        "JinNing6"
+      ],
+      "latest": "1.0.0",
+      "releases": [
+        {
+          "version": "1.0.0",
+          "summary": "Maintainer-authored foundational release in the live Noosphere registry.",
+          "published_at": "2026-07-15T05:57:32.045Z",
+          "status": "active",
+          "reviewer": "JinNing6",
+          "source_count": 1,
+          "publisher_count": 1,
+          "evidence": [],
+          "verification": {
+            "level": "maintainer-validated",
+            "independent_reproductions": 0,
+            "verified_outcomes": 0
+          },
+          "provenance": {
+            "kind": "maintainer-authored",
+            "repository": "JinNing6/Noosphere",
+            "author": "JinNing6"
+          },
+          "artifact": {
+            "path": "shared_skills/releases/1.0.0/agent-debug-memory/SKILL.md",
+            "sha256": "d15ebefd3fa20411c1f2b1202191adcd9fdc0bb2b92761543587bf1bbf81bb4e",
+            "size_bytes": 2456
+          },
+          "withdrawal": null
+        }
+      ]
+    },
+    {
+      "id": "noosphere:binary-credential-format-boundary",
+      "name": "binary-credential-format-boundary",
+      "description": "Audit and repair readers for fixed-length binary credentials and their text encodings without mutating raw bytes. Use when code loads Ed25519/X25519 keys, nonces, digests, MAC keys, signatures, tokens, or other opaque bytes from files or environment values; when `.strip()`, decoding, newline handling, or format auto-detection occurs before length/type validation; or when cryptographic tests fail intermittently for otherwise valid generated material.",
+      "domain": "security-trust",
+      "tags": [
+        "security-trust",
+        "live-skill"
+      ],
+      "originators": [
+        "JinNing6"
+      ],
+      "latest": "1.0.0",
+      "releases": [
+        {
+          "version": "1.0.0",
+          "summary": "Maintainer-authored foundational release in the live Noosphere registry.",
+          "published_at": "2026-07-15T05:57:32.045Z",
+          "status": "active",
+          "reviewer": "JinNing6",
+          "source_count": 1,
+          "publisher_count": 1,
+          "evidence": [],
+          "verification": {
+            "level": "maintainer-validated",
+            "independent_reproductions": 0,
+            "verified_outcomes": 0
+          },
+          "provenance": {
+            "kind": "maintainer-authored",
+            "repository": "JinNing6/Noosphere",
+            "author": "JinNing6"
+          },
+          "artifact": {
+            "path": "shared_skills/releases/1.0.0/binary-credential-format-boundary/SKILL.md",
+            "sha256": "dcfdd2a1ae6e78a99d26a5b1f6c2a3f6fb613985fe169ff6d721cbd3a4697191",
+            "size_bytes": 4018
+          },
+          "withdrawal": null
+        }
+      ]
+    },
+    {
+      "id": "noosphere:browser-actionability-debug",
+      "name": "browser-actionability-debug",
+      "description": "Diagnose browser UI tests or real browser checks where an element appears visible but cannot be clicked, copied, hovered, or focused. Use for Playwright/Chrome/browser automation failures involving overlays, splash screens, opacity transitions, pointer-events, elementFromPoint mismatches, clipboard assertions, or differences between \"visible\" and actually actionable UI.",
+      "domain": "frontend-mobile",
+      "tags": [
+        "frontend-mobile",
+        "live-skill"
+      ],
+      "originators": [
+        "JinNing6"
+      ],
+      "latest": "1.0.0",
+      "releases": [
+        {
+          "version": "1.0.0",
+          "summary": "Maintainer-authored foundational release in the live Noosphere registry.",
+          "published_at": "2026-07-15T05:57:32.045Z",
+          "status": "active",
+          "reviewer": "JinNing6",
+          "source_count": 1,
+          "publisher_count": 1,
+          "evidence": [],
+          "verification": {
+            "level": "maintainer-validated",
+            "independent_reproductions": 0,
+            "verified_outcomes": 0
+          },
+          "provenance": {
+            "kind": "maintainer-authored",
+            "repository": "JinNing6/Noosphere",
+            "author": "JinNing6"
+          },
+          "artifact": {
+            "path": "shared_skills/releases/1.0.0/browser-actionability-debug/SKILL.md",
+            "sha256": "80d7dad158dee44100f0dc7d36ea15d6fce9217e00867c63b9836197d0b5bc3e",
+            "size_bytes": 3229
+          },
+          "withdrawal": null
+        }
+      ]
+    },
+    {
+      "id": "noosphere:cloudflare-pages-stale-assets",
+      "name": "cloudflare-pages-stale-assets",
+      "description": "Diagnose and fix Cloudflare Pages deployments where the live site still shows old CSS, JavaScript, native controls, untranslated text, or stale UI after a successful deploy. Use for static websites on Cloudflare Pages, custom domains, pages.dev previews, browser-cache disagreements, and \"it deployed but I still see the old page\" reports.",
+      "domain": "build-release",
+      "tags": [
+        "build-release",
+        "live-skill"
+      ],
+      "originators": [
+        "JinNing6"
+      ],
+      "latest": "1.0.0",
+      "releases": [
+        {
+          "version": "1.0.0",
+          "summary": "Maintainer-authored foundational release in the live Noosphere registry.",
+          "published_at": "2026-07-15T05:57:32.045Z",
+          "status": "active",
+          "reviewer": "JinNing6",
+          "source_count": 1,
+          "publisher_count": 1,
+          "evidence": [],
+          "verification": {
+            "level": "maintainer-validated",
+            "independent_reproductions": 0,
+            "verified_outcomes": 0
+          },
+          "provenance": {
+            "kind": "maintainer-authored",
+            "repository": "JinNing6/Noosphere",
+            "author": "JinNing6"
+          },
+          "artifact": {
+            "path": "shared_skills/releases/1.0.0/cloudflare-pages-stale-assets/SKILL.md",
+            "sha256": "19d539874ff42d2e72fed4f29a763d6a38a40bef4322e3bfded19b8555b3d77e",
+            "size_bytes": 2610
+          },
+          "withdrawal": null
+        }
+      ]
+    },
+    {
+      "id": "noosphere:debug-async-ui",
+      "name": "debug-async-ui",
+      "description": "Use when UI state or returned content disappears, flashes, rolls back, saves but loses state, menus fail intermittently, or real browser behavior differs from tests in async frontend flows.",
+      "domain": "frontend-mobile",
+      "tags": [
+        "frontend-mobile",
+        "live-skill"
+      ],
+      "originators": [
+        "JinNing6"
+      ],
+      "latest": "1.0.0",
+      "releases": [
+        {
+          "version": "1.0.0",
+          "summary": "Maintainer-authored foundational release in the live Noosphere registry.",
+          "published_at": "2026-07-15T05:57:32.045Z",
+          "status": "active",
+          "reviewer": "JinNing6",
+          "source_count": 1,
+          "publisher_count": 1,
+          "evidence": [],
+          "verification": {
+            "level": "maintainer-validated",
+            "independent_reproductions": 0,
+            "verified_outcomes": 0
+          },
+          "provenance": {
+            "kind": "maintainer-authored",
+            "repository": "JinNing6/Noosphere",
+            "author": "JinNing6"
+          },
+          "artifact": {
+            "path": "shared_skills/releases/1.0.0/debug-async-ui/SKILL.md",
+            "sha256": "906641c2d24d4dff1baae7df3dc73811dbfa02588f7351894bf3cc490766549a",
+            "size_bytes": 12633
+          },
+          "withdrawal": null
+        }
+      ]
+    },
+    {
+      "id": "noosphere:docker-git-bind-mount-push-debug",
+      "name": "docker-git-bind-mount-push-debug",
+      "description": "Diagnose and validate Git commit, fetch, and push failures when worktrees or bare remotes are bind-mounted into Docker, especially on Docker Desktop for Windows. Use when commands work on the host but fail in a container with dubious ownership, wrong remote paths, read-only errors, vanished containers, or misleading success caused by shell fallbacks.",
+      "domain": "data-infrastructure",
+      "tags": [
+        "data-infrastructure",
+        "live-skill"
+      ],
+      "originators": [
+        "JinNing6"
+      ],
+      "latest": "1.0.0",
+      "releases": [
+        {
+          "version": "1.0.0",
+          "summary": "Maintainer-authored foundational release in the live Noosphere registry.",
+          "published_at": "2026-07-15T05:57:32.045Z",
+          "status": "active",
+          "reviewer": "JinNing6",
+          "source_count": 1,
+          "publisher_count": 1,
+          "evidence": [],
+          "verification": {
+            "level": "maintainer-validated",
+            "independent_reproductions": 0,
+            "verified_outcomes": 0
+          },
+          "provenance": {
+            "kind": "maintainer-authored",
+            "repository": "JinNing6/Noosphere",
+            "author": "JinNing6"
+          },
+          "artifact": {
+            "path": "shared_skills/releases/1.0.0/docker-git-bind-mount-push-debug/SKILL.md",
+            "sha256": "808a3aba916c4cc46f9a1760d776f5899a18a9f7a2c24c8f4d695d396d5af4ef",
+            "size_bytes": 3015
+          },
+          "withdrawal": null
+        }
+      ]
+    },
+    {
+      "id": "noosphere:dynamic-shared-skills",
+      "name": "dynamic-shared-skills",
+      "description": "Use when an engineering task may match a community-reviewed Noosphere workflow and the Agent should discover, verify, apply, update, or report the outcome of a dynamic shared Skill.",
+      "domain": "agent-runtime",
+      "tags": [
+        "agent-runtime",
+        "live-skill"
+      ],
+      "originators": [
+        "JinNing6"
+      ],
+      "latest": "1.0.0",
+      "releases": [
+        {
+          "version": "1.0.0",
+          "summary": "Maintainer-authored foundational release in the live Noosphere registry.",
+          "published_at": "2026-07-15T05:57:32.045Z",
+          "status": "active",
+          "reviewer": "JinNing6",
+          "source_count": 1,
+          "publisher_count": 1,
+          "evidence": [],
+          "verification": {
+            "level": "maintainer-validated",
+            "independent_reproductions": 0,
+            "verified_outcomes": 0
+          },
+          "provenance": {
+            "kind": "maintainer-authored",
+            "repository": "JinNing6/Noosphere",
+            "author": "JinNing6"
+          },
+          "artifact": {
+            "path": "shared_skills/releases/1.0.0/dynamic-shared-skills/SKILL.md",
+            "sha256": "7b35eb7800cb2c6f149d04cbd2bf9fb39ea1e103f9bf6a523c4d3aa1ef9304f0",
+            "size_bytes": 1982
+          },
+          "withdrawal": null
+        }
+      ]
+    },
+    {
+      "id": "noosphere:fastapi-response-contract-boundary",
+      "name": "fastapi-response-contract-boundary",
+      "description": "Audit and fix FastAPI/Pydantic response contract failures and analytics metric drift. Use when endpoints return ResponseValidationError/500, legacy JSON rows miss required response fields, response_model schemas need compatibility normalizers, or dashboard/trend/report APIs disagree on a canonical metric.",
+      "domain": "languages-frameworks",
+      "tags": [
+        "languages-frameworks",
+        "live-skill"
+      ],
+      "originators": [
+        "JinNing6"
+      ],
+      "latest": "1.0.0",
+      "releases": [
+        {
+          "version": "1.0.0",
+          "summary": "Maintainer-authored foundational release in the live Noosphere registry.",
+          "published_at": "2026-07-15T05:57:32.045Z",
+          "status": "active",
+          "reviewer": "JinNing6",
+          "source_count": 1,
+          "publisher_count": 1,
+          "evidence": [],
+          "verification": {
+            "level": "maintainer-validated",
+            "independent_reproductions": 0,
+            "verified_outcomes": 0
+          },
+          "provenance": {
+            "kind": "maintainer-authored",
+            "repository": "JinNing6/Noosphere",
+            "author": "JinNing6"
+          },
+          "artifact": {
+            "path": "shared_skills/releases/1.0.0/fastapi-response-contract-boundary/SKILL.md",
+            "sha256": "97170e446bdc1c3a648467bd83efd623a3dbd55b9906bb6c254cecd088315503",
+            "size_bytes": 3385
+          },
+          "withdrawal": null
+        }
+      ]
+    },
+    {
+      "id": "noosphere:frontend-layering-specificity-debug",
+      "name": "frontend-layering-specificity-debug",
+      "description": "Diagnose and fix frontend controls whose typography or dimensions ignore component CSS, and React Three Fiber/Drei projected HTML labels that paint above opaque drawers, dialogs, or navigation. Use for inconsistent button sizes, element-type-dependent styling, unexpected wrapping, z-index escalation failures, or WebGL labels leaking through DOM overlays.",
+      "domain": "frontend-mobile",
+      "tags": [
+        "frontend-mobile",
+        "live-skill"
+      ],
+      "originators": [
+        "JinNing6"
+      ],
+      "latest": "1.0.0",
+      "releases": [
+        {
+          "version": "1.0.0",
+          "summary": "Maintainer-authored foundational release in the live Noosphere registry.",
+          "published_at": "2026-07-15T05:57:32.045Z",
+          "status": "active",
+          "reviewer": "JinNing6",
+          "source_count": 1,
+          "publisher_count": 1,
+          "evidence": [],
+          "verification": {
+            "level": "maintainer-validated",
+            "independent_reproductions": 0,
+            "verified_outcomes": 0
+          },
+          "provenance": {
+            "kind": "maintainer-authored",
+            "repository": "JinNing6/Noosphere",
+            "author": "JinNing6"
+          },
+          "artifact": {
+            "path": "shared_skills/releases/1.0.0/frontend-layering-specificity-debug/SKILL.md",
+            "sha256": "1c3675899430da5a396ef326924a922f7e39d1da9103f428dc731cf854ff71b2",
+            "size_bytes": 3258
+          },
+          "withdrawal": null
+        }
+      ]
+    },
+    {
+      "id": "noosphere:github-actions-public-ci-diagnostics",
+      "name": "github-actions-public-ci-diagnostics",
+      "description": "Diagnose GitHub Actions CI or release workflow failures when full logs are inaccessible, especially public repositories where REST job logs return 403, pytest fails only on Linux runners, check annotations are sparse, PyPI Trusted Publishing fails, or Windows-only test fixtures break on ubuntu-latest.",
+      "domain": "build-release",
+      "tags": [
+        "build-release",
+        "live-skill"
+      ],
+      "originators": [
+        "JinNing6"
+      ],
+      "latest": "1.0.0",
+      "releases": [
+        {
+          "version": "1.0.0",
+          "summary": "Maintainer-authored foundational release in the live Noosphere registry.",
+          "published_at": "2026-07-15T05:57:32.045Z",
+          "status": "active",
+          "reviewer": "JinNing6",
+          "source_count": 1,
+          "publisher_count": 1,
+          "evidence": [],
+          "verification": {
+            "level": "maintainer-validated",
+            "independent_reproductions": 0,
+            "verified_outcomes": 0
+          },
+          "provenance": {
+            "kind": "maintainer-authored",
+            "repository": "JinNing6/Noosphere",
+            "author": "JinNing6"
+          },
+          "artifact": {
+            "path": "shared_skills/releases/1.0.0/github-actions-public-ci-diagnostics/SKILL.md",
+            "sha256": "201e097abe1756d787f6e5f370e9a5969f9485980bb64c6d70dd4a77682bb9c7",
+            "size_bytes": 4075
+          },
+          "withdrawal": null
+        }
+      ]
+    },
+    {
+      "id": "noosphere:upload-debug-memory",
+      "name": "upload-debug-memory",
+      "description": "Use after resolving a bug, test failure, build failure, CI issue, deployment issue, or framework/API pitfall when the verified lesson should be published to Noosphere for future agents.",
+      "domain": "agent-runtime",
+      "tags": [
+        "agent-runtime",
+        "live-skill"
+      ],
+      "originators": [
+        "JinNing6"
+      ],
+      "latest": "1.0.0",
+      "releases": [
+        {
+          "version": "1.0.0",
+          "summary": "Maintainer-authored foundational release in the live Noosphere registry.",
+          "published_at": "2026-07-15T05:57:32.045Z",
+          "status": "active",
+          "reviewer": "JinNing6",
+          "source_count": 1,
+          "publisher_count": 1,
+          "evidence": [],
+          "verification": {
+            "level": "maintainer-validated",
+            "independent_reproductions": 0,
+            "verified_outcomes": 0
+          },
+          "provenance": {
+            "kind": "maintainer-authored",
+            "repository": "JinNing6/Noosphere",
+            "author": "JinNing6"
+          },
+          "artifact": {
+            "path": "shared_skills/releases/1.0.0/upload-debug-memory/SKILL.md",
+            "sha256": "ce1b63f83959f3102f866d20fd152b4b984bdf364cb436ae24712bd561b036f7",
+            "size_bytes": 2020
+          },
+          "withdrawal": null
+        }
+      ]
+    },
+    {
+      "id": "noosphere:windows-child-process-lifecycle",
+      "name": "windows-child-process-lifecycle",
+      "description": "Prevent and recover orphaned child processes, concurrent writers, and post-timeout output corruption on Windows. Use when a PowerShell harness launches long-running Python, Node, benchmark, model, build, or test processes; when a tool timeout or terminal close may kill only the parent shell; or when output files change after a command was reported terminated.",
+      "domain": "testing-reliability",
+      "tags": [
+        "testing-reliability",
+        "live-skill"
+      ],
+      "originators": [
+        "JinNing6"
+      ],
+      "latest": "1.0.0",
+      "releases": [
+        {
+          "version": "1.0.0",
+          "summary": "Maintainer-authored foundational release in the live Noosphere registry.",
+          "published_at": "2026-07-15T05:57:32.045Z",
+          "status": "active",
+          "reviewer": "JinNing6",
+          "source_count": 1,
+          "publisher_count": 1,
+          "evidence": [],
+          "verification": {
+            "level": "maintainer-validated",
+            "independent_reproductions": 0,
+            "verified_outcomes": 0
+          },
+          "provenance": {
+            "kind": "maintainer-authored",
+            "repository": "JinNing6/Noosphere",
+            "author": "JinNing6"
+          },
+          "artifact": {
+            "path": "shared_skills/releases/1.0.0/windows-child-process-lifecycle/SKILL.md",
+            "sha256": "e4eceaf89fb82a0195bf62d4b447b4527b84cf34d80f000aba47ea0092cb537b",
+            "size_bytes": 3364
+          },
+          "withdrawal": null
+        }
+      ]
+    },
+    {
+      "id": "noosphere:windows-npm-run-script-shell",
+      "name": "windows-npm-run-script-shell",
+      "description": "Use when Windows npm run, npm test, npm run build, or npm run-script exits before running the script with ERR_INVALID_ARG_TYPE, \"file argument must be of type string\", missing ComSpec, broken script-shell, stripped CLI flags, sandboxed npm cache/log EPERM, or silent npm script output.",
+      "domain": "build-release",
+      "tags": [
+        "build-release",
+        "live-skill"
+      ],
+      "originators": [
+        "JinNing6"
+      ],
+      "latest": "1.0.0",
+      "releases": [
+        {
+          "version": "1.0.0",
+          "summary": "Maintainer-authored foundational release in the live Noosphere registry.",
+          "published_at": "2026-07-15T05:57:32.045Z",
+          "status": "active",
+          "reviewer": "JinNing6",
+          "source_count": 1,
+          "publisher_count": 1,
+          "evidence": [],
+          "verification": {
+            "level": "maintainer-validated",
+            "independent_reproductions": 0,
+            "verified_outcomes": 0
+          },
+          "provenance": {
+            "kind": "maintainer-authored",
+            "repository": "JinNing6/Noosphere",
+            "author": "JinNing6"
+          },
+          "artifact": {
+            "path": "shared_skills/releases/1.0.0/windows-npm-run-script-shell/SKILL.md",
+            "sha256": "7af3dc0b48d2fef4c3a3ab30297aba42c01ee2eab8f13fc82fa229e01f2fa74f",
+            "size_bytes": 2890
+          },
+          "withdrawal": null
+        }
+      ]
+    }
+  ]
 }

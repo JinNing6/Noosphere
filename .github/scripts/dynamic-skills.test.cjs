@@ -10,6 +10,7 @@ const {
   extractSkillCandidate,
   extractSkillWithdrawalRequest,
   publishCandidate,
+  rebuildCandidateFromCanonicalEvidence,
   renderSkillCandidateBody,
   renderSkillWithdrawalRequest,
   withdrawSkillRelease,
@@ -79,6 +80,98 @@ test("candidate identity is deterministic regardless of input order", () => {
   assert.deepEqual(validateSkillCandidate(first), { valid: true, errors: [] });
 });
 
+test("does not cluster topic-similar memories whose concrete fixes conflict", () => {
+  const safe = memory({ issue: 1, publisher: "alice", embedding: [1, 0] });
+  const incompatible = memory({ issue: 2, publisher: "bob", embedding: [0.99, 0.01] });
+  incompatible.evidence.fix = "Replace pointer selection with a separate DOM list and keyboard navigation.";
+
+  assert.deepEqual(clusterEligibleMemories([safe, incompatible]), []);
+});
+
+test("requires independently supported test commands and public evidence URLs", () => {
+  const left = memory({ issue: 1, publisher: "alice", embedding: [1, 0] });
+  const right = memory({ issue: 2, publisher: "bob", embedding: [0.99, 0.01] });
+  right.evidence.test_commands = ["npm test -- mobile-node-picking"];
+
+  assert.deepEqual(clusterEligibleMemories([left, right]), []);
+
+  right.evidence.test_commands = left.evidence.test_commands;
+  right.evidence.source_urls = [];
+  assert.deepEqual(clusterEligibleMemories([left, right]), []);
+
+  right.evidence.source_urls = left.evidence.source_urls;
+  assert.deepEqual(clusterEligibleMemories([left, right]), []);
+});
+
+test("recomputes evidence eligibility instead of trusting a stale stored flag", () => {
+  const left = memory({ issue: 1, publisher: "alice", embedding: [1, 0] });
+  const right = memory({ issue: 2, publisher: "bob", embedding: [0.99, 0.01] });
+  right.evidence.test_commands = [];
+  right.skill_candidate = { eligible: true, missing: [] };
+
+  assert.deepEqual(clusterEligibleMemories([left, right]), []);
+});
+
+test("targeted version evidence keeps the existing Skill identity and does not cross-cluster", () => {
+  const left = {
+    ...memory({ issue: 1, publisher: "alice", embedding: [1, 0], tags: ["async-ui"] }),
+    target_skill: "debug-async-ui",
+  };
+  const right = {
+    ...memory({ issue: 2, publisher: "bob", embedding: [0.99, 0.01], tags: ["async-ui"] }),
+    target_skill: "debug-async-ui",
+  };
+  const unrelated = {
+    ...memory({ issue: 3, publisher: "carol", embedding: [1, 0], tags: ["browser"] }),
+    target_skill: "browser-actionability-debug",
+  };
+
+  const clusters = clusterEligibleMemories([left, right, unrelated]);
+  const candidate = buildSkillCandidate(clusters[0]);
+
+  assert.equal(clusters.length, 1);
+  assert.equal(candidate.name, "debug-async-ui");
+  assert.equal(candidate.target_skill, "debug-async-ui");
+  assert.deepEqual(candidate.source_issues, [1, 2]);
+});
+
+test("targeted evidence publishes the next immutable version and preserves registry identity", () => {
+  const left = {
+    ...memory({ issue: 1, publisher: "alice", embedding: [1, 0], tags: ["frontend-mobile", "async-ui"] }),
+    target_skill: "debug-async-ui",
+  };
+  const right = {
+    ...memory({ issue: 2, publisher: "bob", embedding: [0.99, 0.01], tags: ["frontend-mobile", "async-ui"] }),
+    target_skill: "debug-async-ui",
+  };
+  const candidate = buildSkillCandidate(clusterEligibleMemories([left, right])[0]);
+  const registry = {
+    schema_version: "1.0",
+    revision: 1,
+    generated_at: "2026-07-15T00:00:00Z",
+    skills: [{
+      id: "noosphere:debug-async-ui",
+      name: "debug-async-ui",
+      description: "Original description",
+      domain: "frontend-mobile",
+      tags: ["frontend-mobile", "live-skill"],
+      originators: ["JinNing6"],
+      latest: null,
+      releases: [{ version: "1.0.0", status: "withdrawn", candidate_sha256: "old" }],
+    }],
+  };
+
+  const published = publishCandidate(registry, candidate, {
+    reviewer: "maintainer",
+    publishedAt: "2026-07-16T00:00:00Z",
+  });
+
+  assert.equal(published.release.version, "1.0.1");
+  assert.equal(published.registry.skills[0].domain, "frontend-mobile");
+  assert.deepEqual(published.registry.skills[0].originators, ["JinNing6", "alice", "bob"]);
+  assert.ok(published.registry.skills[0].tags.includes("async-ui"));
+});
+
 test("candidate marker round-trips through a review Issue body", () => {
   const cluster = clusterEligibleMemories([
     memory({ issue: 1, publisher: "alice", embedding: [1, 0] }),
@@ -105,6 +198,9 @@ test("publisher emits an immutable standards-compliant release and registry dige
 
   assert.equal(published.release.version, "1.0.0");
   assert.equal(published.release.status, "active");
+  assert.equal(published.release.verification.level, "independently-reproduced");
+  assert.equal(published.release.verification.independent_reproductions, 2);
+  assert.equal(published.release.provenance.kind, "community-evidence");
   assert.equal(published.release.artifact.sha256.length, 64);
   assert.equal(
     published.release.artifact.path,
@@ -120,6 +216,30 @@ test("publisher emits an immutable standards-compliant release and registry dige
   });
   assert.equal(repeated.idempotent, true);
   assert.equal(repeated.registry.revision, 1);
+});
+
+test("publication rehydrates the reviewed candidate from canonical non-withdrawn evidence", () => {
+  const memories = [
+    memory({ issue: 1, publisher: "alice", embedding: [1, 0] }),
+    memory({ issue: 2, publisher: "bob", embedding: [0.99, 0.01] }),
+  ];
+  const candidate = buildSkillCandidate(clusterEligibleMemories(memories)[0]);
+
+  assert.deepEqual(rebuildCandidateFromCanonicalEvidence(candidate, memories, { withdrawn_issues: [] }), candidate);
+  assert.throws(
+    () => rebuildCandidateFromCanonicalEvidence(candidate, [memories[0]], { withdrawn_issues: [] }),
+    /canonical evidence.*missing/,
+  );
+  assert.throws(
+    () => rebuildCandidateFromCanonicalEvidence(candidate, memories, { withdrawn_issues: [{ issue_number: 2 }] }),
+    /withdrawn/,
+  );
+  const changed = structuredClone(memories);
+  changed[1].evidence.fix = "Replace the rendering stack with an unrelated server-side workaround.";
+  assert.throws(
+    () => rebuildCandidateFromCanonicalEvidence(candidate, changed, { withdrawn_issues: [] }),
+    /claim consensus/,
+  );
 });
 
 test("rejects candidates containing instruction-override or destructive command text", () => {
@@ -170,19 +290,43 @@ test("approved candidates publish through a trusted versioned registry workflow"
   assert.match(workflow, /skill-approved/);
   assert.match(workflow, /getCollaboratorPermissionLevel/);
   assert.match(workflow, /extractSkillCandidate/);
+  assert.match(workflow, /rebuildCandidateFromCanonicalEvidence/);
+  assert.match(workflow, /github-actions\[bot\]/);
+  assert.match(workflow, /skill-candidate/);
+  assert.match(workflow, /loadCandidatePayloads/);
   assert.match(workflow, /publishCandidate/);
   assert.match(workflow, /registry\.json/);
   assert.match(workflow, /const releasePath = published\.release\.artifact\.path/);
   assert.match(workflow, /git add -A shared_skills/);
 });
 
-test("Skill registry publication and withdrawal preserve every queued decision", () => {
+test("all permanent-state writers preserve every queued decision", () => {
   const workflowsDir = path.join(__dirname, "..", "workflows");
-  for (const file of ["skill_publish.yml", "skill_withdraw.yml"]) {
+  for (const file of [
+    "backfill_embeddings.yml",
+    "consciousness_promote.yml",
+    "consciousness_withdraw.yml",
+    "record-traction-history.yml",
+    "skill_outcome.yml",
+    "skill_publish.yml",
+    "skill_withdraw.yml",
+    "update-contributors.yml",
+  ]) {
     const workflow = fs.readFileSync(path.join(workflowsDir, file), "utf8");
-    assert.match(workflow, /group: shared-skill-registry-main/);
+    assert.match(workflow, /group: noosphere-main-writer/);
     assert.match(workflow, /queue: max/);
   }
+});
+
+test("embedding backfill rebuilds missing candidates from canonical evidence", () => {
+  const workflow = fs.readFileSync(
+    path.join(__dirname, "..", "workflows", "backfill_embeddings.yml"),
+    "utf8",
+  );
+  assert.match(workflow, /buildCanonicalSkillCandidates/);
+  assert.match(workflow, /planCandidateIssueSync/);
+  assert.match(workflow, /skill-candidate-superseded/);
+  assert.match(workflow, /labels: \['skill-candidate', 'needs-review'\]/);
 });
 
 test("the isolated shared Skill CI job installs the SDK dependency boundary", () => {
@@ -299,6 +443,12 @@ test("label initializer provisions every shared Skill workflow label", () => {
     "skill-approved",
     "skill-published",
     "skill-outcome",
+    "needs-outcome-review",
+    "skill-outcome-approved",
+    "skill-outcome-recorded",
+    "skill-outcome-invalid",
+    "skill-update-needed",
+    "skill-candidate-superseded",
     "skill-withdrawal",
     "skill-withdraw-approved",
     "skill-withdrawn",

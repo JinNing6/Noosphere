@@ -38,7 +38,7 @@ drawtext=fontfile='C\:/Windows/Fonts/consola.ttf':text='PASS  intended instance 
 drawtext=fontfile='C\:/Windows/Fonts/consola.ttf':text='One verified failure became reusable memory.':x=70:y=220:fontsize=20:fontcolor=0x58d6ff:enable='between(t,16,18.7)',
 drawbox=x=42:y=414:w=876:h=92:color=0x111827:t=fill:enable='between(t,18.7,20)',
 drawtext=fontfile='C\:/Windows/Fonts/consola.ttf':text='STOP SOLVING THE SAME BUG TWICE.':x=118:y=440:fontsize=31:fontcolor=0xffffff:enable='between(t,18.7,20)',
-drawtext=fontfile='C\:/Windows/Fonts/consola.ttf':text='0 published Skills  |  3 verified seeds  |  review-gated':x=70:y=532:fontsize=17:fontcolor=0x8b949e,
+drawtext=fontfile='C\:/Windows/Fonts/consola.ttf':text='13 live Skills  |  3 verified seeds  |  review-gated':x=70:y=532:fontsize=17:fontcolor=0x8b949e,
 format=yuv420p[out]
 '@
 

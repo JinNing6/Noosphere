@@ -14,9 +14,17 @@ class LaunchSurfaceTests(unittest.TestCase):
         )
         readme = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
 
-        self.assertEqual(registry["skills"], [])
-        self.assertIn("Published_Skills-0", readme)
-        self.assertIn("3 verified seeds and\n0 published dynamic Skills", readme)
+        self.assertEqual(len(registry["skills"]), 13)
+        self.assertIn("Live_Skills-13", readme)
+        self.assertIn("docs/live-skills.md", readme)
+        self.assertIn("foundational Live Skills", readme)
+        for skill in registry["skills"]:
+            release = next(
+                item
+                for item in skill["releases"]
+                if item["version"] == skill["latest"] and item["status"] == "active"
+            )
+            self.assertEqual(release["verification"]["level"], "maintainer-validated")
 
     def test_english_and_chinese_first_screens_lead_with_the_query_not_the_3d_app(self):
         for name in ("README.md", "README.zh-CN.md"):
@@ -25,7 +33,7 @@ class LaunchSurfaceTests(unittest.TestCase):
 
             self.assertIn(QUERY_COMMAND, first_screen)
             self.assertIn("assets/demo/agent-debug-memory.gif", first_screen)
-            self.assertIn("plugins/noosphere/skills/", first_screen)
+            self.assertIn("shared_skills/active/", first_screen)
             self.assertLess(readme.index(QUERY_COMMAND), readme.index("assets/splash_cinematic.webp"))
 
     def test_demo_assets_and_reproducible_source_exist(self):

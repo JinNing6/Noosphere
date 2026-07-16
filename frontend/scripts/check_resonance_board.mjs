@@ -1,18 +1,18 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
-const appSource = await readFile(new URL('../src/App.tsx', import.meta.url), 'utf8');
+const appSource = await readFile(new URL('../src/UniverseApp.tsx', import.meta.url), 'utf8');
 const cssSource = await readFile(new URL('../src/index.css', import.meta.url), 'utf8');
 
 assert.match(
   appSource,
   /import\s+LiveResonanceBoard\s+from\s+'\.\/components\/LiveResonanceBoard'/,
-  'homepage should import the live resonance board',
+  'Universe surface should import the live resonance board',
 );
 assert.match(
   appSource,
   /<LiveResonanceBoard\s+dynamicNodes=\{dynamicNodes\}\s+onOpenUploader=\{handleOpenUploader\}\s*\/>/,
-  'homepage should render the live resonance board with real dynamic payload nodes and upload action',
+  'Universe surface should render the live resonance board with real dynamic payload nodes and upload action',
 );
 assert.match(cssSource, /\.resonance-board\b/, 'resonance board should have a stable CSS surface');
 assert.match(cssSource, /\.resonance-share-button\b/, 'resonance board should expose a styled share button');

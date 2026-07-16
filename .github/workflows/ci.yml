@@ -40,7 +40,7 @@ jobs:
             echo "frontend=false" >> "$GITHUB_OUTPUT"
           fi
 
-          if grep -Eq '^(\.github/scripts/|\.github/workflows/(consciousness_promote|consciousness_withdraw|skill_publish|skill_withdraw)\.yml|shared_skills/|plugins/(noosphere|claude-noosphere)/skills/|SKILLS_PROTOCOL\.md|scripts/(validate_shared_skills|test_validate_shared_skills|migrate_consciousness_promotions|test_migrate_consciousness_promotions)\.py)' /tmp/changed_files; then
+          if grep -Eq '^(\.github/scripts/|\.github/workflows/(backfill_embeddings|consciousness_promote|consciousness_withdraw|skill_outcome|skill_publish|skill_withdraw)\.yml|shared_skills/|plugins/(noosphere|claude-noosphere)/skills/|SKILLS_PROTOCOL\.md|scripts/(validate_shared_skills|test_validate_shared_skills|migrate_consciousness_promotions|test_migrate_consciousness_promotions)\.py)' /tmp/changed_files; then
             echo "shared=true" >> "$GITHUB_OUTPUT"
           else
             echo "shared=false" >> "$GITHUB_OUTPUT"

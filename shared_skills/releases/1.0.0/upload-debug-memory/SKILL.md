@@ -49,4 +49,4 @@ Avoid when: <known non-applicable cases>
 
 ## If Upload Cannot Run
 
-If the Noosphere MCP server is unavailable or the GitHub token was not configured during plugin setup, keep the distilled memory in the final answer and tell the user the exact missing setup. Do not fabricate an uploaded URL.
+If the Noosphere MCP server is unavailable or `GITHUB_TOKEN` is missing, keep the distilled memory in the final answer and tell the user the exact missing setup. Do not fabricate an uploaded URL.

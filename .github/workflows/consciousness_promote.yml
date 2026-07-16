@@ -7,7 +7,7 @@ on:
     types: [opened, labeled]
 
 concurrency:
-  group: consciousness-permanent-state-main
+  group: noosphere-main-writer
   cancel-in-progress: false
   queue: max
 
@@ -182,6 +182,7 @@ jobs:
               bindVerifiedPublisher,
               isTrustedReviewerPermission,
               normalizeEngineeringEvidence,
+              buildModerationText,
             } = require(`${process.env.GITHUB_WORKSPACE}/.github/scripts/memory-trust.cjs`);
             const {
               buildSkillCandidate,
@@ -353,7 +354,7 @@ jobs:
             const openaiKey = process.env.OPENAI_API_KEY;
             let textModerationPassed = Boolean(trustedReview || hasVerifiedExisting);
             if (openaiKey && !trustedReview && !hasVerifiedExisting) {
-              const textToModerate = `${payload.thought_vector_text}\n\n${payload.context_environment}`;
+              const textToModerate = buildModerationText(payload);
               try {
                 const modResponse = await fetch('https://api.openai.com/v1/moderations', {
                   method: 'POST',
@@ -417,6 +418,11 @@ jobs:
 
             payload.evidence = normalizeEngineeringEvidence(payload.evidence);
             if (trustedReview) {
+              payload.content_safety = {
+                status: 'reviewed',
+                method: 'trusted-human-review',
+                checked_at: new Date().toISOString(),
+              };
               payload.trust = {
                 status: 'verified',
                 method: 'trusted-human-review',
@@ -424,11 +430,16 @@ jobs:
                 verified_at: new Date().toISOString(),
               };
             } else if (!hasVerifiedExisting) {
+              payload.content_safety = {
+                status: 'passed',
+                method: 'openai-moderation',
+                checked_at: new Date().toISOString(),
+              };
               payload.trust = {
-                status: 'verified',
-                method: 'automated-content-screening',
+                status: 'screened',
+                method: 'content-screening-only',
                 reviewer: null,
-                verified_at: new Date().toISOString(),
+                screened_at: new Date().toISOString(),
               };
             }
             payload.skill_candidate = assessSkillEligibility(payload);
@@ -538,34 +549,49 @@ jobs:
                 item.members.some((memory) => memory.memory_id === payload.memory_id)
               ));
               if (cluster) {
-                const candidate = buildSkillCandidate(cluster);
-                const candidateIssues = await github.paginate(github.rest.issues.listForRepo, {
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  state: 'all',
-                  labels: 'skill-candidate',
-                  per_page: 100,
-                });
-                const existingCandidateIssue = candidateIssues.find((candidateIssue) => (
-                  extractSkillCandidate(candidateIssue.body)?.id === candidate.id
-                ));
-                const candidateBody = renderSkillCandidateBody(candidate);
-                if (existingCandidateIssue) {
-                  await github.rest.issues.update({
-                    owner: context.repo.owner,
-                    repo: context.repo.repo,
-                    issue_number: existingCandidateIssue.number,
-                    title: `Skill candidate: ${candidate.name}`,
-                    body: candidateBody,
-                  });
+                let candidate = null;
+                try {
+                  candidate = buildSkillCandidate(cluster);
+                } catch (error) {
+                  console.log(`Skipping non-publishable Skill candidate ${cluster.id}: ${error.message}`);
+                }
+                if (!candidate) {
+                  console.log('Verified memory remains promoted; no reviewable Skill candidate was created.');
                 } else {
-                  await github.rest.issues.create({
+                  const candidateIssues = await github.paginate(github.rest.issues.listForRepo, {
                     owner: context.repo.owner,
                     repo: context.repo.repo,
-                    title: `Skill candidate: ${candidate.name}`,
-                    body: candidateBody,
-                    labels: ['skill-candidate', 'needs-review'],
+                    state: 'all',
+                    labels: 'skill-candidate',
+                    per_page: 100,
                   });
+                  const existingCandidateIssue = candidateIssues.find((candidateIssue) => (
+                    extractSkillCandidate(candidateIssue.body)?.id === candidate.id
+                  ));
+                  const candidateBody = renderSkillCandidateBody(candidate);
+                  if (existingCandidateIssue) {
+                    const existingCandidate = extractSkillCandidate(existingCandidateIssue.body);
+                    const candidateChanged = existingCandidate?.candidate_sha256 !== candidate.candidate_sha256;
+                    await github.rest.issues.update({
+                      owner: context.repo.owner,
+                      repo: context.repo.repo,
+                      issue_number: existingCandidateIssue.number,
+                      title: `Skill candidate: ${candidate.name}`,
+                      body: candidateBody,
+                      ...(candidateChanged ? {
+                        state: 'open',
+                        labels: ['skill-candidate', 'needs-review'],
+                      } : {}),
+                    });
+                  } else {
+                    await github.rest.issues.create({
+                      owner: context.repo.owner,
+                      repo: context.repo.repo,
+                      title: `Skill candidate: ${candidate.name}`,
+                      body: candidateBody,
+                      labels: ['skill-candidate', 'needs-review'],
+                    });
+                  }
                 }
               }
             }

@@ -10,8 +10,9 @@ on:
 
 # 并发控制：同一时间只允许一个更新任务运行
 concurrency:
-  group: "contributor-rankings-update"
-  cancel-in-progress: true
+  group: noosphere-main-writer
+  cancel-in-progress: false
+  queue: max
 
 permissions:
   contents: write

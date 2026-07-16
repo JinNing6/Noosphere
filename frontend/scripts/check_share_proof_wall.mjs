@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
-const appSource = await readFile(new URL('../src/App.tsx', import.meta.url), 'utf8');
+const appSource = await readFile(new URL('../src/UniverseApp.tsx', import.meta.url), 'utf8');
 const componentSource = await readFile(new URL('../src/components/ShareProofWall.tsx', import.meta.url), 'utf8');
 const dataSource = await readFile(new URL('../src/utils/shareProofs.ts', import.meta.url), 'utf8');
 const cssSource = await readFile(new URL('../src/index.css', import.meta.url), 'utf8');
@@ -12,9 +12,9 @@ const readmeSource = await readFile(new URL('../../README.md', import.meta.url),
 assert.match(
   appSource,
   /import\s+ShareProofWall\s+from\s+'\.\/components\/ShareProofWall'/,
-  'homepage should import the share proof wall',
+  'Universe surface should import the share proof wall',
 );
-assert.match(appSource, /<ShareProofWall\s*\/>/, 'homepage should render the share proof wall');
+assert.match(appSource, /<ShareProofWall\s*\/>/, 'Universe surface should render the share proof wall');
 
 assert.match(dataSource, /share_proofs\.json/, 'share proof data should load the generated public JSON');
 assert.match(dataSource, /reviewable_public_urls/, 'share proof summary should expose real reviewable URL count');

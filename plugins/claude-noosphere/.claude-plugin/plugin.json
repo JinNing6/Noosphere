@@ -1,7 +1,7 @@
 {
   "name": "noosphere",
-  "version": "0.1.0",
-  "description": "Shared debug memory for Claude Code agents.",
+  "version": "0.4.0",
+  "description": "Live, versioned shared Skills and debug memory for Claude Code agents.",
   "author": {
     "name": "JinNing6",
     "email": "noosphere@consciousness.network",
@@ -15,10 +15,10 @@
     "mcp",
     "debugging",
     "agent-memory",
+    "shared-skills",
     "noosphere",
     "github"
   ],
-  "skills": "./skills/",
   "commands": "./commands/",
   "mcpServers": "./.mcp.json",
   "userConfig": {

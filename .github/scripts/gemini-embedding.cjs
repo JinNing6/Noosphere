@@ -318,6 +318,14 @@ function buildEmbeddingText(payload, options = {}) {
   addLine(lines, "thought", payload?.thought_vector_text);
   addLine(lines, "context", payload?.context_environment);
   addLine(lines, "tags", payload?.tags);
+  addLine(lines, "symptom", payload?.evidence?.symptom);
+  addLine(lines, "root_cause", payload?.evidence?.root_cause);
+  addLine(lines, "fix", payload?.evidence?.fix);
+  addLine(lines, "verification", payload?.evidence?.verification);
+  addLine(lines, "applies_when", payload?.evidence?.applies_when);
+  addLine(lines, "avoid_when", payload?.evidence?.avoid_when);
+  addLine(lines, "test_commands", payload?.evidence?.test_commands);
+  addLine(lines, "source_urls", payload?.evidence?.source_urls);
 
   for (const field of MEDIA_METADATA_FIELDS) {
     addLine(lines, field, payload?.[field]);

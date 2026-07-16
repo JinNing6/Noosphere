@@ -195,6 +195,18 @@ async def test_upload_consciousness_short_thought(mock_env):
     result = await upload_consciousness("user1", "epiphany", "too short", "long enough context here")
     assert "Core thought too short" in result
 
+
+@pytest.mark.asyncio
+async def test_upload_consciousness_rejects_invalid_target_skill(mock_env):
+    result = await upload_consciousness(
+        "user1",
+        "pattern",
+        "This is a long enough thought for testing a targeted Skill update.",
+        "A reusable engineering workflow in a public repository.",
+        target_skill="../private",
+    )
+    assert "Invalid target_skill" in result
+
 @pytest.mark.asyncio
 @respx.mock
 async def test_upload_consciousness_success(mock_env):
@@ -229,6 +241,7 @@ async def test_upload_consciousness_includes_structured_engineering_evidence(moc
         "Visible glow and raycast geometry can diverge on mobile targets.",
         "React Three Fiber inside Android WebView",
         evidence=evidence,
+        target_skill="debug-async-ui",
     )
 
     request_payload = json.loads(issue_route.calls[0].request.content)
@@ -236,6 +249,8 @@ async def test_upload_consciousness_includes_structured_engineering_evidence(moc
     assert extracted["schema_version"] == 2
     assert extracted["memory_kind"] == "engineering"
     assert extracted["evidence"] == evidence
+    assert extracted["target_skill"] == "debug-async-ui"
+    assert "**🎯 Target Skill**: `debug-async-ui`" in request_payload["body"]
 
 @pytest.mark.asyncio
 @respx.mock
