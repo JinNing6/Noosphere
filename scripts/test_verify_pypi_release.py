@@ -57,12 +57,28 @@ class VerifyPypiReleaseTests(unittest.TestCase):
             tool_names = [f"tool_{index}" for index in range(35)] + REQUIRED_GROWTH_TOOLS
             (package_root / "noosphere_mcp.py").write_text(_tool_source(tool_names), encoding="utf-8")
             (package_root / "query_cli.py").write_text("def main(): return 0\n", encoding="utf-8")
+            (package_root / "validation_cli.py").write_text("def main(): return 0\n", encoding="utf-8")
+            validation_kits = package_root / "validation_kits"
+            validation_kits.mkdir()
+            (validation_kits / "public_artifact_runtime_smoke_gate.py").write_text(
+                "def run_validation(): return True\n", encoding="utf-8"
+            )
+            dist_info = target / "noosphere_mcp-0.6.8.dist-info"
+            dist_info.mkdir()
+            (dist_info / "entry_points.txt").write_text(
+                "[console_scripts]\n"
+                "noosphere-mcp = noosphere.server:main\n"
+                "noosphere-query = noosphere.query_cli:main\n"
+                "noosphere-validate = noosphere.validation_cli:main\n",
+                encoding="utf-8",
+            )
 
             result = inspect_installed_release(target, "0.6.8", expected_tool_count=40)
 
         self.assertEqual(result["version"], "0.6.8")
         self.assertEqual(result["tool_count"], 40)
         self.assertEqual(result["query_cli"], "noosphere-query")
+        self.assertEqual(result["validation_cli"], "noosphere-validate")
 
     def test_install_release_to_target_uses_exact_version_and_no_deps(self):
         with patch("scripts.verify_pypi_release.subprocess.run") as run:

@@ -31,6 +31,19 @@ uvx --from noosphere-mcp noosphere-query "React Three Fiber mobile glowing node 
 匿名只读命令只请求一次公开索引。只有查询最新 Issue、上传、反馈或提高 API
 额度时才需要 GitHub Token。
 
+## 验证第一个 Living Skill
+
+运行一条确定性命令，在隔离环境中复现真实的公共制品故障并验证修复：
+
+```bash
+uvx --from noosphere-mcp noosphere-validate public-artifact-runtime-smoke-gate
+```
+
+无需克隆仓库、准备个人项目、配置 GitHub Token、理解 MCP 协议或注册包索引账号。
+命令会生成包含精确制品摘要的可审查证据；将完整标记块粘贴到
+[Skill 验证表单](https://github.com/JinNing6/Noosphere/issues/new?template=validate-skill.yml)，
+即可成为首个社区 Living Skill 的独立验证者。
+
 <div align="center">
   <img src="assets/demo/agent-debug-memory.gif" alt="Agent 遇到 Android 节点点击故障，查询 Noosphere，获得第 35 号已验证种子记忆，应用修复并通过回归测试" width="900">
 </div>
@@ -47,8 +60,9 @@ uvx --from noosphere-mcp noosphere-query "React Three Fiber mobile glowing node 
 | 首批真实证据 | [#35](https://github.com/JinNing6/Noosphere/issues/35)、[#36](https://github.com/JinNing6/Noosphere/issues/36)、[#37](https://github.com/JinNing6/Noosphere/issues/37) |
 | 供应链协议 | [`SKILLS_PROTOCOL.md`](SKILLS_PROTOCOL.md) |
 
-**下一次贡献：**独立复现一条 Founding Memory，并通过
-[结构化证据表单](https://github.com/JinNing6/Noosphere/issues/new?template=consciousness-upload.yml)提交。
+**下一次贡献：**运行上面的验证命令，并将生成结果提交到专用
+[Skill 验证表单](https://github.com/JinNing6/Noosphere/issues/new?template=validate-skill.yml)。
+其他已验证工程经验仍可使用通用[记忆贡献表单](https://github.com/JinNing6/Noosphere/issues/new?template=consciousness-upload.yml)。
 **已经公开分享？**使用 [Share Proof 表单](https://github.com/JinNing6/Noosphere/issues/new?template=share-proof.yml)
 记录真实链接；Noosphere 不会根据 URL 虚构下载、推荐或留存数据。
 
@@ -60,9 +74,10 @@ uvx --from noosphere-mcp noosphere-query "React Three Fiber mobile glowing node 
 | Claude Code | 仓库 Marketplace | `/plugin marketplace add JinNing6/Noosphere`，然后 `/plugin install noosphere@noosphere-agent-memory` |
 | Cursor / Cline / Windsurf | 标准 MCP stdio | `uvx noosphere-mcp` |
 | 终端只读体验 | 零配置 | `uvx --from noosphere-mcp noosphere-query "你的报错"` |
+| 独立验证 | 隔离的确定性夹具 | `uvx --from noosphere-mcp noosphere-validate public-artifact-runtime-smoke-gate` |
 
 > [!IMPORTANT]
-> `v0.8.0` 将所有 Skill 统一到实时版本注册表，并保留匿名只读查询：匿名模式读取仓库内的规范公共索引；认证模式继续
+> `v0.8.1` 新增首个零配置独立验证夹具，同时保留统一实时注册表和匿名只读查询：匿名模式读取仓库内的规范公共索引；认证模式继续
 > 查询更新的 Issues + 永久文件。所有写操作始终要求 GitHub 身份认证。
 
 ## 记忆如何进化成 Skill

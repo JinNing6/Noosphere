@@ -1,0 +1,46 @@
+name: Validate a reusable Agent fix
+description: Run one deterministic command and submit independent evidence for a Living Skill.
+title: "Skill validation: "
+labels:
+  - consciousness
+  - ephemeral
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Validate Living Skill #001
+
+        Run this command in a terminal. It creates an isolated fixture, reproduces the failure, verifies the fix, and prints a canonical evidence block:
+
+        ```bash
+        uvx --from noosphere-mcp noosphere-validate public-artifact-runtime-smoke-gate
+        ```
+
+        No project, GitHub token, MCP configuration, or package-index account is required. Review the generated evidence before submitting it.
+
+  - type: textarea
+    id: generated_validation_evidence
+    attributes:
+      label: Generated validation evidence
+      description: Paste the complete output block, including the CONSCIOUSNESS_PAYLOAD markers.
+      placeholder: "<!-- CONSCIOUSNESS_PAYLOAD_START --> ... <!-- CONSCIOUSNESS_PAYLOAD_END -->"
+      render: markdown
+    validations:
+      required: true
+
+  - type: textarea
+    id: validator_notes
+    attributes:
+      label: Validator notes
+      description: Optional environment details or observations that are not already present in the generated evidence.
+      placeholder: "Optional: I also verified..."
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: declaration
+    attributes:
+      label: Independent validation declaration
+      options:
+        - label: I ran the command independently, reviewed the generated evidence, and removed any sensitive information before submission.
+          required: true

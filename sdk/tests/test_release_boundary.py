@@ -49,6 +49,14 @@ def test_release_exposes_zero_configuration_read_only_query_command():
     assert (SDK_ROOT / "noosphere" / "query_cli.py").is_file()
 
 
+def test_release_exposes_deterministic_living_skill_validation_command():
+    scripts = _project_metadata()["project"]["scripts"]
+
+    assert scripts["noosphere-validate"] == "noosphere.validation_cli:main"
+    assert (SDK_ROOT / "noosphere" / "validation_cli.py").is_file()
+    assert (SDK_ROOT / "noosphere" / "validation_kits" / "public_artifact_runtime_smoke_gate.py").is_file()
+
+
 def test_publish_workflow_uses_single_release_trigger_with_trusted_publishing_quality_gates():
     workflow = (REPO_ROOT / ".github" / "workflows" / "publish-pypi.yml").read_text(encoding="utf-8")
 
@@ -112,3 +120,4 @@ def test_readme_documents_pypi_release_recovery_route():
     assert ".github/workflows/publish-pypi.yml" in readme
     assert "Trusted Publishing" in readme
     assert "45 MCP tools" in readme
+    assert "noosphere-validate public-artifact-runtime-smoke-gate" in readme

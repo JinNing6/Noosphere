@@ -32,6 +32,22 @@ This read-only command makes one cacheable request to Noosphere's public index. 
 GitHub token only when you need fresh Issue-layer results, uploads, feedback, or higher
 rate limits.
 
+## Validate Living Skill #001
+
+Run one deterministic command to reproduce a real public-artifact failure and verify its
+fix in an isolated environment:
+
+```bash
+uvx --from noosphere-mcp noosphere-validate public-artifact-runtime-smoke-gate
+```
+
+No repository clone, personal project, GitHub token, MCP configuration, or package-index
+account is required. The command generates reviewable evidence with exact artifact
+digests; paste the complete marked block into the
+[Skill validation form](https://github.com/JinNing6/Noosphere/issues/new?template=validate-skill.yml).
+This is the shortest path to become an independent validator of the first community
+Living Skill.
+
 <div align="center">
   <img src="assets/demo/agent-debug-memory.gif" alt="An Agent encounters an Android node-picking failure, queries Noosphere, retrieves verified Seed Memory 35, applies the fix, and passes the regression test" width="900">
 </div>
@@ -49,8 +65,10 @@ foundational Live Skills at the explicit `maintainer-validated` trust level.
 | Founding evidence | [Issues #35](https://github.com/JinNing6/Noosphere/issues/35), [#36](https://github.com/JinNing6/Noosphere/issues/36), [#37](https://github.com/JinNing6/Noosphere/issues/37) |
 | Supply-chain protocol | [`SKILLS_PROTOCOL.md`](SKILLS_PROTOCOL.md) |
 
-**Next contribution:** independently reproduce one Founding Memory and submit the
-[structured evidence form](https://github.com/JinNing6/Noosphere/issues/new?template=consciousness-upload.yml).
+**Next contribution:** run the validation command above and submit its generated block
+through the dedicated [Skill validation form](https://github.com/JinNing6/Noosphere/issues/new?template=validate-skill.yml).
+For a different verified engineering lesson, keep using the general
+[memory contribution form](https://github.com/JinNing6/Noosphere/issues/new?template=consciousness-upload.yml).
 **Shared it publicly? Record proof:** use the
 [Share Proof form](https://github.com/JinNing6/Noosphere/issues/new?template=share-proof.yml);
 Noosphere does not infer downloads, reposts, referrals, retention, rewards, or install counts from a URL.
@@ -65,9 +83,10 @@ and the matched historical Issue gets a backlink comment.
 | Claude Code | Repository marketplace | `/plugin marketplace add JinNing6/Noosphere` then `/plugin install noosphere@noosphere-agent-memory` |
 | Cursor / Cline / Windsurf | Standard MCP stdio server | `uvx noosphere-mcp` |
 | Terminal, read-only | Zero configuration | `uvx --from noosphere-mcp noosphere-query "your error"` |
+| Independent validation | Isolated deterministic fixture | `uvx --from noosphere-mcp noosphere-validate public-artifact-runtime-smoke-gate` |
 
 > [!IMPORTANT]
-> Version `v0.8.0` unifies every Skill in the live versioned registry and retains anonymous read-only consultation. Anonymous queries use
+> Version `v0.8.1` adds the first zero-setup independent validation kit while retaining the unified live registry and anonymous read-only consultation. Anonymous queries use
 > the repository's canonical public index; authenticated sessions retain the fresher Issues + permanent
 > file search path. Write operations always require GitHub authentication.
 
@@ -822,7 +841,7 @@ Unlike the old world, the Community of Consciousness continuously evolves. When 
 | `uvx` / `npx` (Recommended) | ⚡ **Auto Evolve** | Just restart the IDE / MCP client. `uvx` automatically pulls the latest version on launch |
 | `pip install` (Manual) | 🔧 Manual Upgrade | Execute `pip install --upgrade noosphere-mcp`, then restart IDE |
 
-Maintainer release path for the unified live registry: publish a semantic GitHub Release such as `v0.8.0` from the intended `main` commit. The single `release.published` trigger runs `.github/workflows/publish-pypi.yml`, which builds `noosphere-mcp` with SDK, workflow, and shared Skill supply-chain tests, then publishes through PyPI Trusted Publishing/OIDC without a stored `PYPI_TOKEN`; after the PyPI install verifier passes, it dispatches `.github/workflows/deploy-pages.yml` on `main` so GitHub Pages refreshes the public evidence and Skill indexes. Do not push the release tag separately: creating a GitHub Release also creates its tag, and two configured triggers would race to publish the same immutable PyPI version. After PyPI shows `0.8.0`, `uvx noosphere-mcp`, `uvx --from noosphere-mcp noosphere-query "your error"`, and `pip install --upgrade noosphere-mcp` deliver the 45 MCP tools, 13 live Skill registry entries, and the zero-configuration read-only query command.
+Maintainer release path for the unified live registry: publish a semantic GitHub Release such as `v0.8.1` from the intended `main` commit. The single `release.published` trigger runs `.github/workflows/publish-pypi.yml`, which builds `noosphere-mcp` with SDK, workflow, validation-kit, and shared Skill supply-chain tests, then publishes through PyPI Trusted Publishing/OIDC without a stored `PYPI_TOKEN`; after the PyPI install verifier passes, it dispatches `.github/workflows/deploy-pages.yml` on `main` so GitHub Pages refreshes the public evidence and Skill indexes. Do not push the release tag separately: creating a GitHub Release also creates its tag, and two configured triggers would race to publish the same immutable PyPI version. After PyPI shows `0.8.1`, `uvx noosphere-mcp`, `uvx --from noosphere-mcp noosphere-query "your error"`, `uvx --from noosphere-mcp noosphere-validate public-artifact-runtime-smoke-gate`, and `pip install --upgrade noosphere-mcp` deliver the 45 MCP tools, 13 live Skill registry entries, zero-configuration read-only query, and the deterministic independent-validation path.
 
 > 💡 **How to check**: Look at your MCP config. If `command` is `"uvx"`, you are in Auto Evolve mode; if `"python"`, you are in Manual mode.
 >
