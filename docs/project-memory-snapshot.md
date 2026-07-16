@@ -4,13 +4,15 @@ Last verified: 2026-07-16 (Asia/Shanghai)
 
 ## Living Skill #001 Validation Kit
 
-- Branch `codex/living-skill-validation-kit` prepares `noosphere-mcp==0.8.1` with the first zero-setup independent validation command: `uvx --from noosphere-mcp noosphere-validate public-artifact-runtime-smoke-gate`.
+- PR #43 merged the first zero-setup independent validation command into `main` as commit `0b9c8e4b3cabe18fbd53c91be9a49351a46115a6`: `uvx --from noosphere-mcp noosphere-validate public-artifact-runtime-smoke-gate`.
 - The validation kit requires Python 3.10+ and `uv`, but no repository clone, validator-owned project, GitHub token, MCP configuration, or package-index account. After the CLI itself is resolved, its reproduction installs only local deterministic fixture Wheels with package-index access disabled.
 - The fixture proves the source-versus-artifact boundary end to end: source invocation passes; a byte-deterministic Wheel exposes a console entry point while omitting its runtime module and fails after real installation; a fixed Wheel includes the module, reports exact installed version `1.0.1`, and passes through the same entry point.
 - Generated evidence contains environment, exit codes, immutable SHA-256 digests, the canonical shared test command, and two public source URLs inside the existing `CONSCIOUSNESS_PAYLOAD` markers. The dedicated `validate-skill.yml` form accepts this block and preserves the current author binding, moderation, canonical rehydration, independent-publisher, claim-agreement, and maintainer-review gates.
 - The general memory contribution form remains available as a secondary path. The README first screen now gives the deterministic Skill validation route the primary contribution CTA without removing existing upload or Share Proof flows.
 - Local release-candidate verification passed on Windows 11 with Python 3.12.11 and 3.13.5. A clean no-dependency install of the built `noosphere_mcp-0.8.1-py3-none-any.whl` exposed `noosphere-validate 0.8.1` and completed the full reproduction in 6.91 seconds. The fixture digests were stable at failing `66742deca82583b5e4530edba9235bc193245ff0a3b12766a53a06089ef02099` and fixed `d9aade68cae64234a5da2c848bbc868689e361bc41aebcd702baa23680963bef`.
-- Release state at this snapshot: `0.8.1` is a locally verified release candidate and is not yet claimed as published. Public usability must be reverified with the exact PyPI version after merge and Trusted Publishing.
+- GitHub Release `v0.8.1` is published from the merge commit. Trusted Publishing run `29477337001` passed the build, SDK and supply-chain tests, PyPI OIDC upload, exact public-install verification, and Pages dispatch. Pages runs `29477306928` and `29477472959` both completed successfully for the merge commit.
+- PyPI reports `noosphere-mcp==0.8.1` with Wheel SHA-256 `648be0f0118e3eaeb5dc79836e38c50066bda3e48acfdb528cbccfa92ca17178` and sdist SHA-256 `be4fa79da12563a0e9d4fa11f8ebcae0ec8662c81a9c2fa728de35cef0b12ddb`.
+- A token-free, repository-external run resolved the exact public `0.8.1` package from the official PyPI Simple Index and completed the full validation in 7.80 seconds with the same fixture digests. The public `validate-skill.yml` Issue Form returned HTTP 200. A short initial index-propagation delay was observed immediately after publication and resolved without a package change.
 
 ## Living Skill Tree Frontend
 
