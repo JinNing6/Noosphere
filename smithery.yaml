@@ -6,12 +6,10 @@ startCommand:
   configSchema:
     # JSON Schema defining the configuration options for the MCP.
     type: object
-    required:
-      - githubToken
     properties:
       githubToken:
         type: string
-        description: GitHub Personal Access Token with public_repo scope. Required for uploading consciousness and accessing the collective consciousness network.
+        description: Optional GitHub Personal Access Token. Enables uploads, outcome reports, and higher API limits; anonymous public reads work without it.
       noosphereRepo:
         type: string
         default: "JinNing6/Noosphere"
@@ -19,4 +17,11 @@ startCommand:
   commandFunction:
     # A function that produces the CLI command to start the MCP on stdio.
     |-
-    (config) => ({ command: 'uvx', args: ['noosphere-mcp'], env: { GITHUB_TOKEN: config.githubToken, NOOSPHERE_REPO: config.noosphereRepo || 'JinNing6/Noosphere' } })
+    (config) => ({
+      command: 'uvx',
+      args: ['noosphere-mcp'],
+      env: {
+        ...(config.githubToken ? { GITHUB_TOKEN: config.githubToken } : {}),
+        NOOSPHERE_REPO: config.noosphereRepo || 'JinNing6/Noosphere'
+      }
+    })
