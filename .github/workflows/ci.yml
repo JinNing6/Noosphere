@@ -187,12 +187,11 @@ jobs:
         run: |
           python - <<'PY'
           import re
-          import subprocess
           from pathlib import Path
 
           from scripts.verify_pypi_release import (
-              build_mcp_probe_input,
               parse_mcp_probe_output,
+              probe_mcp_subprocess,
           )
 
           pyproject = Path("sdk/pyproject.toml").read_text(encoding="utf-8")
@@ -200,7 +199,7 @@ jobs:
           if not version_match:
               raise RuntimeError("Could not determine Noosphere version")
 
-          completed = subprocess.run(
+          completed = probe_mcp_subprocess(
               [
                   "docker",
                   "run",
@@ -210,22 +209,11 @@ jobs:
                   "none",
                   "noosphere-glama:ci",
               ],
-              input=build_mcp_probe_input(),
-              capture_output=True,
-              text=True,
-              encoding="utf-8",
-              errors="replace",
-              timeout=30,
-              check=False,
+              timeout_seconds=30,
           )
-          if completed.returncode != 0:
-              raise RuntimeError(
-                  f"Glama container exited with {completed.returncode}: "
-                  f"{completed.stderr[-1000:]}"
-              )
 
           result = parse_mcp_probe_output(
-              completed.stdout,
+              completed["stdout"],
               expected_version=version_match.group(1),
               expected_tool_count=45,
           )
