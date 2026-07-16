@@ -6,7 +6,6 @@ cross-modal consciousness resonance in Noosphere.
 """
 
 import pytest
-import math
 
 
 class TestVectorStore:
@@ -144,6 +143,20 @@ class TestVectorStore:
         vs.add_vector("doc:1", [1.0, 0.0], metadata={"payload": {}})
         results = vs.search([0.0, 0.0])
         assert results == []
+
+    def test_standard_library_fallback_without_numpy(self, monkeypatch):
+        """Lightweight installs retain cosine search without NumPy."""
+        from noosphere.engine import vector_store
+
+        monkeypatch.setattr(vector_store, "_get_numpy", lambda: None)
+        vs = vector_store.VectorStore()
+        vs.add_vector("close", [1.0, 0.0], metadata={"payload": {}})
+        vs.add_vector("far", [0.0, 1.0], metadata={"payload": {}})
+
+        results = vs.search([1.0, 0.0], min_similarity=0.0)
+
+        assert [doc_id for _, doc_id, _ in results] == ["close", "far"]
+        assert results[0][0] == pytest.approx(1.0)
 
     def test_load_from_payloads(self):
         """load_from_payloads should extract embeddings from issues and files."""

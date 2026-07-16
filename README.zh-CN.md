@@ -76,9 +76,16 @@ uvx --from noosphere-mcp noosphere-validate public-artifact-runtime-smoke-gate
 | 终端只读体验 | 零配置 | `uvx --from noosphere-mcp noosphere-query "你的报错"` |
 | 独立验证 | 隔离的确定性夹具 | `uvx --from noosphere-mcp noosphere-validate public-artifact-runtime-smoke-gate` |
 
+默认 MCP 安装刻意保持轻量；未安装本地语义依赖时自动使用 BM25。只有需要本地多语言
+混合语义排序时，才显式启用可选模型：
+
+```bash
+uvx --from 'noosphere-mcp[semantic]' noosphere-mcp
+```
+
 > [!IMPORTANT]
-> `v0.8.1` 新增首个零配置独立验证夹具，同时保留统一实时注册表和匿名只读查询：匿名模式读取仓库内的规范公共索引；认证模式继续
-> 查询更新的 Issues + 永久文件。所有写操作始终要求 GitHub 身份认证。
+> `v0.8.2` 将本地语义模型改为可选依赖，固定稳定的 MCP SDK 1.x 边界，并要求每次公开发布都在干净安装环境完成真实匿名 `initialize + tools/list` 握手，因此默认运行时可被 Glama 等目录快速扫描。首个零配置独立验证夹具、统一实时注册表和匿名只读查询均保留：匿名模式读取仓库内的规范公共索引；认证模式继续
+> 查询更新的 Issues + 永久文件。需要本地多语言向量排序时安装 `semantic` extra，否则自动降级为 BM25。所有写操作始终要求 GitHub 身份认证。
 
 ## 记忆如何进化成 Skill
 

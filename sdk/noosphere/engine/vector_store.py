@@ -10,6 +10,7 @@ No external vector database required — GitHub is the database.
 from __future__ import annotations
 
 import logging
+import math
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -41,7 +42,8 @@ class VectorStore:
     - Vectors are stored as JSON arrays in GitHub repo files (no external DB)
     - CI computes embeddings via Gemini API during consciousness promotion
     - MCP loads all vectors into memory on startup for sub-millisecond search
-    - Graceful degradation: if numpy unavailable or no vectors, returns empty
+    - NumPy accelerates larger indexes; the standard-library path preserves
+      exact cosine search for lightweight installations
     """
 
     def __init__(self):
@@ -58,8 +60,8 @@ class VectorStore:
 
     @property
     def available(self) -> bool:
-        """Whether vector search is available (numpy installed + vectors loaded)."""
-        return _get_numpy() is not None and self.size > 0
+        """Whether vector search has vectors loaded."""
+        return self.size > 0
 
     def clear(self) -> None:
         """Clear all stored vectors."""
@@ -154,19 +156,32 @@ class VectorStore:
         return loaded
 
     def _build_matrix(self) -> None:
-        """Build the NumPy matrix from raw vectors (lazy, only when needed)."""
-        np = _get_numpy()
-        if np is None or not self._vectors:
+        """Build a normalized search matrix lazily."""
+        if not self._vectors:
             self._matrix = None
             return
 
+        np = _get_numpy()
+
         try:
-            self._matrix = np.array(self._vectors, dtype=np.float32)
-            # L2 normalize for cosine similarity via dot product
-            norms = np.linalg.norm(self._matrix, axis=1, keepdims=True)
-            # Avoid division by zero
-            norms = np.where(norms == 0, 1, norms)
-            self._matrix = self._matrix / norms
+            if np is not None:
+                self._matrix = np.array(self._vectors, dtype=np.float32)
+                # L2 normalize for cosine similarity via dot product
+                norms = np.linalg.norm(self._matrix, axis=1, keepdims=True)
+                # Avoid division by zero
+                norms = np.where(norms == 0, 1, norms)
+                self._matrix = self._matrix / norms
+            else:
+                dimensions = {len(vector) for vector in self._vectors}
+                if len(dimensions) != 1:
+                    raise ValueError("all stored vectors must have the same dimension")
+                self._matrix = []
+                for vector in self._vectors:
+                    norm = math.sqrt(math.fsum(float(value) ** 2 for value in vector))
+                    if norm == 0:
+                        self._matrix.append([0.0 for _ in vector])
+                    else:
+                        self._matrix.append([float(value) / norm for value in vector])
             self._dirty = False
         except Exception as e:
             logger.warning(f"VectorStore: failed to build matrix: {e}")
@@ -194,8 +209,7 @@ class VectorStore:
         Returns:
             List of (similarity_score, doc_id, metadata) tuples, sorted by score desc
         """
-        np = _get_numpy()
-        if np is None or not self._vectors:
+        if not self._vectors:
             return []
 
         if self._dirty or self._matrix is None:
@@ -205,19 +219,44 @@ class VectorStore:
             return []
 
         try:
-            # Normalize query vector
-            q = np.array(query_vector, dtype=np.float32)
-            q_norm = np.linalg.norm(q)
-            if q_norm == 0:
-                return []
-            q = q / q_norm
-
-            # Compute cosine similarities (dot product of normalized vectors)
-            similarities = self._matrix @ q
+            np = _get_numpy()
+            if np is not None:
+                q = np.array(query_vector, dtype=np.float32)
+                q_norm = np.linalg.norm(q)
+                if q_norm == 0:
+                    return []
+                q = q / q_norm
+                similarities = self._matrix @ q
+                ranked_indices = np.argsort(similarities)[::-1]
+            else:
+                if len(query_vector) != len(self._matrix[0]):
+                    return []
+                q_norm = math.sqrt(
+                    math.fsum(float(value) ** 2 for value in query_vector)
+                )
+                if q_norm == 0:
+                    return []
+                normalized_query = [
+                    float(value) / q_norm for value in query_vector
+                ]
+                similarities = [
+                    math.fsum(
+                        stored * query
+                        for stored, query in zip(
+                            vector, normalized_query, strict=True
+                        )
+                    )
+                    for vector in self._matrix
+                ]
+                ranked_indices = sorted(
+                    range(len(similarities)),
+                    key=similarities.__getitem__,
+                    reverse=True,
+                )
 
             # Get top candidates (more than top_k to allow for filtering)
             candidate_count = min(len(similarities), top_k * 3)
-            top_indices = np.argsort(similarities)[::-1][:candidate_count]
+            top_indices = ranked_indices[:candidate_count]
 
             results = []
             for idx in top_indices:

@@ -85,10 +85,19 @@ and the matched historical Issue gets a backlink comment.
 | Terminal, read-only | Zero configuration | `uvx --from noosphere-mcp noosphere-query "your error"` |
 | Independent validation | Isolated deterministic fixture | `uvx --from noosphere-mcp noosphere-validate public-artifact-runtime-smoke-gate` |
 
+The default MCP install is intentionally lightweight and uses BM25 when local semantic
+dependencies are absent. Enable the optional multilingual embedding model only when you
+need local hybrid semantic ranking:
+
+```bash
+uvx --from 'noosphere-mcp[semantic]' noosphere-mcp
+```
+
 > [!IMPORTANT]
-> Version `v0.8.1` adds the first zero-setup independent validation kit while retaining the unified live registry and anonymous read-only consultation. Anonymous queries use
+> Version `v0.8.2` keeps the default MCP runtime scanner-friendly by making the local semantic model optional, pins the stable MCP SDK 1.x boundary, and verifies every public release with a real anonymous `initialize + tools/list` handshake. It retains the zero-setup validation kit, unified live registry, and anonymous read-only consultation. Anonymous queries use
 > the repository's canonical public index; authenticated sessions retain the fresher Issues + permanent
-> file search path. Write operations always require GitHub authentication.
+> file search path. Install the `semantic` extra for local multilingual vector ranking;
+> otherwise search degrades to BM25. Write operations always require GitHub authentication.
 
 ## How memory becomes a Skill
 
@@ -841,7 +850,7 @@ Unlike the old world, the Community of Consciousness continuously evolves. When 
 | `uvx` / `npx` (Recommended) | ⚡ **Auto Evolve** | Just restart the IDE / MCP client. `uvx` automatically pulls the latest version on launch |
 | `pip install` (Manual) | 🔧 Manual Upgrade | Execute `pip install --upgrade noosphere-mcp`, then restart IDE |
 
-Maintainer release path for the unified live registry: publish a semantic GitHub Release such as `v0.8.1` from the intended `main` commit. The single `release.published` trigger runs `.github/workflows/publish-pypi.yml`, which builds `noosphere-mcp` with SDK, workflow, validation-kit, and shared Skill supply-chain tests, then publishes through PyPI Trusted Publishing/OIDC without a stored `PYPI_TOKEN`; after the PyPI install verifier passes, it dispatches `.github/workflows/deploy-pages.yml` on `main` so GitHub Pages refreshes the public evidence and Skill indexes. Do not push the release tag separately: creating a GitHub Release also creates its tag, and two configured triggers would race to publish the same immutable PyPI version. After PyPI shows `0.8.1`, `uvx noosphere-mcp`, `uvx --from noosphere-mcp noosphere-query "your error"`, `uvx --from noosphere-mcp noosphere-validate public-artifact-runtime-smoke-gate`, and `pip install --upgrade noosphere-mcp` deliver the 45 MCP tools, 13 live Skill registry entries, zero-configuration read-only query, and the deterministic independent-validation path.
+Maintainer release path for the unified live registry: publish a semantic GitHub Release such as `v0.8.2` from the intended `main` commit. The single `release.published` trigger runs `.github/workflows/publish-pypi.yml`, which builds `noosphere-mcp` with SDK, workflow, validation-kit, and shared Skill supply-chain tests, then publishes through PyPI Trusted Publishing/OIDC without a stored `PYPI_TOKEN`; after the PyPI verifier performs a real anonymous `initialize + tools/list` handshake against a clean installed runtime, it dispatches `.github/workflows/deploy-pages.yml` on `main` so GitHub Pages refreshes the public evidence and Skill indexes. Do not push the release tag separately: creating a GitHub Release also creates its tag, and two configured triggers would race to publish the same immutable PyPI version. After PyPI shows `0.8.2`, `uvx noosphere-mcp`, `uvx --from noosphere-mcp noosphere-query "your error"`, `uvx --from noosphere-mcp noosphere-validate public-artifact-runtime-smoke-gate`, and `pip install --upgrade noosphere-mcp` deliver the 45 MCP tools, 13 live Skill registry entries, zero-configuration read-only query, and the deterministic independent-validation path.
 
 > 💡 **How to check**: Look at your MCP config. If `command` is `"uvx"`, you are in Auto Evolve mode; if `"python"`, you are in Manual mode.
 >
