@@ -2,6 +2,15 @@
 
 Last verified: 2026-07-16 (Asia/Shanghai)
 
+## Glama MCP Directory Recovery
+
+- Glama's public server record was stale and unhealthy at diagnosis time: its API returned `tools: []`, treated `GITHUB_TOKEN` and `NOOSPHERE_REPO` as required, and the rendered schema still exposed only three legacy tools. The repository `glama.json` remains valid against Glama's current schema, so metadata syntax was not the failure.
+- The failure was reproduced at the public-artifact boundary. A fresh `noosphere-mcp==0.8.1` environment installed 64 packages including Torch, Transformers, SciPy, NumPy, and Sentence Transformers; cold import took 72.67 seconds and a complete MCP handshake still had not returned after 244 seconds. Reusing the installed environment completed `initialize + tools/list` in 0.81 seconds and returned all 45 tools, proving the server contract was healthy but the directory scanner's cold-start budget was exceeded.
+- Release candidate `0.8.2` moves the local Sentence Transformers stack behind the `semantic` extra and keeps the default install on `mcp>=1.27,<2` plus `httpx`. Precomputed cross-modal vector search remains available without NumPy through an exact standard-library cosine fallback; installing the extra retains NumPy acceleration and local multilingual embedding generation.
+- FastMCP 1.x is explicitly bound to the Noosphere package version so `initialize.serverInfo.version` no longer reports the MCP SDK version. The PyPI post-publish verifier now creates a second clean environment, installs the exact public artifact with dependencies, removes optional GitHub credentials, and requires a real `initialize + tools/list` response with the exact release version and 45 tools within 30 seconds.
+- Local candidate verification passed: 206 SDK tests, 25 repository script tests, 93 Node supply-chain tests, and focused plus critical Ruff checks. A newly built `0.8.2` Wheel installed 34 lightweight distributions with none of `torch`, `transformers`, `sentence-transformers`, `scipy`, or `numpy`; its anonymous MCP handshake returned 45 tools in 0.86 seconds and reported version `0.8.2`.
+- Remaining external steps are merge, GitHub Release/PyPI publication of `0.8.2`, successful execution of the strengthened public-artifact verifier, then Glama admin `Sync Server` or the next daily sync. Completion requires the public Glama API to expose 45 tools, optional authentication, and current metadata rather than merely accepting the repository configuration.
+
 ## Living Skill #001 Validation Kit
 
 - PR #43 merged the first zero-setup independent validation command into `main` as commit `0b9c8e4b3cabe18fbd53c91be9a49351a46115a6`: `uvx --from noosphere-mcp noosphere-validate public-artifact-runtime-smoke-gate`.
@@ -53,7 +62,7 @@ Last verified: 2026-07-16 (Asia/Shanghai)
 - PR #32 fixed the anonymous startup regression and was merged as commit `6da816ee69c8c621ba8b84044f9be16361332df5`. Missing credentials now enter degraded anonymous read-only mode, while an explicitly configured invalid token remains fatal.
 - Tag `v0.7.1` was published successfully through Trusted Publishing run `29085299535`; build, OIDC publish, exact PyPI install verification, and Pages refresh dispatch all passed.
 - A public-index-only environment reported `noosphere.__version__ == 0.7.1`. A separate exact-version `uvx --from noosphere-mcp==0.7.1 noosphere-mcp` process with `GITHUB_TOKEN` removed completed the MCP handshake and returned all 45 tools, including all five dynamic shared Skill tools.
-- MCP `serverInfo.version` currently reports the underlying `mcp` implementation version because FastMCP supplies its framework default. Distribution version verification is independent and correct; explicitly advertising the Noosphere package version is a non-blocking metadata follow-up.
+- Published versions through `0.8.1` report the underlying `mcp` implementation version because FastMCP supplies its framework default. Release candidate `0.8.2` explicitly advertises the Noosphere package version and verifies it through a real public-artifact MCP handshake.
 - The 13 foundational Skills are live in `shared_skills/registry.json` revision 1 and distributed by `noosphere-mcp==0.8.0`.
 - Issue #33 is the public coordination seed for the first real Skill: Android GitHub Device Flow browser handoff and polling recovery. It is explicitly excluded from source evidence and asks two independent developers to submit their own verified records.
 - Three maintainer-authored Skill Seeds were uploaded through the published `noosphere-mcp==0.7.1` `upload_consciousness` tool: R3F dense node picking (#35), dynamic shared Skill supply chain (#36), and public-release runtime smoke gating (#37). A second uploader run detected all three stable markers and created no duplicates.
@@ -126,4 +135,4 @@ Last verified: 2026-07-16 (Asia/Shanghai)
 
 1. Recruit independent developers through Issue #33 and Seeds #35-#37. A second GitHub publisher must submit separately reproduced evidence before a Seed or targeted update can become independently reproduced.
 2. Demonstrate one third-party Agent successfully reusing a Live Skill and record the exact-version outcome before claiming `outcome-proven`.
-3. Handle MCP implementation-version metadata, the existing Vite chunk warning, npm dependency advisories, and GitHub Actions Node runtime deprecation in separate maintenance work; none blocks the unified registry release.
+3. Handle the existing Vite chunk warning, npm dependency advisories, and GitHub Actions Node runtime deprecation in separate maintenance work; none blocks the unified registry release.

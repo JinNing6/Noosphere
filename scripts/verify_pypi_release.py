@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -26,6 +27,7 @@ REQUIRED_GROWTH_TOOLS = [
     "growth_flywheel",
     "launch_preflight",
 ]
+MCP_PROBE_PROTOCOL_VERSION = "2024-11-05"
 
 
 def read_project_version(pyproject_path: Path = REPO_ROOT / "sdk" / "pyproject.toml") -> str:
@@ -134,6 +136,169 @@ def wait_for_installable_release(
     raise RuntimeError(f"PyPI release {project}=={version} did not become pip-installable: {last_error}")
 
 
+def runtime_python_command(runtime_dir: Path) -> Path:
+    if os.name == "nt":
+        return runtime_dir / "Scripts" / "python.exe"
+    return runtime_dir / "bin" / "python"
+
+
+def runtime_console_command(runtime_dir: Path) -> Path:
+    if os.name == "nt":
+        return runtime_dir / "Scripts" / "noosphere-mcp.exe"
+    return runtime_dir / "bin" / "noosphere-mcp"
+
+
+def install_runtime_environment(
+    project: str,
+    version: str,
+    runtime_dir: Path,
+    python_executable: str = sys.executable,
+) -> None:
+    subprocess.run(
+        [python_executable, "-m", "venv", str(runtime_dir)],
+        check=True,
+    )
+    subprocess.run(
+        [
+            str(runtime_python_command(runtime_dir)),
+            "-m",
+            "pip",
+            "install",
+            "--disable-pip-version-check",
+            "--no-cache-dir",
+            f"{project}=={version}",
+        ],
+        check=True,
+    )
+
+
+def build_mcp_probe_input() -> str:
+    messages = [
+        {
+            "jsonrpc": "2.0",
+            "id": 1,
+            "method": "initialize",
+            "params": {
+                "protocolVersion": MCP_PROBE_PROTOCOL_VERSION,
+                "capabilities": {},
+                "clientInfo": {
+                    "name": "noosphere-release-verifier",
+                    "version": "1.0",
+                },
+            },
+        },
+        {
+            "jsonrpc": "2.0",
+            "method": "notifications/initialized",
+            "params": {},
+        },
+        {
+            "jsonrpc": "2.0",
+            "id": 2,
+            "method": "tools/list",
+            "params": {},
+        },
+    ]
+    return "".join(json.dumps(message, separators=(",", ":")) + "\n" for message in messages)
+
+
+def parse_mcp_probe_output(
+    stdout: str,
+    *,
+    expected_version: str,
+    expected_tool_count: int,
+) -> dict:
+    payloads: list[dict] = []
+    for line in stdout.splitlines():
+        try:
+            payload = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if isinstance(payload, dict):
+            payloads.append(payload)
+
+    initialize = next((payload for payload in payloads if payload.get("id") == 1), None)
+    if not initialize:
+        raise RuntimeError("Published MCP runtime did not return an initialize response")
+    if "error" in initialize:
+        raise RuntimeError(f"Published MCP initialize failed: {initialize['error']}")
+
+    server_info = initialize.get("result", {}).get("serverInfo", {})
+    server_version = str(server_info.get("version", ""))
+    if server_version != expected_version:
+        raise RuntimeError(
+            f"Published MCP serverInfo.version {server_version!r}, expected {expected_version!r}"
+        )
+
+    tool_response = next((payload for payload in payloads if payload.get("id") == 2), None)
+    if not tool_response:
+        raise RuntimeError("Published MCP runtime did not return a tools/list response")
+    if "error" in tool_response:
+        raise RuntimeError(f"Published MCP tools/list failed: {tool_response['error']}")
+
+    tools = tool_response.get("result", {}).get("tools")
+    if not isinstance(tools, list):
+        raise RuntimeError("Published MCP tools/list response did not contain a tools array")
+    if len(tools) != expected_tool_count:
+        raise RuntimeError(
+            f"Published MCP runtime exposed {len(tools)} tools, expected {expected_tool_count}"
+        )
+
+    return {
+        "server_version": server_version,
+        "runtime_tool_count": len(tools),
+    }
+
+
+def probe_installed_mcp_runtime(
+    runtime_dir: Path,
+    *,
+    expected_version: str,
+    expected_tool_count: int,
+    timeout_seconds: float = 30.0,
+) -> dict:
+    command = runtime_console_command(runtime_dir)
+    if not command.is_file():
+        raise RuntimeError(f"Published MCP console entry point is missing: {command}")
+
+    env = os.environ.copy()
+    env.pop("GITHUB_TOKEN", None)
+    env.pop("GH_TOKEN", None)
+
+    started = time.monotonic()
+    try:
+        completed = subprocess.run(
+            [str(command)],
+            input=build_mcp_probe_input(),
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            env=env,
+            timeout=timeout_seconds,
+            check=False,
+        )
+    except subprocess.TimeoutExpired as exc:
+        stderr = exc.stderr if isinstance(exc.stderr, str) else ""
+        raise RuntimeError(
+            f"Published MCP initialize + tools/list timed out after {timeout_seconds:.1f}s: "
+            f"{stderr[-500:]}"
+        ) from exc
+
+    if completed.returncode != 0:
+        raise RuntimeError(
+            f"Published MCP runtime exited with {completed.returncode}: {completed.stderr[-1000:]}"
+        )
+
+    result = parse_mcp_probe_output(
+        completed.stdout,
+        expected_version=expected_version,
+        expected_tool_count=expected_tool_count,
+    )
+    result["runtime_seconds"] = round(time.monotonic() - started, 3)
+    return result
+
+
 def inspect_installed_release(
     target_dir: Path,
     expected_version: str,
@@ -211,8 +376,17 @@ def verify_pypi_release(project: str, version: str, attempts: int, delay_seconds
 
     temp_dir = Path(tempfile.mkdtemp(prefix="noosphere-pypi-verify-"))
     try:
-        wait_for_installable_release(project, version, temp_dir, attempts, delay_seconds)
-        installed = inspect_installed_release(temp_dir, version, expected_tool_count=expected_tool_count)
+        inspect_dir = temp_dir / "inspect"
+        wait_for_installable_release(project, version, inspect_dir, attempts, delay_seconds)
+        installed = inspect_installed_release(inspect_dir, version, expected_tool_count=expected_tool_count)
+
+        runtime_dir = temp_dir / "runtime"
+        install_runtime_environment(project, version, runtime_dir)
+        runtime = probe_installed_mcp_runtime(
+            runtime_dir,
+            expected_version=version,
+            expected_tool_count=expected_tool_count,
+        )
     finally:
         shutil.rmtree(temp_dir, ignore_errors=True)
 
@@ -222,6 +396,7 @@ def verify_pypi_release(project: str, version: str, attempts: int, delay_seconds
         "files": filenames,
         "latest_files": latest_filenames,
         **installed,
+        **runtime,
     }
 
 
@@ -240,7 +415,8 @@ def main(argv: list[str] | None = None) -> int:
     result = verify_pypi_release(args.project, args.version, args.attempts, args.delay_seconds, args.tool_count)
     print(
         f"Verified {result['project']}=={result['version']}: "
-        f"{result['tool_count']} MCP tools, growth ledger tools, noosphere-query and "
+        f"{result['runtime_tool_count']} MCP tools via initialize + tools/list in "
+        f"{result['runtime_seconds']:.3f}s; growth ledger tools, noosphere-query and "
         "noosphere-validate present."
     )
     return 0

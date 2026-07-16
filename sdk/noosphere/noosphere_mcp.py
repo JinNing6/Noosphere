@@ -48,6 +48,7 @@ from urllib.parse import parse_qsl, urlsplit
 import httpx
 from mcp.server.fastmcp import FastMCP
 
+from noosphere import __version__
 from noosphere.engine.memory_integrity import (
     canonicalize_permanent_entries,
     parse_tombstoned_issue_numbers,
@@ -1154,6 +1155,10 @@ mcp = FastMCP(
         "so that future Agents can understand the scenario in which this thought was born."
     ),
 )
+# FastMCP 1.x otherwise falls back to the SDK distribution version in
+# initialize.serverInfo.version. Directory scanners and clients need the
+# Noosphere release version that matches server.json and PyPI.
+mcp._mcp_server.version = __version__
 
 
 # ────────────────── Text Utilities ──────────────────

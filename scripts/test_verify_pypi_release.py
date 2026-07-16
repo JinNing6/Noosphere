@@ -1,13 +1,18 @@
 import tempfile
 import unittest
 import subprocess
+import json
 from pathlib import Path
 from unittest.mock import ANY, patch
 
 from scripts.verify_pypi_release import (
     REQUIRED_GROWTH_TOOLS,
+    build_mcp_probe_input,
     inspect_installed_release,
     install_release_to_target,
+    parse_mcp_probe_output,
+    probe_installed_mcp_runtime,
+    runtime_console_command,
     validate_release_json,
     verify_pypi_release,
     wait_for_installable_release,
@@ -90,6 +95,125 @@ class VerifyPypiReleaseTests(unittest.TestCase):
         self.assertIn("noosphere-mcp==0.6.8", command)
         run.assert_called_once_with(command, check=True)
 
+    def test_runtime_console_command_is_platform_aware(self):
+        runtime_dir = Path("runtime")
+
+        with patch("scripts.verify_pypi_release.os.name", "nt"):
+            self.assertEqual(
+                runtime_console_command(runtime_dir),
+                runtime_dir / "Scripts" / "noosphere-mcp.exe",
+            )
+
+        with patch("scripts.verify_pypi_release.os.name", "posix"):
+            self.assertEqual(
+                runtime_console_command(runtime_dir),
+                runtime_dir / "bin" / "noosphere-mcp",
+            )
+
+    def test_mcp_probe_input_initializes_before_listing_tools(self):
+        messages = [json.loads(line) for line in build_mcp_probe_input().splitlines()]
+
+        self.assertEqual(messages[0]["method"], "initialize")
+        self.assertEqual(messages[1]["method"], "notifications/initialized")
+        self.assertEqual(messages[2]["method"], "tools/list")
+
+    def test_parse_mcp_probe_output_requires_version_and_exact_tool_count(self):
+        stdout = "\n".join(
+            [
+                json.dumps(
+                    {
+                        "jsonrpc": "2.0",
+                        "id": 1,
+                        "result": {
+                            "serverInfo": {"name": "noosphere", "version": "0.8.2"},
+                        },
+                    }
+                ),
+                json.dumps(
+                    {
+                        "jsonrpc": "2.0",
+                        "id": 2,
+                        "result": {
+                            "tools": [{"name": f"tool_{index}"} for index in range(45)],
+                        },
+                    }
+                ),
+            ]
+        )
+
+        result = parse_mcp_probe_output(stdout, expected_version="0.8.2", expected_tool_count=45)
+
+        self.assertEqual(result["server_version"], "0.8.2")
+        self.assertEqual(result["runtime_tool_count"], 45)
+
+    def test_parse_mcp_probe_output_rejects_missing_tool_response(self):
+        stdout = json.dumps(
+            {
+                "jsonrpc": "2.0",
+                "id": 1,
+                "result": {"serverInfo": {"name": "noosphere", "version": "0.8.2"}},
+            }
+        )
+
+        with self.assertRaisesRegex(RuntimeError, "tools/list"):
+            parse_mcp_probe_output(stdout, expected_version="0.8.2", expected_tool_count=45)
+
+    def test_probe_installed_runtime_uses_anonymous_environment_and_timeout(self):
+        completed = subprocess.CompletedProcess(
+            ["noosphere-mcp"],
+            0,
+            stdout="\n".join(
+                [
+                    json.dumps(
+                        {
+                            "jsonrpc": "2.0",
+                            "id": 1,
+                            "result": {
+                                "serverInfo": {"name": "noosphere", "version": "0.8.2"},
+                            },
+                        }
+                    ),
+                    json.dumps(
+                        {
+                            "jsonrpc": "2.0",
+                            "id": 2,
+                            "result": {
+                                "tools": [{"name": f"tool_{index}"} for index in range(45)],
+                            },
+                        }
+                    ),
+                ]
+            ),
+            stderr="",
+        )
+
+        with tempfile.TemporaryDirectory() as tmp:
+            runtime_dir = Path(tmp)
+            command = runtime_console_command(runtime_dir)
+            command.parent.mkdir(parents=True)
+            command.touch()
+
+            with (
+                patch("scripts.verify_pypi_release.subprocess.run", return_value=completed) as run,
+                patch.dict(
+                    "scripts.verify_pypi_release.os.environ",
+                    {"GITHUB_TOKEN": "secret", "GH_TOKEN": "secret", "PATH": "test-path"},
+                    clear=True,
+                ),
+            ):
+                result = probe_installed_mcp_runtime(
+                    runtime_dir,
+                    expected_version="0.8.2",
+                    expected_tool_count=45,
+                    timeout_seconds=30,
+                )
+
+        kwargs = run.call_args.kwargs
+        self.assertNotIn("GITHUB_TOKEN", kwargs["env"])
+        self.assertNotIn("GH_TOKEN", kwargs["env"])
+        self.assertEqual(kwargs["timeout"], 30)
+        self.assertEqual(result["runtime_tool_count"], 45)
+
     def test_wait_for_pypi_project_latest_requires_latest_version(self):
         stale_json = {
             "info": {"version": "0.6.4"},
@@ -138,12 +262,15 @@ class VerifyPypiReleaseTests(unittest.TestCase):
             ],
         }
         installed = {"version": "0.6.8", "tool_count": 40, "growth_tools": REQUIRED_GROWTH_TOOLS}
+        runtime = {"server_version": "0.6.8", "runtime_tool_count": 40, "runtime_seconds": 1.5}
 
         with (
             patch("scripts.verify_pypi_release.wait_for_pypi_release", return_value=release_json) as wait,
             patch("scripts.verify_pypi_release.wait_for_pypi_project_latest", return_value=release_json) as wait_latest,
             patch("scripts.verify_pypi_release.wait_for_installable_release") as install,
             patch("scripts.verify_pypi_release.inspect_installed_release", return_value=installed) as inspect,
+            patch("scripts.verify_pypi_release.install_runtime_environment") as install_runtime,
+            patch("scripts.verify_pypi_release.probe_installed_mcp_runtime", return_value=runtime) as probe_runtime,
         ):
             result = verify_pypi_release("noosphere-mcp", "0.6.8", attempts=1, delay_seconds=0, expected_tool_count=40)
 
@@ -151,8 +278,11 @@ class VerifyPypiReleaseTests(unittest.TestCase):
         wait_latest.assert_called_once_with("noosphere-mcp", "0.6.8", 1, 0)
         install.assert_called_once_with("noosphere-mcp", "0.6.8", ANY, 1, 0)
         inspect.assert_called_once()
+        install_runtime.assert_called_once()
+        probe_runtime.assert_called_once()
         self.assertEqual(result["version"], "0.6.8")
         self.assertEqual(result["tool_count"], 40)
+        self.assertEqual(result["runtime_tool_count"], 40)
         self.assertEqual(result["latest_files"], result["files"])
 
 

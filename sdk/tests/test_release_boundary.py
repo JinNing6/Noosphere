@@ -57,6 +57,25 @@ def test_release_exposes_deterministic_living_skill_validation_command():
     assert (SDK_ROOT / "noosphere" / "validation_kits" / "public_artifact_runtime_smoke_gate.py").is_file()
 
 
+def test_default_runtime_excludes_optional_semantic_model_stack():
+    project = _project_metadata()["project"]
+
+    assert project["dependencies"] == [
+        "mcp>=1.27,<2",
+        "httpx>=0.28.0",
+    ]
+    assert project["optional-dependencies"]["semantic"] == [
+        "sentence-transformers>=2.2.0",
+        "numpy>=1.24.0",
+    ]
+
+
+def test_mcp_handshake_advertises_noosphere_distribution_version():
+    from noosphere.noosphere_mcp import mcp
+
+    assert mcp._mcp_server.version == _package_version()
+
+
 def test_publish_workflow_uses_single_release_trigger_with_trusted_publishing_quality_gates():
     workflow = (REPO_ROOT / ".github" / "workflows" / "publish-pypi.yml").read_text(encoding="utf-8")
 
@@ -82,6 +101,7 @@ def test_publish_workflow_uses_single_release_trigger_with_trusted_publishing_qu
     assert "verify-pypi:" in workflow
     assert "needs: publish-pypi" in workflow
     assert "python scripts/verify_pypi_release.py --tool-count 45" in workflow
+    assert "initialize + tools/list" in workflow
     assert "refresh-pages-proof:" in workflow
     assert "needs: verify-pypi" in workflow
     assert "actions: write" in workflow
