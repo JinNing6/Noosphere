@@ -34,6 +34,63 @@ test("extracts the canonical MCP marker payload", () => {
   assert.deepEqual(result.payload, validPayload);
 });
 
+test("extracts canonical evidence pasted through the dedicated Skill validation form", () => {
+  const validationPayload = {
+    ...validPayload,
+    target_skill: "public-artifact-runtime-smoke-gate",
+    evidence: {
+      symptom: "Source invocation passes while the installed artifact entry point fails.",
+      root_cause: "The built artifact omitted the runtime module.",
+      fix: "Install and execute the exact built artifact in an isolated environment.",
+      verification: "Failing artifact exited 1 and the fixed artifact exited 0.",
+      applies_when: "A packaged CLI may differ from its source tree.",
+      avoid_when: "The exact artifact was not resolved.",
+      test_commands: [
+        "uvx --from noosphere-mcp noosphere-validate public-artifact-runtime-smoke-gate",
+      ],
+      source_urls: [
+        "https://github.com/JinNing6/Noosphere/issues/37",
+        "https://github.com/JinNing6/Noosphere/tree/main/examples/reproductions/public-artifact-runtime-smoke-gate",
+      ],
+    },
+  };
+  const body = [
+    "### Generated validation evidence",
+    "",
+    "```markdown",
+    "<!-- CONSCIOUSNESS_PAYLOAD_START -->",
+    "```json",
+    JSON.stringify(validationPayload, null, 2),
+    "```",
+    "<!-- CONSCIOUSNESS_PAYLOAD_END -->",
+    "```",
+    "",
+    "### Independent validation declaration",
+    "",
+    "- [x] I ran the command independently.",
+  ].join("\n");
+
+  const result = extractConsciousnessPayload(body);
+
+  assert.equal(result.source, "mcp-marker");
+  assert.deepEqual(result.payload, validationPayload);
+});
+
+test("dedicated Skill validation form exposes one command and the canonical evidence field", () => {
+  const formPath = path.join(__dirname, "..", "ISSUE_TEMPLATE", "validate-skill.yml");
+  const form = fs.readFileSync(formPath, "utf8");
+
+  assert.match(form, /name:\s*Validate a reusable Agent fix/);
+  assert.match(form, /labels:\s*\r?\n\s*- consciousness\s*\r?\n\s*- ephemeral/);
+  assert.match(
+    form,
+    /uvx --from noosphere-mcp noosphere-validate public-artifact-runtime-smoke-gate/
+  );
+  assert.match(form, /id:\s*generated_validation_evidence/);
+  assert.match(form, /label:\s*Generated validation evidence/);
+  assert.match(form, /id:\s*declaration/);
+});
+
 test("extracts simplified external payload issues", () => {
   const body = [
     "## Consciousness Payload",

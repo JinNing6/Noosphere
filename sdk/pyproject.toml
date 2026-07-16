@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "noosphere-mcp"
-version = "0.8.0"
+version = "0.8.1"
 description = "🧠 Noosphere — 集体意识网络 MCP Server，直连 GitHub 意识仓库"
 readme = "../README.md"
 requires-python = ">=3.10"
@@ -51,6 +51,7 @@ Issues = "https://github.com/JinNing6/Noosphere/issues"
 [project.scripts]
 noosphere-mcp = "noosphere.server:main"
 noosphere-query = "noosphere.query_cli:main"
+noosphere-validate = "noosphere.validation_cli:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["noosphere"]

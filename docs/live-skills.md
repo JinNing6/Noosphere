@@ -28,6 +28,24 @@ npx skills add JinNing6/Noosphere --skill debug-async-ui
 
 MCP clients can call `list_shared_skills`, `get_shared_skill`, and `check_skill_updates`. Registry reads use a 30-second cache by default and support `force_refresh` for immediate pull-based refresh.
 
+## Validate Living Skill #001
+
+The first independent-validation sprint targets `public-artifact-runtime-smoke-gate`:
+
+```bash
+uvx --from noosphere-mcp noosphere-validate public-artifact-runtime-smoke-gate
+```
+
+The command builds deterministic failing and fixed Wheels, installs both through the real
+console-entry boundary in an isolated environment, and emits canonical evidence with
+artifact digests. It requires no user project, GitHub token, MCP configuration, or
+package-index account. Submit the complete generated block through the
+[dedicated validation form](https://github.com/JinNing6/Noosphere/issues/new?template=validate-skill.yml).
+
+One submission remains a Seed-level evidence record. The existing supply-chain gate still
+requires two independent GitHub publishers with claim-level agreement and shared public
+verification before it can create a reviewable Skill Candidate.
+
 ## Catalog
 
 | Domain | Skill | Use it when |

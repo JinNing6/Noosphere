@@ -144,14 +144,26 @@ def inspect_installed_release(
     init_path = package_root / "__init__.py"
     mcp_path = package_root / "noosphere_mcp.py"
     query_cli_path = package_root / "query_cli.py"
-    if not init_path.exists() or not mcp_path.exists() or not query_cli_path.exists():
+    validation_cli_path = package_root / "validation_cli.py"
+    validation_kit_path = package_root / "validation_kits" / "public_artifact_runtime_smoke_gate.py"
+    entry_points_path = target_dir / f"noosphere_mcp-{expected_version}.dist-info" / "entry_points.txt"
+    required_paths = [
+        init_path,
+        mcp_path,
+        query_cli_path,
+        validation_cli_path,
+        validation_kit_path,
+        entry_points_path,
+    ]
+    missing_paths = [path.relative_to(target_dir).as_posix() for path in required_paths if not path.exists()]
+    if missing_paths:
         raise RuntimeError(
-            f"Installed package is missing {package_dir}/__init__.py, "
-            f"{package_dir}/noosphere_mcp.py, or {package_dir}/query_cli.py"
+            "Installed package is missing required release files: " + ", ".join(missing_paths)
         )
 
     init_source = init_path.read_text(encoding="utf-8")
     mcp_source = mcp_path.read_text(encoding="utf-8")
+    entry_points = entry_points_path.read_text(encoding="utf-8")
 
     version_match = re.search(r'__version__\s*=\s*"([^"]+)"', init_source)
     installed_version = version_match.group(1) if version_match else ""
@@ -169,11 +181,25 @@ def inspect_installed_release(
     if missing_tools:
         raise RuntimeError(f"Installed package is missing growth tool(s): {', '.join(missing_tools)}")
 
+    required_entry_points = {
+        "noosphere-mcp = noosphere.server:main",
+        "noosphere-query = noosphere.query_cli:main",
+        "noosphere-validate = noosphere.validation_cli:main",
+    }
+    missing_entry_points = sorted(
+        entry_point for entry_point in required_entry_points if entry_point not in entry_points
+    )
+    if missing_entry_points:
+        raise RuntimeError(
+            "Installed package is missing console entry point(s): " + ", ".join(missing_entry_points)
+        )
+
     return {
         "version": installed_version,
         "tool_count": len(tool_names),
         "growth_tools": REQUIRED_GROWTH_TOOLS,
         "query_cli": "noosphere-query",
+        "validation_cli": "noosphere-validate",
     }
 
 
@@ -214,7 +240,8 @@ def main(argv: list[str] | None = None) -> int:
     result = verify_pypi_release(args.project, args.version, args.attempts, args.delay_seconds, args.tool_count)
     print(
         f"Verified {result['project']}=={result['version']}: "
-        f"{result['tool_count']} MCP tools, growth ledger tools and noosphere-query present."
+        f"{result['tool_count']} MCP tools, growth ledger tools, noosphere-query and "
+        "noosphere-validate present."
     )
     return 0
 

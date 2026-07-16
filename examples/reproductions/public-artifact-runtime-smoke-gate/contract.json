@@ -1,0 +1,10 @@
+{
+  "skill": "public-artifact-runtime-smoke-gate",
+  "distribution": "noosphere-public-artifact-fixture",
+  "entry_point": "noosphere-runtime-fixture",
+  "failing_version": "1.0.0",
+  "fixed_version": "1.0.1",
+  "expected_failure": "installed console entry point cannot import noosphere_public_artifact_fixture.__main__",
+  "expected_success": "installed console entry point reports runtime-ok and version 1.0.1",
+  "validation_command": "uvx --from noosphere-mcp noosphere-validate public-artifact-runtime-smoke-gate"
+}

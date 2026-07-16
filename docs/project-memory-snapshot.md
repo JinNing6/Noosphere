@@ -2,6 +2,16 @@
 
 Last verified: 2026-07-16 (Asia/Shanghai)
 
+## Living Skill #001 Validation Kit
+
+- Branch `codex/living-skill-validation-kit` prepares `noosphere-mcp==0.8.1` with the first zero-setup independent validation command: `uvx --from noosphere-mcp noosphere-validate public-artifact-runtime-smoke-gate`.
+- The validation kit requires Python 3.10+ and `uv`, but no repository clone, validator-owned project, GitHub token, MCP configuration, or package-index account. After the CLI itself is resolved, its reproduction installs only local deterministic fixture Wheels with package-index access disabled.
+- The fixture proves the source-versus-artifact boundary end to end: source invocation passes; a byte-deterministic Wheel exposes a console entry point while omitting its runtime module and fails after real installation; a fixed Wheel includes the module, reports exact installed version `1.0.1`, and passes through the same entry point.
+- Generated evidence contains environment, exit codes, immutable SHA-256 digests, the canonical shared test command, and two public source URLs inside the existing `CONSCIOUSNESS_PAYLOAD` markers. The dedicated `validate-skill.yml` form accepts this block and preserves the current author binding, moderation, canonical rehydration, independent-publisher, claim-agreement, and maintainer-review gates.
+- The general memory contribution form remains available as a secondary path. The README first screen now gives the deterministic Skill validation route the primary contribution CTA without removing existing upload or Share Proof flows.
+- Local release-candidate verification passed on Windows 11 with Python 3.12.11 and 3.13.5. A clean no-dependency install of the built `noosphere_mcp-0.8.1-py3-none-any.whl` exposed `noosphere-validate 0.8.1` and completed the full reproduction in 6.91 seconds. The fixture digests were stable at failing `66742deca82583b5e4530edba9235bc193245ff0a3b12766a53a06089ef02099` and fixed `d9aade68cae64234a5da2c848bbc868689e361bc41aebcd702baa23680963bef`.
+- Release state at this snapshot: `0.8.1` is a locally verified release candidate and is not yet claimed as published. Public usability must be reverified with the exact PyPI version after merge and Trusted Publishing.
+
 ## Living Skill Tree Frontend
 
 - Branch `codex/living-skill-tree-v1` replaces the frontend default route with an operational Living Skill Tree while preserving the complete existing 3D universe behind `?view=universe` and a persistent Universe navigation entry. Existing Issue, playground, and profile routes continue to resolve through the preserved universe application.
