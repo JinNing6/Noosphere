@@ -12,6 +12,14 @@ Last verified: 2026-07-17 (Asia/Shanghai)
 - PyPI publishes Wheel SHA-256 `3fdf8a14f6d9d6383054a8c5ad6156fdbfea9ec681f16a6bbdd715ef27be909a` and sdist SHA-256 `796aa6e7a7107179870c0f68c400cd44656593b2f0ab89a1aecb28b8931df030`. Local release-candidate verification also passed 208 SDK tests, 28 repository tests, 93 Node supply-chain tests, registry and migration checks, Ruff, frontend lint, production build, and Skill Tree checks.
 - External validation was deliberately removed as a launch prerequisite. The operating plan is now to use the public Skill against ten real external release failures, offer the 60-second reproducer as immediate help, and upgrade the trust level only when affected maintainers submit authenticated evidence through the existing gates.
 
+## Living Skill #001 External Proof Sprint
+
+- Issue #51 is the single public tracker for the external proof sprint. Ten active public failures were screened against the source-versus-public-artifact boundary; the board records reproduction, fix PR, maintainer response, and Noosphere Outcome separately so project activity cannot be mistaken for independent trust evidence.
+- The first target, `mattdav/okflint#2`, was reproduced from the exact public artifact with `uvx --isolated --from okflint==0.3.0 okflint --help`. The released environment installed only `okflint` and `pyyaml`, then exited 1 with `ModuleNotFoundError: No module named 'beartype'` even though the CLI imports `beartype` at runtime.
+- Upstream PR `mattdav/okflint#4` moves `beartype` from the development group into declared runtime dependencies and adds an installed-Wheel smoke gate to pull-request CI and the PyPI release workflow. The gate builds the Wheel, installs it into a fresh virtual environment without development dependencies, runs `uv pip check`, and starts the installed `okflint` entry point.
+- Local verification of the proposed upstream fix passed Ruff, mypy, 267 tests with 94% coverage, clean-Wheel metadata inspection, dependency consistency, and `okflint --help` in an isolated environment containing only `okflint`, `pyyaml`, and `beartype`.
+- The upstream maintainer has not yet confirmed or merged the fix. No independent reproduction or verified external Outcome has been added to `public-artifact-runtime-smoke-gate@1.0.0`; its trust level remains `maintainer-validated`. The next concierge target is `TSchonleber/brainctl#159` while PR #4 awaits review.
+
 ## Glama MCP Directory Recovery
 
 - Glama's public server record was stale and unhealthy at diagnosis time: its API returned `tools: []`, treated `GITHUB_TOKEN` and `NOOSPHERE_REPO` as required, and the rendered schema still exposed only three legacy tools. The repository `glama.json` remains valid against Glama's current schema, so metadata syntax was not the failure.
@@ -155,7 +163,7 @@ Last verified: 2026-07-17 (Asia/Shanghai)
 
 ## Required Deployment Steps
 
-1. Find ten public Python package, CLI, MCP server, or Agent-plugin Issues whose symptoms match source-versus-public-artifact runtime drift. Run the Skill against each case first, then offer the exact 60-second command to the affected maintainer; do not ask them to help build Noosphere before Noosphere has helped them.
+1. Continue Issue #51 from the completed ten-candidate screen: reproduce at least three failures, submit bounded upstream fixes, and record a Noosphere Outcome only after an affected maintainer or another independent identity confirms the result publicly.
 2. Upgrade `public-artifact-runtime-smoke-gate` from `maintainer-validated` only after a second GitHub publisher submits independently reproduced evidence. Claim `outcome-proven` only after an exact-version third-party Agent reuse is recorded with public evidence.
 3. Convert the first external failed or partial outcome into a reviewed immutable `1.1.0` candidate and demonstrate `check_skill_updates` plus digest-verified retrieval. This version transition, not raw Skill count, is the first proof of a Living Skill network.
 4. Complete the separate Glama admin deployment and release so its public directory record exposes the current 45-tool runtime rather than the stale legacy snapshot.
