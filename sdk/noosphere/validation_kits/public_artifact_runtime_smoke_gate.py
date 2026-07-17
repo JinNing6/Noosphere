@@ -17,10 +17,12 @@ import zipfile
 from collections.abc import Sequence
 from dataclasses import asdict, dataclass
 from pathlib import Path
+from urllib.parse import urlencode
 
 SKILL_NAME = "public-artifact-runtime-smoke-gate"
 VALIDATION_COMMAND = "uvx --from noosphere-mcp noosphere-validate public-artifact-runtime-smoke-gate"
 FORM_URL = "https://github.com/JinNing6/Noosphere/issues/new?template=validate-skill.yml"
+ISSUE_NEW_URL = "https://github.com/JinNing6/Noosphere/issues/new"
 FIXTURE_URL = (
     "https://github.com/JinNing6/Noosphere/tree/main/examples/reproductions/public-artifact-runtime-smoke-gate"
 )
@@ -360,8 +362,40 @@ def build_evidence_payload(result: ValidationResult) -> dict:
     }
 
 
+def _evidence_block(payload: dict, *, pretty: bool) -> str:
+    serialized = json.dumps(
+        payload,
+        ensure_ascii=False,
+        indent=2 if pretty else None,
+        separators=None if pretty else (",", ":"),
+    )
+    return "\n".join(
+        [
+            PAYLOAD_START,
+            "```json",
+            serialized,
+            "```",
+            PAYLOAD_END,
+        ]
+    )
+
+
+def build_submission_url(result: ValidationResult) -> str:
+    """Build a token-free GitHub Issue Form URL with canonical evidence prefilled."""
+    payload = build_evidence_payload(result)
+    query = urlencode(
+        {
+            "template": "validate-skill.yml",
+            "title": f"Skill validation: {SKILL_NAME}",
+            "generated_validation_evidence": _evidence_block(payload, pretty=False),
+        }
+    )
+    return f"{ISSUE_NEW_URL}?{query}"
+
+
 def render_evidence_markdown(result: ValidationResult) -> str:
     payload = build_evidence_payload(result)
+    submission_url = build_submission_url(result)
     return "\n".join(
         [
             "# Noosphere Skill validation",
@@ -373,15 +407,12 @@ def render_evidence_markdown(result: ValidationResult) -> str:
             f"- Failing artifact: `{result.failing_artifact_sha256}`",
             f"- Fixed artifact: `{result.fixed_artifact_sha256}`",
             "",
-            "Paste the complete block below into the **Generated validation evidence** field:",
+            "The submission link below already contains this canonical evidence block:",
             "",
-            PAYLOAD_START,
-            "```json",
-            json.dumps(payload, ensure_ascii=False, indent=2),
-            "```",
-            PAYLOAD_END,
+            _evidence_block(payload, pretty=True),
             "",
-            f"Submit: {FORM_URL}",
+            "Open the prefilled form, review the evidence, confirm the declaration, and submit:",
+            f"{submission_url}",
             "",
             "The repository workflow binds authorship to the submitting GitHub account and "
             "review-gates the evidence before it can affect a published Skill.",

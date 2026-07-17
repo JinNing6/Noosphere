@@ -14,8 +14,10 @@ from scripts.verify_pypi_release import (
     install_release_to_target,
     parse_mcp_probe_output,
     probe_installed_mcp_runtime,
+    probe_installed_validation_runtime,
     probe_mcp_subprocess,
     runtime_console_command,
+    runtime_validation_command,
     validate_release_json,
     verify_pypi_release,
     wait_for_installable_release,
@@ -125,6 +127,18 @@ class VerifyPypiReleaseTests(unittest.TestCase):
             self.assertEqual(
                 runtime_console_command(runtime_dir),
                 runtime_dir / "bin" / "noosphere-mcp",
+            )
+
+        with patch("scripts.verify_pypi_release.os.name", "nt"):
+            self.assertEqual(
+                runtime_validation_command(runtime_dir),
+                runtime_dir / "Scripts" / "noosphere-validate.exe",
+            )
+
+        with patch("scripts.verify_pypi_release.os.name", "posix"):
+            self.assertEqual(
+                runtime_validation_command(runtime_dir),
+                runtime_dir / "bin" / "noosphere-validate",
             )
 
     def test_mcp_probe_input_initializes_before_listing_tools(self):
@@ -289,6 +303,74 @@ print(json.dumps({
         self.assertEqual(kwargs["timeout_seconds"], 30)
         self.assertEqual(result["runtime_tool_count"], 45)
 
+    def test_probe_installed_validation_enforces_anonymous_60_second_contract(self):
+        payload = {
+            "passed": True,
+            "duration_seconds": 7.25,
+            "submission_url": (
+                "https://github.com/JinNing6/Noosphere/issues/new?"
+                "template=validate-skill.yml&generated_validation_evidence=payload"
+            ),
+        }
+        completed = subprocess.CompletedProcess(
+            args=["noosphere-validate"],
+            returncode=0,
+            stdout=json.dumps(payload),
+            stderr="",
+        )
+
+        with tempfile.TemporaryDirectory() as tmp:
+            runtime_dir = Path(tmp)
+            command = runtime_validation_command(runtime_dir)
+            command.parent.mkdir(parents=True)
+            command.touch()
+            with (
+                patch(
+                    "scripts.verify_pypi_release.subprocess.run",
+                    return_value=completed,
+                ) as run,
+                patch.dict(
+                    "scripts.verify_pypi_release.os.environ",
+                    {"GITHUB_TOKEN": "secret", "GH_TOKEN": "secret", "PATH": "test"},
+                    clear=True,
+                ),
+            ):
+                result = probe_installed_validation_runtime(runtime_dir)
+
+        kwargs = run.call_args.kwargs
+        self.assertNotIn("GITHUB_TOKEN", kwargs["env"])
+        self.assertNotIn("GH_TOKEN", kwargs["env"])
+        self.assertEqual(kwargs["timeout"], 65.0)
+        self.assertEqual(result["validation_seconds"], 7.25)
+
+    def test_probe_installed_validation_rejects_an_over_budget_result(self):
+        payload = {
+            "passed": True,
+            "duration_seconds": 60.01,
+            "submission_url": (
+                "https://github.com/JinNing6/Noosphere/issues/new?"
+                "template=validate-skill.yml&generated_validation_evidence=payload"
+            ),
+        }
+        completed = subprocess.CompletedProcess(
+            args=["noosphere-validate"],
+            returncode=0,
+            stdout=json.dumps(payload),
+            stderr="",
+        )
+
+        with tempfile.TemporaryDirectory() as tmp:
+            runtime_dir = Path(tmp)
+            command = runtime_validation_command(runtime_dir)
+            command.parent.mkdir(parents=True)
+            command.touch()
+            with patch(
+                "scripts.verify_pypi_release.subprocess.run",
+                return_value=completed,
+            ):
+                with self.assertRaisesRegex(RuntimeError, "exceeded 60 seconds"):
+                    probe_installed_validation_runtime(runtime_dir)
+
     def test_wait_for_pypi_project_latest_requires_latest_version(self):
         stale_json = {
             "info": {"version": "0.6.4"},
@@ -353,6 +435,10 @@ print(json.dumps({
             "runtime_tool_count": 40,
             "runtime_seconds": 1.5,
         }
+        validation = {
+            "validation_seconds": 7.25,
+            "validation_submission_url": "https://github.com/prefilled",
+        }
 
         with (
             patch(
@@ -377,6 +463,10 @@ print(json.dumps({
                 "scripts.verify_pypi_release.probe_installed_mcp_runtime",
                 return_value=runtime,
             ) as probe_runtime,
+            patch(
+                "scripts.verify_pypi_release.probe_installed_validation_runtime",
+                return_value=validation,
+            ) as probe_validation,
         ):
             result = verify_pypi_release(
                 "noosphere-mcp",
@@ -392,9 +482,11 @@ print(json.dumps({
         inspect.assert_called_once()
         install_runtime.assert_called_once()
         probe_runtime.assert_called_once()
+        probe_validation.assert_called_once()
         self.assertEqual(result["version"], "0.6.8")
         self.assertEqual(result["tool_count"], 40)
         self.assertEqual(result["runtime_tool_count"], 40)
+        self.assertEqual(result["validation_seconds"], 7.25)
         self.assertEqual(result["latest_files"], result["files"])
 
 

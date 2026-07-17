@@ -17,6 +17,7 @@ jobs:
       python: ${{ steps.filter.outputs.python }}
       shared: ${{ steps.filter.outputs.shared }}
       glama: ${{ steps.filter.outputs.glama }}
+      validation: ${{ steps.filter.outputs.validation }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -57,6 +58,12 @@ jobs:
             echo "glama=true" >> "$GITHUB_OUTPUT"
           else
             echo "glama=false" >> "$GITHUB_OUTPUT"
+          fi
+
+          if grep -Eq '^(sdk/noosphere/validation_|sdk/tests/test_validation_cli\.py|examples/reproductions/public-artifact-runtime-smoke-gate/|\.github/ISSUE_TEMPLATE/validate-skill\.yml|\.github/workflows/ci\.yml|scripts/(check_validation_result|test_check_validation_result|verify_pypi_release|test_verify_pypi_release)\.py)' /tmp/changed_files; then
+            echo "validation=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "validation=false" >> "$GITHUB_OUTPUT"
           fi
 
   frontend-check:
@@ -109,7 +116,7 @@ jobs:
       - name: SDK and repository tests
         run: |
           python -m pytest sdk/tests
-          python -m unittest scripts.test_validate_shared_skills scripts.test_migrate_consciousness_promotions scripts.test_launch_surface
+          python -m unittest scripts.test_validate_shared_skills scripts.test_migrate_consciousness_promotions scripts.test_launch_surface scripts.test_check_validation_result
 
       - name: Syntax and undefined-name gate
         run: |
@@ -163,6 +170,38 @@ jobs:
           python -m unittest scripts.test_validate_shared_skills scripts.test_migrate_consciousness_promotions
           python scripts/validate_shared_skills.py
           python scripts/migrate_consciousness_promotions.py --check
+
+  validation-kit-matrix:
+    name: 60s Validation Kit (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    needs: detect-changes
+    if: needs.detect-changes.outputs.validation == 'true'
+    timeout-minutes: 5
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install the validation command
+        run: pip install -e "./sdk[dev]"
+
+      - name: Run the exact token-free validation path
+        env:
+          GITHUB_TOKEN: ''
+          GH_TOKEN: ''
+        run: noosphere-validate public-artifact-runtime-smoke-gate --format json --output validation-result.json
+
+      - name: Enforce the 60-second and prefilled-form contracts
+        run: python scripts/check_validation_result.py validation-result.json
 
   glama-container-check:
     name: Glama Container MCP Discovery

@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
-  "revision": 1,
-  "generated_at": "2026-07-15T05:57:32.045Z",
+  "revision": 2,
+  "generated_at": "2026-07-17T06:33:24.000Z",
   "skills": [
     {
       "id": "noosphere:agent-debug-memory",
@@ -418,6 +418,52 @@
             "path": "shared_skills/releases/1.0.0/github-actions-public-ci-diagnostics/SKILL.md",
             "sha256": "201e097abe1756d787f6e5f370e9a5969f9485980bb64c6d70dd4a77682bb9c7",
             "size_bytes": 4075
+          },
+          "withdrawal": null
+        }
+      ]
+    },
+    {
+      "id": "noosphere:public-artifact-runtime-smoke-gate",
+      "name": "public-artifact-runtime-smoke-gate",
+      "description": "Verify Python packages, CLIs, MCP servers, and Agent plugins through the exact installed artifact and real runtime contract. Use when source tests pass but a published release may omit modules, expose broken entry points, depend on local paths, fail without optional credentials, or behave differently after public installation.",
+      "domain": "build-release",
+      "tags": [
+        "build-release",
+        "artifact-runtime",
+        "live-skill"
+      ],
+      "originators": [
+        "JinNing6"
+      ],
+      "latest": "1.0.0",
+      "releases": [
+        {
+          "version": "1.0.0",
+          "summary": "Maintainer-validated public-artifact runtime gate with a deterministic, token-free, sub-60-second reproduction path.",
+          "published_at": "2026-07-17T06:33:24.000Z",
+          "status": "active",
+          "reviewer": "JinNing6",
+          "source_count": 1,
+          "publisher_count": 1,
+          "evidence": [
+            "https://github.com/JinNing6/Noosphere/issues/37",
+            "https://github.com/JinNing6/Noosphere/tree/main/examples/reproductions/public-artifact-runtime-smoke-gate"
+          ],
+          "verification": {
+            "level": "maintainer-validated",
+            "independent_reproductions": 0,
+            "verified_outcomes": 0
+          },
+          "provenance": {
+            "kind": "maintainer-authored",
+            "repository": "JinNing6/Noosphere",
+            "author": "JinNing6"
+          },
+          "artifact": {
+            "path": "shared_skills/releases/1.0.0/public-artifact-runtime-smoke-gate/SKILL.md",
+            "sha256": "09c9b9ec1925a2d624bf6f8efb2a92ce0bc41e1c2a4b64628b4d389c043836a1",
+            "size_bytes": 5086
           },
           "withdrawal": null
         }

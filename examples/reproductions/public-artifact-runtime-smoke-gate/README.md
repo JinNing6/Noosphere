@@ -2,7 +2,7 @@
 
 This deterministic fixture validates one release boundary: source code can run while the exact packaged artifact is broken.
 
-Run the complete reproduction and receive submission-ready evidence:
+Run the complete reproduction and receive a prefilled evidence submission link:
 
 ```bash
 uvx --from noosphere-mcp noosphere-validate public-artifact-runtime-smoke-gate
@@ -19,7 +19,7 @@ The command requires Python 3.10+ and `uv`. It does not require a validator-owne
 5. A deterministic fixed Wheel is force-installed into the same isolated environment.
 6. The real entry point succeeds and the installed distribution reports the exact fixed version.
 
-The generated Markdown contains artifact SHA-256 digests, environment details, observed exit codes, the canonical test command, and public sources. Paste the complete marked block into the [Skill validation form](https://github.com/JinNing6/Noosphere/issues/new?template=validate-skill.yml).
+The generated Markdown contains artifact SHA-256 digests, environment details, observed exit codes, the canonical test command, and public sources. Open its prefilled GitHub link, review the evidence, confirm the independent-validation declaration, and submit. No manual JSON transfer is required.
 
 Submission does not publish a Skill directly. Existing repository automation binds authorship to the GitHub Issue author, moderates the structured evidence, compares independent claims, and creates a review-gated Candidate only after the supply-chain requirements are met.
 

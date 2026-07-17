@@ -12,9 +12,9 @@ from pathlib import Path
 
 from noosphere import __version__
 from noosphere.validation_kits.public_artifact_runtime_smoke_gate import (
-    FORM_URL,
     SKILL_NAME,
     ValidationKitError,
+    build_submission_url,
     render_evidence_markdown,
     run_validation,
 )
@@ -60,7 +60,7 @@ def configure_console_output() -> None:
 def _render_json(result, workdir: Path | None) -> str:
     data = json.loads(result.as_json())
     data["workdir"] = str(workdir) if workdir else None
-    data["submission_url"] = FORM_URL
+    data["submission_url"] = build_submission_url(result)
     return json.dumps(data, ensure_ascii=False, indent=2)
 
 
@@ -89,7 +89,7 @@ def main(argv: list[str] | None = None) -> int:
         if retained_workdir:
             print(f"Validation workdir retained at {retained_workdir}")
         if result.passed and args.open_form:
-            webbrowser.open(FORM_URL, new=2)
+            webbrowser.open(build_submission_url(result), new=2)
         return 0 if result.passed else 1
     except (OSError, subprocess.SubprocessError, ValidationKitError) as exc:
         print(f"Validation harness failed: {exc}", file=sys.stderr)

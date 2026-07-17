@@ -195,6 +195,12 @@ def runtime_console_command(runtime_dir: Path) -> Path:
     return runtime_dir / "bin" / "noosphere-mcp"
 
 
+def runtime_validation_command(runtime_dir: Path) -> Path:
+    if os.name == "nt":
+        return runtime_dir / "Scripts" / "noosphere-validate.exe"
+    return runtime_dir / "bin" / "noosphere-validate"
+
+
 def install_runtime_environment(
     project: str,
     version: str,
@@ -467,6 +473,64 @@ def probe_installed_mcp_runtime(
     return result
 
 
+def probe_installed_validation_runtime(
+    runtime_dir: Path,
+    *,
+    timeout_seconds: float = 65.0,
+) -> dict:
+    command = runtime_validation_command(runtime_dir)
+    if not command.is_file():
+        raise RuntimeError(
+            f"Published validation console entry point is missing: {command}"
+        )
+
+    env = os.environ.copy()
+    env.pop("GITHUB_TOKEN", None)
+    env.pop("GH_TOKEN", None)
+    completed = subprocess.run(
+        [
+            str(command),
+            "public-artifact-runtime-smoke-gate",
+            "--format",
+            "json",
+        ],
+        cwd=runtime_dir,
+        env=env,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        timeout=timeout_seconds,
+        check=False,
+    )
+    if completed.returncode != 0:
+        raise RuntimeError(
+            "Published validation command failed: "
+            + (completed.stderr.strip() or completed.stdout.strip())[-2000:]
+        )
+    try:
+        result = json.loads(completed.stdout)
+    except json.JSONDecodeError as exc:
+        raise RuntimeError("Published validation command did not return JSON") from exc
+    duration = float(result.get("duration_seconds", 0))
+    submission_url = str(result.get("submission_url", ""))
+    if result.get("passed") is not True or not 0 < duration < 60:
+        raise RuntimeError(
+            f"Published validation contract failed or exceeded 60 seconds: {result}"
+        )
+    if (
+        "template=validate-skill.yml" not in submission_url
+        or "generated_validation_evidence=" not in submission_url
+    ):
+        raise RuntimeError(
+            "Published validation command lacks a prefilled evidence URL"
+        )
+    return {
+        "validation_seconds": duration,
+        "validation_submission_url": submission_url,
+    }
+
+
 def inspect_installed_release(
     target_dir: Path,
     expected_version: str,
@@ -587,6 +651,7 @@ def verify_pypi_release(
             expected_version=version,
             expected_tool_count=expected_tool_count,
         )
+        validation = probe_installed_validation_runtime(runtime_dir)
     finally:
         shutil.rmtree(temp_dir, ignore_errors=True)
 
@@ -597,6 +662,7 @@ def verify_pypi_release(
         "latest_files": latest_filenames,
         **installed,
         **runtime,
+        **validation,
     }
 
 
@@ -621,7 +687,7 @@ def main(argv: list[str] | None = None) -> int:
         f"Verified {result['project']}=={result['version']}: "
         f"{result['runtime_tool_count']} MCP tools via initialize + tools/list in "
         f"{result['runtime_seconds']:.3f}s; growth ledger tools, noosphere-query and "
-        "noosphere-validate present."
+        f"the token-free validation path passed in {result['validation_seconds']:.2f}s."
     )
     return 0
 

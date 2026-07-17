@@ -1,6 +1,6 @@
 # Founding Debug Memories
 
-Last updated: 2026-07-09
+Last updated: 2026-07-17
 
 Canonical launch thread: https://github.com/JinNing6/Noosphere/issues/25
 
@@ -13,6 +13,11 @@ Stop solving the same bug twice.
 ```
 
 This document turns real Noosphere engineering failures into reusable debug memories. The strongest memories can become `skill-candidate` issues and, later, callable agent skills.
+
+Current registry projection: the public-release runtime record from Issue #37 has become
+`public-artifact-runtime-smoke-gate@1.0.0`, the first immutable Living Skill at the honest
+`maintainer-validated` trust level. The R3F and dynamic supply-chain records remain the two
+verified Seeds; Issue #37 stays here as the historical evidence behind the published Skill.
 
 Every founding memory below follows the same proof shape:
 

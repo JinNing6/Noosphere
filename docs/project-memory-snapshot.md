@@ -1,6 +1,15 @@
 # Noosphere Project Memory Snapshot
 
-Last verified: 2026-07-16 (Asia/Shanghai)
+Last verified: 2026-07-17 (Asia/Shanghai)
+
+## Living Skill #001 Release Candidate
+
+- Branch `codex/validator-60s` promotes `public-artifact-runtime-smoke-gate@1.0.0` from historical Seed evidence into the first immutable Living Skill. Registry revision 2 now contains 14 active Skills and the generated tree contains 2 remaining verified Seeds; Seed #37 is projected through the published release evidence instead of appearing twice.
+- The release is explicitly `maintainer-validated`, with one publisher, zero independent reproductions, source Issue #37, a public deterministic fixture, immutable artifact SHA-256 `09c9b9ec1925a2d624bf6f8efb2a92ce0bc41e1c2a4b64628b4d389c043836a1`, and byte size 5,086. No external or community validation is claimed.
+- `noosphere-validate public-artifact-runtime-smoke-gate` now generates a prefilled GitHub Issue Form link containing the canonical evidence payload. The user only reviews the evidence, checks the independent-validation declaration, and submits; no token, project, MCP configuration, package-index account, or manual JSON transfer is required.
+- PR CI adds a five-minute Windows, Linux, and macOS matrix that executes the real installed command with optional GitHub credentials removed and rejects a failed run, a duration of 60 seconds or more, or a missing prefilled evidence payload. The PyPI post-publish verifier now runs the same validation command from the exact public installation in addition to the anonymous MCP `initialize + tools/list` handshake.
+- The release candidate is version `0.8.3`. A clean no-dependency install of the built Wheel executed the installed `noosphere-validate.exe` on Windows, passed in 34.45 seconds, and produced a 2,710-character prefilled URL. The complete SDK suite passed 208 tests; 28 repository tests, 93 Node supply-chain tests, registry and migration checks, focused Ruff checks, frontend lint, production build, and Skill Tree checks also passed.
+- This state is local until the branch is merged and GitHub Release `v0.8.3` completes Trusted Publishing. External validation is no longer a launch prerequisite: after public release, the operating plan is to apply the Skill to ten real external release failures, invite affected maintainers to run the 60-second command, and upgrade trust only when their authenticated evidence passes the existing gates.
 
 ## Glama MCP Directory Recovery
 
