@@ -1,6 +1,6 @@
 # Live Engineering Skills
 
-Noosphere publishes 13 maintainer-authored Agent Skills through one live, versioned registry. There is no parallel static catalog and the Codex and Claude Code plugins contain no Skill copies.
+Noosphere publishes 14 maintainer-validated Agent Skills through one live, versioned registry. There is no parallel static catalog and the Codex and Claude Code plugins contain no Skill copies.
 
 Every active Skill has:
 
@@ -28,9 +28,9 @@ npx skills add JinNing6/Noosphere --skill debug-async-ui
 
 MCP clients can call `list_shared_skills`, `get_shared_skill`, and `check_skill_updates`. Registry reads use a 30-second cache by default and support `force_refresh` for immediate pull-based refresh.
 
-## Validate Living Skill #001
+## Living Skill #001
 
-The first independent-validation sprint targets `public-artifact-runtime-smoke-gate`:
+`public-artifact-runtime-smoke-gate@1.0.0` is the first public Living Skill built around a complete real incident, deterministic reproduction, immutable digest, and explicit `maintainer-validated` trust level:
 
 ```bash
 uvx --from noosphere-mcp noosphere-validate public-artifact-runtime-smoke-gate
@@ -39,12 +39,14 @@ uvx --from noosphere-mcp noosphere-validate public-artifact-runtime-smoke-gate
 The command builds deterministic failing and fixed Wheels, installs both through the real
 console-entry boundary in an isolated environment, and emits canonical evidence with
 artifact digests. It requires no user project, GitHub token, MCP configuration, or
-package-index account. Submit the complete generated block through the
-[dedicated validation form](https://github.com/JinNing6/Noosphere/issues/new?template=validate-skill.yml).
+package-index account, completes under a hard 60-second gate, and prints a prefilled
+GitHub submission link. The validator only needs to review the evidence, confirm the
+declaration, and submit.
 
-One submission remains a Seed-level evidence record. The existing supply-chain gate still
-requires two independent GitHub publishers with claim-level agreement and shared public
-verification before it can create a reviewable Skill Candidate.
+The active release remains honestly labeled `maintainer-validated`. External submissions
+do not mutate it directly. Two independent GitHub publishers with claim-level agreement
+and shared public verification are still required before automation creates a reviewable
+next-version Candidate.
 
 ## Catalog
 
@@ -60,6 +62,7 @@ verification before it can create a reviewable Skill Candidate.
 | Build and release | `github-actions-public-ci-diagnostics` | Public GitHub Actions or release jobs fail with incomplete logs, sparse annotations, or cross-OS drift. |
 | Build and release | `windows-npm-run-script-shell` | `npm run` fails or exits silently on Windows while the underlying `npx` tool succeeds. |
 | Build and release | `cloudflare-pages-stale-assets` | Cloudflare Pages deploys successfully but a hostname or browser still serves old UI assets. |
+| Build and release | `public-artifact-runtime-smoke-gate` | Source tests pass but the exact installed package, CLI, MCP server, or plugin may fail at runtime. |
 | Data and infrastructure | `docker-git-bind-mount-push-debug` | Git commit or push behaves differently inside Docker bind mounts than on the host. |
 | Languages and frameworks | `fastapi-response-contract-boundary` | FastAPI response validation, legacy stored JSON, or analytics invariants produce endpoint drift or 500s. |
 | Security and trust | `binary-credential-format-boundary` | Fixed-length binary keys, signatures, digests, nonces, or tokens may be mutated by text cleanup or decoding. |

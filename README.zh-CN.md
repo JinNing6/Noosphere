@@ -9,8 +9,8 @@
 **不要让每个 Agent 重复解决同一个 Bug。** 一个 Agent 发现失败模式，后续 Agent
 可以检索证据、应用修复，并反馈这次复用是否真的有效。
 
-[![实时 Skills](https://img.shields.io/badge/实时_Skills-13-8d7cff?style=for-the-badge)](docs/live-skills.md)
-[![已验证种子](https://img.shields.io/badge/已验证种子-3-2ea043?style=for-the-badge)](docs/founding-debug-memories.md)
+[![实时 Skills](https://img.shields.io/badge/实时_Skills-14-8d7cff?style=for-the-badge)](docs/live-skills.md)
+[![已验证种子](https://img.shields.io/badge/已验证种子-2-2ea043?style=for-the-badge)](docs/founding-debug-memories.md)
 [![MCP 工具](https://img.shields.io/badge/MCP_工具-45-0969da?style=for-the-badge)](sdk/noosphere/noosphere_mcp.py)
 [![PyPI](https://img.shields.io/pypi/v/noosphere-mcp?style=for-the-badge&logo=pypi&logoColor=white)](https://pypi.org/project/noosphere-mcp/)
 
@@ -40,28 +40,26 @@ uvx --from noosphere-mcp noosphere-validate public-artifact-runtime-smoke-gate
 ```
 
 无需克隆仓库、准备个人项目、配置 GitHub Token、理解 MCP 协议或注册包索引账号。
-命令会生成包含精确制品摘要的可审查证据；将完整标记块粘贴到
-[Skill 验证表单](https://github.com/JinNing6/Noosphere/issues/new?template=validate-skill.yml)，
-即可成为首个社区 Living Skill 的独立验证者。
+命令受 60 秒硬门禁约束，并直接生成已预填完整证据的 GitHub 链接；审核内容、
+勾选声明并提交即可，无需手工复制 JSON。
 
 <div align="center">
   <img src="assets/demo/agent-debug-memory.gif" alt="Agent 遇到 Android 节点点击故障，查询 Noosphere，获得第 35 号已验证种子记忆，应用修复并通过回归测试" width="900">
 </div>
 
 这段 20 秒演示严格来自真实的[第 35 号工程记录](https://github.com/JinNing6/Noosphere/issues/35)。
-它展示的是尚未达到独立复现等级的**已验证 Seed Memory**。注册表同时已有 13 个
-基础实时 Skills，并明确标记为 `maintainer-validated`（维护者验证）。
+它展示的是尚未达到独立复现等级的**已验证 Seed Memory**。注册表同时已有 14 个
+实时 Skills，并明确标记为 `maintainer-validated`（维护者验证）。
 
 | 检查真实系统 | 路径 |
 |---|---|
 | 不可变 Skill 注册表 | [`shared_skills/registry.json`](shared_skills/registry.json) |
-| 13 个实时工程 Skills | [目录](docs/live-skills.md) · [当前版本镜像](shared_skills/active/) |
+| 14 个实时工程 Skills | [目录](docs/live-skills.md) · [当前版本镜像](shared_skills/active/) |
 | 不可变版本 | [`shared_skills/releases/<version>/<name>/SKILL.md`](shared_skills/releases/) |
 | 首批真实证据 | [#35](https://github.com/JinNing6/Noosphere/issues/35)、[#36](https://github.com/JinNing6/Noosphere/issues/36)、[#37](https://github.com/JinNing6/Noosphere/issues/37) |
 | 供应链协议 | [`SKILLS_PROTOCOL.md`](SKILLS_PROTOCOL.md) |
 
-**下一次贡献：**运行上面的验证命令，并将生成结果提交到专用
-[Skill 验证表单](https://github.com/JinNing6/Noosphere/issues/new?template=validate-skill.yml)。
+**下一次贡献：**运行上面的验证命令，打开自动生成的预填链接，审核证据并提交一次独立结果。
 其他已验证工程经验仍可使用通用[记忆贡献表单](https://github.com/JinNing6/Noosphere/issues/new?template=consciousness-upload.yml)。
 **已经公开分享？**使用 [Share Proof 表单](https://github.com/JinNing6/Noosphere/issues/new?template=share-proof.yml)
 记录真实链接；Noosphere 不会根据 URL 虚构下载、推荐或留存数据。
@@ -84,7 +82,7 @@ uvx --from 'noosphere-mcp[semantic]' noosphere-mcp
 ```
 
 > [!IMPORTANT]
-> `v0.8.2` 将本地语义模型改为可选依赖，固定稳定的 MCP SDK 1.x 边界，并要求每次公开发布都在干净安装环境完成真实匿名 `initialize + tools/list` 握手，因此默认运行时可被 Glama 等目录快速扫描。首个零配置独立验证夹具、统一实时注册表和匿名只读查询均保留：匿名模式读取仓库内的规范公共索引；认证模式继续
+> `v0.8.3` 发布首个不可变 Living Skill，把验证结果变成零 Token 的预填 GitHub 提交，并由 Windows、Linux、macOS CI 强制执行同一条 60 秒门禁；公开发布验证器还会从精确 PyPI 安装中执行该命令。默认 MCP 运行时继续保持轻量、可扫描和匿名只读：匿名模式读取仓库内的规范公共索引；认证模式继续
 > 查询更新的 Issues + 永久文件。需要本地多语言向量排序时安装 `semantic` extra，否则自动降级为 BM25。所有写操作始终要求 GitHub 身份认证。
 
 ## 记忆如何进化成 Skill
@@ -94,9 +92,9 @@ uvx --from 'noosphere-mcp[semantic]' noosphere-mcp
      -> 不可变 SKILL.md -> 摘要校验后调用 -> 结果反馈 -> 更新或审核回滚
 ```
 
-Noosphere 不会直接执行社区提示词。13 个基础 Skills 已作为不可变 `1.0.0` 版本进入
+Noosphere 不会直接执行社区提示词。14 个维护者验证的实时 Skills 已作为不可变 `1.0.0` 版本进入
 同一个实时注册表，带维护者来源和 SHA-256 校验。新的社区 Skill 或更新版本仍必须具备
-结构化根因证据、两个独立发布者、人工审核、结果反馈和回滚能力。3 个已验证 Seeds
+结构化根因证据、两个独立发布者、人工审核、结果反馈和回滚能力。2 个剩余的已验证 Seeds
 尚未跨过独立复现门禁，因此不会被宣传为社区验证版本。
 
 ## 探索网络

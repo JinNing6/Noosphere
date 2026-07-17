@@ -79,7 +79,16 @@ validateRegistry(registry);
 
 const verifiedSeeds = await readVerifiedSeeds();
 const publishedNames = new Set(registry.skills.map((skill) => skill.name));
-const unpublishedSeeds = verifiedSeeds.filter((seed) => !publishedNames.has(seed.name));
+const publishedIssueEvidence = new Set(
+  registry.skills.flatMap((skill) => skill.releases || [])
+    .flatMap((release) => release.evidence || [])
+    .map((value) => String(value).match(/github\.com\/JinNing6\/Noosphere\/issues\/(\d+)/)?.[1])
+    .filter(Boolean)
+    .map(Number),
+);
+const unpublishedSeeds = verifiedSeeds.filter((seed) => (
+  !publishedNames.has(seed.name) && !publishedIssueEvidence.has(seed.source_issue)
+));
 
 for (const [kind, records] of [['published', registry.skills], ['seed', unpublishedSeeds]]) {
   const names = records.map((record) => record.name);

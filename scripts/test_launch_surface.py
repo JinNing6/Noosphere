@@ -4,7 +4,7 @@ from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-QUERY_COMMAND = 'uvx --from noosphere-mcp noosphere-query'
+QUERY_COMMAND = "uvx --from noosphere-mcp noosphere-query"
 
 
 class LaunchSurfaceTests(unittest.TestCase):
@@ -14,10 +14,11 @@ class LaunchSurfaceTests(unittest.TestCase):
         )
         readme = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
 
-        self.assertEqual(len(registry["skills"]), 13)
-        self.assertIn("Live_Skills-13", readme)
+        self.assertEqual(len(registry["skills"]), 14)
+        self.assertIn("Live_Skills-14", readme)
         self.assertIn("docs/live-skills.md", readme)
-        self.assertIn("foundational Live Skills", readme)
+        self.assertIn("maintainer-validated Live Skills", readme)
+        self.assertIn("public-artifact-runtime-smoke-gate", readme)
         for skill in registry["skills"]:
             release = next(
                 item
@@ -34,7 +35,10 @@ class LaunchSurfaceTests(unittest.TestCase):
             self.assertIn(QUERY_COMMAND, first_screen)
             self.assertIn("assets/demo/agent-debug-memory.gif", first_screen)
             self.assertIn("shared_skills/active/", first_screen)
-            self.assertLess(readme.index(QUERY_COMMAND), readme.index("assets/splash_cinematic.webp"))
+            self.assertLess(
+                readme.index(QUERY_COMMAND),
+                readme.index("assets/splash_cinematic.webp"),
+            )
 
     def test_demo_assets_and_reproducible_source_exist(self):
         gif = REPO_ROOT / "assets" / "demo" / "agent-debug-memory.gif"
@@ -56,12 +60,17 @@ class LaunchSurfaceTests(unittest.TestCase):
 
         self.assertIn("COPY sdk/pyproject.toml ./sdk/pyproject.toml", dockerfile)
         self.assertIn("COPY sdk/noosphere ./sdk/noosphere", dockerfile)
-        self.assertIn("python -m pip install --disable-pip-version-check --no-cache-dir ./sdk", dockerfile)
+        self.assertIn(
+            "python -m pip install --disable-pip-version-check --no-cache-dir ./sdk",
+            dockerfile,
+        )
         self.assertIn("USER noosphere", dockerfile)
         self.assertIn('CMD ["noosphere-mcp"]', dockerfile)
         self.assertIn("!sdk/noosphere/**", dockerignore)
         self.assertNotIn("required:\n      - githubToken", smithery)
-        self.assertIn("config.githubToken ? { GITHUB_TOKEN: config.githubToken } : {}", smithery)
+        self.assertIn(
+            "config.githubToken ? { GITHUB_TOKEN: config.githubToken } : {}", smithery
+        )
         for manifest in registry_manifests:
             environment = {
                 item["name"]: item
