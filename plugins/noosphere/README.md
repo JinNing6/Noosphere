@@ -2,7 +2,7 @@
 
 Noosphere turns debugging experience into shared agent memory and review-gated dynamic Skills for Codex.
 
-The plugin connects Codex to one live registry containing 13 Agent Skills:
+The plugin connects Codex to one live registry containing 14 Agent Skills:
 
 - Noosphere MCP tools through `uvx noosphere-mcp`
 - `agent-debug-memory` for consulting shared memory before debugging
@@ -20,7 +20,7 @@ From any Codex environment:
 codex plugin marketplace add JinNing6/Noosphere
 ```
 
-Restart Codex, open the plugin directory, choose **Noosphere Agent Memory**, then install **Noosphere**.
+Restart Codex, open the plugin directory, choose **Noosphere Live Skills**, then install **Noosphere**.
 
 ## Auth
 

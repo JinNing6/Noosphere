@@ -22,6 +22,13 @@ description: Recover a verified test failure.
 
 
 class SharedSkillValidationTests(unittest.TestCase):
+    def test_repository_launch_metadata_matches_registry_and_sdk(self):
+        root = Path(__file__).resolve().parents[1]
+
+        errors = validate_repository(root)
+
+        self.assertEqual(errors, [])
+
     def test_outcome_ledger_counts_and_independent_proof_must_match_registry(self):
         digest = "a" * 64
         registry = {
@@ -317,6 +324,26 @@ class SharedSkillValidationTests(unittest.TestCase):
         self.assertTrue(
             any("must load live Skills through MCP" in error for error in errors)
         )
+
+    def test_repository_rejects_legacy_codex_mcp_field(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            registry_path = root / "shared_skills/registry.json"
+            registry_path.parent.mkdir(parents=True)
+            registry_path.write_text(
+                json.dumps({"schema_version": "1.0", "revision": 0, "skills": []}),
+                encoding="utf-8",
+            )
+            mcp_config = root / "plugins/noosphere/.mcp.json"
+            mcp_config.parent.mkdir(parents=True)
+            mcp_config.write_text(
+                json.dumps({"mcp_servers": {"noosphere": {}}}),
+                encoding="utf-8",
+            )
+
+            errors = validate_repository(root)
+
+        self.assertTrue(any("current `mcpServers` field" in error for error in errors))
 
 
 if __name__ == "__main__":

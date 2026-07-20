@@ -306,7 +306,7 @@ Noosphere is now packaged as a GitHub-installable Codex marketplace. You do not 
 codex plugin marketplace add JinNing6/Noosphere
 ```
 
-Then restart Codex, open the plugin directory, choose **Noosphere Agent Memory**, and install **Noosphere**.
+Then restart Codex, open the plugin directory, choose **Noosphere Live Skills**, and install **Noosphere**.
 
 Public read-only consultation works without `GITHUB_TOKEN`. For uploads and higher GitHub API limits, start Codex with `GITHUB_TOKEN` available in the environment. The plugin forwards that token to the `noosphere-mcp` server and targets `JinNing6/Noosphere` by default.
 

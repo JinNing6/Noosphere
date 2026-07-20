@@ -1,7 +1,7 @@
 {
   "name": "noosphere-marketplace",
   "interface": {
-    "displayName": "Noosphere Agent Memory"
+    "displayName": "Noosphere Live Skills"
   },
   "plugins": [
     {

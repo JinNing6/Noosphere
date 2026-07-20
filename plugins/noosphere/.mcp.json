@@ -1,5 +1,5 @@
 {
-  "mcp_servers": {
+  "mcpServers": {
     "noosphere": {
       "command": "uvx",
       "args": [
