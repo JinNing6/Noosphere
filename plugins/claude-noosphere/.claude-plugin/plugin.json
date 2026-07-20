@@ -1,6 +1,6 @@
 {
   "name": "noosphere",
-  "version": "0.8.3",
+  "version": "0.9.0",
   "description": "Live, versioned shared Skills and debug memory for Claude Code agents.",
   "author": {
     "name": "JinNing6",
@@ -20,14 +20,16 @@
     "github"
   ],
   "commands": "./commands/",
+  "skills": "./skills/",
+  "hooks": "./hooks/hooks.json",
   "mcpServers": "./.mcp.json",
   "userConfig": {
     "github_token": {
       "type": "string",
       "title": "GitHub token",
-      "description": "GitHub token used by noosphere-mcp to read and create public issues. A fine-grained token with access to public repositories is enough for the default Noosphere repo.",
+      "description": "Optional GitHub token for fresh Issue-layer reads and explicit public writes. Anonymous registry discovery works without it.",
       "sensitive": true,
-      "required": true
+      "required": false
     },
     "noosphere_repo": {
       "type": "string",

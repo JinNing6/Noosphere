@@ -5,7 +5,7 @@ if TYPE_CHECKING:
     from noosphere.client import Noosphere
 
 __all__ = ["Noosphere"]
-__version__ = "0.8.3"
+__version__ = "0.9.0"
 
 
 def __getattr__(name: str):

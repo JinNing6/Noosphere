@@ -1,0 +1,6 @@
+interface:
+  display_name: "Using Noosphere"
+  short_description: "Apply the latest verified shared fix"
+  default_prompt: "Use $using-noosphere to diagnose and fix this software failure with the latest verified Noosphere Skill."
+policy:
+  allow_implicit_invocation: true
