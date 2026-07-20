@@ -1,0 +1,602 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Noosphere v0.9.0 launch assets</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #080b0e;
+      --panel: #0d1217;
+      --panel-2: #111820;
+      --line: #26313a;
+      --muted: #89949e;
+      --text: #f4f7f8;
+      --cyan: #55d7e5;
+      --green: #68df9b;
+      --amber: #f1c75b;
+      --coral: #ff766b;
+    }
+
+    * { box-sizing: border-box; }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      letter-spacing: 0;
+    }
+
+    body::before {
+      position: fixed;
+      inset: 0;
+      content: "";
+      pointer-events: none;
+      opacity: .28;
+      background-image:
+        linear-gradient(#172028 1px, transparent 1px),
+        linear-gradient(90deg, #172028 1px, transparent 1px);
+      background-size: 48px 48px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .mark {
+      position: relative;
+      display: grid;
+      width: 52px;
+      height: 52px;
+      place-items: center;
+      border: 1px solid #3a454e;
+      border-radius: 7px;
+      background: #050708;
+      color: #fff;
+      font-size: 30px;
+      font-weight: 650;
+    }
+
+    .mark::after {
+      position: absolute;
+      right: -5px;
+      bottom: -5px;
+      width: 12px;
+      height: 12px;
+      border: 3px solid var(--bg);
+      border-radius: 50%;
+      background: var(--green);
+      content: "";
+      box-shadow: 0 0 18px rgba(104, 223, 155, .7);
+    }
+
+    .brand-name {
+      font-size: 24px;
+      font-weight: 680;
+    }
+
+    .brand-meta {
+      margin-top: 2px;
+      color: var(--muted);
+      font-family: Consolas, "SFMono-Regular", monospace;
+      font-size: 13px;
+      text-transform: uppercase;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      min-height: 30px;
+      padding: 0 10px;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      background: #0b1014;
+      color: #b9c2c9;
+      font-family: Consolas, "SFMono-Regular", monospace;
+      font-size: 13px;
+    }
+
+    .social {
+      position: relative;
+      display: none;
+      width: 1280px;
+      height: 640px;
+      padding: 52px 58px 44px;
+    }
+
+    body[data-mode="social"] .social { display: block; }
+
+    .social-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .social-copy {
+      position: absolute;
+      top: 154px;
+      left: 58px;
+      width: 660px;
+    }
+
+    .eyebrow {
+      color: var(--cyan);
+      font-family: Consolas, "SFMono-Regular", monospace;
+      font-size: 16px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .social h1 {
+      max-width: 680px;
+      margin: 18px 0 20px;
+      font-size: 59px;
+      font-weight: 690;
+      line-height: 1.04;
+    }
+
+    .social-copy p {
+      max-width: 610px;
+      margin: 0;
+      color: #aeb8bf;
+      font-size: 21px;
+      line-height: 1.46;
+    }
+
+    .social-graph {
+      position: absolute;
+      top: 162px;
+      right: 58px;
+      width: 430px;
+      height: 310px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #0b1014;
+    }
+
+    .graph-label {
+      position: absolute;
+      top: 20px;
+      left: 22px;
+      color: var(--muted);
+      font-family: Consolas, "SFMono-Regular", monospace;
+      font-size: 13px;
+      text-transform: uppercase;
+    }
+
+    .graph-line {
+      position: absolute;
+      top: 149px;
+      left: 72px;
+      width: 278px;
+      height: 2px;
+      background: #35414a;
+    }
+
+    .graph-line::before,
+    .graph-line::after {
+      position: absolute;
+      top: -2px;
+      width: 86px;
+      height: 2px;
+      content: "";
+    }
+
+    .graph-line::before { left: 66px; background: var(--cyan); }
+    .graph-line::after { right: 66px; background: var(--green); }
+
+    .graph-node {
+      position: absolute;
+      top: 112px;
+      display: grid;
+      width: 76px;
+      height: 76px;
+      place-items: center;
+      border: 1px solid #3a454e;
+      border-radius: 50%;
+      background: #111820;
+      color: #dbe2e6;
+      font-family: Consolas, "SFMono-Regular", monospace;
+      font-size: 12px;
+      font-weight: 700;
+      text-align: center;
+    }
+
+    .graph-node.failure { left: 35px; border-color: var(--coral); box-shadow: 0 0 26px rgba(255, 118, 107, .14); }
+    .graph-node.registry { left: 177px; border-color: var(--cyan); box-shadow: 0 0 30px rgba(85, 215, 229, .2); }
+    .graph-node.inherit { right: 35px; border-color: var(--green); box-shadow: 0 0 26px rgba(104, 223, 155, .14); }
+
+    .graph-caption {
+      position: absolute;
+      right: 22px;
+      bottom: 24px;
+      left: 22px;
+      display: flex;
+      justify-content: space-between;
+      color: var(--muted);
+      font-family: Consolas, "SFMono-Regular", monospace;
+      font-size: 12px;
+    }
+
+    .social-footer {
+      position: absolute;
+      right: 58px;
+      bottom: 42px;
+      left: 58px;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      border-top: 1px solid var(--line);
+    }
+
+    .fact {
+      min-width: 0;
+      padding: 18px 20px 0 0;
+    }
+
+    .fact strong {
+      display: block;
+      font-size: 21px;
+      font-weight: 650;
+    }
+
+    .fact span {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .demo {
+      position: relative;
+      display: none;
+      width: 1280px;
+      height: 720px;
+      padding: 34px 38px;
+    }
+
+    body[data-mode="demo"] .demo { display: block; }
+
+    .demo-header {
+      display: flex;
+      height: 64px;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .demo-header .brand-name { font-size: 20px; }
+    .demo-header .mark { width: 40px; height: 40px; font-size: 22px; }
+
+    .demo-layout {
+      display: grid;
+      height: 560px;
+      margin-top: 28px;
+      grid-template-columns: 218px 1fr;
+      gap: 28px;
+    }
+
+    .steps {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 9px;
+    }
+
+    .step {
+      display: flex;
+      min-height: 56px;
+      align-items: center;
+      gap: 12px;
+      padding: 0 13px;
+      border: 1px solid transparent;
+      border-radius: 6px;
+      color: #65717a;
+      font-family: Consolas, "SFMono-Regular", monospace;
+      font-size: 13px;
+      text-transform: uppercase;
+    }
+
+    .step-dot {
+      width: 9px;
+      height: 9px;
+      border: 1px solid #53606a;
+      border-radius: 50%;
+      background: #151b20;
+    }
+
+    body[data-scene="1"] .step[data-step="1"],
+    body[data-scene="2"] .step[data-step="2"],
+    body[data-scene="3"] .step[data-step="3"],
+    body[data-scene="4"] .step[data-step="4"],
+    body[data-scene="5"] .step[data-step="5"] {
+      border-color: #3a454e;
+      background: #0e1419;
+      color: var(--text);
+    }
+
+    body[data-scene="1"] .step[data-step="1"] .step-dot { border-color: var(--coral); background: var(--coral); box-shadow: 0 0 16px rgba(255, 118, 107, .6); }
+    body[data-scene="2"] .step[data-step="2"] .step-dot { border-color: var(--cyan); background: var(--cyan); box-shadow: 0 0 16px rgba(85, 215, 229, .6); }
+    body[data-scene="3"] .step[data-step="3"] .step-dot { border-color: var(--amber); background: var(--amber); box-shadow: 0 0 16px rgba(241, 199, 91, .6); }
+    body[data-scene="4"] .step[data-step="4"] .step-dot,
+    body[data-scene="5"] .step[data-step="5"] .step-dot { border-color: var(--green); background: var(--green); box-shadow: 0 0 16px rgba(104, 223, 155, .6); }
+
+    .terminal {
+      position: relative;
+      overflow: hidden;
+      border: 1px solid #303b44;
+      border-radius: 8px;
+      background: #090d10;
+    }
+
+    .terminal-top {
+      display: flex;
+      height: 48px;
+      align-items: center;
+      gap: 8px;
+      padding: 0 17px;
+      border-bottom: 1px solid #252f37;
+      background: #11171c;
+    }
+
+    .window-dot { width: 9px; height: 9px; border-radius: 50%; }
+    .window-dot.red { background: var(--coral); }
+    .window-dot.amber { background: var(--amber); }
+    .window-dot.green { background: var(--green); }
+
+    .terminal-title {
+      margin-left: 10px;
+      color: #85919a;
+      font-family: Consolas, "SFMono-Regular", monospace;
+      font-size: 12px;
+    }
+
+    .scene {
+      position: absolute;
+      inset: 48px 0 0;
+      display: none;
+      padding: 38px 42px;
+    }
+
+    body[data-scene="1"] .scene[data-scene="1"],
+    body[data-scene="2"] .scene[data-scene="2"],
+    body[data-scene="3"] .scene[data-scene="3"],
+    body[data-scene="4"] .scene[data-scene="4"],
+    body[data-scene="5"] .scene[data-scene="5"] { display: block; }
+
+    .scene-kicker {
+      margin-bottom: 24px;
+      color: var(--muted);
+      font-family: Consolas, "SFMono-Regular", monospace;
+      font-size: 13px;
+      text-transform: uppercase;
+    }
+
+    .line {
+      margin: 12px 0;
+      color: #cdd5da;
+      font-family: Consolas, "SFMono-Regular", monospace;
+      font-size: 21px;
+      line-height: 1.42;
+    }
+
+    .line.small { font-size: 17px; }
+    .prompt { color: var(--cyan); }
+    .ok { color: var(--green); }
+    .warn { color: var(--amber); }
+    .error { color: var(--coral); }
+    .muted { color: var(--muted); }
+
+    .result-box {
+      margin-top: 24px;
+      padding: 20px 22px;
+      border: 1px solid #33404a;
+      border-left: 4px solid var(--cyan);
+      border-radius: 6px;
+      background: #0d1419;
+    }
+
+    .result-box.verified { border-left-color: var(--amber); }
+    .result-box.passed { border-left-color: var(--green); }
+
+    .result-title {
+      margin-bottom: 11px;
+      font-size: 22px;
+      font-weight: 650;
+    }
+
+    .result-meta {
+      color: #9aa5ad;
+      font-family: Consolas, "SFMono-Regular", monospace;
+      font-size: 15px;
+      line-height: 1.55;
+    }
+
+    .digest {
+      color: var(--amber);
+      overflow-wrap: anywhere;
+    }
+
+    .pass-layout {
+      display: grid;
+      height: 100%;
+      place-items: center;
+      text-align: center;
+    }
+
+    .pass-word {
+      color: var(--green);
+      font-size: 96px;
+      font-weight: 720;
+      line-height: 1;
+    }
+
+    .pass-copy {
+      margin-top: 22px;
+      font-size: 31px;
+      font-weight: 620;
+    }
+
+    .pass-subcopy {
+      margin: 12px auto 0;
+      color: var(--muted);
+      font-size: 17px;
+    }
+
+    .install-command {
+      display: inline-flex;
+      margin-top: 28px;
+      padding: 12px 16px;
+      border: 1px solid #33404a;
+      border-radius: 5px;
+      background: #0d1419;
+      color: #dbe2e6;
+      font-family: Consolas, "SFMono-Regular", monospace;
+      font-size: 15px;
+    }
+
+    .demo-footnote {
+      position: absolute;
+      right: 38px;
+      bottom: 17px;
+      color: #68747d;
+      font-family: Consolas, "SFMono-Regular", monospace;
+      font-size: 11px;
+      text-transform: uppercase;
+    }
+  </style>
+</head>
+<body>
+  <main class="social" aria-label="Noosphere social preview">
+    <header class="social-header">
+      <div class="brand">
+        <div class="mark">N</div>
+        <div>
+          <div class="brand-name">Noosphere</div>
+          <div class="brand-meta">Live Skills for coding agents</div>
+        </div>
+      </div>
+      <span class="tag">v0.9.0 / automatic discovery</span>
+    </header>
+
+    <section class="social-copy">
+      <div class="eyebrow">Install once</div>
+      <h1>One Agent learns.<br>Every Agent inherits the Skill.</h1>
+      <p>Review-gated Live Skills, exact artifact digests, and local verification before reuse.</p>
+    </section>
+
+    <section class="social-graph" aria-label="Failure to inherited Skill flow">
+      <div class="graph-label">failure-time Skill discovery</div>
+      <div class="graph-line"></div>
+      <div class="graph-node failure">FAIL</div>
+      <div class="graph-node registry">LIVE<br>SKILL</div>
+      <div class="graph-node inherit">PASS</div>
+      <div class="graph-caption"><span>Agent A</span><span>registry r2</span><span>Agent B</span></div>
+    </section>
+
+    <footer class="social-footer">
+      <div class="fact"><strong>14 Live Skills</strong><span>one shared registry</span></div>
+      <div class="fact"><strong>SHA-256</strong><span>exact artifact identity</span></div>
+      <div class="fact"><strong>No token</strong><span>anonymous read-only access</span></div>
+      <div class="fact"><strong>Codex + Claude</strong><span>automatic failure-time discovery</span></div>
+    </footer>
+  </main>
+
+  <main class="demo" aria-label="Noosphere automatic Live Skill demo">
+    <header class="demo-header">
+      <div class="brand">
+        <div class="mark">N</div>
+        <div>
+          <div class="brand-name">Noosphere</div>
+          <div class="brand-meta">automatic Live Skill loop</div>
+        </div>
+      </div>
+      <span class="tag">real v0.9.0 output / registry revision 2</span>
+    </header>
+
+    <div class="demo-layout">
+      <aside class="steps">
+        <div class="step" data-step="1"><span class="step-dot"></span>failure</div>
+        <div class="step" data-step="2"><span class="step-dot"></span>discover</div>
+        <div class="step" data-step="3"><span class="step-dot"></span>verify</div>
+        <div class="step" data-step="4"><span class="step-dot"></span>apply + test</div>
+        <div class="step" data-step="5"><span class="step-dot"></span>inherit</div>
+      </aside>
+
+      <section class="terminal">
+        <div class="terminal-top">
+          <span class="window-dot red"></span>
+          <span class="window-dot amber"></span>
+          <span class="window-dot green"></span>
+          <span class="terminal-title">agent / public-artifact release check</span>
+        </div>
+
+        <div class="scene" data-scene="1">
+          <div class="scene-kicker">Deterministic public-artifact fixture</div>
+          <div class="line"><span class="prompt">$</span> run source-tree entry point</div>
+          <div class="line ok">PASS&nbsp;&nbsp;source invocation exited 0</div>
+          <div class="line"><span class="prompt">$</span> run exact installed wheel entry point</div>
+          <div class="line error">FAIL&nbsp;&nbsp;runtime module missing from artifact</div>
+          <div class="line small muted">Source tests passed. The artifact users install does not.</div>
+        </div>
+
+        <div class="scene" data-scene="2">
+          <div class="scene-kicker">using-noosphere activates for a concrete failure</div>
+          <div class="line"><span class="prompt">Agent</span> list_shared_skills(</div>
+          <div class="line small">&nbsp;&nbsp;query="public artifact runtime"</div>
+          <div class="line">)</div>
+          <div class="result-box">
+            <div class="result-title">public-artifact-runtime-smoke-gate@1.0.0</div>
+            <div class="result-meta">registry revision&nbsp;&nbsp;2<br>verification&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;maintainer-validated</div>
+          </div>
+        </div>
+
+        <div class="scene" data-scene="3">
+          <div class="scene-kicker">Immutable Skill retrieval</div>
+          <div class="line"><span class="prompt">Agent</span> get_shared_skill(</div>
+          <div class="line small">&nbsp;&nbsp;"public-artifact-runtime-smoke-gate", "1.0.0"</div>
+          <div class="line">)</div>
+          <div class="result-box verified">
+            <div class="result-title"><span class="ok">VERIFIED</span>&nbsp;&nbsp;exact artifact digest</div>
+            <div class="result-meta digest">09c9b9ec1925a2d624bf6f8efb2a92ce0bc41e1c2a4b64628b4d389c043836a1</div>
+          </div>
+        </div>
+
+        <div class="scene" data-scene="4">
+          <div class="scene-kicker">Real isolated validation / Windows 11 / Python 3.12.11</div>
+          <div class="line"><span class="prompt">$</span> noosphere-validate public-artifact-runtime-smoke-gate</div>
+          <div class="result-box passed">
+            <div class="result-title"><span class="ok">PASS</span>&nbsp;&nbsp;48.86 seconds</div>
+            <div class="result-meta">source invocation&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;exit 0<br>installed failing artifact&nbsp;&nbsp;exit 1<br>installed fixed artifact&nbsp;&nbsp;&nbsp;&nbsp;exit 0 / version 1.0.1</div>
+          </div>
+          <div class="line small muted">No repository clone. No personal project. No GitHub token.</div>
+        </div>
+
+        <div class="scene" data-scene="5">
+          <div class="pass-layout">
+            <div>
+              <div class="pass-word">PASS</div>
+              <div class="pass-copy">One Agent learns. Every Agent inherits the Skill.</div>
+              <div class="pass-subcopy">The reviewed Skill stays live in one digest-pinned registry.</div>
+              <div class="install-command">codex plugin marketplace add JinNing6/Noosphere</div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div class="demo-footnote">time-compressed reconstruction from real public v0.9.0 query and validation output</div>
+  </main>
+
+  <script>
+    const params = new URLSearchParams(location.search);
+    document.body.dataset.mode = params.get('mode') || 'social';
+    document.body.dataset.scene = params.get('scene') || '1';
+  </script>
+</body>
+</html>

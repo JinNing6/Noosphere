@@ -4,14 +4,17 @@
 
 # Noosphere
 
-### A review-gated, dynamically evolving shared Skill network for coding agents.
+### Live, review-gated Skills for coding agents.
 
-**Stop solving the same bug twice.** One Agent discovers a failure pattern; every
-future Agent can retrieve the evidence, apply the fix, and report whether it worked.
+## Install once. One Agent learns. Every Agent inherits the Skill.
+
+Noosphere connects coding Agents to one live Skill registry. When a concrete failure
+occurs, the Agent discovers an applicable reviewed Skill, verifies its exact artifact,
+checks local applicability, and runs the real project verification before claiming success.
 
 [![Live Skills](https://img.shields.io/badge/Live_Skills-14-8d7cff?style=for-the-badge)](docs/live-skills.md)
-[![Verified Seeds](https://img.shields.io/badge/Verified_Seeds-2-2ea043?style=for-the-badge)](docs/founding-debug-memories.md)
-[![MCP Tools](https://img.shields.io/badge/MCP_Tools-45-0969da?style=for-the-badge)](sdk/noosphere/noosphere_mcp.py)
+[![Registry](https://img.shields.io/badge/Registry-r2-55d7e5?style=for-the-badge)](shared_skills/registry.json)
+[![Release](https://img.shields.io/badge/Release-v0.9.0-68df9b?style=for-the-badge)](https://github.com/JinNing6/Noosphere/releases/tag/v0.9.0)
 [![PyPI](https://img.shields.io/pypi/v/noosphere-mcp?style=for-the-badge&logo=pypi&logoColor=white)](https://pypi.org/project/noosphere-mcp/)
 
 **Codex · Claude Code · Cursor / Cline / Windsurf · any MCP client**
@@ -20,7 +23,7 @@ future Agent can retrieve the evidence, apply the fix, and report whether it wor
 
 </div>
 
-## Install once. Your Agent inherits every verified fix.
+## Install once
 
 | Runtime | Install |
 |---|---|
@@ -37,47 +40,53 @@ frame the failure -> discover applicable Live Skills -> verify exact SHA-256
                   -> check local applicability -> apply -> run real verification
 ```
 
+<div align="center">
+  <a href="docs/demo-v090-auto-live-skill.md">
+    <img src="assets/launch/noosphere-live-skills-v090-demo.gif" alt="A coding Agent encounters an installed-artifact failure, automatically discovers a reviewed Noosphere Live Skill, verifies its exact SHA-256 digest, applies the artifact runtime gate, and passes isolated validation" width="960">
+  </a>
+  <br>
+  <sub>Time-compressed reconstruction from real public <code>noosphere-mcp==0.9.0</code> query and validation output.</sub>
+</div>
+
 The plugin does **not** bundle static copies of the 14 engineering Skills. They remain in
-one review-gated live registry, so a reviewed update is available to every connected
+one review-gated live registry, so a reviewed Skill update is available to every connected
 Agent without reinstalling the plugin. Read-only discovery works anonymously. Creating
 public memory or Outcome records always requires authentication and explicit user consent.
 
-## Try the public memory now
+## One real Skill, end to end
 
-No clone, account, token, or configuration file is required:
+[`public-artifact-runtime-smoke-gate@1.0.0`](shared_skills/active/public-artifact-runtime-smoke-gate/SKILL.md)
+captures a release failure that source-only CI misses: the source entry point succeeds,
+but the exact installed Wheel exits because its runtime module was omitted.
+
+| Layer | Public evidence |
+|---|---|
+| Discovery | Registry revision `2` returns the applicable immutable Skill. |
+| Integrity | SHA-256 `09c9b9ec...043836a1` is verified before the content is returned. |
+| Application | The gate installs and invokes the exact artifact outside the source tree. |
+| Real verification | On the recorded Windows run: source exit `0`, failing artifact exit `1`, fixed artifact exit `0`; overall `PASS` in `48.86s`. |
+
+The current release is honestly labeled **maintainer-validated**; it does not claim
+independent reproduction. Reproduce the complete result without a repository clone,
+personal project, GitHub token, MCP configuration, or external package index:
 
 ```bash
-uvx --from noosphere-mcp noosphere-query "React Three Fiber mobile glowing node tap selects wrong instance"
+uvx --from noosphere-mcp==0.9.0 noosphere-validate public-artifact-runtime-smoke-gate
 ```
 
-This read-only command makes one cacheable request to Noosphere's public index. Add a
-GitHub token only when you need fresh Issue-layer results, uploads, feedback, or higher
-rate limits.
+The command emits reviewable evidence, exact artifact digests, and a prefilled submission
+link. The full command record and claim boundary are in the
+[v0.9.0 demo evidence](docs/demo-v090-auto-live-skill.md).
 
-## Validate Living Skill #001
+## Try the network without installing a plugin
 
-Run one deterministic command to reproduce a real public-artifact failure and verify its
-fix in an isolated environment:
+Anonymous read-only access needs no clone, account, token, or configuration file:
 
 ```bash
-uvx --from noosphere-mcp noosphere-validate public-artifact-runtime-smoke-gate
+uvx --from noosphere-mcp==0.9.0 noosphere-query "React Three Fiber mobile glowing node tap selects wrong instance"
 ```
 
-No repository clone, personal project, GitHub token, MCP configuration, or package-index
-account is required. The command finishes under a 60-second gate and generates reviewable
-evidence with exact artifact digests plus a prefilled GitHub submission link. Review the
-evidence, confirm the declaration, and submit without copying JSON manually.
-This is the shortest path to become an independent validator of the first community
-Living Skill.
-
-<div align="center">
-  <img src="assets/demo/agent-debug-memory.gif" alt="An Agent encounters an Android node-picking failure, queries Noosphere, retrieves verified Seed Memory 35, applies the fix, and passes the regression test" width="900">
-</div>
-
-The 20-second demo is reconstructed from the real, verified engineering record in
-[Issue #35](https://github.com/JinNing6/Noosphere/issues/35). It shows a **Seed Memory**
-that has not yet reached independent reproduction. The registry now contains 14
-maintainer-validated Live Skills, including Living Skill #001.
+Add a GitHub token only for fresher Issue-layer results, uploads, feedback, or higher rate limits.
 
 | Inspect the live system | Path |
 |---|---|

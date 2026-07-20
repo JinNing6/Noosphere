@@ -1,10 +1,11 @@
 import json
+import struct
 import unittest
 from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-QUERY_COMMAND = "uvx --from noosphere-mcp noosphere-query"
+QUERY_COMMAND = "uvx --from noosphere-mcp==0.9.0 noosphere-query"
 CODEX_INSTALL = "codex plugin marketplace add JinNing6/Noosphere"
 CLAUDE_INSTALL = "/plugin marketplace add JinNing6/Noosphere"
 
@@ -37,7 +38,10 @@ class LaunchSurfaceTests(unittest.TestCase):
             self.assertIn(CODEX_INSTALL, first_screen)
             self.assertIn(CLAUDE_INSTALL, first_screen)
             self.assertIn(QUERY_COMMAND, first_screen)
-            self.assertIn("assets/demo/agent-debug-memory.gif", first_screen)
+            self.assertIn(
+                "assets/launch/noosphere-live-skills-v090-demo.gif",
+                first_screen,
+            )
             self.assertIn("shared_skills/active/", first_screen)
             self.assertLess(readme.index(CODEX_INSTALL), readme.index(QUERY_COMMAND))
             self.assertLess(
@@ -46,13 +50,62 @@ class LaunchSurfaceTests(unittest.TestCase):
             )
 
     def test_demo_assets_and_reproducible_source_exist(self):
-        gif = REPO_ROOT / "assets" / "demo" / "agent-debug-memory.gif"
-        mp4 = REPO_ROOT / "assets" / "demo" / "agent-debug-memory.mp4"
+        gif = (
+            REPO_ROOT
+            / "assets"
+            / "launch"
+            / "noosphere-live-skills-v090-demo.gif"
+        )
+        mp4 = (
+            REPO_ROOT
+            / "assets"
+            / "launch"
+            / "noosphere-live-skills-v090-demo.mp4"
+        )
+        social = (
+            REPO_ROOT
+            / "assets"
+            / "launch"
+            / "noosphere-live-skills-v090-social-preview.png"
+        )
 
         self.assertGreater(gif.stat().st_size, 50_000)
         self.assertGreater(mp4.stat().st_size, 50_000)
-        self.assertTrue((REPO_ROOT / "docs" / "demo-script-20s.md").is_file())
-        self.assertTrue((REPO_ROOT / "scripts" / "render-launch-demo.ps1").is_file())
+        self.assertGreater(social.stat().st_size, 50_000)
+        self.assertLess(social.stat().st_size, 1_000_000)
+        with social.open("rb") as handle:
+            self.assertEqual(handle.read(8), b"\x89PNG\r\n\x1a\n")
+            handle.read(8)
+            width, height = struct.unpack(">II", handle.read(8))
+        self.assertEqual((width, height), (1280, 640))
+        self.assertTrue(
+            (REPO_ROOT / "docs" / "demo-v090-auto-live-skill.md").is_file()
+        )
+        self.assertTrue(
+            (REPO_ROOT / "scripts" / "render-v090-launch-assets.ps1").is_file()
+        )
+        self.assertTrue(
+            (
+                REPO_ROOT
+                / "scripts"
+                / "launch-assets"
+                / "v090-live-skill.html"
+            ).is_file()
+        )
+
+    def test_first_screen_uses_the_skill_inheritance_promise(self):
+        english = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
+        chinese = (REPO_ROOT / "README.zh-CN.md").read_text(encoding="utf-8")
+
+        self.assertIn(
+            "Install once. One Agent learns. Every Agent inherits the Skill.",
+            english,
+        )
+        self.assertIn(
+            "安装一次。一个 Agent 学会，所有 Agent 继承这个 Skill。",
+            chinese,
+        )
+        self.assertNotIn("inherits every verified fix", english[:4000])
 
     def test_glama_has_a_deterministic_anonymous_source_container(self):
         dockerfile = (REPO_ROOT / "Dockerfile").read_text(encoding="utf-8")
