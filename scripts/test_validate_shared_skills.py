@@ -6,6 +6,7 @@ from pathlib import Path
 
 from scripts.validate_shared_skills import (
     validate_outcomes,
+    validate_plugin_bootstrap,
     validate_registry,
     validate_repository,
     validate_skill_file,
@@ -291,39 +292,53 @@ class SharedSkillValidationTests(unittest.TestCase):
 
         self.assertEqual(errors, [])
 
-    def test_plugins_must_not_bundle_static_skill_copies(self):
+    def test_repository_automatic_skill_bootstrap_is_valid(self):
+        root = Path(__file__).resolve().parents[1]
+
+        self.assertEqual(validate_plugin_bootstrap(root), [])
+
+    def test_plugins_must_not_bundle_dynamic_skill_copies(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
-            (root / "shared_skills").mkdir()
-            (root / "shared_skills/registry.json").write_text(
-                json.dumps({"schema_version": "1.0", "revision": 0, "skills": []}),
-                encoding="utf-8",
-            )
-            codex_manifest = root / "plugins/noosphere/.codex-plugin/plugin.json"
-            claude_manifest = (
-                root / "plugins/claude-noosphere/.claude-plugin/plugin.json"
-            )
-            marketplace = root / ".claude-plugin/marketplace.json"
-            codex_manifest.parent.mkdir(parents=True)
-            claude_manifest.parent.mkdir(parents=True)
-            marketplace.parent.mkdir(parents=True)
-            codex_manifest.write_text(
-                json.dumps({"version": "0.4.0", "skills": "./skills/"}),
-                encoding="utf-8",
-            )
-            claude_manifest.write_text(
-                json.dumps({"version": "0.4.0"}), encoding="utf-8"
-            )
-            marketplace.write_text(
-                json.dumps({"version": "0.4.0", "plugins": [{"version": "0.4.0"}]}),
-                encoding="utf-8",
+            for plugin in ("noosphere", "claude-noosphere"):
+                skill_path = root / f"plugins/{plugin}/skills/using-noosphere/SKILL.md"
+                skill_path.parent.mkdir(parents=True)
+                skill_path.write_text(
+                    SKILL.replace("test-recovery", "using-noosphere"), encoding="utf-8"
+                )
+            extra_skill = root / "plugins/noosphere/skills/static-fix/SKILL.md"
+            extra_skill.parent.mkdir(parents=True)
+            extra_skill.write_text(
+                SKILL.replace("test-recovery", "static-fix"), encoding="utf-8"
             )
 
-            errors = validate_repository(root)
+            errors = validate_plugin_bootstrap(root)
 
         self.assertTrue(
-            any("must load live Skills through MCP" in error for error in errors)
+            any("must not bundle dynamic Skill copies" in error for error in errors)
         )
+
+    def test_control_skill_must_match_across_agent_plugins(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            codex_skill = root / "plugins/noosphere/skills/using-noosphere/SKILL.md"
+            claude_skill = (
+                root / "plugins/claude-noosphere/skills/using-noosphere/SKILL.md"
+            )
+            codex_skill.parent.mkdir(parents=True)
+            claude_skill.parent.mkdir(parents=True)
+            codex_skill.write_text(
+                SKILL.replace("test-recovery", "using-noosphere"), encoding="utf-8"
+            )
+            claude_skill.write_text(
+                SKILL.replace("test-recovery", "using-noosphere")
+                + "\nDivergent behavior.\n",
+                encoding="utf-8",
+            )
+
+            errors = validate_plugin_bootstrap(root)
+
+        self.assertTrue(any("control Skill drift" in error for error in errors))
 
     def test_repository_rejects_legacy_codex_mcp_field(self):
         with tempfile.TemporaryDirectory() as temp:

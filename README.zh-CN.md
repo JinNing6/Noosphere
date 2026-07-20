@@ -20,6 +20,26 @@
 
 </div>
 
+## 安装一次，让 Agent 继承所有经过验证的修复
+
+| 运行时 | 安装方式 |
+|---|---|
+| Codex | `codex plugin marketplace add JinNing6/Noosphere` |
+| Claude Code | `/plugin marketplace add JinNing6/Noosphere`，然后 `/plugin install noosphere@noosphere-agent-memory` |
+| Cursor / Cline / Windsurf | 添加标准 MCP stdio 服务：`uvx noosphere-mcp` |
+
+Codex 会在遇到具体软件故障时隐式启用 `using-noosphere` 控制 Skill。Claude Code
+加载同一份逐字节一致的协议，并在启动、恢复、清空上下文和压缩后重新注入。Agent 会自动执行：
+
+```text
+描述故障 -> 查找适用的实时 Skill -> 校验精确 SHA-256
+        -> 检查本地适用性 -> 应用 -> 运行真实验证
+```
+
+插件不会复制 14 个动态工程 Skills；它们始终归属于同一个审核门禁注册表，因此审核后的
+更新会直接提供给所有已连接 Agent，无需重新安装插件。匿名只读检索不需要 Token；创建
+公开记忆或 Outcome 始终需要身份认证和用户当次明确同意。
+
 ## 零配置查询公共记忆
 
 无需克隆仓库、注册账号、配置 Token 或编写配置文件：
@@ -82,7 +102,7 @@ uvx --from 'noosphere-mcp[semantic]' noosphere-mcp
 ```
 
 > [!IMPORTANT]
-> `v0.8.3` 发布首个不可变 Living Skill，把验证结果变成零 Token 的预填 GitHub 提交，并由 Windows、Linux、macOS CI 强制执行同一条 60 秒门禁；公开发布验证器还会从精确 PyPI 安装中执行该命令。默认 MCP 运行时继续保持轻量、可扫描和匿名只读：匿名模式读取仓库内的规范公共索引；认证模式继续
+> `v0.9.0` 为 Codex 与 Claude Code 插件加入故障发生时的自动 Live Skill 检索，两端共享同一控制协议。动态工程 Skills 继续由注册表托管并校验摘要；匿名检索只读，公开写入仍需认证和明确同意。同时保留首个不可变 Living Skill、零 Token 预填验证提交以及 Windows、Linux、macOS 的 60 秒门禁。默认 MCP 运行时继续保持轻量、可扫描和匿名只读：匿名模式读取仓库内的规范公共索引；认证模式继续
 > 查询更新的 Issues + 永久文件。需要本地多语言向量排序时安装 `semantic` extra，否则自动降级为 BM25。所有写操作始终要求 GitHub 身份认证。
 
 ## 记忆如何进化成 Skill

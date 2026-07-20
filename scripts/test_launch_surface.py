@@ -5,6 +5,8 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 QUERY_COMMAND = "uvx --from noosphere-mcp noosphere-query"
+CODEX_INSTALL = "codex plugin marketplace add JinNing6/Noosphere"
+CLAUDE_INSTALL = "/plugin marketplace add JinNing6/Noosphere"
 
 
 class LaunchSurfaceTests(unittest.TestCase):
@@ -27,14 +29,17 @@ class LaunchSurfaceTests(unittest.TestCase):
             )
             self.assertEqual(release["verification"]["level"], "maintainer-validated")
 
-    def test_english_and_chinese_first_screens_lead_with_the_query_not_the_3d_app(self):
+    def test_english_and_chinese_first_screens_lead_with_automatic_agent_install(self):
         for name in ("README.md", "README.zh-CN.md"):
             readme = (REPO_ROOT / name).read_text(encoding="utf-8")
-            first_screen = "\n".join(readme.splitlines()[:80])
+            first_screen = "\n".join(readme.splitlines()[:110])
 
+            self.assertIn(CODEX_INSTALL, first_screen)
+            self.assertIn(CLAUDE_INSTALL, first_screen)
             self.assertIn(QUERY_COMMAND, first_screen)
             self.assertIn("assets/demo/agent-debug-memory.gif", first_screen)
             self.assertIn("shared_skills/active/", first_screen)
+            self.assertLess(readme.index(CODEX_INSTALL), readme.index(QUERY_COMMAND))
             self.assertLess(
                 readme.index(QUERY_COMMAND),
                 readme.index("assets/splash_cinematic.webp"),

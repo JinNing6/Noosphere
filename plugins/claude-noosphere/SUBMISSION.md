@@ -11,19 +11,19 @@ Noosphere
 Tagline:
 
 ```text
-Shared Debug Memory for Claude Code Agents
+Automatic Live Skills for Claude Code
 ```
 
 Short description:
 
 ```text
-Stop solving the same bug twice. Noosphere lets Claude Code consult and publish reusable debugging memories through MCP.
+Install once. Claude Code automatically discovers, digest-verifies, applies, and locally verifies relevant reviewed fixes from Noosphere's live Skill registry.
 ```
 
 Long description:
 
 ```text
-Noosphere turns verified debugging lessons into shared agent memory and live, review-gated Agent Skills. Claude Code can discover 14 versioned foundational Skills, verify exact digests, check updates, report execution outcomes, and upload reproducible evidence for a new version through MCP. The plugin contains the MCP connection and manual slash commands, while Skills remain in one public immutable registry.
+Noosphere turns verified debugging lessons into shared agent memory and live, review-gated Agent Skills. Claude Code can discover 14 versioned foundational Skills automatically when a concrete software failure occurs, verify exact digests, check applicability and updates, run local verification, and report execution outcomes only with explicit consent. The plugin contains one control Skill, a bounded SessionStart hook, the MCP connection, and optional manual commands; all dynamic engineering Skills remain in one public immutable registry.
 ```
 
 ## Review Notes
@@ -31,7 +31,7 @@ Noosphere turns verified debugging lessons into shared agent memory and live, re
 - Plugin manifest: `.claude-plugin/plugin.json`
 - Marketplace manifest: `../../.claude-plugin/marketplace.json`
 - MCP server: `uvx noosphere-mcp`
-- Required user configuration: `github_token`
+- Optional user configuration: `github_token` for fresh Issue reads and explicit public writes
 - Default memory repository: `JinNing6/Noosphere`
 - Privacy policy: `../../PRIVACY.md`
 - License: `../../LICENSE`
@@ -66,6 +66,9 @@ Do this in order:
 2. Confirm manifest and package structure:
    - `plugins/claude-noosphere/.claude-plugin/plugin.json`
    - `plugins/claude-noosphere/commands/*`
+   - `plugins/claude-noosphere/skills/using-noosphere/SKILL.md`
+   - `plugins/claude-noosphere/hooks/hooks.json`
+   - `plugins/claude-noosphere/scripts/noosphere-session-start.cjs`
    - `plugins/claude-noosphere/.mcp.json`
 3. Validate locally:
 

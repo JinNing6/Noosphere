@@ -1,9 +1,11 @@
 # Noosphere Claude Code Plugin
 
-Noosphere gives Claude Code shared debug memory and review-gated dynamic Skills.
+Noosphere makes reviewed shared fixes available automatically when Claude Code encounters a concrete software failure.
 
 The plugin connects Claude Code to one live registry containing 14 Agent Skills:
 
+- one plugin-local `using-noosphere` control Skill for safe automatic discovery and use
+- a fast `SessionStart` hook that restores the activation contract after startup, resume, clear, or compaction
 - Noosphere MCP tools through `uvx noosphere-mcp`
 - `agent-debug-memory` for consulting shared memory before debugging
 - `upload-debug-memory` for publishing verified lessons after a fix
@@ -11,7 +13,7 @@ The plugin connects Claude Code to one live registry containing 14 Agent Skills:
 - ten maintainer-authored engineering playbooks for async UI, browser actionability, CSS/R3F layering, public CI, Windows npm, child-process lifecycle, Cloudflare Pages, Docker/Git, FastAPI contracts, and binary credential parsing
 - `/noosphere-consult` and `/noosphere-upload` commands for manual control
 
-The plugin contains no plugin-local Skill copies. Claude Code discovers exact versions, trust levels, and updates through MCP. See the [live Skill catalog](../../docs/live-skills.md).
+The plugin contains no plugin-local copies of dynamic engineering Skills. Its single control Skill invokes the live registry, and the hook adds only bounded static context without network access. Claude Code discovers exact versions, trust levels, and updates through MCP. See the [live Skill catalog](../../docs/live-skills.md).
 
 ## Install from GitHub
 
@@ -23,10 +25,12 @@ Inside Claude Code:
 /reload-plugins
 ```
 
-When enabling the plugin, provide:
+When enabling the plugin:
 
-- `github_token`: GitHub token used by `noosphere-mcp`
+- `github_token`: optional; anonymous registry discovery works without it, while public writes require it and explicit consent
 - `noosphere_repo`: defaults to `JinNing6/Noosphere`
+
+After installation, describe a concrete software failure normally. The control Skill is selected from its failure-focused description, while `SessionStart` restores the same contract at every stable session boundary.
 
 ## Local Development Test
 

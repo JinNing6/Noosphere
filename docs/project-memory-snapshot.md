@@ -4,12 +4,21 @@ Last verified: 2026-07-20 (Asia/Shanghai)
 
 ## Launch Metadata Alignment
 
-- Codex and Claude Code plugin manifests, the Claude marketplace, and the public MCP package now share version `0.8.3`. Explicit Claude plugin versions are cache keys, so future plugin-visible changes must bump the manifest version instead of relying on a repository commit alone.
+- Public PyPI and GitHub releases remain at `0.8.3`. Branch `codex/automatic-live-skill-bootstrap` prepares the Codex and Claude Code plugins, Claude marketplace, MCP package, and registry manifests as the aligned `0.9.0` release candidate. Explicit Claude plugin versions are cache keys, so the automatic-bootstrap change requires this semantic version bump rather than relying on a repository commit alone.
 - Public plugin descriptions and documentation now report the canonical registry state of 14 active Live Skills and 2 remaining verified Seeds. Repository validation derives these values from `shared_skills/registry.json` and rejects future count drift.
 - The repository marketplace display name is `Noosphere Live Skills`, aligned with the current product category rather than the legacy Agent Memory entry point.
 - The Codex plugin MCP companion file now uses the current `mcpServers` schema. The bundled plugin validator rejects the legacy `mcp_servers` spelling, and repository validation now guards this boundary.
 - GitHub repository Topics are managed as public discovery metadata. The launch set targets Agent Skills, MCP, coding Agents, debugging, shared memory, supported Agent runtimes, and developer tooling.
 - The public `noosphere-mcp==0.8.3` validation command was re-run on Windows 11 on 2026-07-20. The deterministic failure/fix boundary passed in 27.22 seconds of validation time and 29.42 seconds end to end.
+
+## Automatic Live Skill Bootstrap
+
+- The product entry point is now install-once Agent behavior rather than a manual query command. When a concrete software engineering failure is present, the Agent frames the failure, discovers the live registry, retrieves one applicable immutable version, verifies its SHA-256, checks local applicability, applies the relevant guidance, and runs the real project verification.
+- Codex and Claude Code contain one byte-identical plugin-local control Skill named `using-noosphere`. It contains no concrete engineering fix and is not a parallel registry. Repository validation permits only this control Skill and rejects any additional plugin-local Skill as a dynamic artifact copy.
+- Codex enables implicit invocation through `agents/openai.yaml`. Claude Code declares the Skill in its manifest and runs a dependency-free, no-network `SessionStart` hook at startup, resume, clear, and compaction to restore the activation contract without fetching or executing community content during session initialization.
+- Anonymous read-only discovery remains the default and does not require a GitHub token. A public memory upload, Outcome, or withdrawal request remains authenticated and requires explicit user consent at the time of the write. Digest identity never replaces local applicability checks or local verification.
+- The English and Chinese repository first screens now lead with Codex and Claude Code installation, then preserve the zero-configuration query, deterministic validation command, evidence paths, Android App, and 3D universe as secondary surfaces.
+- Local release-candidate verification passed 208 SDK tests, 36 repository tests, 97 Node workflow and supply-chain tests, Ruff checks and formatting, registry and migration validation, the Codex plugin validator, `claude plugin validate`, and Skill Creator validation. The built `noosphere_mcp-0.9.0-py3-none-any.whl` installed into a clean environment with no GitHub token, advertised `serverInfo.version=0.9.0`, returned all 45 tools in 4.911 seconds, and passed the deterministic public-artifact validation in 36.36 seconds. CI change detection now routes every file under both plugin roots through the shared Skill gate, including hook-only and manifest-only updates. GitHub PR checks remain required before merge.
 
 ## Living Skill #001 Public Release
 
@@ -172,8 +181,9 @@ Last verified: 2026-07-20 (Asia/Shanghai)
 
 ## Required Deployment Steps
 
-1. Continue Issue #51 from the completed ten-candidate screen: reproduce at least three failures, submit bounded upstream fixes, and record a Noosphere Outcome only after an affected maintainer or another independent identity confirms the result publicly.
-2. Upgrade `public-artifact-runtime-smoke-gate` from `maintainer-validated` only after a second GitHub publisher submits independently reproduced evidence. Claim `outcome-proven` only after an exact-version third-party Agent reuse is recorded with public evidence.
-3. Convert the first external failed or partial outcome into a reviewed immutable `1.1.0` candidate and demonstrate `check_skill_updates` plus digest-verified retrieval. This version transition, not raw Skill count, is the first proof of a Living Skill network.
-4. Complete the separate Glama admin deployment and release so its public directory record exposes the current 45-tool runtime rather than the stale legacy snapshot.
-5. Handle the existing Vite chunk warning, npm dependency advisories, and GitHub Actions Node runtime deprecation in separate maintenance work; none blocks `v0.8.3` or the external-issue campaign.
+1. Merge the automatic-bootstrap PR only after the complete Python, Node, plugin, package, MCP, and validation-kit gates pass; then publish one GitHub Release `v0.9.0` so PyPI and cache-keyed plugin metadata become public together.
+2. Continue Issue #51 from the completed ten-candidate screen: reproduce at least three failures, submit bounded upstream fixes, and record a Noosphere Outcome only after an affected maintainer or another independent identity confirms the result publicly.
+3. Upgrade `public-artifact-runtime-smoke-gate` from `maintainer-validated` only after a second GitHub publisher submits independently reproduced evidence. Claim `outcome-proven` only after an exact-version third-party Agent reuse is recorded with public evidence.
+4. Convert the first external failed or partial outcome into a reviewed immutable `1.1.0` candidate and demonstrate `check_skill_updates` plus digest-verified retrieval. This version transition, not raw Skill count, is the first proof of a Living Skill network.
+5. Complete the separate Glama admin deployment and release so its public directory record exposes the current 45-tool runtime rather than the stale legacy snapshot.
+6. Handle the existing Vite chunk warning, npm dependency advisories, and GitHub Actions Node runtime deprecation in separate maintenance work; none blocks the `v0.9.0` automatic-bootstrap candidate or the external-issue campaign.

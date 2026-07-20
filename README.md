@@ -20,6 +20,28 @@ future Agent can retrieve the evidence, apply the fix, and report whether it wor
 
 </div>
 
+## Install once. Your Agent inherits every verified fix.
+
+| Runtime | Install |
+|---|---|
+| Codex | `codex plugin marketplace add JinNing6/Noosphere` |
+| Claude Code | `/plugin marketplace add JinNing6/Noosphere` then `/plugin install noosphere@noosphere-agent-memory` |
+| Cursor / Cline / Windsurf | Add the standard MCP stdio server: `uvx noosphere-mcp` |
+
+Codex implicitly activates the bundled `using-noosphere` control Skill for concrete
+software failures. Claude Code loads the same byte-identical protocol and reinforces it
+at startup, resume, clear, and compaction. The Agent then:
+
+```text
+frame the failure -> discover applicable Live Skills -> verify exact SHA-256
+                  -> check local applicability -> apply -> run real verification
+```
+
+The plugin does **not** bundle static copies of the 14 engineering Skills. They remain in
+one review-gated live registry, so a reviewed update is available to every connected
+Agent without reinstalling the plugin. Read-only discovery works anonymously. Creating
+public memory or Outcome records always requires authentication and explicit user consent.
+
 ## Try the public memory now
 
 No clone, account, token, or configuration file is required:
@@ -94,7 +116,7 @@ uvx --from 'noosphere-mcp[semantic]' noosphere-mcp
 ```
 
 > [!IMPORTANT]
-> Version `v0.8.3` adds the first immutable Living Skill and turns the validation result into a prefilled, token-free GitHub handoff. Windows, Linux, and macOS CI enforce the same sub-60-second fixture, and the public release verifier executes it from the exact PyPI installation. The default MCP runtime remains scanner-friendly, lightweight, and anonymously readable. Anonymous queries use
+> Version `v0.9.0` adds automatic failure-time Live Skill discovery to the Codex and Claude Code plugins through one shared control protocol. The dynamic engineering Skills remain registry-owned and digest-verified; anonymous discovery is read-only, while public writes remain authenticated and consent-gated. It also retains the first immutable Living Skill and its prefilled, token-free validation handoff. Windows, Linux, and macOS CI enforce the same sub-60-second fixture, and the public release verifier executes it from the exact PyPI installation. The default MCP runtime remains scanner-friendly, lightweight, and anonymously readable. Anonymous queries use
 > the repository's canonical public index; authenticated sessions retain the fresher Issues + permanent
 > file search path. Install the `semantic` extra for local multilingual vector ranking;
 > otherwise search degrades to BM25. Write operations always require GitHub authentication.
@@ -850,7 +872,7 @@ Unlike the old world, the Community of Consciousness continuously evolves. When 
 | `uvx` / `npx` (Recommended) | ⚡ **Auto Evolve** | Just restart the IDE / MCP client. `uvx` automatically pulls the latest version on launch |
 | `pip install` (Manual) | 🔧 Manual Upgrade | Execute `pip install --upgrade noosphere-mcp`, then restart IDE |
 
-Maintainer release path for the unified live registry: publish a semantic GitHub Release such as `v0.8.3` from the intended `main` commit. The single `release.published` trigger runs `.github/workflows/publish-pypi.yml`, which builds `noosphere-mcp` with SDK, workflow, validation-kit, and shared Skill supply-chain tests, then publishes through PyPI Trusted Publishing/OIDC without a stored `PYPI_TOKEN`; after the PyPI verifier performs a real anonymous `initialize + tools/list` handshake and the sub-60-second validation command against a clean installed runtime, it dispatches `.github/workflows/deploy-pages.yml` on `main` so GitHub Pages refreshes the public evidence and Skill indexes. Do not push the release tag separately: creating a GitHub Release also creates its tag, and two configured triggers would race to publish the same immutable PyPI version. After PyPI shows `0.8.3`, `uvx noosphere-mcp`, `uvx --from noosphere-mcp noosphere-query "your error"`, `uvx --from noosphere-mcp noosphere-validate public-artifact-runtime-smoke-gate`, and `pip install --upgrade noosphere-mcp` deliver the 45 MCP tools, 14 live Skill registry entries, zero-configuration read-only query, and the prefilled independent-validation path.
+Maintainer release path for the unified live registry: publish a semantic GitHub Release such as `v0.9.0` from the intended `main` commit. The single `release.published` trigger runs `.github/workflows/publish-pypi.yml`, which builds `noosphere-mcp` with SDK, workflow, validation-kit, and shared Skill supply-chain tests, then publishes through PyPI Trusted Publishing/OIDC without a stored `PYPI_TOKEN`; after the PyPI verifier performs a real anonymous `initialize + tools/list` handshake and the sub-60-second validation command against a clean installed runtime, it dispatches `.github/workflows/deploy-pages.yml` on `main` so GitHub Pages refreshes the public evidence and Skill indexes. Do not push the release tag separately: creating a GitHub Release also creates its tag, and two configured triggers would race to publish the same immutable PyPI version. After PyPI shows `0.9.0`, `uvx noosphere-mcp`, `uvx --from noosphere-mcp noosphere-query "your error"`, `uvx --from noosphere-mcp noosphere-validate public-artifact-runtime-smoke-gate`, and `pip install --upgrade noosphere-mcp` deliver the 45 MCP tools, 14 live Skill registry entries, zero-configuration read-only query, and the prefilled independent-validation path.
 
 > 💡 **How to check**: Look at your MCP config. If `command` is `"uvx"`, you are in Auto Evolve mode; if `"python"`, you are in Manual mode.
 >

@@ -1,16 +1,17 @@
 # Noosphere Codex Plugin
 
-Noosphere turns debugging experience into shared agent memory and review-gated dynamic Skills for Codex.
+Noosphere makes reviewed shared fixes available automatically when Codex encounters a concrete software failure.
 
 The plugin connects Codex to one live registry containing 14 Agent Skills:
 
+- one plugin-local `using-noosphere` control Skill that triggers discovery, digest verification, applicability checks, and project verification
 - Noosphere MCP tools through `uvx noosphere-mcp`
 - `agent-debug-memory` for consulting shared memory before debugging
 - `upload-debug-memory` for publishing verified lessons after a fix
 - `dynamic-shared-skills` for discovering digest-verified, versioned workflows and returning confirmed outcomes
 - ten maintainer-authored engineering playbooks for async UI, browser actionability, CSS/R3F layering, public CI, Windows npm, child-process lifecycle, Cloudflare Pages, Docker/Git, FastAPI contracts, and binary credential parsing
 
-The plugin contains no plugin-local Skill copies. Codex discovers exact versions, trust levels, and updates through MCP. See the [live Skill catalog](../../docs/live-skills.md).
+The plugin contains no plugin-local copies of dynamic engineering Skills. The single control Skill is implicitly invokable and all concrete fixes remain in the live registry. Codex discovers exact versions, trust levels, and updates through MCP. See the [live Skill catalog](../../docs/live-skills.md).
 
 ## Install
 
@@ -22,9 +23,11 @@ codex plugin marketplace add JinNing6/Noosphere
 
 Restart Codex, open the plugin directory, choose **Noosphere Live Skills**, then install **Noosphere**.
 
-## Auth
+After installation, describe a real bug, failing test, build failure, package fault, or runtime incident normally. Codex will invoke `using-noosphere` when its failure trigger matches; no manual slash command is required.
 
-Set `GITHUB_TOKEN` in the environment where Codex starts. The token is forwarded to the Noosphere MCP server and is used to read and create public GitHub issues in `JinNing6/Noosphere`.
+## Optional Auth
+
+Anonymous registry discovery works without a token. Set `GITHUB_TOKEN` only for fresh Issue-layer reads or an explicitly approved public write. The token is forwarded to the Noosphere MCP server and is never required for the default read-only path.
 
 The plugin MCP config sets:
 
@@ -37,7 +40,7 @@ The plugin MCP config sets:
 ## Starter Prompts
 
 ```text
-Consult Noosphere before fixing this bug.
+Fix this failing build.
 Upload this fix as reusable debug memory.
 Find an approved shared Skill for this failure and verify it before use.
 ```

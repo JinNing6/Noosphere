@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Validate the versioned Noosphere Skill registry and MCP-only plugins."""
+"""Validate the versioned Noosphere Skill registry and Agent plugins."""
 
 from __future__ import annotations
 
@@ -303,6 +303,93 @@ def validate_outcomes(registry: dict, ledger: dict) -> list[str]:
     return errors
 
 
+def validate_plugin_bootstrap(root: Path) -> list[str]:
+    """Allow one shared control Skill while rejecting bundled dynamic artifacts."""
+    errors: list[str] = []
+    plugin_roots = [
+        root / "plugins" / "noosphere",
+        root / "plugins" / "claude-noosphere",
+    ]
+    control_paths: list[Path] = []
+    for plugin_root in plugin_roots:
+        skills_root = plugin_root / "skills"
+        discovered = (
+            {path.parent.name for path in skills_root.glob("*/SKILL.md")}
+            if skills_root.is_dir()
+            else set()
+        )
+        unexpected = sorted(discovered - {"using-noosphere"})
+        if unexpected:
+            errors.append(
+                "Plugin must not bundle dynamic Skill copies: "
+                f"{plugin_root}: {', '.join(unexpected)}"
+            )
+        control_path = skills_root / "using-noosphere" / "SKILL.md"
+        control_paths.append(control_path)
+        errors.extend(validate_skill_file(control_path, "using-noosphere"))
+
+    if all(path.is_file() for path in control_paths) and (
+        _canonical_artifact_bytes(control_paths[0])
+        != _canonical_artifact_bytes(control_paths[1])
+    ):
+        errors.append("Codex and Claude Code control Skill drift")
+
+    codex_metadata = (
+        root
+        / "plugins"
+        / "noosphere"
+        / "skills"
+        / "using-noosphere"
+        / "agents"
+        / "openai.yaml"
+    )
+    try:
+        metadata = codex_metadata.read_text(encoding="utf-8")
+    except OSError as exc:
+        errors.append(f"Cannot read Codex control Skill metadata: {exc}")
+    else:
+        if not re.search(r"allow_implicit_invocation:\s*true\b", metadata):
+            errors.append("Codex control Skill must allow implicit invocation")
+
+    manifest_contracts = [
+        (
+            root / "plugins" / "noosphere" / ".codex-plugin" / "plugin.json",
+            {"skills": "./skills/"},
+        ),
+        (
+            root / "plugins" / "claude-noosphere" / ".claude-plugin" / "plugin.json",
+            {"skills": "./skills/", "hooks": "./hooks/hooks.json"},
+        ),
+    ]
+    for manifest_path, expected in manifest_contracts:
+        try:
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as exc:
+            errors.append(
+                f"Cannot parse plugin bootstrap manifest {manifest_path}: {exc}"
+            )
+            continue
+        for field, value in expected.items():
+            if manifest.get(field) != value:
+                errors.append(
+                    f"Plugin bootstrap manifest must set {field}={value!r}: "
+                    f"{manifest_path}"
+                )
+
+    hook_path = root / "plugins" / "claude-noosphere" / "hooks" / "hooks.json"
+    script_path = (
+        root
+        / "plugins"
+        / "claude-noosphere"
+        / "scripts"
+        / "noosphere-session-start.cjs"
+    )
+    for path in (hook_path, script_path):
+        if not path.is_file():
+            errors.append(f"Missing Claude Code automatic bootstrap artifact: {path}")
+    return errors
+
+
 def validate_repository(root: Path) -> list[str]:
     errors: list[str] = []
     registry_path = root / "shared_skills" / "registry.json"
@@ -318,6 +405,7 @@ def validate_repository(root: Path) -> list[str]:
         errors.append(f"Cannot read shared Skill outcome ledger: {exc}")
     else:
         errors.extend(validate_outcomes(registry, outcomes))
+    errors.extend(validate_plugin_bootstrap(root))
     manifest_paths = [
         root / "plugins" / "noosphere" / ".codex-plugin" / "plugin.json",
         root / "plugins" / "claude-noosphere" / ".claude-plugin" / "plugin.json",
@@ -395,11 +483,6 @@ def validate_repository(root: Path) -> list[str]:
             if expected not in text:
                 errors.append(
                     f"Plugin Skill count drift in {path}: expected `{expected}`"
-                )
-        for path, manifest in zip(manifest_paths[:2], manifests[:2], strict=True):
-            if manifest.get("skills"):
-                errors.append(
-                    f"Plugin must load live Skills through MCP, not bundle static copies: {path}"
                 )
     codex_mcp_path = root / "plugins" / "noosphere" / ".mcp.json"
     try:
