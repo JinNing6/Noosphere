@@ -4,14 +4,16 @@
 
 # Noosphere
 
-### 面向 Coding Agent、由证据与审核驱动的动态共享 Skill 网络
+### 面向 Coding Agent、由证据与审核驱动的 Live Skill 网络
 
-**不要让每个 Agent 重复解决同一个 Bug。** 一个 Agent 发现失败模式，后续 Agent
-可以检索证据、应用修复，并反馈这次复用是否真的有效。
+## 安装一次。一个 Agent 学会，所有 Agent 继承这个 Skill。
 
-[![实时 Skills](https://img.shields.io/badge/实时_Skills-14-8d7cff?style=for-the-badge)](docs/live-skills.md)
-[![已验证种子](https://img.shields.io/badge/已验证种子-2-2ea043?style=for-the-badge)](docs/founding-debug-memories.md)
-[![MCP 工具](https://img.shields.io/badge/MCP_工具-45-0969da?style=for-the-badge)](sdk/noosphere/noosphere_mcp.py)
+Noosphere 将 Coding Agent 连接到同一个持续更新的 Skill 注册表。遇到具体故障时，Agent 会自动
+发现适用的审核后 Skill、校验精确制品、检查本地适用性，并在声称成功前运行真实项目验证。
+
+[![Live Skills](https://img.shields.io/badge/Live_Skills-14-8d7cff?style=for-the-badge)](docs/live-skills.md)
+[![注册表](https://img.shields.io/badge/注册表-r2-55d7e5?style=for-the-badge)](shared_skills/registry.json)
+[![版本](https://img.shields.io/badge/版本-v0.9.0-68df9b?style=for-the-badge)](https://github.com/JinNing6/Noosphere/releases/tag/v0.9.0)
 [![PyPI](https://img.shields.io/pypi/v/noosphere-mcp?style=for-the-badge&logo=pypi&logoColor=white)](https://pypi.org/project/noosphere-mcp/)
 
 **Codex · Claude Code · Cursor / Cline / Windsurf · 所有 MCP 客户端**
@@ -20,7 +22,7 @@
 
 </div>
 
-## 安装一次，让 Agent 继承所有经过验证的修复
+## 安装一次
 
 | 运行时 | 安装方式 |
 |---|---|
@@ -32,49 +34,59 @@ Codex 会在遇到具体软件故障时隐式启用 `using-noosphere` 控制 Ski
 加载同一份逐字节一致的协议，并在启动、恢复、清空上下文和压缩后重新注入。Agent 会自动执行：
 
 ```text
-描述故障 -> 查找适用的实时 Skill -> 校验精确 SHA-256
+描述故障 -> 查找适用的 Live Skill -> 校验精确 SHA-256
         -> 检查本地适用性 -> 应用 -> 运行真实验证
 ```
 
-插件不会复制 14 个动态工程 Skills；它们始终归属于同一个审核门禁注册表，因此审核后的
-更新会直接提供给所有已连接 Agent，无需重新安装插件。匿名只读检索不需要 Token；创建
-公开记忆或 Outcome 始终需要身份认证和用户当次明确同意。
-
-## 零配置查询公共记忆
-
-无需克隆仓库、注册账号、配置 Token 或编写配置文件：
-
-```bash
-uvx --from noosphere-mcp noosphere-query "React Three Fiber mobile glowing node tap selects wrong instance"
-```
-
-匿名只读命令只请求一次公开索引。只有查询最新 Issue、上传、反馈或提高 API
-额度时才需要 GitHub Token。
-
-## 验证第一个 Living Skill
-
-运行一条确定性命令，在隔离环境中复现真实的公共制品故障并验证修复：
-
-```bash
-uvx --from noosphere-mcp noosphere-validate public-artifact-runtime-smoke-gate
-```
-
-无需克隆仓库、准备个人项目、配置 GitHub Token、理解 MCP 协议或注册包索引账号。
-命令受 60 秒硬门禁约束，并直接生成已预填完整证据的 GitHub 链接；审核内容、
-勾选声明并提交即可，无需手工复制 JSON。
-
 <div align="center">
-  <img src="assets/demo/agent-debug-memory.gif" alt="Agent 遇到 Android 节点点击故障，查询 Noosphere，获得第 35 号已验证种子记忆，应用修复并通过回归测试" width="900">
+  <a href="docs/demo-v090-auto-live-skill.md">
+    <img src="assets/launch/noosphere-live-skills-v090-demo.gif" alt="Coding Agent 遇到已安装制品故障后，自动发现审核后的 Noosphere Live Skill，校验精确 SHA-256，应用公共制品运行门禁并通过隔离验证" width="960">
+  </a>
+  <br>
+  <sub>基于公开 <code>noosphere-mcp==0.9.0</code> 真实查询与验证输出制作的时间压缩重建。</sub>
 </div>
 
-这段 20 秒演示严格来自真实的[第 35 号工程记录](https://github.com/JinNing6/Noosphere/issues/35)。
-它展示的是尚未达到独立复现等级的**已验证 Seed Memory**。注册表同时已有 14 个
-实时 Skills，并明确标记为 `maintainer-validated`（维护者验证）。
+插件不会复制 14 个动态工程 Skills；它们始终归属于同一个审核门禁注册表，因此审核后的
+Skill 更新会直接提供给所有已连接 Agent，无需重新安装插件。匿名只读检索不需要 Token；
+创建公开记忆或 Outcome 始终需要身份认证和用户当次明确同意。
+
+## 一个真实 Skill 的完整链路
+
+[`public-artifact-runtime-smoke-gate@1.0.0`](shared_skills/active/public-artifact-runtime-smoke-gate/SKILL.md)
+沉淀了一类源码 CI 无法发现的发布故障：源码入口可以运行，但精确安装后的 Wheel 因遗漏
+运行模块而直接退出。
+
+| 层级 | 公开证据 |
+|---|---|
+| 发现 | 注册表 revision `2` 返回适用的不可变 Skill。 |
+| 完整性 | 返回内容前先校验 SHA-256 `09c9b9ec...043836a1`。 |
+| 应用 | 门禁会离开源码树，安装并调用精确制品。 |
+| 真实验证 | 本次 Windows 记录中：源码退出 `0`、失败制品退出 `1`、修复制品退出 `0`；总结果在 `48.86s` 内 `PASS`。 |
+
+当前版本明确标记为 **maintainer-validated（维护者验证）**，不宣称已经完成外部独立复现。
+无需克隆仓库、准备个人项目、配置 GitHub Token、理解 MCP 或访问外部包索引即可复现：
+
+```bash
+uvx --from noosphere-mcp==0.9.0 noosphere-validate public-artifact-runtime-smoke-gate
+```
+
+命令会生成可审核证据、精确制品摘要和预填提交链接。完整命令记录与声明边界见
+[v0.9.0 演示证据](docs/demo-v090-auto-live-skill.md)。
+
+## 不安装插件也能查询网络
+
+匿名只读访问无需克隆仓库、账号、Token 或配置文件：
+
+```bash
+uvx --from noosphere-mcp==0.9.0 noosphere-query "React Three Fiber mobile glowing node tap selects wrong instance"
+```
+
+只有查询最新 Issue、上传、反馈或提高 API 额度时才需要 GitHub Token。
 
 | 检查真实系统 | 路径 |
 |---|---|
 | 不可变 Skill 注册表 | [`shared_skills/registry.json`](shared_skills/registry.json) |
-| 14 个实时工程 Skills | [目录](docs/live-skills.md) · [当前版本镜像](shared_skills/active/) |
+| 14 个持续更新的工程 Skills | [目录](docs/live-skills.md) · [当前版本镜像](shared_skills/active/) |
 | 不可变版本 | [`shared_skills/releases/<version>/<name>/SKILL.md`](shared_skills/releases/) |
 | 首批真实证据 | [#35](https://github.com/JinNing6/Noosphere/issues/35)、[#36](https://github.com/JinNing6/Noosphere/issues/36)、[#37](https://github.com/JinNing6/Noosphere/issues/37) |
 | 供应链协议 | [`SKILLS_PROTOCOL.md`](SKILLS_PROTOCOL.md) |
@@ -112,8 +124,8 @@ uvx --from 'noosphere-mcp[semantic]' noosphere-mcp
      -> 不可变 SKILL.md -> 摘要校验后调用 -> 结果反馈 -> 更新或审核回滚
 ```
 
-Noosphere 不会直接执行社区提示词。14 个维护者验证的实时 Skills 已作为不可变 `1.0.0` 版本进入
-同一个实时注册表，带维护者来源和 SHA-256 校验。新的社区 Skill 或更新版本仍必须具备
+Noosphere 不会直接执行社区提示词。14 个维护者验证的 Live Skills 已作为不可变 `1.0.0` 版本进入
+同一个持续更新的注册表，带维护者来源和 SHA-256 校验。新的社区 Skill 或更新版本仍必须具备
 结构化根因证据、两个独立发布者、人工审核、结果反馈和回滚能力。2 个剩余的已验证 Seeds
 尚未跨过独立复现门禁，因此不会被宣传为社区验证版本。
 

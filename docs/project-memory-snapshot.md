@@ -189,3 +189,35 @@ Last verified: 2026-07-20 (Asia/Shanghai)
 3. Convert the first external failed or partial outcome into a reviewed immutable `1.1.0` candidate and demonstrate `check_skill_updates` plus digest-verified retrieval. This version transition, not raw Skill count, is the first proof of a Living Skill network.
 4. Complete the separate Glama admin deployment and release so its public directory record exposes the current 45-tool runtime rather than the stale legacy snapshot.
 5. Handle the existing Vite chunk warning, npm dependency advisories, and GitHub Actions Node runtime deprecation in separate maintenance work; none blocks public `v0.9.0` or the external-issue campaign.
+
+## Concentrated v0.9.0 Launch Surface
+
+- On 2026-07-20 the concentrated developer launch was prepared from remote `main` commit
+  `71947ae1016a100f40ba525976151d3e244a6e50` on branch
+  `codex/v090-concentrated-launch`. The older dirty Android/frontend workspace was left
+  untouched in a separate worktree.
+- The English and Chinese README first screens now use one promise:
+  `Install once. One Agent learns. Every Agent inherits the Skill.` / `安装一次。一个 Agent
+  学会，所有 Agent 继承这个 Skill。` The first screen leads with install commands,
+  automatic failure-time discovery, exact artifact verification, and one real Skill case.
+- The launch demo uses real public `noosphere-mcp==0.9.0` outputs. Anonymous queries returned
+  registry revision `2` and `public-artifact-runtime-smoke-gate@1.0.0` with exact SHA-256
+  `09c9b9ec1925a2d624bf6f8efb2a92ce0bc41e1c2a4b64628b4d389c043836a1`.
+- The deterministic validation passed on `Windows 11 / AMD64 / Python 3.12.11` in `48.86s`:
+  source invocation exit `0`, installed failing artifact exit `1`, and installed fixed
+  artifact exit `0` with version `1.0.1`. This is maintainer validation, not external
+  independent reproduction.
+- Generated launch assets are reproducible from `scripts/render-v090-launch-assets.ps1`:
+  a 1280 x 640 PNG social preview below GitHub's 1 MB limit, a 19-second 1280 x 720 H.264
+  `yuv420p` MP4, and a 960 x 540 animated GIF. The renderer binds browser descendants to a
+  Windows kill-on-close Job Object and leaves no matching child process after completion.
+- `docs/launch-copy.md` and `docs/launch-pack.md` now define one-message, one-CTA launch copy
+  and a 72-hour English-then-Chinese release sequence. The Android application and original
+  3D universe remain secondary product surfaces and do not block the developer launch.
+- Verification after the launch-surface update: `208` SDK tests passed with an isolated
+  pytest base directory; `22` repository unit tests passed; README local links and images
+  resolve; launch-surface truthfulness tests pass; the social preview is `1280 x 640 / 95 KB`;
+  the MP4 is `19.0s / 1280 x 720 / yuv420p`; and no renderer process remains.
+- After merge, upload `assets/launch/noosphere-live-skills-v090-social-preview.png` through
+  GitHub repository Settings, then execute the 72-hour channel sequence. Do not change the
+  current trust claim from `maintainer-validated` until linked independent evidence exists.

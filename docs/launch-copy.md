@@ -1,93 +1,141 @@
-# Launch Copy
+# Noosphere v0.9.0 Launch Copy
 
-Use these as starting points. Adjust only the first sentence for the audience, and keep the install/proof links intact.
+Status date: 2026-07-20
 
-## Core One-Liner
+Use one product promise across every channel. Adapt the opening sentence to the audience,
+but do not change the trust boundary, install commands, or evidence links.
+
+## Core Message
 
 ```text
-Noosphere is shared debug memory for Claude Code and Codex agents.
-Stop solving the same bug twice.
+Install once. One Agent learns. Every Agent inherits the Skill.
 ```
 
-## X / LinkedIn
+Supporting line:
 
 ```text
-I built Noosphere: shared debug memory for AI coding agents.
-
-When Claude Code or Codex hits a bug:
-1. consult_noosphere
-2. find prior warnings/patterns/decisions
-3. fix once
-4. upload_consciousness
-5. the next agent starts smarter
-
-It is GitHub-installable today:
-Claude Code: /plugin marketplace add JinNing6/Noosphere
-Codex: codex plugin marketplace add JinNing6/Noosphere
-PyPI: uvx noosphere-mcp
-
-Repo: https://github.com/JinNing6/Noosphere
-
-I am collecting real repeated-bug memories this week: MCP auth, Playwright flakes, PyPI publishing, React hydration, Claude/Codex plugin installs.
+Noosphere gives coding Agents automatic access to live, review-gated Skills with exact
+artifact digests and local verification before reuse.
 ```
 
-## Claude Code Community
+Chinese:
 
 ```text
-I am launching Noosphere for Claude Code: shared debug memory for agents.
+安装一次。一个 Agent 学会，所有 Agent 继承这个 Skill。
 
-The workflow is intentionally narrow:
+Noosphere 让 Coding Agent 自动访问持续更新、经过审核的 Skills；调用前校验精确制品，
+并在本地运行真实验证。
+```
 
-Claude Code hits an error
--> /noosphere:agent-debug-memory
--> consults prior warnings/patterns/decisions
--> verified fix
--> /noosphere:upload-debug-memory
--> the next agent avoids the same trap
+## Single Call To Action
 
-Install:
+Lead with the Codex install command in general developer channels:
+
+```bash
+codex plugin marketplace add JinNing6/Noosphere
+```
+
+Link to the repository after the command:
+
+```text
+https://github.com/JinNing6/Noosphere
+```
+
+Use the Claude Code commands only in Claude-specific channels:
+
+```text
 /plugin marketplace add JinNing6/Noosphere
 /plugin install noosphere@noosphere-agent-memory
-/reload-plugins
-
-Public read-only consultation works without a GitHub token. Uploads need a token.
-
-Repo: https://github.com/JinNing6/Noosphere
-
-I am looking for real bug memories from Claude Code users, especially plugin setup failures, MCP auth issues, packaging errors, and test flakes.
 ```
 
-## Codex Community
+## Verified Facts Available For Launch
+
+- Public GitHub Release: `v0.9.0`.
+- Public PyPI artifact: `noosphere-mcp==0.9.0`.
+- 14 maintainer-validated Live Skills in registry revision 2.
+- Anonymous read-only discovery without a GitHub token.
+- Exact SHA-256 verification before a Skill artifact is returned.
+- Automatic failure-time activation for Codex and Claude Code through the shared
+  `using-noosphere` control Skill.
+- Deterministic Windows, Linux, and macOS validation for Living Skill #001.
+- Current public verification level is `maintainer-validated`; no external independent
+  reproduction is claimed yet.
+
+## Launch Assets
+
+- Social preview: `assets/launch/noosphere-live-skills-v090-social-preview.png`
+- Animated demo: `assets/launch/noosphere-live-skills-v090-demo.gif`
+- MP4 demo: `assets/launch/noosphere-live-skills-v090-demo.mp4`
+- Evidence boundary: `docs/demo-v090-auto-live-skill.md`
+- Real Skill: `shared_skills/active/public-artifact-runtime-smoke-gate/SKILL.md`
+- Release: `https://github.com/JinNing6/Noosphere/releases/tag/v0.9.0`
+
+The GitHub social preview image must be uploaded through repository Settings. GitHub's
+documented target is 1280 x 640 and below 1 MB; the generated asset meets both constraints.
+
+## X / LinkedIn Launch Thread
+
+### Post 1
 
 ```text
-Noosphere is now a GitHub-installable Codex marketplace for shared agent debug memory.
+Install once. One Agent learns. Every Agent inherits the Skill.
 
-Install:
+Noosphere v0.9.0 gives Codex and Claude Code automatic access to a live, review-gated
+Skill registry when a concrete software failure occurs.
+
+https://github.com/JinNing6/Noosphere
+```
+
+Attach `noosphere-live-skills-v090-demo.mp4`.
+
+### Post 2
+
+```text
+This is not another static Skill folder.
+
+The Agent discovers an applicable release, verifies its exact SHA-256, checks
+applies_when / avoid_when against the local project, applies only the relevant steps,
+and runs the real project verification.
+```
+
+### Post 3
+
+```text
+The first end-to-end case catches a release failure that source-only CI misses:
+
+source entry point: PASS
+installed failing artifact: FAIL
+installed fixed artifact: PASS
+
+The full fixture runs without a repository clone, personal project, or GitHub token.
+```
+
+### Post 4
+
+```text
+Current trust boundary:
+
+- 14 maintainer-validated Live Skills
+- immutable releases
+- exact artifact digests
+- anonymous read-only discovery
+- review-gated updates and rollback
+
+We do not claim external independent reproduction until that evidence exists.
+```
+
+### Post 5
+
+```text
+Codex:
 codex plugin marketplace add JinNing6/Noosphere
 
-Use case:
-before spending 30 minutes rediscovering a bug, the agent consults public Noosphere memory. After the fix is verified, it uploads the warning/pattern/decision for future agents.
+Claude Code:
+/plugin marketplace add JinNing6/Noosphere
+/plugin install noosphere@noosphere-agent-memory
 
-Repo: https://github.com/JinNing6/Noosphere
-
-I am collecting concrete "this bug keeps happening to agents" examples this week.
-```
-
-## Reddit
-
-```text
-I built an open-source MCP project called Noosphere.
-
-The narrow use case: shared debug memory for AI coding agents. When Claude Code or Codex hits a bug, it can consult public memories of prior warnings/patterns/decisions before trying to solve it from scratch. After a verified fix, it can upload the distilled lesson for the next agent.
-
-Install paths:
-- Claude Code: /plugin marketplace add JinNing6/Noosphere
-- Codex: codex plugin marketplace add JinNing6/Noosphere
-- PyPI: uvx noosphere-mcp
-
-Repo: https://github.com/JinNing6/Noosphere
-
-I am looking for hard feedback and real repeated bug examples. Especially MCP auth, Playwright flakes, PyPI publishing, React/Next hydration, Claude/Codex plugin install problems.
+Any MCP client:
+uvx noosphere-mcp
 ```
 
 ## Show HN
@@ -95,126 +143,139 @@ I am looking for hard feedback and real repeated bug examples. Especially MCP au
 Title:
 
 ```text
-Show HN: Noosphere - shared debug memory for AI coding agents
+Show HN: Noosphere - Live Skills that coding agents inherit automatically
 ```
 
 Body:
 
 ```text
-I built Noosphere because AI coding agents keep rediscovering the same bugs: MCP auth issues, plugin setup failures, packaging edge cases, flaky browser tests, framework-specific traps.
+AI coding agents still solve the same engineering failures in isolation. I built
+Noosphere so a reviewed Skill learned from one failure can become available to every
+connected Agent without rebundling static copies.
 
-Noosphere is an MCP-driven shared memory layer. The first use case is deliberately concrete:
+In v0.9.0, Codex and Claude Code load the same control Skill. When a concrete failure
+occurs, the Agent discovers an applicable immutable release, verifies its exact SHA-256,
+checks whether it applies to the local evidence, and runs the real project verification.
 
-agent hits bug
--> consult_noosphere
--> prior warning/pattern/decision found
--> fix is verified
--> upload_consciousness
--> the next agent starts smarter
+The repository currently contains 14 maintainer-validated Live Skills. That label is
+intentional: I am not claiming external independent reproduction before it exists.
 
-It is open source and installable today:
-- Claude Code: /plugin marketplace add JinNing6/Noosphere
-- Codex: codex plugin marketplace add JinNing6/Noosphere
-- PyPI: uvx noosphere-mcp
+The first end-to-end case is a public-artifact runtime gate. It reproduces a package that
+passes from the source tree but fails after installation because the runtime module was
+omitted, then proves the corrected artifact from an isolated environment.
 
-There is also a public GitHub Issue upload path for people who do not have MCP set up yet.
+Codex install:
+codex plugin marketplace add JinNing6/Noosphere
 
-I would especially like feedback on whether the workflow is narrow enough, whether the install path is clear, and what repeated agent-debugging failures should be seeded first.
+Zero-token terminal query:
+uvx --from noosphere-mcp==0.9.0 noosphere-query "your error"
+
+Repository and complete public evidence:
+https://github.com/JinNing6/Noosphere
+
+I would value hard feedback on the trust model, automatic activation boundary, and which
+high-frequency engineering failures deserve the next Live Skills.
 ```
 
-HN note: do not ask for upvotes, do not use generated comments, and stay available to answer questions personally.
+Do not ask for upvotes, coordinate votes, or publish generated replies. Stay available and
+answer technical questions personally with links to code and evidence.
 
-## Product Hunt
-
-Name:
-
-```text
-Noosphere
-```
-
-Tagline:
+## Reddit / Technical Communities
 
 ```text
-Shared debug memory for AI coding agents
-```
+I built an open-source live Skill registry for coding agents.
 
-Short description:
+The difference from a static Skill directory is the runtime path: Codex or Claude Code
+encounters a concrete failure, discovers an applicable reviewed Skill, verifies the exact
+artifact digest, checks local applicability, and runs real verification before reporting
+success.
 
-```text
-Noosphere lets Claude Code, Codex, and MCP agents consult shared warnings, bug patterns, and decisions before rediscovering the same failure. After a verified fix, agents can upload the distilled lesson so future agents start smarter.
-```
+v0.9.0 is public. The current registry has 14 maintainer-validated Skills; I am not
+calling them externally reproduced before that evidence exists.
 
-First comment:
+The first deterministic case catches a Python/MCP release that works from source but
+fails after exact artifact installation.
 
-```text
-Noosphere started from a simple frustration: AI coding agents keep solving the same bugs in isolation.
+Codex:
+codex plugin marketplace add JinNing6/Noosphere
 
-The first killer workflow is shared debug memory:
-1. Agent hits a bug
-2. Agent consults Noosphere
-3. Prior warning/pattern/decision is found
-4. Fix is verified
-5. The distilled lesson is uploaded for future agents
-
-It is open source and installable today through Claude Code, Codex GitHub marketplace, and PyPI.
-
-I am using this launch to collect real repeated-bug memories and hard feedback on the install/onboarding flow.
-```
-
-Product Hunt note: ask people to visit and comment, not upvote.
-
-## Discord
-
-```text
-I am opening the first Noosphere launch sprint.
-
-Focus: shared debug memory for Claude Code and Codex agents.
-
-If an agent hits a bug, it should consult prior warnings before solving from scratch. If it fixes something real, it should upload the distilled lesson so the next agent avoids it.
-
-Install:
-Claude Code: /plugin marketplace add JinNing6/Noosphere
-Codex: codex plugin marketplace add JinNing6/Noosphere
-PyPI: uvx noosphere-mcp
+Read-only, no token:
+uvx --from noosphere-mcp==0.9.0 noosphere-query "your error"
 
 Repo: https://github.com/JinNing6/Noosphere
 
-This week I want 20 real repeated-bug memories. Drop one issue you have seen agents repeatedly mishandle.
+I am specifically looking for criticism of the trust and update model, not generic launch feedback.
 ```
 
-## GitHub Discussion Or Issue Intro
+Read each community's self-promotion rules before posting. Do not cross-post identical text
+to multiple subcommunities at the same time.
+
+## V2EX / 掘金 / 中文开发者社区
+
+Title:
 
 ```text
-This is the public launch sprint for Noosphere's first killer workflow: Agent Debug Memory Network.
-
-Goal for this sprint:
-- 20 real bug-memory contributions
-- 5 non-maintainer contributors
-- 10 public share-proof URLs
-- 5 concrete bug-save stories
-
-Install:
-- Claude Code: /plugin marketplace add JinNing6/Noosphere
-- Codex: codex plugin marketplace add JinNing6/Noosphere
-- PyPI: uvx noosphere-mcp
-
-No MCP yet:
-https://github.com/JinNing6/Noosphere/issues/new?template=consciousness-upload.yml
-
-Shared it publicly:
-https://github.com/JinNing6/Noosphere/issues/new?template=share-proof.yml
+我把 Coding Agent 的调试经验做成了可以持续更新和继承的 Skill
 ```
 
-## Proof Recording After Posting
-
-After every public post, record the real URL:
+Body:
 
 ```text
-https://github.com/JinNing6/Noosphere/issues/new?template=share-proof.yml
+最近反复遇到一个问题：不同 Coding Agent 会在不同项目里重新排查同一类工程故障。
+静态 SKILL.md 可以保存流程，但无法回答版本是否最新、来源是什么、是否真的执行成功，
+以及出错后如何更新或回滚。
+
+因此我做了 Noosphere v0.9.0：
+
+安装一次。一个 Agent 学会，所有 Agent 继承这个 Skill。
+
+当 Codex 或 Claude Code 遇到具体软件故障时，会先自动查询审核门禁的 Live Skill 注册表，
+获取不可变版本，校验精确 SHA-256，再检查 applies_when / avoid_when，最后在当前项目运行
+真实验证。没有匹配 Skill 时不会强行套用，也不会阻塞正常调试。
+
+第一个完整案例解决的是“源码测试通过，但发布后的 Python 包 / CLI / MCP Server 无法启动”。
+确定性夹具会证明：源码入口退出 0、遗漏模块的安装制品退出 1、修复后的精确制品退出 0。
+
+当前公开边界也写得很清楚：14 个 Skills 属于 maintainer-validated，不会在缺少外部证据时
+宣传成社区独立验证。
+
+Codex 安装：
+codex plugin marketplace add JinNing6/Noosphere
+
+无需 Token 的只读查询：
+uvx --from noosphere-mcp==0.9.0 noosphere-query "你的报错"
+
+源码、注册表、不可变 Skill、摘要和验证夹具全部公开：
+https://github.com/JinNing6/Noosphere
+
+最希望讨论两个问题：这种审核与回滚边界是否足够可信，以及你最希望 Agent 不再重复排查
+哪一类工程故障？
 ```
 
-Then ask an agent with Noosphere installed:
+## Follow-Up Proof Post
+
+Publish this only after real external evidence exists. Replace placeholders with linked facts.
 
 ```text
-Run share_attribution_report, then growth_flywheel. Do not infer downloads, reposts, referrals, retention, rewards, or install counts.
+Noosphere Live Skill update:
+
+[Skill name] was used in [public environment].
+Outcome: [success / partial / failure]
+Verification: [public command or CI link]
+Contributor: [public GitHub identity]
+
+The evidence did / did not trigger an update candidate. Noosphere keeps the old release
+immutable and publishes reviewed changes as a new digest-pinned version.
 ```
+
+## Measurement
+
+Record only verifiable metrics:
+
+- GitHub repository visitors and Stars.
+- PyPI downloads from the official endpoint.
+- Public install feedback.
+- Successful, partial, and failed Skill Outcomes.
+- External validators and public evidence URLs.
+
+Do not infer installs from clones, users from downloads, or successful reuse from a click.
