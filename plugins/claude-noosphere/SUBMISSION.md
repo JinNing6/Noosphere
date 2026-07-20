@@ -23,7 +23,7 @@ Stop solving the same bug twice. Noosphere lets Claude Code consult and publish 
 Long description:
 
 ```text
-Noosphere turns verified debugging lessons into shared agent memory and live, review-gated Agent Skills. Claude Code can discover 13 versioned foundational Skills, verify exact digests, check updates, report execution outcomes, and upload reproducible evidence for a new version through MCP. The plugin contains the MCP connection and manual slash commands, while Skills remain in one public immutable registry.
+Noosphere turns verified debugging lessons into shared agent memory and live, review-gated Agent Skills. Claude Code can discover 14 versioned foundational Skills, verify exact digests, check updates, report execution outcomes, and upload reproducible evidence for a new version through MCP. The plugin contains the MCP connection and manual slash commands, while Skills remain in one public immutable registry.
 ```
 
 ## Review Notes

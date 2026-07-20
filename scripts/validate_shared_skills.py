@@ -340,11 +340,79 @@ def validate_repository(root: Path) -> list[str]:
             errors.append(
                 f"Plugin manifest versions diverge: {sorted(str(value) for value in versions)}"
             )
+        sdk_init = root / "sdk" / "noosphere" / "__init__.py"
+        try:
+            sdk_init_text = sdk_init.read_text(encoding="utf-8")
+        except OSError as exc:
+            errors.append(f"Cannot read SDK version metadata: {exc}")
+        else:
+            sdk_version_match = re.search(
+                r'^__version__\s*=\s*["\'](\d+\.\d+\.\d+)["\']',
+                sdk_init_text,
+                re.MULTILINE,
+            )
+            if not sdk_version_match:
+                errors.append("Cannot parse SDK version metadata")
+            elif versions != {sdk_version_match.group(1)}:
+                errors.append(
+                    "Plugin manifests must match the public SDK version: "
+                    f"sdk={sdk_version_match.group(1)}, "
+                    f"plugins={sorted(str(value) for value in versions)}"
+                )
+
+        active_skill_count = sum(
+            1
+            for skill in registry.get("skills", [])
+            if isinstance(skill, dict) and skill.get("latest")
+        )
+        codex_description = manifests[0].get("interface", {}).get("longDescription", "")
+        expected_description = f"Discover {active_skill_count} versioned"
+        if expected_description not in codex_description:
+            errors.append(
+                f"Codex plugin Skill count drift: expected `{expected_description}`"
+            )
+
+        count_copy = [
+            (
+                root / "plugins" / "noosphere" / "README.md",
+                f"containing {active_skill_count} Agent Skills",
+            ),
+            (
+                root / "plugins" / "claude-noosphere" / "README.md",
+                f"containing {active_skill_count} Agent Skills",
+            ),
+            (
+                root / "plugins" / "claude-noosphere" / "SUBMISSION.md",
+                f"discover {active_skill_count} versioned foundational Skills",
+            ),
+        ]
+        for path, expected in count_copy:
+            try:
+                text = path.read_text(encoding="utf-8")
+            except OSError as exc:
+                errors.append(f"Cannot read plugin launch metadata {path}: {exc}")
+                continue
+            if expected not in text:
+                errors.append(
+                    f"Plugin Skill count drift in {path}: expected `{expected}`"
+                )
         for path, manifest in zip(manifest_paths[:2], manifests[:2], strict=True):
             if manifest.get("skills"):
                 errors.append(
                     f"Plugin must load live Skills through MCP, not bundle static copies: {path}"
                 )
+    codex_mcp_path = root / "plugins" / "noosphere" / ".mcp.json"
+    try:
+        codex_mcp = json.loads(codex_mcp_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        errors.append(f"Cannot parse Codex plugin MCP configuration: {exc}")
+    else:
+        if set(codex_mcp) != {"mcpServers"}:
+            errors.append(
+                "Codex plugin .mcp.json must contain only the current `mcpServers` field"
+            )
+        elif not isinstance(codex_mcp["mcpServers"].get("noosphere"), dict):
+            errors.append("Codex plugin .mcp.json is missing the noosphere server")
     return errors
 
 

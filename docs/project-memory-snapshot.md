@@ -1,6 +1,15 @@
 # Noosphere Project Memory Snapshot
 
-Last verified: 2026-07-17 (Asia/Shanghai)
+Last verified: 2026-07-20 (Asia/Shanghai)
+
+## Launch Metadata Alignment
+
+- Codex and Claude Code plugin manifests, the Claude marketplace, and the public MCP package now share version `0.8.3`. Explicit Claude plugin versions are cache keys, so future plugin-visible changes must bump the manifest version instead of relying on a repository commit alone.
+- Public plugin descriptions and documentation now report the canonical registry state of 14 active Live Skills and 2 remaining verified Seeds. Repository validation derives these values from `shared_skills/registry.json` and rejects future count drift.
+- The repository marketplace display name is `Noosphere Live Skills`, aligned with the current product category rather than the legacy Agent Memory entry point.
+- The Codex plugin MCP companion file now uses the current `mcpServers` schema. The bundled plugin validator rejects the legacy `mcp_servers` spelling, and repository validation now guards this boundary.
+- GitHub repository Topics are managed as public discovery metadata. The launch set targets Agent Skills, MCP, coding Agents, debugging, shared memory, supported Agent runtimes, and developer tooling.
+- The public `noosphere-mcp==0.8.3` validation command was re-run on Windows 11 on 2026-07-20. The deterministic failure/fix boundary passed in 27.22 seconds of validation time and 29.42 seconds end to end.
 
 ## Living Skill #001 Public Release
 
@@ -59,7 +68,7 @@ Last verified: 2026-07-17 (Asia/Shanghai)
 - The default surface is a workbench, not a marketing landing page: global search, Tree and Directory views, eight deterministic engineering domains, Skill details, version history, Agent connection guidance, and structured contribution entry points are available in English and Chinese.
 - The tree index is generated only from repository truth. At verification time it contains 13 Live Skills from `shared_skills/registry.json` revision 1 and 3 verified Skill Seeds. Seed ingestion requires trusted review, Skill eligibility, complete symptom/root-cause/fix/verification evidence, and at least one test command; a Seed is excluded when a same-name Live Skill exists.
 - The original three Noosphere workflows plus ten maintainer-authored engineering playbooks now have immutable `1.0.0` releases, active mirrors, exact SHA-256 and byte-size records, provenance, reviewers, and rollback state. Their explicit trust level is `maintainer-validated`; they are usable but are not claimed as independently reproduced.
-- Codex and Claude Code plugins contain no Skill copies. Plugin and marketplace manifests are aligned at version `0.4.0`; Agents discover the same registry through MCP, while standards-compatible installers discover all 13 active mirrors under `shared_skills/active/`.
+- At the `v0.8.0` Skill Tree release, Codex and Claude Code plugins contained no Skill copies, plugin manifests were still at `0.4.0`, and standards-compatible installers discovered 13 active mirrors. The current `0.8.3` launch metadata and 14-Skill registry state are recorded in the alignment section above.
 - The SDK is prepared as `0.8.0`. Registry reads use a 30-second cache with explicit `force_refresh`, and `upload_consciousness` accepts `target_skill` so an Agent can submit evidence for an existing Skill version without crossing identity boundaries.
 - Community actions remain review-gated. Creating or updating a Skill emits the same structured `CONSCIOUSNESS_PAYLOAD` used by MCP, including `target_skill` and engineering evidence; the browser never writes directly to the immutable registry. Two independent GitHub publishers, claim-level agreement, shared executable verification, canonical evidence rehydration, and maintainer approval are mandatory for a community release.
 - The WebGL tree uses responsive node spacing and dedicated transparent hit geometry on mobile. Playwright checks at a 390 x 844 viewport selected two vertically adjacent Skill nodes independently, and the directory search for `runtime smoke` returned the single matching verified Seed without horizontal overflow.

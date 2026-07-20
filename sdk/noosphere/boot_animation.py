@@ -11,6 +11,8 @@ import shutil
 import sys
 import time
 
+from noosphere import __version__
+
 
 # ── ANSI 颜色 ──
 class C:
@@ -213,7 +215,7 @@ def play_boot_sequence() -> None:
 
     _print(f"  {C.CYAN}╭{'─' * 56}╮{C.RESET}")
     _print(
-        f"  {C.CYAN}│{C.RESET}  {C.WHITE}{C.BOLD}🧠 Noosphere MCP Server v0.4.0{C.RESET}                       {C.CYAN}│{C.RESET}"
+        f"  {C.CYAN}│{C.RESET}  {C.WHITE}{C.BOLD}🧠 Noosphere MCP Server v{__version__}{C.RESET}                       {C.CYAN}│{C.RESET}"
     )
     _print(
         f"  {C.CYAN}│{C.RESET}  {C.DIM}The Collective Consciousness Network{C.RESET}                  {C.CYAN}│{C.RESET}"

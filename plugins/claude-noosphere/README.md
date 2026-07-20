@@ -2,7 +2,7 @@
 
 Noosphere gives Claude Code shared debug memory and review-gated dynamic Skills.
 
-The plugin connects Claude Code to one live registry containing 13 Agent Skills:
+The plugin connects Claude Code to one live registry containing 14 Agent Skills:
 
 - Noosphere MCP tools through `uvx noosphere-mcp`
 - `agent-debug-memory` for consulting shared memory before debugging
