@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
-  "revision": 2,
-  "generated_at": "2026-07-17T06:33:24.000Z",
+  "revision": 3,
+  "generated_at": "2026-07-21T06:31:47.277Z",
   "skills": [
     {
       "id": "noosphere:agent-debug-memory",
@@ -453,7 +453,9 @@
           "verification": {
             "level": "maintainer-validated",
             "independent_reproductions": 0,
-            "verified_outcomes": 0
+            "verified_outcomes": 1,
+            "failed_outcomes": 0,
+            "update_needed": false
           },
           "provenance": {
             "kind": "maintainer-authored",

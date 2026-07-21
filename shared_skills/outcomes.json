@@ -1,5 +1,27 @@
 {
   "schema_version": "1.0",
-  "generated_at": null,
-  "outcomes": []
+  "generated_at": "2026-07-21T06:31:47.277Z",
+  "outcomes": [
+    {
+      "outcome_id": "okflint-0.3.0-to-0.3.1-20260721",
+      "skill_name": "public-artifact-runtime-smoke-gate",
+      "skill_version": "1.0.0",
+      "skill_sha256": "09c9b9ec1925a2d624bf6f8efb2a92ce0bc41e1c2a4b64628b4d389c043836a1",
+      "outcome": "success",
+      "task_summary": "Applied public-artifact-runtime-smoke-gate@1.0.0 to the okflint public Wheel boundary. The exact okflint 0.3.0 public artifact failed in an isolated invocation because the CLI imported beartype while the package omitted it from runtime dependencies. A bounded dependency and installed-Wheel smoke-gate PR was submitted. The upstream maintainer then independently landed an equivalent remediation, closed the affected Issue as completed, and released okflint 0.3.1.",
+      "verification_summary": "Fresh isolated verification on 2026-07-21: `uvx --isolated --from okflint==0.3.0 okflint --help` exited 1 with `ModuleNotFoundError: No module named 'beartype'`; `uvx --isolated --from okflint==0.3.1 okflint --help` exited 0 and rendered the CLI help. This confirms the technical diagnosis and released remediation. It does not establish that the upstream maintainer adopted the Noosphere PR, nor that an independent third-party Agent reused the Noosphere Skill digest.",
+      "evidence_urls": [
+        "https://github.com/mattdav/okflint/commit/d727ceb",
+        "https://github.com/mattdav/okflint/issues/2",
+        "https://github.com/mattdav/okflint/pull/4",
+        "https://github.com/mattdav/okflint/releases/tag/v0.3.1",
+        "https://pypi.org/project/okflint/0.3.1/"
+      ],
+      "reporter": "JinNing6",
+      "issue_number": 57,
+      "issue_url": "https://github.com/JinNing6/Noosphere/issues/57",
+      "approved_by": "JinNing6",
+      "approved_at": "2026-07-21T06:31:47.277Z"
+    }
+  ]
 }
