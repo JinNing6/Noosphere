@@ -1,6 +1,6 @@
 # Noosphere v0.9.0 Launch Copy
 
-Status date: 2026-07-20
+Status date: 2026-07-21
 
 Use one product promise across every channel. Adapt the opening sentence to the audience,
 but do not change the trust boundary, install commands, or evidence links.
@@ -26,6 +26,28 @@ Chinese:
 Noosphere 让 Coding Agent 自动访问持续更新、经过审核的 Skills；调用前校验精确制品，
 并在本地运行真实验证。
 ```
+
+## Current Proof Wave
+
+The v0.9.0 text below remains the release-launch copy. Ongoing distribution must use current
+facts from the canonical, channel-native evidence packet rather than repeating the original
+announcement unchanged:
+
+```text
+docs/distribution-waves/live-skill-proof-20260721.md
+```
+
+Current hook:
+
+```text
+One runtime packaging pattern. Three real projects.
+One released upstream repair and two regression-tested fixes under review.
+```
+
+Active Issue search is a cold-start proof method, not the long-term acquisition engine. Each
+new verified event should produce one evidence packet, native channel variants, one conversion
+path, and a 24-/72-hour result review. Keep the public trust level at `maintainer-validated`
+until the existing independent-evidence gates are satisfied.
 
 ## Single Call To Action
 
