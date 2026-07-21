@@ -107,6 +107,35 @@ class LaunchSurfaceTests(unittest.TestCase):
         )
         self.assertNotIn("inherits every verified fix", english[:4000])
 
+    def test_first_distribution_wave_preserves_proof_and_channel_boundaries(self):
+        wave = (
+            REPO_ROOT
+            / "docs"
+            / "distribution-waves"
+            / "live-skill-proof-20260721.md"
+        ).read_text(encoding="utf-8")
+
+        for required in (
+            "okflint==0.3.0",
+            "okflint==0.3.1",
+            "https://github.com/JinNing6/Noosphere/issues/57",
+            "https://github.com/TSchonleber/brainctl/pull/170",
+            "https://github.com/guardiatechnology/ahrena/pull/376",
+            "maintainer-validated",
+            "Weekly External Verified Reuses",
+            "X / LinkedIn",
+            "Show HN",
+            "Reddit",
+            "V2EX",
+            "掘金 / DEV",
+            "24-hour",
+            "72-hour",
+        ):
+            self.assertIn(required, wave)
+
+        self.assertNotIn("independently validated", wave)
+        self.assertNotIn("CI passed", wave)
+
     def test_glama_has_a_deterministic_anonymous_source_container(self):
         dockerfile = (REPO_ROOT / "Dockerfile").read_text(encoding="utf-8")
         dockerignore = (REPO_ROOT / ".dockerignore").read_text(encoding="utf-8")

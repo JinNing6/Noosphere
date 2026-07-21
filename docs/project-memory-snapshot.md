@@ -229,6 +229,31 @@ Last verified: 2026-07-21 (Asia/Shanghai)
   first externally evidenced partial or failed Outcome must still become a reviewed,
   immutable update candidate rather than mutating `1.0.0`.
 
+## Synchronized Distribution Strategy
+
+- On 2026-07-21, the launch strategy moved from a finite channel sequence plus manual Issue
+  discovery to a proof-led synchronized distribution loop. Active Issue discovery remains a
+  cold-start evidence-production method; it is not the long-term acquisition engine.
+- The operating loop is: verified event -> canonical evidence packet -> channel-native media
+  wave -> one install-and-use path -> public Outcome or maintainer response -> next verified
+  event. Identical mass cross-posting is explicitly excluded.
+- The product north star remains `Weekly External Verified Reuses`. Stars, views, downloads,
+  and post impressions remain diagnostic reach signals and cannot be treated as installs,
+  people, or successful reuse.
+- The GitHub API baseline captured at 2026-07-21 15:59 +08:00 was 18 Stars, 1 fork, and 39
+  repository views from 19 unique visitors in the current 14-day window. Top referrers were
+  `github.com` at 6 views / 1 unique, Baidu at 1 / 1, and Google at 1 / 1.
+- The public proof ledgers contained 0 Share Proof Issues and 0 Growth Proof Issues at that
+  baseline. Outcome #57 remained the only recorded Skill Outcome and was maintainer-reported,
+  so it did not raise the `maintainer-validated` trust level.
+- The first synchronized packet is
+  `docs/distribution-waves/live-skill-proof-20260721.md`. It combines the released okflint
+  repair with open upstream brainctl PR #170 and Ahrena PR #376 while preserving their exact
+  review and workflow-approval states.
+- The strategy introduces no tracking SDK, cookies, fingerprinting, or inferred adoption
+  metrics. Measurement uses public post URLs, GitHub's bounded 14-day traffic/referrer API,
+  upstream maintainer actions, and exact-version Outcomes.
+
 ## Required Deployment Steps
 
 1. Monitor and respond to review on `brainctl#170` and `Ahrena#376`. Their first workflow runs

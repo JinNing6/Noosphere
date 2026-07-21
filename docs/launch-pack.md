@@ -1,6 +1,6 @@
 # Noosphere v0.9.0 Concentrated Launch Pack
 
-Status date: 2026-07-20
+Status date: 2026-07-21
 
 ## Current Decision
 
@@ -23,6 +23,39 @@ codex plugin marketplace add JinNing6/Noosphere
 Do not lead with the 3D universe, consciousness philosophy, Android application, 45-tool
 count, or a request to contribute. Those remain available after the user understands the
 automatic Live Skill workflow.
+
+## Synchronized Distribution Loop
+
+The 72-hour launch sequence is the release wave, not the long-term growth engine. Ongoing
+distribution uses this loop:
+
+```text
+verified event
+-> canonical evidence packet
+-> channel-native media wave
+-> one install-and-use path
+-> public Outcome or maintainer response
+-> next verified event
+```
+
+Active Issue discovery remains useful as a cold-start proof method. It must not become the
+permanent acquisition model. Long-term supply comes from real Agent Outcomes, upstream
+maintainer responses, reviewed Skill updates, search discovery, and channel discussions that
+return new failure evidence.
+
+Synchronization means that every channel uses the same verified facts, trust boundary, and
+conversion path. It does not mean publishing identical copy everywhere. Reddit, Show HN,
+V2EX, short-form media, and long-form media each require a native form and their current rules
+must be checked before publication.
+
+The current evidence packet and public execution ledger are:
+
+```text
+docs/distribution-waves/live-skill-proof-20260721.md
+```
+
+The north star remains `Weekly External Verified Reuses`. Public URLs, repository traffic,
+and platform engagement are diagnostic signals; none proves an install or successful reuse.
 
 ## Verified Launch Baseline
 
