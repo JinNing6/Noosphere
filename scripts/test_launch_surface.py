@@ -121,6 +121,8 @@ class LaunchSurfaceTests(unittest.TestCase):
             "https://github.com/JinNing6/Noosphere/issues/57",
             "https://github.com/TSchonleber/brainctl/pull/170",
             "https://github.com/guardiatechnology/ahrena/pull/376",
+            "https://github.com/JinNing6/Noosphere/discussions/61",
+            "https://github.com/JinNing6/Noosphere/issues/62",
             "maintainer-validated",
             "Weekly External Verified Reuses",
             "X / LinkedIn",
