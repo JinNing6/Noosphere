@@ -1,6 +1,6 @@
 # Noosphere Project Memory Snapshot
 
-Last verified: 2026-07-20 (Asia/Shanghai)
+Last verified: 2026-07-21 (Asia/Shanghai)
 
 ## Launch Metadata Alignment
 
@@ -182,9 +182,41 @@ Last verified: 2026-07-20 (Asia/Shanghai)
 - Reusable methods are captured in validated global Skills `dynamic-shared-skill-supply-chain` and `release-runtime-smoke-gate`.
 - GitHub Actions currently emits a Node.js 20 deprecation warning for pinned action runtimes that GitHub forces onto Node.js 24. It is non-blocking but should be removed in a maintenance PR.
 
+## First Recorded Skill Outcome And External Proof Sprint
+
+- On 2026-07-21, authenticated Outcome Issue #57 recorded the first approved public
+  execution result for `public-artifact-runtime-smoke-gate@1.0.0`. Its stable Outcome ID is
+  `okflint-0.3.0-to-0.3.1-20260721`, its result is `success`, and it is bound to the immutable
+  release SHA-256 `09c9b9ec1925a2d624bf6f8efb2a92ce0bc41e1c2a4b64628b4d389c043836a1`.
+- The exact public `okflint==0.3.0` artifact reproduced the missing-runtime-dependency failure:
+  `uvx --isolated --from okflint==0.3.0 okflint --help` exited `1` with
+  `ModuleNotFoundError: No module named 'beartype'`. The upstream maintainer independently
+  landed the equivalent remediation in `d727ceb`, closed the affected Issue as completed,
+  and released `v0.3.1`; the exact `0.3.1` command exited `0`.
+- Contributor PR `mattdav/okflint#4` was closed as superseded after the upstream release. Its
+  closing note explicitly avoids claiming that the maintainer adopted the PR. Outcome #57
+  likewise records technical success without claiming independent Agent reuse or upstream
+  use of Noosphere.
+- The approved Outcome workflow advanced the public registry from revision `2` to revision
+  `3` and the public Outcome ledger from `0` to `1`. The release now reports one verified
+  success, zero failed outcomes, and `update_needed: false`. The reporter and approver are
+  both `JinNing6`, so the verification level correctly remains `maintainer-validated`.
+- External Proof Sprint Issue #51 now has three of three selected failures reproduced. For
+  `brainctl==2.8.0`, a base install followed by `brainctl-mcp --help` exited `1` with a raw
+  missing-`mcp` traceback, while `brainctl[mcp]==2.8.0` exited `0`. For `ahrena-mcp==0.1.0a1`,
+  an isolated editable install exited `0` while its source path existed, exited `1` with
+  `ModuleNotFoundError: No module named 'ahrena_mcp'` after that path was moved, and returned
+  to `0` after the exact path was restored.
+- The first recorded Outcome is a success and does not justify a `1.1.0` Skill update. The
+  first externally evidenced partial or failed Outcome must still become a reviewed,
+  immutable update candidate rather than mutating `1.0.0`.
+
 ## Required Deployment Steps
 
-1. Continue Issue #51 from the completed ten-candidate screen: reproduce at least three failures, submit bounded upstream fixes, and record a Noosphere Outcome only after an affected maintainer or another independent identity confirms the result publicly.
+1. Continue Issue #51 from the completed three-of-three reproduction state: prepare bounded,
+   regression-tested fixes for `brainctl#159` and `ahrena#331`, then request explicit approval
+   before either new upstream write. Outcome #57 is already recorded; do not present it as
+   independent Noosphere reuse.
 2. Upgrade `public-artifact-runtime-smoke-gate` from `maintainer-validated` only after a second GitHub publisher submits independently reproduced evidence. Claim `outcome-proven` only after an exact-version third-party Agent reuse is recorded with public evidence.
 3. Convert the first external failed or partial outcome into a reviewed immutable `1.1.0` candidate and demonstrate `check_skill_updates` plus digest-verified retrieval. This version transition, not raw Skill count, is the first proof of a Living Skill network.
 4. Complete the separate Glama admin deployment and release so its public directory record exposes the current 45-tool runtime rather than the stale legacy snapshot.
