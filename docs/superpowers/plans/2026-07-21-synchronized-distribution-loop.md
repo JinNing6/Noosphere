@@ -161,7 +161,7 @@ git diff -- docs/distribution-waves/live-skill-proof-20260721.md docs/launch-pac
 
 Expected: no fabricated adoption metrics, no trust upgrade, and no unrelated changes.
 
-- [ ] **Step 4: Commit, push, and open a pull request**
+- [x] **Step 4: Commit, push, and open a pull request**
 
 ```powershell
 git add docs scripts/test_launch_surface.py
@@ -177,15 +177,15 @@ Expected: a ready-for-review pull request containing only the synchronized distr
 **Files:**
 - Update after each external action: `docs/distribution-waves/live-skill-proof-20260721.md`
 
-- [ ] **Step 1: Publish GitHub as the canonical anchor**
+- [x] **Step 1: Publish GitHub as the canonical anchor**
 
 After the repository changes reach `main`, publish the factual wave link on the existing launch/proof surface. Record the exact public URL.
 
-- [ ] **Step 2: Stage channel-native posts**
+- [x] **Step 2: Stage channel-native posts**
 
 Prepare X/LinkedIn, one rules-compliant Reddit community, V2EX, and one long-form platform from the wave packet. Do not submit any browser form until the exact destination, account, and post are confirmed at action time.
 
-- [ ] **Step 3: Keep HN human-authored**
+- [x] **Step 3: Keep HN human-authored**
 
 Provide only the fact outline and product link. The maintainer writes and submits the HN explanation personally and does not coordinate votes or comments.
 

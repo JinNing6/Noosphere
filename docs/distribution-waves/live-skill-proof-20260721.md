@@ -2,7 +2,7 @@
 
 Campaign ID: `live-skill-proof-20260721`
 
-Status: prepared; publication starts after this evidence packet reaches `main`
+Status: active; the first public surface was published on 2026-07-21 at 16:37 +08:00
 
 North star: `Weekly External Verified Reuses`
 
@@ -286,8 +286,10 @@ claims. Adapt the surrounding explanation to the platform; do not duplicate the 
 
 | Surface | State | Public URL | Published at | Evidence owner |
 |---|---|---|---|---|
-| Canonical GitHub packet | Prepared | Pending merge to `main` | — | Noosphere maintainer |
-| GitHub proof anchor | Prepared | [Issue #51](https://github.com/JinNing6/Noosphere/issues/51) | Existing | Noosphere maintainer |
+| Canonical GitHub packet | Published | [Evidence packet on `main`](https://github.com/JinNing6/Noosphere/blob/main/docs/distribution-waves/live-skill-proof-20260721.md) | 2026-07-21 16:36 +08:00 | Noosphere maintainer |
+| GitHub Show and tell | Published | [Discussion #61](https://github.com/JinNing6/Noosphere/discussions/61) | 2026-07-21 16:37 +08:00 | Noosphere maintainer |
+| Share Proof ledger | Recorded | [Issue #62](https://github.com/JinNing6/Noosphere/issues/62) | 2026-07-21 16:41 +08:00 | GitHub IssueOps |
+| GitHub proof anchor | Active | [Issue #51](https://github.com/JinNing6/Noosphere/issues/51) | Existing | Noosphere maintainer |
 | X | Prepared | Not published | — | Noosphere maintainer |
 | LinkedIn | Prepared | Not published | — | Noosphere maintainer |
 | Show HN | Human authorship required | Not published | — | Noosphere maintainer |
@@ -297,6 +299,11 @@ claims. Adapt the surrounding explanation to the platform; do not duplicate the 
 
 Every published URL must also be recorded through the repository's Share Proof form. A public
 URL proves that a post exists; it does not prove installs, reuse, or successful Outcomes.
+
+The first loop segment is now verified: Discussion #61 is public, Share Proof #62 contains the
+same URL and source Issue, and both Share Proof IssueOps runs completed successfully. This
+changes the live Share Proof count from the baseline value of 0 to 1 reviewable public URL; it
+does not change install, reuse, or trust claims.
 
 ## Measurement Checkpoints
 
