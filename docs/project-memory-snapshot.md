@@ -207,16 +207,35 @@ Last verified: 2026-07-21 (Asia/Shanghai)
   an isolated editable install exited `0` while its source path existed, exited `1` with
   `ModuleNotFoundError: No module named 'ahrena_mcp'` after that path was moved, and returned
   to `0` after the exact path was restored.
+- Upstream `TSchonleber/brainctl#170` is now open from commit `7466aca`. It routes the
+  `brainctl-mcp` console script through a narrow optional-dependency boundary, returns an
+  exact `[mcp]` pip/pipx remediation with no traceback for a base-only install, preserves
+  unrelated import failures, and clarifies the README install choice. Twenty-six related
+  tests passed. A built `2.8.0` Wheel then proved base install exit `1`, hint present, no
+  traceback, while the same Wheel installed with `[mcp]` exited `0` on `--help`.
+- Upstream `guardiatechnology/ahrena#376` is now open with one GitHub-signed, Verified commit,
+  `5512984`. Adopter installs use a self-contained `pipx install --force <path>`; installer
+  reruns detect and automatically migrate legacy editable installs, conservatively repair an
+  unreadable install mode, and preserve the previous behavior for a healthy non-editable
+  install. Four focused regressions pass. An isolated real pipx lifecycle reproduced the old
+  source-removal failure at exit `1`, applied the installer migration, removed both old and
+  new source directories, and then kept `ahrena-mcp --help` healthy at exit `0`.
+- Both upstream workflow runs currently report `action_required` with zero jobs because a
+  maintainer must approve Actions for a first-time external contributor. This is neither a
+  failing test result nor green CI. Both upstream Issues and PRs remain open, there is no
+  maintainer response or merge claim, no Noosphere Outcome has been recorded for either case,
+  and the Skill correctly remains `maintainer-validated`.
 - The first recorded Outcome is a success and does not justify a `1.1.0` Skill update. The
   first externally evidenced partial or failed Outcome must still become a reviewed,
   immutable update candidate rather than mutating `1.0.0`.
 
 ## Required Deployment Steps
 
-1. Continue Issue #51 from the completed three-of-three reproduction state: prepare bounded,
-   regression-tested fixes for `brainctl#159` and `ahrena#331`, then request explicit approval
-   before either new upstream write. Outcome #57 is already recorded; do not present it as
-   independent Noosphere reuse.
+1. Monitor and respond to review on `brainctl#170` and `Ahrena#376`. Their first workflow runs
+   require upstream maintainer approval before jobs can start; do not describe `action_required`
+   as a failure or a pass. Record a new Outcome only after public maintainer response, merge,
+   release verification, or independently authenticated evidence. Outcome #57 is already
+   recorded; do not present it as independent Noosphere reuse.
 2. Upgrade `public-artifact-runtime-smoke-gate` from `maintainer-validated` only after a second GitHub publisher submits independently reproduced evidence. Claim `outcome-proven` only after an exact-version third-party Agent reuse is recorded with public evidence.
 3. Convert the first external failed or partial outcome into a reviewed immutable `1.1.0` candidate and demonstrate `check_skill_updates` plus digest-verified retrieval. This version transition, not raw Skill count, is the first proof of a Living Skill network.
 4. Complete the separate Glama admin deployment and release so its public directory record exposes the current 45-tool runtime rather than the stale legacy snapshot.
