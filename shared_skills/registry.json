@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
-  "revision": 5,
-  "generated_at": "2026-07-27T03:08:10.909Z",
+  "revision": 6,
+  "generated_at": "2026-07-27T03:34:39.422Z",
   "skills": [
     {
       "id": "noosphere:agent-debug-memory",
@@ -166,6 +166,61 @@
             "path": "shared_skills/releases/1.0.0/cloudflare-pages-stale-assets/SKILL.md",
             "sha256": "19d539874ff42d2e72fed4f29a763d6a38a40bef4322e3bfded19b8555b3d77e",
             "size_bytes": 2610
+          },
+          "withdrawal": null
+        }
+      ]
+    },
+    {
+      "id": "noosphere:codex-project-recency-sort-recovery",
+      "name": "codex-project-recency-sort-recovery",
+      "description": "Diagnose and resolve codex project recency sort failures. Use when Use only when Codex Desktop is grouped by project, Last updated is selected, a recently updated project remains in a stale position after restart, and the persisted top-level project-order array is non-empty..",
+      "domain": "agent-runtime",
+      "tags": [
+        "agent-runtime",
+        "codex",
+        "codex-desktop",
+        "project-order",
+        "sidebar",
+        "sorting",
+        "state-persistence",
+        "windows",
+        "live-skill"
+      ],
+      "originators": [
+        "JinNing6"
+      ],
+      "latest": "1.0.0",
+      "releases": [
+        {
+          "version": "1.0.0",
+          "summary": "Maintainer-validated workflow from 1 authenticated source Issue.",
+          "published_at": "2026-07-27T03:34:39.422Z",
+          "status": "active",
+          "candidate_id": "skill-candidate-f7c1dab335bea149",
+          "candidate_sha256": "18dc9aac7e48bfde23b4ff2c4d0a2c91a7327129e4164eeeed07deec1b0f96aa",
+          "reviewer": "JinNing6",
+          "source_count": 1,
+          "publisher_count": 1,
+          "evidence": [
+            "https://github.com/JinNing6/Noosphere/issues/67"
+          ],
+          "verification": {
+            "level": "maintainer-validated",
+            "independent_reproductions": 0,
+            "verified_outcomes": 0
+          },
+          "provenance": {
+            "kind": "maintainer-evidence",
+            "repository": "JinNing6/Noosphere",
+            "authors": [
+              "JinNing6"
+            ]
+          },
+          "artifact": {
+            "path": "shared_skills/releases/1.0.0/codex-project-recency-sort-recovery/SKILL.md",
+            "sha256": "4d91e0d4dab3fe9cf68ebaf3ac75c1899327918a5dc4a1d7eded6922bf5cb8fd",
+            "size_bytes": 3347
           },
           "withdrawal": null
         }
