@@ -287,12 +287,7 @@ async def test_submit_skill_evidence_creates_distinct_idempotent_record():
     assert issue_route.call_count == 1
     assert submitted["title"].startswith("Shared Skill Evidence:")
     assert "Consciousness Leap" not in submitted["title"]
-    assert "consciousness" not in submitted["labels"]
-    assert submitted["labels"] == [
-        "skill-evidence",
-        "needs-review",
-        "awaiting-independent-evidence",
-    ]
+    assert "labels" not in submitted
     assert '"record_kind": "skill-evidence"' in submitted["body"]
     assert '"proposed_skill": "codex-project-recency-sort-recovery"' in submitted["body"]
     assert "not a consciousness fragment" in submitted["body"]

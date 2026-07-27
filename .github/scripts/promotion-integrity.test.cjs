@@ -9,8 +9,10 @@ const {
   extractWithdrawalRequest,
   findExistingPromotion,
   hasPromotionComment,
+  hasReviewPauseComment,
   isIssueTombstoned,
   promotionCommentMarker,
+  reviewPauseCommentMarker,
 } = require("./promotion-integrity.cjs");
 
 test("uses one deterministic promotion path per source issue", () => {
@@ -53,6 +55,13 @@ test("uses a stable marker to reconcile the promotion success comment", () => {
   assert.equal(marker, "<!-- noosphere-promotion:issue-27 -->");
   assert.equal(hasPromotionComment([{ body: `done\n${marker}` }], 27), true);
   assert.equal(hasPromotionComment([{ body: "unrelated" }], 27), false);
+});
+
+test("uses one stable review-pause comment across workflow retries", () => {
+  const marker = reviewPauseCommentMarker(69);
+  assert.equal(marker, "<!-- noosphere-review-pause:issue-69 -->");
+  assert.equal(hasReviewPauseComment([{ body: `paused\n${marker}` }], 69), true);
+  assert.equal(hasReviewPauseComment([{ body: "unrelated" }], 69), false);
 });
 
 test("builds an idempotent tombstone manifest", () => {
@@ -106,6 +115,12 @@ test("promotion workflow reuses an existing source Issue promotion", () => {
   assert.match(workflow, /canonicalPromotionPath/);
   assert.match(workflow, /existingPromotion\?\.path/);
   assert.match(workflow, /hasPromotionComment/);
+  assert.match(workflow, /hasReviewPauseComment/);
+  assert.match(workflow, /reviewPauseCommentMarker/);
+  assert.match(
+    workflow,
+    /github\.event\.action == 'opened'.*github\.event\.label\.name == 'trusted-review'/s,
+  );
   assert.match(workflow, /git fetch origin main/);
   assert.doesNotMatch(workflow, /skipping duplicate write[\s\S]*?return;/);
 });
