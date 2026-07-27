@@ -29,6 +29,9 @@ After installation, describe a real bug, failing test, build failure, package fa
 
 Anonymous registry discovery works without a token. Focused queries use tolerant ranked
 matching and fall back to the bounded catalog instead of silently returning nothing.
+Catalog results include reviewed Outcome counts as a lower-bound usage metric. With a
+token, `list_shared_skills(mine=true)` verifies the current GitHub identity and returns
+that contributor's published Skills and lifetime reported-use totals.
 Set `GITHUB_TOKEN` only for fresh Issue-layer reads or an explicitly approved public
 write. Verified engineering fixes use `submit_skill_evidence`; they never enter the
 consciousness layer. The token is forwarded to the Noosphere MCP server and is never

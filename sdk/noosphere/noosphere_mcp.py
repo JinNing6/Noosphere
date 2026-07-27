@@ -55,7 +55,10 @@ from noosphere.engine.memory_integrity import (
 )
 from noosphere.engine.shared_skills import (
     check_installed_skill_versions,
+    is_release_originator,
     select_skill_release,
+    summarize_release_usage,
+    summarize_skill_usage,
     validate_skill_name,
     verify_skill_artifact,
 )
@@ -6229,12 +6232,26 @@ def _rank_shared_skill(skill: dict, query_tokens: set[str]) -> tuple[int, list[s
 async def list_shared_skills(
     query: str = "",
     force_refresh: bool = False,
+    mine: bool = False,
 ) -> str:
     """List approved dynamic Skills from the public Noosphere registry.
 
     Registry reads are anonymous. Only human-approved, active releases are
-    returned; unreviewed candidates never enter this interface.
+    returned; unreviewed candidates never enter this interface. Set ``mine``
+    to true to authenticate through GitHub and show only releases contributed
+    by the current token owner, together with reviewed usage counts.
     """
+    authenticated_owner = ""
+    if mine:
+        if not GITHUB_TOKEN:
+            return (
+                "❌ GITHUB_TOKEN not configured. Viewing your shared Skill usage "
+                "requires GitHub authentication."
+            )
+        authenticated_owner = await _get_authenticated_user()
+        if not authenticated_owner:
+            return "❌ Unable to verify the GitHub identity associated with GITHUB_TOKEN."
+
     try:
         registry = await _fetch_shared_skill_registry(force_refresh=force_refresh)
         query_tokens = _shared_skill_search_tokens(query)
@@ -6250,6 +6267,8 @@ async def list_shared_skills(
                 release = select_skill_release(registry, name)
             except (KeyError, ValueError):
                 continue
+            if mine and not is_release_originator(skill, release, authenticated_owner):
+                continue
             score, matched_terms = _rank_shared_skill(skill, query_tokens)
             candidates.append({
                 "name": name,
@@ -6261,16 +6280,18 @@ async def list_shared_skills(
                 "verification_level": release.get("verification", {}).get(
                     "level", "unclassified"
                 ),
+                "usage": summarize_skill_usage(skill),
+                "current_release_usage": summarize_release_usage(release),
                 "match_score": score,
                 "matched_terms": matched_terms,
             })
         if not query_tokens:
-            query_mode = "catalog"
+            query_mode = "owner-catalog" if mine else "catalog"
             visible = candidates
         else:
             visible = [candidate for candidate in candidates if candidate["match_score"] > 0]
             if visible:
-                query_mode = "ranked"
+                query_mode = "owner-ranked" if mine else "ranked"
                 visible.sort(
                     key=lambda candidate: (
                         -candidate["match_score"],
@@ -6279,13 +6300,37 @@ async def list_shared_skills(
                 )
                 visible = visible[:50]
             else:
-                query_mode = "catalog-fallback"
+                query_mode = "owner-catalog-fallback" if mine else "catalog-fallback"
                 visible = candidates[:50]
-        return json.dumps({
+        response = {
             "registry_revision": registry.get("revision", 0),
             "query_mode": query_mode,
+            "usage_measurement": {
+                "counting_basis": "approved-outcome-reports",
+                "lower_bound": True,
+                "excludes": [
+                    "discovery",
+                    "downloads",
+                    "unreported-executions",
+                ],
+            },
             "skills": visible,
-        }, ensure_ascii=False, indent=2)
+        }
+        if mine:
+            response["authenticated_owner"] = authenticated_owner
+            response["owner_summary"] = {
+                "shared_skill_count": len(visible),
+                "reported_usage_count": sum(
+                    item["usage"]["reported_usage_count"] for item in visible
+                ),
+                "successful_usage_count": sum(
+                    item["usage"]["successful_usage_count"] for item in visible
+                ),
+                "non_successful_usage_count": sum(
+                    item["usage"]["non_successful_usage_count"] for item in visible
+                ),
+            }
+        return json.dumps(response, ensure_ascii=False, indent=2)
     except (KeyError, RuntimeError, ValueError) as exc:
         return f"❌ Unable to read the shared Skill registry: {exc}"
 
@@ -6312,11 +6357,15 @@ async def get_shared_skill(
                 "❌ Shared Skill integrity verification failed. "
                 "The artifact was not returned to the Agent."
             )
+        usage = summarize_release_usage(release)
         return (
             f"SHARED SKILL: {skill_name}@{release['version']}\n"
             f"SHA-256: {artifact['sha256']}\n"
             f"Verification level: "
             f"{release.get('verification', {}).get('level', 'unclassified')}\n"
+            f"Reviewed usage reports: {usage['reported_usage_count']} "
+            f"(success: {usage['successful_usage_count']}, "
+            f"non-success: {usage['non_successful_usage_count']})\n"
             f"Registry revision: {registry.get('revision', 0)}\n\n"
             f"{content}"
         )

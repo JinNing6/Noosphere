@@ -73,6 +73,87 @@ def verify_skill_artifact(content: str, release: Mapping[str, Any]) -> bool:
     return len(encoded) == expected_size and hashlib.sha256(encoded).hexdigest() == expected_sha.lower()
 
 
+def summarize_release_usage(release: Mapping[str, Any]) -> dict[str, Any]:
+    """Return the reviewed Outcome count for one immutable Skill release.
+
+    This is deliberately a lower-bound metric. Noosphere does not silently
+    track discovery, downloads, or unreported executions; only trusted-review
+    Outcome records are counted.
+    """
+    verification = release.get("verification", {})
+    if not isinstance(verification, Mapping):
+        raise ValueError("Invalid shared Skill verification metadata")
+
+    def _counter(name: str) -> int:
+        value = verification.get(name, 0)
+        if isinstance(value, bool) or not isinstance(value, int) or value < 0:
+            raise ValueError(f"Invalid shared Skill Outcome counter: {name}")
+        return value
+
+    successful = _counter("verified_outcomes")
+    non_successful = _counter("failed_outcomes")
+    return {
+        "reported_usage_count": successful + non_successful,
+        "successful_usage_count": successful,
+        "non_successful_usage_count": non_successful,
+        "counting_basis": "approved-outcome-reports",
+        "lower_bound": True,
+    }
+
+
+def summarize_skill_usage(skill: Mapping[str, Any]) -> dict[str, Any]:
+    """Aggregate reviewed Outcome counts across every immutable release."""
+    releases = skill.get("releases", [])
+    if not isinstance(releases, list):
+        raise ValueError("Invalid shared Skill releases metadata")
+
+    usage = {
+        "reported_usage_count": 0,
+        "successful_usage_count": 0,
+        "non_successful_usage_count": 0,
+        "counting_basis": "approved-outcome-reports",
+        "lower_bound": True,
+    }
+    for release in releases:
+        if not isinstance(release, Mapping):
+            raise ValueError("Invalid shared Skill release metadata")
+        release_usage = summarize_release_usage(release)
+        for field in (
+            "reported_usage_count",
+            "successful_usage_count",
+            "non_successful_usage_count",
+        ):
+            usage[field] += release_usage[field]
+    return usage
+
+
+def is_release_originator(
+    skill: Mapping[str, Any],
+    release: Mapping[str, Any],
+    github_login: str,
+) -> bool:
+    """Return whether an authenticated GitHub login contributed this release."""
+    login = github_login.strip().casefold()
+    if not login:
+        return False
+
+    identities: list[Any] = []
+    originators = skill.get("originators", [])
+    if isinstance(originators, list):
+        identities.extend(originators)
+
+    provenance = release.get("provenance", {})
+    if isinstance(provenance, Mapping):
+        author = provenance.get("author")
+        if author:
+            identities.append(author)
+        authors = provenance.get("authors", [])
+        if isinstance(authors, list):
+            identities.extend(authors)
+
+    return any(isinstance(identity, str) and identity.strip().casefold() == login for identity in identities)
+
+
 def check_installed_skill_versions(
     registry: Mapping[str, Any],
     installed_versions: Mapping[str, str],

@@ -51,6 +51,11 @@ Skill 更新会直接提供给所有已连接 Agent，无需重新安装插件�
 创建公开 Skill 证据、意识内容或 Outcome 始终需要身份认证和用户当次明确同意。工程修复
 进入独立 Skill Evidence 层，不再上传为意识体。
 
+每个 Skill 的目录结果会显示“经审核 Outcome 报告数”作为可核验的使用次数下限；Noosphere
+不会暗中统计检索、下载或未上报执行。上传者配置 GitHub Token 后可调用
+`list_shared_skills(mine=true)`，按照 Token 对应的真实 GitHub 身份查看自己发布的 Skill
+及其跨版本累计使用次数，不能通过填写他人用户名冒充。
+
 ## 一个真实 Skill 的完整链路
 
 [`public-artifact-runtime-smoke-gate@1.0.0`](shared_skills/active/public-artifact-runtime-smoke-gate/SKILL.md)
@@ -319,7 +324,7 @@ uvx noosphere-mcp
 | 39 | `growth_flywheel` | 诊断真实传播闭环 |
 | 40 | `launch_preflight` | 检查发布、PyPI、Pages 与证明就绪状态 |
 | | **动态共享 Skills** | |
-| 41 | `list_shared_skills` | 容错排序审核后 Skill，无匹配时回退目录 |
+| 41 | `list_shared_skills` | 容错排序、展示审核后使用次数；`mine=true` 查看本人贡献汇总 |
 | 42 | `get_shared_skill` | 获取并校验精确 Skill 制品摘要 |
 | 43 | `check_skill_updates` | 比较已安装版本或摘要 |
 | 44 | `submit_skill_evidence` | 经授权提交独立于意识层的工程证据 |

@@ -15,7 +15,7 @@ community text nor a raw evidence Issue is executable authority.
 6. **Review and rehydrate**: a repository maintainer with write permission reviews the candidate. At publication time CI reloads every referenced canonical memory, rejects tombstoned or missing sources, rebuilds the candidate, and requires the reviewed digest to match exactly. Community text cannot publish itself.
 7. **Render**: the publisher generates a standards-compatible `SKILL.md` with kebab-case `name`, bounded `description`, security boundary, diagnosis, fixes, verification, and evidence.
 8. **Publish and version**: immutable releases are stored under `shared_skills/releases/<version>/<name>/SKILL.md`; `shared_skills/registry.json` records SHA-256, byte size, reviewer, evidence, and active version.
-9. **Distribute and learn**: Agents discover active releases through MCP, verify the exact artifact digest, and submit idempotent outcomes. Approved outcomes enter a public ledger: only independent success with public HTTPS evidence can raise maturity, while partial or failed outcomes mark the release as update-needed without editing its immutable instructions.
+9. **Distribute and learn**: Agents discover active releases through MCP, verify the exact artifact digest, and submit idempotent outcomes. Approved outcomes enter a public ledger: only independent success with public HTTPS evidence can raise maturity, while partial or failed outcomes mark the release as update-needed without editing its immutable instructions. Every catalog result exposes the number of approved Outcome reports as a lower-bound usage count; Noosphere does not silently track discovery, downloads, or unreported executions.
 
 ## Repository Layout
 
@@ -38,7 +38,7 @@ Codex and Claude Code plugins contain only the MCP connection and explicit comma
 
 Noosphere is an MCP server, not an HTTP Skills backend. The implemented tools are:
 
-- `list_shared_skills(query, force_refresh)`: anonymous tolerant ranked discovery of approved active releases. If no term matches, it returns a bounded catalog fallback instead of an empty dead end.
+- `list_shared_skills(query, force_refresh, mine=false)`: anonymous tolerant ranked discovery of approved active releases with reviewed lower-bound usage counts. If no term matches, it returns a bounded catalog fallback instead of an empty dead end. With `mine=true`, the tool verifies the current GitHub token through `/user`, returns only releases attributed to that authenticated contributor, and summarizes their reported usage across immutable versions.
 - `get_shared_skill(skill_name, version, force_refresh)`: registry-whitelisted retrieval with SHA-256 and size verification.
 - `check_skill_updates(installed_versions, force_refresh)`: compares local versions or content digests with the active registry.
 - `submit_skill_evidence(...)`: authenticated, consent-gated, idempotent engineering evidence submission. The response reports the exact non-callable lifecycle state and stable public URL.
@@ -55,9 +55,11 @@ Clients must not construct artifact paths from user input. They select a release
 - Automated moderation produces `screened`, not `verified`. It covers all Agent-facing evidence fields and is a content-risk signal only; screened evidence is withheld from Agent consultation until trusted human review or immutable Skill publication.
 - Moderation failure is fail-closed for Skill candidacy.
 - Self-declared creator names do not establish publisher identity.
+- Contributor usage views are selected from the authenticated GitHub login and canonical registry originators/provenance; callers cannot supply another username.
 - A published Skill cannot override system or user instructions.
 - Agents must verify local applicability and obtain explicit user approval before external writes or destructive actions.
 - Outcome IDs are deterministic and ledger writes are idempotent. Reports remain evidence for review, never an automatic edit signal.
+- Usage counts mean trusted-review Outcome records only. They are an auditable lower bound, not a claim about total executions, downloads, or unique users.
 - Withdrawal preserves the immutable artifact for audit, marks the release inactive, and rolls `latest` back to the newest verified active release. If no active release remains, `latest` is `null`; the public audit page remains visible but installation is disabled.
 
 ## Verification Levels

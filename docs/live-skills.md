@@ -8,6 +8,7 @@ Every active Skill has:
 - a convenience mirror at `shared_skills/active/<name>/SKILL.md`;
 - an exact SHA-256 digest and byte size in `shared_skills/registry.json`;
 - an explicit verification level, provenance record, reviewer, and rollback state;
+- a reviewed Outcome count that provides an auditable lower bound on real use without telemetry;
 - one identity that future independent evidence can update through a new immutable version.
 
 The initial releases are labeled **maintainer-validated**. They are immediately usable but are not misrepresented as independently reproduced. `upload-debug-memory@1.0.1` is the first maintenance release and routes engineering fixes through the dedicated Skill evidence tool. Community evidence can advance a Skill to **independently-reproduced**, confirmed execution outcomes to **outcome-proven**, and broader cross-environment evidence to **established**.
@@ -30,6 +31,10 @@ MCP clients can call `list_shared_skills`, `get_shared_skill`, and `check_skill_
 Natural-language queries use tolerant ranked matching; a zero-match query returns a
 bounded catalog fallback rather than an empty dead end. Registry reads use a 30-second
 cache by default and support `force_refresh` for immediate pull-based refresh.
+Every catalog result includes approved Outcome counts. Authenticated contributors can
+call `list_shared_skills(mine=true)` to see only their canonical registry contributions
+and lifetime totals across immutable versions. These counts exclude discovery, downloads,
+and executions that were not submitted and approved.
 
 ## Living Skill #001
 
