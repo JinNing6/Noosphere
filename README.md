@@ -795,15 +795,15 @@ The leaderboard is auto-generated based on **real GitHub API Commit stats**, upd
 <!-- AUTO-UPDATE-START: contributor-rankings -->
 | 序列 | 宇宙缔造者 (Contributor) | 灵能总值 (Total Psi) | 意志形态与阶梯称号 (Cosmic Title) | 跃迁阈值 |
 |:---:|:---|:---:|:---|:---|
-| 🏆 **#1** | **[JinNing6](https://github.com/JinNing6)** | **450** (45 commits) | 💫 **记忆编织者 (Memory Weaver)** | `Psi ≥ 100` |
+| 🏆 **#1** | **[JinNing6](https://github.com/JinNing6)** | **560** (56 commits) | 🌌 **真理探索家 (Truth Seeker)** | `Psi ≥ 500` |
 
 > **📤 意识上传者排行 (Top Consciousness Uploaders)**
 >
-> 🥇 **[JinNing6](https://github.com/JinNing6)** — 18 次上传 [![badge](https://noosphere-badge.vercel.app/api/rank/JinNing6)](https://jinning6.github.io/Noosphere/?profile=JinNing6)
+> 🥇 **[JinNing6](https://github.com/JinNing6)** — 19 次上传 [![badge](https://noosphere-badge.vercel.app/api/rank/JinNing6)](https://jinning6.github.io/Noosphere/?profile=JinNing6)
 > 🥈 **[shural](https://github.com/shural)** — 3 次上传 [![badge](https://noosphere-badge.vercel.app/api/rank/shural)](https://jinning6.github.io/Noosphere/?profile=shural)
 
-> 🌐 **宇宙能量指标** — ⭐ Stars: **18** | 🍴 Forks: **1** | 👁️ Watchers: **1** | 🧠 意识载荷: **44** 个
-> 🤖 *上次自动更新：`2026-07-20 09:59 (UTC+8)`*
+> 🌐 **宇宙能量指标** — ⭐ Stars: **18** | 🍴 Forks: **2** | 👁️ Watchers: **1** | 🧠 意识载荷: **44** 个
+> 🤖 *上次自动更新：`2026-07-27 09:56 (UTC+8)`*
 <!-- AUTO-UPDATE-END: contributor-rankings -->
 
 > *Note: These paramount wills are shaping the entire stellar network. Click the top animation to enter the [Interactive Universe](https://jinning6.github.io/Noosphere/), pull up the "🌌 Consciousness Heat Network" panel on the bottom right, and view the ultimate visual form: dark cyber glass textures paired with exclusive neon glowing badges for each tier.*
