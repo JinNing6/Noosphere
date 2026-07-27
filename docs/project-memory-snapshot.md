@@ -2,6 +2,17 @@
 
 Last verified: 2026-07-27 (Asia/Shanghai)
 
+## Codex Project Recency Recovery — Published Shared Skill
+
+- Historical Issue #67 remains an unmodified consciousness record. The same verified engineering lesson was resubmitted through the first-class Skill Evidence path as Issue #76, with `record_kind=skill-evidence`, maintainer publication track, the original Issue as public source evidence, and no consciousness-index projection.
+- The opened promotion run paused at `needs-review` as designed. After the evidence fields and the read-only state check were reviewed, `trusted-review` persisted `skill_evidence_payloads/memory_issue0076.json` and created candidate Issue #77. The canonical record is eligible, uses `trusted-human-review`, and binds publisher and reviewer to authenticated maintainer `JinNing6`.
+- Candidate `skill-candidate-f7c1dab335bea149` validates against canonical evidence and rebuilds to the reviewed SHA-256 `18dc9aac7e48bfde23b4ff2c4d0a2c91a7327129e4164eeeed07deec1b0f96aa`. Its applicability and exclusion rules preserve the backup requirement, require Codex to be fully stopped, and avoid clearing unrelated workspace, project, or task-assignment state.
+- Publication workflow run `30234917607` completed staging, supply-chain validation, atomic commit, and decision recording. `codex-project-recency-sort-recovery@1.0.0` is active in registry revision `6`; the registry now contains 16 active Skills.
+- The immutable artifact is `shared_skills/releases/1.0.0/codex-project-recency-sort-recovery/SKILL.md`, 3,347 bytes, SHA-256 `4d91e0d4dab3fe9cf68ebaf3ac75c1899327918a5dc4a1d7eded6922bf5cb8fd`. A fresh remote download reproduced both the byte size and digest.
+- Trust remains explicitly `maintainer-validated`: one authenticated source Issue, one publisher, zero independent reproductions, and zero approved Outcome reports. Discovery or retrieval is not counted as use.
+- A credential-free query for `Codex Desktop project Last updated sorting keeps recently active project in stale sidebar order on Windows` returned ranked mode and placed the new Skill first with score `48`. Exact `get_shared_skill` retrieval returned `1.0.0`, verified the published digest, and preserved the security, safe-fix, applicability, and source-evidence sections.
+- The local verification state at publication time was `project-order=0`, `mode=project`, and `projectSortMode=updated_at`. This proves the local workaround state, not an upstream Codex product fix; the Skill remains applicable only when a non-empty persisted fixed order overrides project recency.
+
 ## Reviewed Shared Skill Usage Metrics
 
 - `list_shared_skills` now exposes per-Skill reviewed usage counts derived from the canonical registry Outcome counters. `usage` aggregates every immutable release, while `current_release_usage` reports the selected active version.
