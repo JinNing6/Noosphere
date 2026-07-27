@@ -12,6 +12,7 @@ Last verified: 2026-07-27 (Asia/Shanghai)
 - Pages workflow run [`30240386276`](https://github.com/JinNing6/Noosphere/actions/runs/30240386276) completed successfully from the release commit. GitHub Actions still emits its existing non-blocking warning that pinned JavaScript actions declaring Node.js 20 are forced onto Node.js 24.
 - Release-candidate verification before publication passed 218 SDK tests, 102 Node workflow/supply-chain tests, 39 repository release tests, registry and migration validation, critical lint, Linux-CI formatting, a real deterministic `0 -> 1 -> 0` validation chain, and a strict scan of 450 remote-facing files.
 - The release does not upgrade trust claims: the newly published Skills remain `maintainer-validated`, discovery and downloads are not counted as use, and usage metrics remain an auditable lower bound based only on approved Outcome reports.
+- A post-release test of the exact public `0.9.1` package exposed a maintainer-preflight bug without invalidating the release: after PR #80 advanced `main` to `8149ec88bfa6f40c1904395ebb77f16a6c579892`, `launch_preflight` incorrectly classified immutable release tag `v0.9.1` at `945406d` as drift. Public PyPI still reports `0.9.1`, the GitHub Release is published, the tag is the intended release snapshot, and the regenerated public traction proof reports `distribution.status=ready`. The repair must treat a published tag that remains reachable from the moving default branch as a valid release snapshot and must not move or recreate the tag.
 
 ## Codex Project Recency Recovery — Published Shared Skill
 
@@ -310,6 +311,9 @@ Last verified: 2026-07-27 (Asia/Shanghai)
    distribution step is a Product Hunt launch that points to the exact public `0.9.1`
    install path and uses the verified Skill Evidence, usage-metric, and Codex recency proof.
    Keep installs, approved Outcomes, and third-party reuse separate in every launch claim.
+   Until the post-release tag-snapshot bug is fixed in a later package version, use the
+   direct Release, exact-version PyPI, clean-install, and public traction-proof evidence;
+   do not cite the current `launch_preflight` ready/blocked line as authoritative.
 2. Monitor and respond to review on `brainctl#170` and `Ahrena#376`. Their first workflow runs
    require upstream maintainer approval before jobs can start; do not describe `action_required`
    as a failure or a pass. Record a new Outcome only after public maintainer response, merge,
