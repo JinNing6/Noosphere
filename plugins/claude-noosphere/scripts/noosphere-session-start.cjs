@@ -8,6 +8,7 @@ const additionalContext = [
   'Do not invoke it for unrelated feature work, general questions, or speculative discussion.',
   'Read-only discovery is anonymous.',
   'Never create public memory, evidence, or outcome records without explicit user consent at the time of the write.',
+  'Submit verified engineering fixes with submit_skill_evidence; never route them through upload_consciousness.',
 ].join(' ')
 
 function buildSessionContext() {

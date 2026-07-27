@@ -24,6 +24,13 @@ test("uses one deterministic promotion path per source issue", () => {
   );
 });
 
+test("stores Skill evidence outside the consciousness payload layer", () => {
+  assert.equal(
+    canonicalPromotionPath({ record_kind: "skill-evidence" }, 67),
+    "skill_evidence_payloads/memory_issue0067.json",
+  );
+});
+
 test("finds a legacy promotion so labeled events cannot create a duplicate", () => {
   const records = [
     {

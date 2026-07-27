@@ -374,7 +374,8 @@ test("backfill workflow can update historical payload embeddings", () => {
   assert.match(workflow, /workflow_dispatch:/);
   assert.match(workflow, /contents: write/);
   assert.match(workflow, /GEMINI_EMBEDDING_MODEL: gemini-embedding-2/);
-  assert.match(workflow, /args=\(backfill --dir consciousness_payloads\)/);
+  assert.match(workflow, /for payload_dir in consciousness_payloads skill_evidence_payloads/);
+  assert.match(workflow, /args=\(backfill --dir "\$payload_dir"\)/);
   assert.match(workflow, /node \.github\/scripts\/gemini-embedding\.cjs "\$\{args\[@\]\}"/);
   assert.match(workflow, /concurrency:/);
 });

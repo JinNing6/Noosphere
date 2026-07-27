@@ -5,6 +5,7 @@ const path = require("node:path");
 const test = require("node:test");
 
 const {
+  buildMaintainerSkillCandidate,
   buildSkillCandidate,
   clusterEligibleMemories,
   extractSkillCandidate,
@@ -172,6 +173,60 @@ test("targeted evidence publishes the next immutable version and preserves regis
   assert.ok(published.registry.skills[0].tags.includes("async-ui"));
 });
 
+test("maintainer evidence creates an honest single-source candidate without weakening community consensus", () => {
+  const source = {
+    ...memory({
+      issue: 67,
+      publisher: "repo-maintainer",
+      embedding: [1, 0],
+      tags: ["frontend-mobile", "codex"],
+    }),
+    record_kind: "skill-evidence",
+    publication_track: "maintainer",
+    proposed_skill: "codex-project-recency-sort-recovery",
+    trust: { status: "verified", reviewer: "second-maintainer" },
+  };
+
+  assert.deepEqual(clusterEligibleMemories([source]), []);
+  const candidate = buildMaintainerSkillCandidate(source);
+  assert.equal(candidate.publication_track, "maintainer");
+  assert.equal(candidate.name, "codex-project-recency-sort-recovery");
+  assert.deepEqual(candidate.source_issues, [67]);
+  assert.deepEqual(candidate.publishers, ["repo-maintainer"]);
+  assert.deepEqual(validateSkillCandidate(candidate), { valid: true, errors: [] });
+
+  const rebuilt = rebuildCandidateFromCanonicalEvidence(
+    candidate,
+    [source],
+    { withdrawn_issues: [] },
+  );
+  assert.deepEqual(rebuilt, candidate);
+
+  const published = publishCandidate(
+    { schema_version: "1.0", revision: 0, generated_at: null, skills: [] },
+    candidate,
+    { reviewer: "second-maintainer", publishedAt: "2026-07-26T00:00:00Z" },
+  );
+  assert.equal(published.release.verification.level, "maintainer-validated");
+  assert.equal(published.release.verification.independent_reproductions, 0);
+  assert.equal(published.release.provenance.kind, "maintainer-evidence");
+  assert.match(published.skillMarkdown, /maintainer-validated workflow/);
+  assert.doesNotMatch(published.skillMarkdown, /community-reviewed workflow/);
+});
+
+test("proposed Skill identities cannot cross-cluster even when embeddings match", () => {
+  const left = {
+    ...memory({ issue: 1, publisher: "alice", embedding: [1, 0] }),
+    proposed_skill: "first-ui-recovery",
+  };
+  const right = {
+    ...memory({ issue: 2, publisher: "bob", embedding: [0.99, 0.01] }),
+    proposed_skill: "second-ui-recovery",
+  };
+
+  assert.deepEqual(clusterEligibleMemories([left, right]), []);
+});
+
 test("candidate marker round-trips through a review Issue body", () => {
   const cluster = clusterEligibleMemories([
     memory({ issue: 1, publisher: "alice", embedding: [1, 0] }),
@@ -277,6 +332,11 @@ test("promotion workflow creates reviewable candidates from eligible clusters", 
   );
   assert.match(workflow, /clusterEligibleMemories/);
   assert.match(workflow, /buildSkillCandidate/);
+  assert.match(workflow, /buildMaintainerSkillCandidate/);
+  assert.match(workflow, /skill_evidence_payloads/);
+  assert.match(workflow, /record_kind === 'skill-evidence'/);
+  assert.match(workflow, /not a consciousness fragment/);
+  assert.match(workflow, /getCollaboratorPermissionLevel/);
   assert.match(workflow, /renderSkillCandidateBody/);
   assert.match(workflow, /skill-candidate/);
   assert.match(workflow, /needs-review/);
@@ -294,6 +354,8 @@ test("approved candidates publish through a trusted versioned registry workflow"
   assert.match(workflow, /github-actions\[bot\]/);
   assert.match(workflow, /skill-candidate/);
   assert.match(workflow, /loadCandidatePayloads/);
+  assert.match(workflow, /skill_evidence_payloads/);
+  assert.match(workflow, /Maintainer-track publisher/);
   assert.match(workflow, /publishCandidate/);
   assert.match(workflow, /registry\.json/);
   assert.match(workflow, /const releasePath = published\.release\.artifact\.path/);
@@ -454,6 +516,12 @@ test("label initializer provisions every shared Skill workflow label", () => {
     "skill-withdrawn",
     "withdrawal-request",
     "withdrawn",
+    "skill-evidence",
+    "skill-evidence-recorded",
+    "skill-evidence-incomplete",
+    "awaiting-independent-evidence",
+    "maintainer-skill-proposal",
+    "skill-candidate-created",
   ]) {
     assert.match(workflow, new RegExp(`name: '${label}'`));
   }

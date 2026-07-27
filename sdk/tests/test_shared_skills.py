@@ -21,6 +21,7 @@ from noosphere.noosphere_mcp import (
     list_shared_skills,
     record_skill_outcome,
     request_shared_skill_withdrawal,
+    submit_skill_evidence,
 )
 
 SKILL_CONTENT = """---
@@ -142,6 +143,238 @@ async def test_list_and_get_shared_skills_allow_anonymous_verified_reads():
     assert "Verification level: independently-reproduced" in fetched
     assert SKILL_CONTENT in fetched
     assert "Invalid Skill name" in rejected
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_shared_skill_discovery_ranks_tolerant_matches_and_falls_back():
+    registry = json.loads(json.dumps(REGISTRY))
+    registry["skills"].extend(
+        [
+            {
+                "id": "noosphere:agent-debug-memory",
+                "name": "agent-debug-memory",
+                "description": "General debugging memory for code, tests, and UI state.",
+                "tags": ["testing-reliability", "live-skill"],
+                "latest": "1.0.0",
+                "releases": [json.loads(json.dumps(REGISTRY["skills"][0]["releases"][0]))],
+            },
+            {
+                "id": "noosphere:debug-async-ui",
+                "name": "debug-async-ui",
+                "description": (
+                    "Use when UI state disappears, rolls back, or saved menus lose "
+                    "persisted state in async frontend flows."
+                ),
+                "tags": ["frontend-mobile", "live-skill"],
+                "latest": "1.0.0",
+                "releases": [json.loads(json.dumps(REGISTRY["skills"][0]["releases"][0]))],
+            },
+        ]
+    )
+    for skill in registry["skills"][1:]:
+        skill["releases"][0]["artifact"]["path"] = f"shared_skills/releases/1.0.0/{skill['name']}/SKILL.md"
+    registry_url = "https://api.github.com/repos/test_owner/test_repo/contents/shared_skills/registry.json"
+    respx.get(registry_url).mock(return_value=Response(200, json={"content": encoded(registry)}))
+
+    _invalidate_cache()
+    await _close_client()
+    with (
+        patch("noosphere.noosphere_mcp.GITHUB_TOKEN", ""),
+        patch("noosphere.noosphere_mcp.GITHUB_REPO", "test_owner/test_repo"),
+        patch("noosphere.noosphere_mcp.GITHUB_BRANCH", "main"),
+    ):
+        ranked = json.loads(
+            await list_shared_skills(
+                "Codex sidebar project sorting recent updated_at project-order persisted state",
+                force_refresh=True,
+            )
+        )
+        fallback = json.loads(
+            await list_shared_skills(
+                "quasar-neutrino-unrelated-term",
+                force_refresh=True,
+            )
+        )
+
+    await _close_client()
+    _invalidate_cache()
+    assert ranked["query_mode"] == "ranked"
+    assert ranked["skills"][0]["name"] == "debug-async-ui"
+    assert "state" in ranked["skills"][0]["matched_terms"]
+    assert fallback["query_mode"] == "catalog-fallback"
+    assert len(fallback["skills"]) == len(registry["skills"])
+
+
+@pytest.mark.asyncio
+async def test_submit_skill_evidence_rejects_non_public_source_evidence():
+    with patch("noosphere.noosphere_mcp.GITHUB_TOKEN", "token"):
+        result = await submit_skill_evidence(
+            skill_name="codex-project-recency-sort-recovery",
+            symptom="Recent projects remain in a fixed order.",
+            root_cause="A persisted project-order overrides updated_at.",
+            fix="Ignore project-order while the updated_at mode is selected.",
+            verification="A newly updated project moves to the first position.",
+            applies_when="Codex desktop project groups use recent sorting.",
+            test_commands=["pytest tests/test_sidebar_sort.py"],
+            source_urls=["http://localhost/private"],
+        )
+
+    assert "Invalid public HTTPS source URL" in result
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_submit_skill_evidence_creates_distinct_idempotent_record():
+    registry_url = "https://api.github.com/repos/test_owner/test_repo/contents/shared_skills/registry.json"
+    issue_url = "https://api.github.com/repos/test_owner/test_repo/issues"
+    respx.get("https://api.github.com/user").mock(return_value=Response(200, json={"login": "validator-a"}))
+    respx.get(registry_url).mock(return_value=Response(200, json={"content": encoded(REGISTRY)}))
+    existing_route = respx.get(issue_url).mock(return_value=Response(200, json=[]))
+    issue_route = respx.post(issue_url).mock(
+        return_value=Response(
+            201,
+            json={
+                "number": 67,
+                "html_url": "https://github.com/test_owner/test_repo/issues/67",
+            },
+        )
+    )
+
+    kwargs = {
+        "skill_name": "codex-project-recency-sort-recovery",
+        "symptom": "Recent projects remain in a fixed order.",
+        "root_cause": "A persisted project-order overrides updated_at.",
+        "fix": "Ignore project-order while the updated_at mode is selected.",
+        "verification": "A newly updated project moves to the first position.",
+        "applies_when": "Codex desktop project groups use recent sorting.",
+        "test_commands": ["pytest tests/test_sidebar_sort.py"],
+        "source_urls": [],
+        "tags": ["codex", "ui-state"],
+    }
+
+    _invalidate_cache()
+    await _close_client()
+    with (
+        patch("noosphere.noosphere_mcp.GITHUB_TOKEN", "token"),
+        patch("noosphere.noosphere_mcp.GITHUB_REPO", "test_owner/test_repo"),
+        patch("noosphere.noosphere_mcp.GITHUB_BRANCH", "main"),
+        patch("noosphere.noosphere_mcp._AUTHENTICATED_USER", None),
+    ):
+        created = json.loads(await submit_skill_evidence(**kwargs))
+        submitted = json.loads(issue_route.calls[0].request.content)
+        existing_route.mock(
+            return_value=Response(
+                200,
+                json=[
+                    {
+                        "number": 67,
+                        "html_url": "https://github.com/test_owner/test_repo/issues/67",
+                        "body": submitted["body"],
+                    }
+                ],
+            )
+        )
+        duplicate = json.loads(await submit_skill_evidence(**kwargs))
+
+    await _close_client()
+    _invalidate_cache()
+    assert created["status"] == "evidence-recorded"
+    assert created["callable_skill"] is False
+    assert created["candidate_created"] is False
+    assert created["canonical_source_url"].endswith("/issues/67")
+    assert duplicate["status"] == "evidence-existing"
+    assert issue_route.call_count == 1
+    assert submitted["title"].startswith("Shared Skill Evidence:")
+    assert "Consciousness Leap" not in submitted["title"]
+    assert "consciousness" not in submitted["labels"]
+    assert submitted["labels"] == [
+        "skill-evidence",
+        "needs-review",
+        "awaiting-independent-evidence",
+    ]
+    assert '"record_kind": "skill-evidence"' in submitted["body"]
+    assert '"proposed_skill": "codex-project-recency-sort-recovery"' in submitted["body"]
+    assert "not a consciousness fragment" in submitted["body"]
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_submit_skill_evidence_targets_an_existing_registry_skill():
+    registry_url = "https://api.github.com/repos/test_owner/test_repo/contents/shared_skills/registry.json"
+    issue_url = "https://api.github.com/repos/test_owner/test_repo/issues"
+    respx.get("https://api.github.com/user").mock(return_value=Response(200, json={"login": "validator-a"}))
+    respx.get(registry_url).mock(return_value=Response(200, json={"content": encoded(REGISTRY)}))
+    respx.get(issue_url).mock(return_value=Response(200, json=[]))
+    issue_route = respx.post(issue_url).mock(
+        return_value=Response(
+            201,
+            json={"number": 68, "html_url": "https://example.com/issues/68"},
+        )
+    )
+
+    _invalidate_cache()
+    await _close_client()
+    with (
+        patch("noosphere.noosphere_mcp.GITHUB_TOKEN", "token"),
+        patch("noosphere.noosphere_mcp.GITHUB_REPO", "test_owner/test_repo"),
+        patch("noosphere.noosphere_mcp.GITHUB_BRANCH", "main"),
+        patch("noosphere.noosphere_mcp._AUTHENTICATED_USER", None),
+    ):
+        await submit_skill_evidence(
+            skill_name="android-node-picking-recovery",
+            symptom="Mobile taps select the wrong visible node.",
+            root_cause="The bloom footprint exceeds the raycast hit mesh.",
+            fix="Use a synchronized invisible hit mesh.",
+            verification="The projected node opens the expected detail panel.",
+            applies_when="Instanced R3F nodes run inside Android WebView.",
+            test_commands=["node reports/android-node-pick-regression.cjs"],
+        )
+
+    await _close_client()
+    _invalidate_cache()
+    submitted = json.loads(issue_route.calls[0].request.content)
+    assert '"target_skill": "android-node-picking-recovery"' in submitted["body"]
+    assert '"proposed_skill"' not in submitted["body"]
+    assert "**Target Skill**" in submitted["body"]
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_submit_skill_evidence_maintainer_track_checks_live_permission():
+    registry_url = "https://api.github.com/repos/test_owner/test_repo/contents/shared_skills/registry.json"
+    permission_url = "https://api.github.com/repos/test_owner/test_repo/collaborators/external-user/permission"
+    post_route = respx.post("https://api.github.com/repos/test_owner/test_repo/issues").mock(
+        return_value=Response(500, json={"message": "must not post"})
+    )
+    respx.get("https://api.github.com/user").mock(return_value=Response(200, json={"login": "external-user"}))
+    respx.get(permission_url).mock(return_value=Response(200, json={"permission": "read"}))
+    respx.get(registry_url).mock(return_value=Response(200, json={"content": encoded(REGISTRY)}))
+
+    _invalidate_cache()
+    await _close_client()
+    with (
+        patch("noosphere.noosphere_mcp.GITHUB_TOKEN", "token"),
+        patch("noosphere.noosphere_mcp.GITHUB_REPO", "test_owner/test_repo"),
+        patch("noosphere.noosphere_mcp.GITHUB_BRANCH", "main"),
+        patch("noosphere.noosphere_mcp._AUTHENTICATED_USER", None),
+    ):
+        result = await submit_skill_evidence(
+            skill_name="codex-project-recency-sort-recovery",
+            symptom="Recent projects remain in a fixed order.",
+            root_cause="A persisted project-order overrides updated_at.",
+            fix="Ignore project-order while the updated_at mode is selected.",
+            verification="A newly updated project moves to the first position.",
+            applies_when="Codex desktop project groups use recent sorting.",
+            test_commands=["pytest tests/test_sidebar_sort.py"],
+            source_urls=["https://github.com/test_owner/test_repo/issues/67"],
+            publication_track="maintainer",
+        )
+
+    await _close_client()
+    _invalidate_cache()
+    assert "Maintainer track requires current write" in result
+    assert not post_route.called
 
 
 @pytest.mark.asyncio

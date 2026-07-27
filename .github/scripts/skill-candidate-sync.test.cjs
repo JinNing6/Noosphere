@@ -35,6 +35,24 @@ test("embedding recovery rebuilds canonical candidates and excludes tombstones",
   assert.equal(buildCanonicalSkillCandidates(memories, { withdrawn_issues: [{ issue_number: 2 }] }).length, 0);
 });
 
+test("embedding recovery rebuilds separately reviewed maintainer evidence", () => {
+  const source = {
+    ...memory(67, "repo-maintainer"),
+    record_kind: "skill-evidence",
+    publication_track: "maintainer",
+    proposed_skill: "public-artifact-recovery",
+    trust: { status: "verified", reviewer: "second-maintainer" },
+  };
+  const candidates = buildCanonicalSkillCandidates(
+    [source],
+    { withdrawn_issues: [] },
+  );
+
+  assert.equal(candidates.length, 1);
+  assert.equal(candidates[0].publication_track, "maintainer");
+  assert.equal(candidates[0].name, "public-artifact-recovery");
+});
+
 test("candidate sync creates missing, updates drifted, and supersedes stale Issues", () => {
   const candidate = buildCanonicalSkillCandidates([memory(1, "alice"), memory(2, "bob")], { withdrawn_issues: [] })[0];
   const missing = planCandidateIssueSync([candidate], []);

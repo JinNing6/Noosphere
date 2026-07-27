@@ -535,7 +535,7 @@ def inspect_installed_release(
     target_dir: Path,
     expected_version: str,
     package_dir: str = DEFAULT_PACKAGE_DIR,
-    expected_tool_count: int = 45,
+    expected_tool_count: int = 46,
 ) -> dict:
     package_root = target_dir / package_dir
     init_path = package_root / "__init__.py"
@@ -674,7 +674,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--version", default=read_project_version())
     parser.add_argument("--attempts", type=int, default=24)
     parser.add_argument("--delay-seconds", type=float, default=10.0)
-    parser.add_argument("--tool-count", type=int, default=45)
+    parser.add_argument("--tool-count", type=int, default=46)
     return parser.parse_args(argv)
 
 

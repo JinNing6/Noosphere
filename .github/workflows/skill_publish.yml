@@ -72,7 +72,10 @@ jobs:
               core.setFailed('The Issue does not contain a valid structured Skill candidate.');
               return;
             }
-            const memories = loadCandidatePayloads(path.join(process.env.GITHUB_WORKSPACE, 'consciousness_payloads'));
+            const memories = [
+              path.join(process.env.GITHUB_WORKSPACE, 'consciousness_payloads'),
+              path.join(process.env.GITHUB_WORKSPACE, 'skill_evidence_payloads'),
+            ].flatMap((directory) => loadCandidatePayloads(directory));
             const tombstonesPath = path.join(process.env.GITHUB_WORKSPACE, 'consciousness_tombstones.json');
             const tombstones = fs.existsSync(tombstonesPath)
               ? JSON.parse(fs.readFileSync(tombstonesPath, 'utf8'))
@@ -87,6 +90,21 @@ jobs:
             } catch (error) {
               core.setFailed(`Canonical Skill evidence validation failed: ${error.message}`);
               return;
+            }
+            if (candidate.publication_track === 'maintainer') {
+              for (const publisher of candidate.publishers) {
+                const publisherPermission = await github.rest.repos.getCollaboratorPermissionLevel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  username: publisher,
+                });
+                if (!isTrustedReviewerPermission(publisherPermission.data.permission)) {
+                  core.setFailed(
+                    `Maintainer-track publisher ${publisher} no longer has repository write permission.`,
+                  );
+                  return;
+                }
+              }
             }
             const registryPath = path.join(process.env.GITHUB_WORKSPACE, 'shared_skills', 'registry.json');
             const registry = JSON.parse(fs.readFileSync(registryPath, 'utf8'));
