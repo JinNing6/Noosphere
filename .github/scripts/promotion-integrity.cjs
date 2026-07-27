@@ -77,13 +77,28 @@ function hasPromotionComment(comments, issueNumber) {
   ));
 }
 
+function reviewPauseCommentMarker(issueNumber) {
+  const normalizedIssue = positiveIssueNumber(issueNumber);
+  if (!normalizedIssue) throw new Error("A positive source Issue number is required");
+  return `<!-- noosphere-review-pause:issue-${normalizedIssue} -->`;
+}
+
+function hasReviewPauseComment(comments, issueNumber) {
+  const marker = reviewPauseCommentMarker(issueNumber);
+  return Array.isArray(comments) && comments.some((comment) => (
+    String(comment?.body || "").includes(marker)
+  ));
+}
+
 module.exports = {
   buildTombstoneManifest,
   canonicalPromotionPath,
   extractWithdrawalRequest,
   findExistingPromotion,
   hasPromotionComment,
+  hasReviewPauseComment,
   isIssueTombstoned,
   positiveIssueNumber,
   promotionCommentMarker,
+  reviewPauseCommentMarker,
 };

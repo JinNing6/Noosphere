@@ -6473,11 +6473,6 @@ async def submit_skill_evidence(
             f"{hashlib.sha256(identity.encode('utf-8')).hexdigest()[:24]}"
         )
         marker = f"<!-- SKILL_EVIDENCE_ID:{evidence_id} -->"
-        track_label = (
-            "awaiting-independent-evidence"
-            if publication_track == "community"
-            else "maintainer-skill-proposal"
-        )
         next_state = (
             "awaiting-review-and-independent-reproduction"
             if publication_track == "community"
@@ -6550,17 +6545,8 @@ async def submit_skill_evidence(
             json={
                 "title": f"Shared Skill Evidence: {skill_name} by {authenticated_user}",
                 "body": body,
-                "labels": ["skill-evidence", "needs-review", track_label],
             },
         )
-        if response.status_code == 422:
-            response = await client.post(
-                f"/repos/{owner}/{repo}/issues",
-                json={
-                    "title": f"Shared Skill Evidence: {skill_name} by {authenticated_user}",
-                    "body": body,
-                },
-            )
         if response.status_code != 201:
             message = response.json().get("message", "Unknown error")
             return f"❌ Failed to submit Skill evidence: {message}"

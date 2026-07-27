@@ -1,4 +1,4 @@
-name: 🌌 Consciousness Promotion (意识晋升流水线)
+name: 🌌 Noosphere Contribution Promotion
 
 # Trigger on Issue creation or labeling. The job parses the Issue body and only
 # promotes Issues that contain a recognized Noosphere payload.
@@ -18,9 +18,11 @@ permissions:
 
 jobs:
   promote_consciousness:
-    name: 🧠 Validate & Promote Consciousness
+    name: 🧠 Validate & Route Contribution
     runs-on: ubuntu-latest
-    if: github.event.issue.state == 'open'
+    if: >-
+      github.event.issue.state == 'open' &&
+      (github.event.action == 'opened' || github.event.label.name == 'trusted-review')
 
     steps:
       - name: 🌐 Checkout Repository
@@ -174,8 +176,10 @@ jobs:
               canonicalPromotionPath,
               findExistingPromotion,
               hasPromotionComment,
+              hasReviewPauseComment,
               isIssueTombstoned,
               promotionCommentMarker,
+              reviewPauseCommentMarker,
             } = require(`${process.env.GITHUB_WORKSPACE}/.github/scripts/promotion-integrity.cjs`);
             const {
               assessSkillEligibility,
@@ -224,6 +228,14 @@ jobs:
                   });
                 } catch (error) {
                   if (error.status !== 422) throw error;
+                  await github.rest.issues.updateLabel({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    name,
+                    new_name: name,
+                    color,
+                    description,
+                  });
                 }
               }
             }
@@ -262,12 +274,20 @@ jobs:
                 issue_number: issue.number,
                 labels: ['needs-review'],
               });
-              await github.rest.issues.createComment({
+              const pauseComments = await github.rest.issues.listComments({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 issue_number: issue.number,
-                body: `Promotion paused: ${reason}. A repository maintainer must review the payload and add the trusted-review label.`,
+                per_page: 100,
               });
+              if (!hasReviewPauseComment(pauseComments.data, issue.number)) {
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: issue.number,
+                  body: `Promotion paused: ${reason}. A repository maintainer must review the payload and add the trusted-review label.\n\n${reviewPauseCommentMarker(issue.number)}`,
+                });
+              }
               core.setOutput('promoted', 'false');
             }
 
