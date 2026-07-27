@@ -2,6 +2,17 @@
 
 Last verified: 2026-07-27 (Asia/Shanghai)
 
+## v0.9.1 Public Release — Verified
+
+- GitHub Release [`v0.9.1 - Verified Shared Skill Evidence`](https://github.com/JinNing6/Noosphere/releases/tag/v0.9.1) was published from exact remote `main` commit `945406d58243ba098570239249d4f9f13c730480`. The release created the tag once and triggered only the `release.published` path; no duplicate tag or publish trigger was used.
+- Trusted Publishing run [`30240304774`](https://github.com/JinNing6/Noosphere/actions/runs/30240304774) passed package build, SDK and supply-chain gates, OIDC publication with digital attestations, exact public PyPI installation, anonymous MCP `initialize + tools/list`, the token-free validation path, and Pages dispatch.
+- PyPI now serves [`noosphere-mcp==0.9.1`](https://pypi.org/project/noosphere-mcp/0.9.1/) for Python 3.10+. The official Wheel is 167,588 bytes with SHA-256 `37a35e7ca22d1c09787ac21ac6d75352ebe1fee43be9cda0657d4e9c538846ed`; the official sdist is 218,594 bytes with SHA-256 `a9322dd2b9c102385a87d520497a6c55b0b046c4c021a9ab8cc578b055ad26ec`. Neither artifact is yanked.
+- A separate credential-free public-index verification installed the exact PyPI release into fresh inspect and runtime environments. It reported version `0.9.1`, exposed all 46 MCP tools, completed `initialize + tools/list` in 0.871 seconds, and passed `public-artifact-runtime-smoke-gate` in 7.39 seconds.
+- The same isolated release read public registry revision `6`, ranked `codex-project-recency-sort-recovery@1.0.0` first for a natural Codex project-recency query, and retrieved the immutable artifact only after matching SHA-256 `4d91e0d4dab3fe9cf68ebaf3ac75c1899327918a5dc4a1d7eded6922bf5cb8fd`.
+- Pages workflow run [`30240386276`](https://github.com/JinNing6/Noosphere/actions/runs/30240386276) completed successfully from the release commit. GitHub Actions still emits its existing non-blocking warning that pinned JavaScript actions declaring Node.js 20 are forced onto Node.js 24.
+- Release-candidate verification before publication passed 218 SDK tests, 102 Node workflow/supply-chain tests, 39 repository release tests, registry and migration validation, critical lint, Linux-CI formatting, a real deterministic `0 -> 1 -> 0` validation chain, and a strict scan of 450 remote-facing files.
+- The release does not upgrade trust claims: the newly published Skills remain `maintainer-validated`, discovery and downloads are not counted as use, and usage metrics remain an auditable lower bound based only on approved Outcome reports.
+
 ## Codex Project Recency Recovery — Published Shared Skill
 
 - Historical Issue #67 remains an unmodified consciousness record. The same verified engineering lesson was resubmitted through the first-class Skill Evidence path as Issue #76, with `record_kind=skill-evidence`, maintainer publication track, the original Issue as public source evidence, and no consciousness-index projection.
@@ -19,11 +30,11 @@ Last verified: 2026-07-27 (Asia/Shanghai)
 - The counting basis is explicitly `approved-outcome-reports`. It is an auditable lower bound and excludes discovery, downloads, and executions that were not submitted and approved; Noosphere still has no silent usage telemetry.
 - `list_shared_skills(mine=true)` verifies the current GitHub token through the GitHub `/user` endpoint, filters against canonical registry originators/provenance, and returns an owner summary. Callers cannot provide another username or use a self-declared creator signature.
 - A real authenticated read against public registry revision `5` resolved owner `JinNing6`, returned 15 contributed Skills, and reported one approved use: one success and zero non-success reports for `public-artifact-runtime-smoke-gate`.
-- Verification includes 218 SDK tests, 24 repository tests, 102 Node workflow/supply-chain tests, registry/plugin validation, fatal Python lint, focused full Ruff checks, an MCP schema inspection showing 46 tools with the new optional `mine` field, and the authenticated remote read. This capability remains source-only until the still-pending `v0.9.1` GitHub/PyPI release.
+- Verification includes 218 SDK tests, 24 repository tests, 102 Node workflow/supply-chain tests, registry/plugin validation, fatal Python lint, focused full Ruff checks, an MCP schema inspection showing 46 tools with the new optional `mine` field, and the authenticated remote read. The capability is public in GitHub Release and PyPI version `0.9.1`; the post-publish verifier repeated the 46-tool handshake from a clean public install.
 
 ## v0.9.1 Skill Evidence Flow — Merged and Live on `main`
 
-- PR #68 merged as `ca50c947d7a36840bed49ee045363b29dd82b573`. Source `main`, the SDK/server manifests, and both plugin manifests now declare `0.9.1`; no GitHub Release or PyPI `0.9.1` has been published, so the public package remains `noosphere-mcp==0.9.0`.
+- PR #68 merged as `ca50c947d7a36840bed49ee045363b29dd82b573`. Source `main`, the SDK/server manifests, both plugin manifests, GitHub Release, and PyPI now consistently declare `0.9.1`.
 - Engineering fixes now use the first-class, authenticated, consent-gated, idempotent `submit_skill_evidence` tool. `upload_consciousness` remains reserved for general thoughts and philosophical consciousness fragments. Issue #67 remains an historical consciousness record and was not silently migrated or reclassified.
 - Skill Evidence is stored under `skill_evidence_payloads/`, excluded from `consciousness_payloads/` and the consciousness index, bound to the authenticated GitHub Issue author, and returned with an exact non-callable lifecycle state and stable URL. Community publication still requires two independent publishers; the separately reviewed maintainer track can publish only as `maintainer-validated` with zero claimed independent reproductions.
 - The first live maintainer submission created Evidence Issue #69, then candidate Issue #70. Its initial label fan-out exposed duplicate serialized workflow events and four repeated pause comments. PR #71 merged as `51fbb51a61aa756c278d8db66844d7a6bb185b8d`; clients now create an unlabeled Evidence Issue, the workflow owns lifecycle labels, only `opened` and `trusted-review` execute the job, and pause comments use a stable idempotency marker.
@@ -35,8 +46,8 @@ Last verified: 2026-07-27 (Asia/Shanghai)
 
 ## Launch Metadata Alignment
 
-- Remote `main`, both source plugin manifests, the Claude marketplace manifest, SDK metadata, and server manifests declare `0.9.1`; PyPI and the latest GitHub Release remain at `0.9.0`. Explicit Claude plugin versions are cache keys, so completing distribution still requires a semantic `v0.9.1` release rather than relying on repository commits alone.
-- Registry revision `5` contains 15 active Live Skills and 2 remaining verified Seeds. Plugin descriptions, badges, and launch copy intentionally use dynamic wording; repository validation checks registry entries and trust metadata directly instead of blocking growth on a mirrored count.
+- Remote `main`, both source plugin manifests, the Claude marketplace manifest, SDK metadata, server manifests, GitHub Release, and PyPI all declare `0.9.1`. The semantic release completed the distribution step required by explicit Claude plugin cache keys.
+- Registry revision `6` contains 16 active Live Skills and 2 remaining verified Seeds. Plugin descriptions, badges, and launch copy intentionally use dynamic wording; repository validation checks registry entries and trust metadata directly instead of blocking growth on a mirrored count.
 - The repository marketplace display name is `Noosphere Live Skills`, aligned with the current product category rather than the legacy Agent Memory entry point.
 - The Codex plugin MCP companion file now uses the current `mcpServers` schema. The bundled plugin validator rejects the legacy `mcp_servers` spelling, and repository validation now guards this boundary.
 - GitHub repository Topics are managed as public discovery metadata. The launch set targets Agent Skills, MCP, coding Agents, debugging, shared memory, supported Agent runtimes, and developer tooling.
@@ -295,9 +306,10 @@ Last verified: 2026-07-27 (Asia/Shanghai)
 
 ## Required Deployment Steps
 
-1. After a final review of current `main`, publish GitHub Release `v0.9.1` so Trusted Publishing
-   can build and verify the exact public PyPI artifact with all 46 MCP tools. Do not describe
-   the source merge or live registry update as a PyPI release before that workflow succeeds.
+1. GitHub Release and PyPI `v0.9.1` are complete and independently re-verified. The next
+   distribution step is a Product Hunt launch that points to the exact public `0.9.1`
+   install path and uses the verified Skill Evidence, usage-metric, and Codex recency proof.
+   Keep installs, approved Outcomes, and third-party reuse separate in every launch claim.
 2. Monitor and respond to review on `brainctl#170` and `Ahrena#376`. Their first workflow runs
    require upstream maintainer approval before jobs can start; do not describe `action_required`
    as a failure or a pass. Record a new Outcome only after public maintainer response, merge,
