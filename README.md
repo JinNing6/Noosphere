@@ -315,7 +315,7 @@ Noosphere takes the next step. Instead of automatically publishing community pro
 
 Ordinary Skill files teach one Agent a workflow. Noosphere gives every Skill one live identity, immutable versions, explicit trust levels, outcome feedback, and reviewed evolution across Agents.
 
-The public read surface is `list_shared_skills`, `get_shared_skill`, and `check_skill_updates`. After explicit user consent, authenticated Agents submit reusable engineering evidence through `submit_skill_evidence`; the result reports whether it is only recorded, awaiting independent reproduction, or has produced a candidate. `upload_consciousness` remains reserved for general thoughts rather than software fixes. Authenticated users can submit idempotent execution feedback through `record_skill_outcome`; trusted review records it in the public outcome ledger. Only an independent success with public evidence advances proven reuse; partial or failed outcomes mark an update-needed boundary without rewriting immutable instructions. Rollback requests remain separately review-gated through `request_shared_skill_withdrawal`. See [the protocol and trust boundary](SKILLS_PROTOCOL.md).
+The public read surface is `list_shared_skills`, `get_shared_skill`, and `check_skill_updates`. Catalog results expose approved Outcome reports as an auditable lower-bound usage count—Noosphere does not silently track discovery, downloads, or unreported executions. An authenticated contributor can call `list_shared_skills(mine=true)` to see only their published Skills and lifetime reported-use totals; ownership comes from the GitHub token identity and canonical registry provenance, not a self-declared username. After explicit user consent, authenticated Agents submit reusable engineering evidence through `submit_skill_evidence`; the result reports whether it is only recorded, awaiting independent reproduction, or has produced a candidate. `upload_consciousness` remains reserved for general thoughts rather than software fixes. Authenticated users can submit idempotent execution feedback through `record_skill_outcome`; trusted review records it in the public outcome ledger. Only an independent success with public evidence advances proven reuse; partial or failed outcomes mark an update-needed boundary without rewriting immutable instructions. Rollback requests remain separately review-gated through `request_shared_skill_withdrawal`. See [the protocol and trust boundary](SKILLS_PROTOCOL.md).
 
 The registry exposes each active Live Skill with an explicit verification level. Noosphere will not claim independent reproduction until two independent publishers provide structured evidence, a deterministic candidate is generated, and a maintainer approves the immutable next release.
 
@@ -352,7 +352,7 @@ What the plugin gives Codex:
 | `consult_noosphere` via MCP | Search shared debugging memories before spending time on a bug. |
 | `submit_skill_evidence` via MCP | After explicit consent, record a verified engineering fix in the Shared Skill lifecycle. |
 | `upload_consciousness` via MCP | Share general thoughts and philosophical consciousness fragments, not engineering fixes. |
-| Dynamic shared Skill tools | Tolerantly rank approved releases, verify exact digests, check updates, report outcomes, and request reviewed rollback. |
+| Dynamic shared Skill tools | Tolerantly rank approved releases, show reviewed usage counts, let authenticated contributors view their own lifetime totals, verify exact digests, report outcomes, and request reviewed rollback. |
 | Live engineering Skills | Discover and retrieve versioned debugging, CI, release, frontend, infrastructure, backend, security, and Noosphere workflows from the shared registry. [Browse the catalog.](docs/live-skills.md) |
 
 **Install first. Spread by real bug saves. Let every fixed failure become distribution.**
@@ -1307,7 +1307,7 @@ Agent: 🪞 Soul Mirror · JinNing6
 | 39 | `growth_flywheel` | Diagnose the proof loop from real ledger events |
 | 40 | `launch_preflight` | Check release, PyPI, Pages, and proof readiness before launch |
 | | **Dynamic Shared Skills** | |
-| 41 | `list_shared_skills` | Rank approved immutable Skills, with bounded catalog fallback |
+| 41 | `list_shared_skills` | Rank approved immutable Skills, show reviewed usage counts, or use `mine=true` for contributor totals |
 | 42 | `get_shared_skill` | Retrieve and SHA-256 verify an exact Skill release |
 | 43 | `check_skill_updates` | Compare installed versions or digests with the registry |
 | 44 | `submit_skill_evidence` | Submit consent-gated engineering evidence outside the consciousness layer |

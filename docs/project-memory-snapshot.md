@@ -2,6 +2,14 @@
 
 Last verified: 2026-07-27 (Asia/Shanghai)
 
+## Reviewed Shared Skill Usage Metrics
+
+- `list_shared_skills` now exposes per-Skill reviewed usage counts derived from the canonical registry Outcome counters. `usage` aggregates every immutable release, while `current_release_usage` reports the selected active version.
+- The counting basis is explicitly `approved-outcome-reports`. It is an auditable lower bound and excludes discovery, downloads, and executions that were not submitted and approved; Noosphere still has no silent usage telemetry.
+- `list_shared_skills(mine=true)` verifies the current GitHub token through the GitHub `/user` endpoint, filters against canonical registry originators/provenance, and returns an owner summary. Callers cannot provide another username or use a self-declared creator signature.
+- A real authenticated read against public registry revision `5` resolved owner `JinNing6`, returned 15 contributed Skills, and reported one approved use: one success and zero non-success reports for `public-artifact-runtime-smoke-gate`.
+- Verification includes 218 SDK tests, 24 repository tests, 102 Node workflow/supply-chain tests, registry/plugin validation, fatal Python lint, focused full Ruff checks, an MCP schema inspection showing 46 tools with the new optional `mine` field, and the authenticated remote read. This capability remains source-only until the still-pending `v0.9.1` GitHub/PyPI release.
+
 ## v0.9.1 Skill Evidence Flow — Merged and Live on `main`
 
 - PR #68 merged as `ca50c947d7a36840bed49ee045363b29dd82b573`. Source `main`, the SDK/server manifests, and both plugin manifests now declare `0.9.1`; no GitHub Release or PyPI `0.9.1` has been published, so the public package remains `noosphere-mcp==0.9.0`.

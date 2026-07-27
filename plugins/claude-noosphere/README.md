@@ -31,7 +31,10 @@ When enabling the plugin:
 - `noosphere_repo`: defaults to `JinNing6/Noosphere`
 
 Focused discovery uses tolerant ranked matching and falls back to the bounded catalog
-instead of silently returning nothing. After a fix is verified, Claude asks for explicit
+instead of silently returning nothing. Catalog results include reviewed Outcome counts
+as a lower-bound usage metric. With a token, `list_shared_skills(mine=true)` verifies
+the current GitHub identity and returns that contributor's published Skills and lifetime
+reported-use totals. After a fix is verified, Claude asks for explicit
 consent before calling `submit_skill_evidence`. Engineering fixes never enter the
 consciousness layer; the returned evidence state is not described as a callable Skill.
 

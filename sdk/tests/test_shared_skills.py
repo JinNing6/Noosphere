@@ -9,7 +9,10 @@ from httpx import Response
 
 from noosphere.engine.shared_skills import (
     check_installed_skill_versions,
+    is_release_originator,
     select_skill_release,
+    summarize_release_usage,
+    summarize_skill_usage,
     validate_skill_name,
     verify_skill_artifact,
 )
@@ -113,6 +116,51 @@ def test_update_check_accepts_version_or_content_digest():
     assert by_digest["android-node-picking-recovery"]["status"] == "current"
 
 
+def test_usage_summary_is_a_reviewed_lower_bound_and_rejects_invalid_counters():
+    release = json.loads(json.dumps(REGISTRY["skills"][0]["releases"][0]))
+    release["verification"]["verified_outcomes"] = 3
+    release["verification"]["failed_outcomes"] = 2
+
+    usage = summarize_release_usage(release)
+
+    assert usage == {
+        "reported_usage_count": 5,
+        "successful_usage_count": 3,
+        "non_successful_usage_count": 2,
+        "counting_basis": "approved-outcome-reports",
+        "lower_bound": True,
+    }
+    release["verification"]["verified_outcomes"] = -1
+    with pytest.raises(ValueError, match="Outcome counter"):
+        summarize_release_usage(release)
+
+
+def test_skill_usage_aggregates_every_immutable_release():
+    skill = json.loads(json.dumps(REGISTRY["skills"][0]))
+    old_release = json.loads(json.dumps(skill["releases"][0]))
+    old_release["version"] = "0.9.0"
+    old_release["status"] = "withdrawn"
+    old_release["verification"]["verified_outcomes"] = 4
+    old_release["verification"]["failed_outcomes"] = 1
+    skill["releases"][0]["verification"]["verified_outcomes"] = 2
+    skill["releases"].insert(0, old_release)
+
+    usage = summarize_skill_usage(skill)
+
+    assert usage["reported_usage_count"] == 7
+    assert usage["successful_usage_count"] == 6
+    assert usage["non_successful_usage_count"] == 1
+
+
+def test_release_originator_uses_canonical_registry_identity_case_insensitively():
+    skill = REGISTRY["skills"][0]
+    release = skill["releases"][0]
+
+    assert is_release_originator(skill, release, "VALIDATOR-A") is True
+    assert is_release_originator(skill, release, "stranger") is False
+    assert is_release_originator(skill, release, "") is False
+
+
 @pytest.mark.asyncio
 @respx.mock
 async def test_list_and_get_shared_skills_allow_anonymous_verified_reads():
@@ -139,10 +187,62 @@ async def test_list_and_get_shared_skills_allow_anonymous_verified_reads():
     _invalidate_cache()
     assert "android-node-picking-recovery" in listed
     assert '"verification_level": "independently-reproduced"' in listed
+    assert '"reported_usage_count": 0' in listed
+    assert '"counting_basis": "approved-outcome-reports"' in listed
     assert SKILL_SHA in fetched
     assert "Verification level: independently-reproduced" in fetched
+    assert "Reviewed usage reports: 0" in fetched
     assert SKILL_CONTENT in fetched
     assert "Invalid Skill name" in rejected
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_list_my_shared_skills_binds_owner_to_authenticated_github_identity():
+    registry = json.loads(json.dumps(REGISTRY))
+    owned_release = registry["skills"][0]["releases"][0]
+    owned_release["verification"]["verified_outcomes"] = 2
+    owned_release["verification"]["failed_outcomes"] = 1
+    other_skill = json.loads(json.dumps(registry["skills"][0]))
+    other_skill["name"] = "unrelated-shared-skill"
+    other_skill["id"] = "noosphere:unrelated-shared-skill"
+    other_skill["originators"] = ["someone-else"]
+    other_skill["releases"][0]["provenance"]["authors"] = ["someone-else"]
+    other_skill["releases"][0]["artifact"]["path"] = "shared_skills/releases/1.0.0/unrelated-shared-skill/SKILL.md"
+    registry["skills"].append(other_skill)
+    registry_url = "https://api.github.com/repos/test_owner/test_repo/contents/shared_skills/registry.json"
+    respx.get("https://api.github.com/user").mock(return_value=Response(200, json={"login": "validator-a"}))
+    respx.get(registry_url).mock(return_value=Response(200, json={"content": encoded(registry)}))
+
+    _invalidate_cache()
+    await _close_client()
+    with (
+        patch("noosphere.noosphere_mcp.GITHUB_TOKEN", "token"),
+        patch("noosphere.noosphere_mcp.GITHUB_REPO", "test_owner/test_repo"),
+        patch("noosphere.noosphere_mcp.GITHUB_BRANCH", "main"),
+        patch("noosphere.noosphere_mcp._AUTHENTICATED_USER", None),
+    ):
+        result = json.loads(await list_shared_skills(mine=True, force_refresh=True))
+
+    await _close_client()
+    _invalidate_cache()
+    assert result["query_mode"] == "owner-catalog"
+    assert result["authenticated_owner"] == "validator-a"
+    assert result["owner_summary"] == {
+        "shared_skill_count": 1,
+        "reported_usage_count": 3,
+        "successful_usage_count": 2,
+        "non_successful_usage_count": 1,
+    }
+    assert [skill["name"] for skill in result["skills"]] == ["android-node-picking-recovery"]
+
+
+@pytest.mark.asyncio
+async def test_list_my_shared_skills_requires_authentication_without_self_declared_owner():
+    with patch("noosphere.noosphere_mcp.GITHUB_TOKEN", ""):
+        result = await list_shared_skills(mine=True)
+
+    assert "requires GitHub authentication" in result
 
 
 @pytest.mark.asyncio
