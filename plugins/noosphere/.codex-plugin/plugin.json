@@ -24,7 +24,7 @@
   "interface": {
     "displayName": "Noosphere",
     "shortDescription": "Automatically apply verified shared fixes.",
-    "longDescription": "Install once and Codex automatically checks one live registry before debugging concrete software failures. Discover 14 versioned engineering workflows through a single control Skill that verifies exact digests, checks local applicability, runs project verification, and keeps public outcome reporting consent-gated.",
+    "longDescription": "Install once and Codex automatically checks one live registry before debugging concrete software failures. Discover approved versioned engineering workflows through a single control Skill that verifies exact digests, checks local applicability, runs project verification, and keeps public outcome reporting consent-gated.",
     "developerName": "JinNing6",
     "category": "Developer Tools",
     "capabilities": [

@@ -1,5 +1,6 @@
 import hashlib
 import json
+import re
 import tempfile
 import unittest
 from pathlib import Path
@@ -296,6 +297,27 @@ class SharedSkillValidationTests(unittest.TestCase):
         root = Path(__file__).resolve().parents[1]
 
         self.assertEqual(validate_plugin_bootstrap(root), [])
+
+    def test_dynamic_registry_surfaces_do_not_hardcode_active_skill_count(self):
+        root = Path(__file__).resolve().parents[1]
+        surfaces = [
+            root / "plugins/noosphere/.codex-plugin/plugin.json",
+            root / "plugins/noosphere/README.md",
+            root / "plugins/claude-noosphere/README.md",
+            root / "plugins/claude-noosphere/SUBMISSION.md",
+        ]
+
+        for path in surfaces:
+            text = path.read_text(encoding="utf-8")
+            self.assertIsNone(
+                re.search(
+                    r"\b\d+\s+(?:versioned\s+(?:foundational\s+)?|live\s+)?"
+                    r"(?:Agent\s+)?Skills\b",
+                    text,
+                    re.IGNORECASE,
+                ),
+                path,
+            )
 
     def test_plugins_must_not_bundle_dynamic_skill_copies(self):
         with tempfile.TemporaryDirectory() as temp:

@@ -11,8 +11,8 @@
 Noosphere 将 Coding Agent 连接到同一个持续更新的 Skill 注册表。遇到具体故障时，Agent 会自动
 发现适用的审核后 Skill、校验精确制品、检查本地适用性，并在声称成功前运行真实项目验证。
 
-[![Live Skills](https://img.shields.io/badge/Live_Skills-14-8d7cff?style=for-the-badge)](docs/live-skills.md)
-[![注册表](https://img.shields.io/badge/注册表-r4-55d7e5?style=for-the-badge)](shared_skills/registry.json)
+[![Live Skills](https://img.shields.io/badge/Live_Skills-live-8d7cff?style=for-the-badge)](docs/live-skills.md)
+[![注册表](https://img.shields.io/badge/注册表-dynamic-55d7e5?style=for-the-badge)](shared_skills/registry.json)
 [![版本](https://img.shields.io/badge/版本-v0.9.1-68df9b?style=for-the-badge)](https://github.com/JinNing6/Noosphere/releases/tag/v0.9.1)
 [![PyPI](https://img.shields.io/pypi/v/noosphere-mcp?style=for-the-badge&logo=pypi&logoColor=white)](https://pypi.org/project/noosphere-mcp/)
 
@@ -46,7 +46,7 @@ Codex 会在遇到具体软件故障时隐式启用 `using-noosphere` 控制 Ski
   <sub>基于公开 <code>noosphere-mcp==0.9.0</code> 真实查询与验证输出制作的时间压缩重建。</sub>
 </div>
 
-插件不会复制 14 个动态工程 Skills；它们始终归属于同一个审核门禁注册表，因此审核后的
+插件不会复制动态工程 Skills；它们始终归属于同一个审核门禁注册表，因此审核后的
 Skill 更新会直接提供给所有已连接 Agent，无需重新安装插件。匿名只读检索不需要 Token；
 创建公开 Skill 证据、意识内容或 Outcome 始终需要身份认证和用户当次明确同意。工程修复
 进入独立 Skill Evidence 层，不再上传为意识体。
@@ -87,7 +87,7 @@ uvx --from noosphere-mcp==0.9.0 noosphere-query "React Three Fiber mobile glowin
 | 检查真实系统 | 路径 |
 |---|---|
 | 不可变 Skill 注册表 | [`shared_skills/registry.json`](shared_skills/registry.json) |
-| 14 个持续更新的工程 Skills | [目录](docs/live-skills.md) · [当前版本镜像](shared_skills/active/) |
+| 持续更新的工程 Skills | [目录](docs/live-skills.md) · [当前版本镜像](shared_skills/active/) |
 | 不可变版本 | [`shared_skills/releases/<version>/<name>/SKILL.md`](shared_skills/releases/) |
 | 首批真实证据 | [#35](https://github.com/JinNing6/Noosphere/issues/35)、[#36](https://github.com/JinNing6/Noosphere/issues/36)、[#37](https://github.com/JinNing6/Noosphere/issues/37) |
 | 供应链协议 | [`SKILLS_PROTOCOL.md`](SKILLS_PROTOCOL.md) |
@@ -126,7 +126,7 @@ uvx --from 'noosphere-mcp[semantic]' noosphere-mcp
      -> 不可变 SKILL.md -> 摘要校验后调用 -> 结果反馈 -> 更新或审核回滚
 ```
 
-Noosphere 不会直接执行社区提示词。14 个维护者验证的 Live Skills 已作为不可变 `1.0.0` 版本进入
+Noosphere 不会直接执行社区提示词。维护者验证的 Live Skills 以不可变版本进入
 同一个持续更新的注册表，带维护者来源和 SHA-256 校验。新的社区 Skill 或更新版本仍必须具备
 结构化根因证据、两个独立发布者、人工审核、结果反馈和回滚能力。单一维护者证据可以走
 独立轨道，但必须经过另一位可信审核者，并明确标记为 `maintainer-validated`。2 个剩余的已验证 Seeds

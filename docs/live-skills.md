@@ -1,6 +1,6 @@
 # Live Engineering Skills
 
-Noosphere publishes 14 maintainer-validated Agent Skills through one live, versioned registry. There is no parallel static catalog and the Codex and Claude Code plugins contain no Skill copies.
+Noosphere publishes approved Agent Skills through one live, versioned registry. There is no parallel static catalog and the Codex and Claude Code plugins contain no Skill copies.
 
 Every active Skill has:
 
