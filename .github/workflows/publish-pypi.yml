@@ -91,7 +91,7 @@ jobs:
           python-version: "3.10"
 
       - name: Verify published PyPI package with initialize + tools/list
-        run: python scripts/verify_pypi_release.py --tool-count 45
+        run: python scripts/verify_pypi_release.py --tool-count 46
 
   refresh-pages-proof:
     name: Dispatch Pages traction proof refresh

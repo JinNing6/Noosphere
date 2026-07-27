@@ -126,6 +126,62 @@ def _extract_skill_outcome_payload(body: str) -> dict | None:
     return payload if isinstance(payload, dict) else None
 
 
+_SKILL_EVIDENCE_REQUIRED_FIELDS = (
+    "symptom",
+    "root_cause",
+    "fix",
+    "verification",
+    "applies_when",
+)
+
+
+def _skill_evidence_identity(payload: dict) -> str | None:
+    """Return a stable identity for an exact, authenticated evidence submission."""
+    evidence = payload.get("evidence")
+    creator = payload.get("creator_signature")
+    publication_track = payload.get("publication_track")
+    skill_name = payload.get("target_skill") or payload.get("proposed_skill")
+    if (
+        not isinstance(evidence, dict)
+        or not isinstance(creator, str)
+        or publication_track not in {"community", "maintainer"}
+        or not isinstance(skill_name, str)
+    ):
+        return None
+    if not all(
+        isinstance(evidence.get(field), str) and evidence[field].strip()
+        for field in _SKILL_EVIDENCE_REQUIRED_FIELDS
+    ):
+        return None
+    commands = evidence.get("test_commands")
+    urls = evidence.get("source_urls")
+    if (
+        not isinstance(commands, list)
+        or not commands
+        or not all(isinstance(value, str) for value in commands)
+        or not isinstance(urls, list)
+        or not all(isinstance(value, str) for value in urls)
+    ):
+        return None
+    canonical = {
+        "creator_signature": creator.lower(),
+        "publication_track": publication_track,
+        "skill_name": skill_name,
+        "evidence": {
+            field: evidence.get(field, "").strip()
+            for field in (*_SKILL_EVIDENCE_REQUIRED_FIELDS, "avoid_when")
+        },
+        "test_commands": sorted(value.strip() for value in commands),
+        "source_urls": sorted(value.strip() for value in urls),
+    }
+    return json.dumps(
+        canonical,
+        sort_keys=True,
+        ensure_ascii=False,
+        separators=(",", ":"),
+    )
+
+
 # ── Configuration ──
 GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN", "")
 GITHUB_REPO = os.environ.get("NOOSPHERE_REPO", "JinNing6/Noosphere")
@@ -1098,6 +1154,8 @@ mcp = FastMCP(
         "**Philosophical & Existential Questions** — `consult_noosphere`, `telepath`\n"
         "**Life Experiences & Reflections** — `consult_noosphere`\n"
         "**Technology & Future Thinking** — `telepath`\n"
+        "**Software Engineering Failures** — `list_shared_skills`, `get_shared_skill`; "
+        "after a verified fix and explicit consent, `submit_skill_evidence`\n"
         "**Telepathy & Messaging** — `send_telepathy`, `group_telepathy`\n"
         "**Identity & Self-Discovery** — `soul_mirror`, `get_consciousness_profile`\n"
         "**Uploading** — `upload_consciousness` (only when user explicitly asks)\n"
@@ -1151,8 +1209,15 @@ mcp = FastMCP(
         "38. `share_attribution_report` - Summarize share proof from real ledger events\n"
         "39. `growth_flywheel` - Diagnose the proof loop from real ledger events\n"
         "40. `launch_preflight` - Check release, PyPI, Pages, and proof readiness before launch\n\n"
+        "41. `list_shared_skills` - Tolerant ranked discovery of approved immutable Skills\n"
+        "42. `get_shared_skill` - Retrieve and verify an exact Skill release\n"
+        "43. `check_skill_updates` - Compare installed versions or digests with the registry\n"
+        "44. `submit_skill_evidence` - Submit consent-gated engineering evidence outside the consciousness layer\n"
+        "45. `record_skill_outcome` - Record a verified Skill execution outcome\n"
+        "46. `request_shared_skill_withdrawal` - Request reviewed withdrawal of a Skill release\n\n"
         "When uploading consciousness, ensure you provide sufficient context description (at least 10 characters),\n"
-        "so that future Agents can understand the scenario in which this thought was born."
+        "so that future Agents can understand the scenario in which this thought was born. "
+        "Never use `upload_consciousness` for software engineering evidence."
     ),
 )
 # FastMCP 1.x otherwise falls back to the SDK distribution version in
@@ -5573,7 +5638,7 @@ async def launch_preflight(target_version: str = "") -> str:
         "3. Build artifacts: cd sdk && python -m build",
         f"4. Push release tag {tag_name} or publish GitHub Release: {release_link}",
         f"5. Watch Trusted Publishing workflow: {workflow_link}",
-        "6. Verify registry install: python scripts/verify_pypi_release.py --tool-count 45",
+        "6. Verify registry install: python scripts/verify_pypi_release.py --tool-count 46",
         "7. Rebuild public proof: python scripts/build_traction_proof.py",
         "",
         "First public proof routes:",
@@ -6136,6 +6201,30 @@ def my_subscriptions(creator: str) -> str:
 # ────────────────── Tools: Dynamic Shared Skills ──────────────────
 
 
+def _shared_skill_search_tokens(value: str) -> set[str]:
+    """Tokenize Skill catalog text while splitting common identifier separators."""
+    normalized = re.sub(r"[-_/\\]+", " ", value)
+    tokens = set(_tokenize(normalized))
+    if tokens & {"sidebar", "panel", "dialog", "menu", "frontend"}:
+        tokens.add("ui")
+    if tokens & {"rollback", "persisted", "persistence", "saved", "updated"}:
+        tokens.add("state")
+    return tokens
+
+
+def _rank_shared_skill(skill: dict, query_tokens: set[str]) -> tuple[int, list[str]]:
+    name_tokens = _shared_skill_search_tokens(str(skill.get("name", "")))
+    tag_tokens = _shared_skill_search_tokens(" ".join(skill.get("tags", [])))
+    description_tokens = _shared_skill_search_tokens(str(skill.get("description", "")))
+    matched = query_tokens & (name_tokens | tag_tokens | description_tokens)
+    score = (
+        6 * len(query_tokens & name_tokens)
+        + 3 * len(query_tokens & tag_tokens)
+        + len(query_tokens & description_tokens)
+    )
+    return score, sorted(matched)
+
+
 @mcp.tool()
 async def list_shared_skills(
     query: str = "",
@@ -6148,8 +6237,8 @@ async def list_shared_skills(
     """
     try:
         registry = await _fetch_shared_skill_registry(force_refresh=force_refresh)
-        terms = [term for term in query.lower().split() if term]
-        visible = []
+        query_tokens = _shared_skill_search_tokens(query)
+        candidates = []
         for skill in registry["skills"]:
             if not isinstance(skill, dict):
                 continue
@@ -6161,12 +6250,8 @@ async def list_shared_skills(
                 release = select_skill_release(registry, name)
             except (KeyError, ValueError):
                 continue
-            haystack = " ".join(
-                [name, str(description), " ".join(skill.get("tags", []))]
-            ).lower()
-            if terms and not all(term in haystack for term in terms):
-                continue
-            visible.append({
+            score, matched_terms = _rank_shared_skill(skill, query_tokens)
+            candidates.append({
                 "name": name,
                 "description": description,
                 "version": release["version"],
@@ -6176,9 +6261,29 @@ async def list_shared_skills(
                 "verification_level": release.get("verification", {}).get(
                     "level", "unclassified"
                 ),
+                "match_score": score,
+                "matched_terms": matched_terms,
             })
+        if not query_tokens:
+            query_mode = "catalog"
+            visible = candidates
+        else:
+            visible = [candidate for candidate in candidates if candidate["match_score"] > 0]
+            if visible:
+                query_mode = "ranked"
+                visible.sort(
+                    key=lambda candidate: (
+                        -candidate["match_score"],
+                        candidate["name"],
+                    ),
+                )
+                visible = visible[:50]
+            else:
+                query_mode = "catalog-fallback"
+                visible = candidates[:50]
         return json.dumps({
             "registry_revision": registry.get("revision", 0),
+            "query_mode": query_mode,
             "skills": visible,
         }, ensure_ascii=False, indent=2)
     except (KeyError, RuntimeError, ValueError) as exc:
@@ -6236,6 +6341,247 @@ async def check_skill_updates(
         }, ensure_ascii=False, indent=2)
     except (RuntimeError, ValueError) as exc:
         return f"❌ Unable to check shared Skill updates: {exc}"
+
+
+@mcp.tool()
+async def submit_skill_evidence(
+    skill_name: str,
+    symptom: str,
+    root_cause: str,
+    fix: str,
+    verification: str,
+    applies_when: str,
+    test_commands: list[str],
+    source_urls: list[str] | None = None,
+    avoid_when: str = "",
+    tags: list[str] | None = None,
+    publication_track: str = "community",
+) -> str:
+    """Submit a verified engineering lesson as Shared Skill evidence.
+
+    Call only after the user explicitly authorizes the public contribution.
+    This creates a reviewable evidence record, never a consciousness fragment
+    and never an immediately callable Skill.
+
+    Community track requires matching evidence from at least two independent
+    publishers before a Skill candidate can be created. Maintainer track is
+    restricted to repository maintainers and can create a maintainer-validated
+    candidate after separate review.
+    """
+    if not GITHUB_TOKEN:
+        return (
+            "❌ GITHUB_TOKEN not configured. Skill evidence submission requires "
+            "GitHub authentication."
+        )
+    if not validate_skill_name(skill_name):
+        return "❌ Invalid skill_name. Use lowercase kebab-case."
+    if publication_track not in {"community", "maintainer"}:
+        return "❌ publication_track must be community or maintainer."
+
+    evidence: dict[str, str | list[str]] = {}
+    raw_fields = {
+        "symptom": symptom,
+        "root_cause": root_cause,
+        "fix": fix,
+        "verification": verification,
+        "applies_when": applies_when,
+        "avoid_when": avoid_when,
+    }
+    for field, value in raw_fields.items():
+        clean_value = value.strip()
+        if field in _SKILL_EVIDENCE_REQUIRED_FIELDS and not clean_value:
+            return f"❌ {field} is required."
+        if len(clean_value) > 4000:
+            return f"❌ {field} exceeds 4000 characters."
+        if clean_value:
+            evidence[field] = clean_value
+
+    clean_commands = list(dict.fromkeys(
+        str(value).strip() for value in test_commands if str(value).strip()
+    ))
+    clean_urls = list(dict.fromkeys(
+        str(value).strip() for value in (source_urls or []) if str(value).strip()
+    ))
+    if not clean_commands:
+        return "❌ At least one reproducible test command is required."
+    if len(clean_commands) > 12 or len(clean_urls) > 12:
+        return "❌ At most 12 test commands and 12 source URLs are allowed."
+    if any(len(value) > 500 for value in (*clean_commands, *clean_urls)):
+        return "❌ Test commands and source URLs must not exceed 500 characters."
+    for source_url in clean_urls:
+        if not _is_public_https_evidence_url(source_url):
+            return f"❌ Invalid public HTTPS source URL: {source_url}"
+    evidence["test_commands"] = clean_commands
+    evidence["source_urls"] = clean_urls
+
+    try:
+        owner, repo = _parse_repo()
+        client = await _get_client()
+        authenticated_user = await _get_authenticated_user()
+        if not authenticated_user:
+            return (
+                "❌ Unable to verify the GitHub identity associated with GITHUB_TOKEN."
+            )
+
+        if publication_track == "maintainer":
+            permission_response = await client.get(
+                f"/repos/{owner}/{repo}/collaborators/{authenticated_user}/permission"
+            )
+            permission = (
+                permission_response.json().get("permission", "")
+                if permission_response.status_code == 200
+                else ""
+            )
+            if permission not in {"write", "maintain", "admin"}:
+                return (
+                    "❌ Maintainer track requires current write, maintain, or admin "
+                    "permission on the Noosphere repository."
+                )
+
+        registry = await _fetch_shared_skill_registry(force_refresh=True)
+        existing_names = {
+            skill.get("name")
+            for skill in registry.get("skills", [])
+            if isinstance(skill, dict)
+        }
+        target_field = "target_skill" if skill_name in existing_names else "proposed_skill"
+        normalized_tags = list(dict.fromkeys(
+            tag.strip().lower()
+            for tag in (tags or [])
+            if isinstance(tag, str) and tag.strip()
+        ))[:12]
+        payload = {
+            "schema_version": 3,
+            "record_kind": "skill-evidence",
+            "publication_track": publication_track,
+            "creator_signature": authenticated_user,
+            "is_anonymous": False,
+            "consciousness_type": "pattern",
+            "thought_vector_text": f"{root_cause.strip()} {fix.strip()}",
+            "context_environment": f"{symptom.strip()} {applies_when.strip()}",
+            "tags": normalized_tags,
+            "memory_kind": "engineering",
+            "evidence": evidence,
+            target_field: skill_name,
+            "uploaded_at": datetime.now(timezone.utc).isoformat(),
+        }
+        identity = _skill_evidence_identity(payload)
+        if identity is None:
+            return "❌ Unable to construct a complete Skill evidence record."
+        evidence_id = (
+            "skill-evidence-"
+            f"{hashlib.sha256(identity.encode('utf-8')).hexdigest()[:24]}"
+        )
+        marker = f"<!-- SKILL_EVIDENCE_ID:{evidence_id} -->"
+        track_label = (
+            "awaiting-independent-evidence"
+            if publication_track == "community"
+            else "maintainer-skill-proposal"
+        )
+        next_state = (
+            "awaiting-review-and-independent-reproduction"
+            if publication_track == "community"
+            else "awaiting-maintainer-review"
+        )
+        identity_label = "Target" if target_field == "target_skill" else "Proposed"
+        body = (
+            "## Shared Skill Evidence\n\n"
+            f"{marker}\n"
+            f"**Authenticated publisher**: `{authenticated_user}`\n"
+            f"**{identity_label} Skill**: `{skill_name}`\n"
+            f"**Publication track**: `{publication_track}`\n"
+            f"**Current state**: `{next_state}`\n\n"
+            "This is a reviewable engineering evidence record. It is not a "
+            "consciousness fragment, not a Skill candidate, and not callable yet.\n\n"
+            "If no external source URL was supplied, this public Issue becomes "
+            "the canonical source record during repository validation.\n\n"
+            "### Structured evidence\n\n"
+            f"{_build_issue_payload_block(payload)}\n"
+        )
+
+        for page in range(1, 6):
+            response = await client.get(
+                f"/repos/{owner}/{repo}/issues",
+                params={
+                    "state": "all",
+                    "per_page": 100,
+                    "page": page,
+                },
+            )
+            if response.status_code != 200:
+                message = response.json().get("message", "Unknown error")
+                return f"❌ Unable to check existing Skill evidence: {message}"
+            issues = response.json()
+            existing = next(
+                (
+                    issue
+                    for issue in issues
+                    if marker in str(issue.get("body", ""))
+                    and _skill_evidence_identity(
+                        _extract_payload_from_issue_body(
+                            str(issue.get("body", ""))
+                        ) or {}
+                    )
+                    == identity
+                ),
+                None,
+            )
+            if existing:
+                return json.dumps(
+                    {
+                        "status": "evidence-existing",
+                        "evidence_id": evidence_id,
+                        "issue_number": existing.get("number"),
+                        "issue_url": existing.get("html_url", ""),
+                        "canonical_source_url": existing.get("html_url", ""),
+                        "publication_track": publication_track,
+                        "lifecycle_state": next_state,
+                        "callable_skill": False,
+                        "candidate_created": False,
+                    },
+                    ensure_ascii=False,
+                    indent=2,
+                )
+            if len(issues) < 100:
+                break
+
+        response = await client.post(
+            f"/repos/{owner}/{repo}/issues",
+            json={
+                "title": f"Shared Skill Evidence: {skill_name} by {authenticated_user}",
+                "body": body,
+                "labels": ["skill-evidence", "needs-review", track_label],
+            },
+        )
+        if response.status_code == 422:
+            response = await client.post(
+                f"/repos/{owner}/{repo}/issues",
+                json={
+                    "title": f"Shared Skill Evidence: {skill_name} by {authenticated_user}",
+                    "body": body,
+                },
+            )
+        if response.status_code != 201:
+            message = response.json().get("message", "Unknown error")
+            return f"❌ Failed to submit Skill evidence: {message}"
+        issue = response.json()
+        return json.dumps(
+            {
+                "status": "evidence-recorded",
+                "evidence_id": evidence_id,
+                "issue_number": issue.get("number"),
+                "issue_url": issue.get("html_url", ""),
+                "canonical_source_url": issue.get("html_url", ""),
+                "publication_track": publication_track,
+                "lifecycle_state": next_state,
+                "callable_skill": False,
+                "candidate_created": False,
+            },
+            ensure_ascii=False,
+            indent=2,
+        )
+    except (RuntimeError, ValueError) as exc:
+        return f"❌ Unable to submit Skill evidence: {exc}"
 
 
 @mcp.tool()

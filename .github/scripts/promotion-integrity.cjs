@@ -19,7 +19,10 @@ function extractWithdrawalRequest(body) {
 function canonicalPromotionPath(payload, issueNumber) {
   const normalizedIssue = positiveIssueNumber(issueNumber);
   if (!normalizedIssue) throw new Error("A positive source Issue number is required");
-  return `consciousness_payloads/memory_issue${String(normalizedIssue).padStart(4, "0")}.json`;
+  const directory = payload?.record_kind === "skill-evidence"
+    ? "skill_evidence_payloads"
+    : "consciousness_payloads";
+  return `${directory}/memory_issue${String(normalizedIssue).padStart(4, "0")}.json`;
 }
 
 function findExistingPromotion(records, issueNumber) {

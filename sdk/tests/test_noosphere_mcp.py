@@ -1777,7 +1777,7 @@ async def test_launch_preflight_reports_release_and_install_blockers(mock_env):
     assert "Trusted Publishing trigger: tag-or-release" in result
     assert "GitHub Release v0.6.8: missing" in result
     assert "Current bottleneck: release tag" in result
-    assert "python scripts/verify_pypi_release.py --tool-count 45" in result
+    assert "python scripts/verify_pypi_release.py --tool-count 46" in result
     assert "share-proof.yml" in result
     assert "No downloads, reposts, referrals, retention, rewards, or install counts are inferred" in result
 
@@ -1882,7 +1882,7 @@ def test_growth_ledger_tools_are_documented_in_public_surfaces():
         assert tool_name in readme
         assert tool_name in mcp_source
 
-    assert "45 MCP tools" in readme
+    assert "46 MCP tools" in readme
     assert "resonate_media" in readme
     assert "First Proof links `growth-proof.yml` + `share-proof.yml`; MCP ledger tools" in readme
     assert "No downloads, reposts, referrals, retention, rewards, or install counts are inferred" in readme

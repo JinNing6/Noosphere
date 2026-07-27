@@ -185,6 +185,7 @@ jobs:
               buildModerationText,
             } = require(`${process.env.GITHUB_WORKSPACE}/.github/scripts/memory-trust.cjs`);
             const {
+              buildMaintainerSkillCandidate,
               buildSkillCandidate,
               clusterEligibleMemories,
               extractSkillCandidate,
@@ -201,7 +202,31 @@ jobs:
             }
 
             const payload = bindVerifiedPublisher(extracted.payload, issue);
+            const isSkillEvidence = payload.record_kind === 'skill-evidence';
             console.log(`Noosphere payload found via ${extracted.source}.`);
+            if (isSkillEvidence) {
+              const lifecycleLabels = [
+                ['skill-evidence', '8250DF', 'Structured engineering evidence for a shared Skill'],
+                ['skill-evidence-recorded', '1D76DB', 'Skill evidence persisted in the canonical evidence layer'],
+                ['skill-evidence-incomplete', 'B60205', 'Skill evidence is missing required fields or public sources'],
+                ['awaiting-independent-evidence', 'FBCA04', 'Community evidence awaits an independent matching publisher'],
+                ['maintainer-skill-proposal', 'D4C5F9', 'Maintainer-track Skill evidence awaiting trusted review'],
+                ['skill-candidate-created', '5319E7', 'Evidence has produced a reviewable Skill candidate'],
+              ];
+              for (const [name, color, description] of lifecycleLabels) {
+                try {
+                  await github.rest.issues.createLabel({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    name,
+                    color,
+                    description,
+                  });
+                } catch (error) {
+                  if (error.status !== 422) throw error;
+                }
+              }
+            }
 
             const tombstonesPath = `${process.env.GITHUB_WORKSPACE}/consciousness_tombstones.json`;
             const tombstones = fs.existsSync(tombstonesPath)
@@ -246,13 +271,17 @@ jobs:
               core.setOutput('promoted', 'false');
             }
 
-            const promotionDir = `${process.env.GITHUB_WORKSPACE}/consciousness_payloads`;
+            const promotionDirectoryName = isSkillEvidence
+              ? 'skill_evidence_payloads'
+              : 'consciousness_payloads';
+            const promotionDir = `${process.env.GITHUB_WORKSPACE}/${promotionDirectoryName}`;
+            fs.mkdirSync(promotionDir, { recursive: true });
             const promotionRecords = fs.readdirSync(promotionDir)
               .filter((name) => name.endsWith('.json'))
               .map((name) => {
                 try {
                   return {
-                    path: path.posix.join('consciousness_payloads', name),
+                    path: path.posix.join(promotionDirectoryName, name),
                     payload: JSON.parse(fs.readFileSync(path.join(promotionDir, name), 'utf8')),
                   };
                 } catch {
@@ -417,6 +446,9 @@ jobs:
             }
 
             payload.evidence = normalizeEngineeringEvidence(payload.evidence);
+            if (isSkillEvidence && payload.evidence.source_urls.length === 0) {
+              payload.evidence.source_urls = [issue.html_url];
+            }
             if (trustedReview) {
               payload.content_safety = {
                 status: 'reviewed',
@@ -443,6 +475,22 @@ jobs:
               };
             }
             payload.skill_candidate = assessSkillEligibility(payload);
+            if (isSkillEvidence && !payload.skill_candidate.eligible) {
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                labels: ['skill-evidence', 'skill-evidence-incomplete', 'needs-review'],
+              });
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                body: `Shared Skill evidence is incomplete and was not recorded. Missing or invalid requirements: ${payload.skill_candidate.missing.join(', ') || 'verified engineering evidence'}.`,
+              });
+              core.setOutput('promoted', 'false');
+              return;
+            }
 
             // ── Step 3.5: Gemini Embedding Generation ──
             const hasExistingEmbedding = Boolean(
@@ -466,7 +514,7 @@ jobs:
             }
 
             let resonanceMatch = null;
-            if (embeddingResult.status === 'ok') {
+            if (embeddingResult.status === 'ok' && !isSkillEvidence) {
               const candidatePayloads = loadCandidatePayloads(`${process.env.GITHUB_WORKSPACE}/consciousness_payloads`);
               resonanceMatch = findNearestResonanceMatch(payload, candidatePayloads, {
                 excludeIssueNumber: issue.number,
@@ -507,7 +555,9 @@ jobs:
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 path: filePath,
-                message: `${emoji} Promote Consciousness: [${payload.consciousness_type}] by ${creator} (Issue #${issue.number})`,
+                message: isSkillEvidence
+                  ? `Record Shared Skill evidence by ${creator} (Issue #${issue.number})`
+                  : `${emoji} Promote Consciousness: [${payload.consciousness_type}] by ${creator} (Issue #${issue.number})`,
                 content: content,
                 committer: {
                   name: 'Noosphere Bot',
@@ -528,7 +578,9 @@ jobs:
                   owner: context.repo.owner,
                   repo: context.repo.repo,
                   path: filePath,
-                  message: `Reconcile verified consciousness from Issue #${issue.number}`,
+                  message: isSkillEvidence
+                    ? `Reconcile Shared Skill evidence from Issue #${issue.number}`
+                    : `Reconcile verified consciousness from Issue #${issue.number}`,
                   content,
                   sha: existingFile.sha,
                   committer: {
@@ -539,25 +591,50 @@ jobs:
               }
             }
 
+            let linkedCandidateIssue = null;
             if (payload.skill_candidate?.eligible && ['ok', 'existing'].includes(embeddingResult.status)) {
-              const activeMemories = loadCandidatePayloads(promotionDir).filter((memory) => (
-                !isIssueTombstoned(tombstones, memory.promoted_from_issue) &&
-                Number(memory.promoted_from_issue) !== Number(issue.number)
-              ));
-              const clusters = clusterEligibleMemories([...activeMemories, payload]);
-              const cluster = clusters.find((item) => (
-                item.members.some((memory) => memory.memory_id === payload.memory_id)
-              ));
-              if (cluster) {
-                let candidate = null;
-                try {
-                  candidate = buildSkillCandidate(cluster);
-                } catch (error) {
-                  console.log(`Skipping non-publishable Skill candidate ${cluster.id}: ${error.message}`);
-                }
-                if (!candidate) {
-                  console.log('Verified memory remains promoted; no reviewable Skill candidate was created.');
+              let candidate = null;
+              try {
+                if (payload.publication_track === 'maintainer') {
+                  if (trustedReview) {
+                    const publisherPermission = await github.rest.repos.getCollaboratorPermissionLevel({
+                      owner: context.repo.owner,
+                      repo: context.repo.repo,
+                      username: payload.publisher.github_login,
+                    });
+                    if (!isTrustedReviewerPermission(publisherPermission.data.permission)) {
+                      core.setFailed(
+                        `Maintainer-track publisher ${payload.publisher.github_login} no longer has repository write permission.`,
+                      );
+                      return;
+                    }
+                    candidate = buildMaintainerSkillCandidate(payload);
+                  } else {
+                    console.log('Maintainer evidence recorded; trusted-review is required before candidate creation.');
+                  }
                 } else {
+                  const evidenceDirectories = [
+                    `${process.env.GITHUB_WORKSPACE}/consciousness_payloads`,
+                    `${process.env.GITHUB_WORKSPACE}/skill_evidence_payloads`,
+                  ];
+                  const activeMemories = evidenceDirectories
+                    .flatMap((directory) => loadCandidatePayloads(directory))
+                    .filter((memory) => (
+                      !isIssueTombstoned(tombstones, memory.promoted_from_issue) &&
+                      Number(memory.promoted_from_issue) !== Number(issue.number)
+                    ));
+                  const clusters = clusterEligibleMemories([...activeMemories, payload]);
+                  const cluster = clusters.find((item) => (
+                    item.members.some((memory) => memory.memory_id === payload.memory_id)
+                  ));
+                  if (cluster) candidate = buildSkillCandidate(cluster);
+                }
+              } catch (error) {
+                console.log(`Skipping non-publishable Skill candidate: ${error.message}`);
+              }
+              if (!candidate) {
+                console.log('Verified evidence remains recorded; no reviewable Skill candidate was created.');
+              } else {
                   const candidateIssues = await github.paginate(github.rest.issues.listForRepo, {
                     owner: context.repo.owner,
                     repo: context.repo.repo,
@@ -583,20 +660,71 @@ jobs:
                         labels: ['skill-candidate', 'needs-review'],
                       } : {}),
                     });
+                    linkedCandidateIssue = existingCandidateIssue;
                   } else {
-                    await github.rest.issues.create({
+                    const createdCandidate = await github.rest.issues.create({
                       owner: context.repo.owner,
                       repo: context.repo.repo,
                       title: `Skill candidate: ${candidate.name}`,
                       body: candidateBody,
                       labels: ['skill-candidate', 'needs-review'],
                     });
+                    linkedCandidateIssue = createdCandidate.data;
                   }
-                }
               }
             }
 
-            // ── Step 5: Close Issue with 'promoted' label ──
+            // ── Step 5: Project the correct lifecycle state ──
+            if (isSkillEvidence) {
+              const evidenceLabels = ['skill-evidence', 'skill-evidence-recorded'];
+              if (linkedCandidateIssue) evidenceLabels.push('skill-candidate-created');
+              else if (payload.publication_track === 'maintainer') evidenceLabels.push('maintainer-skill-proposal');
+              else evidenceLabels.push('awaiting-independent-evidence');
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                labels: evidenceLabels,
+              });
+              if (trustedReview || payload.publication_track !== 'maintainer') {
+                try {
+                  await github.rest.issues.removeLabel({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: issue.number,
+                    name: 'needs-review',
+                  });
+                } catch (error) {
+                  if (error.status !== 404) throw error;
+                }
+              }
+              const stateMarker = `<!-- noosphere-skill-evidence:issue-${issue.number} -->`;
+              const stateComments = await github.rest.issues.listComments({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                per_page: 100,
+              });
+              if (!stateComments.data.some((comment) => String(comment.body || '').includes(stateMarker))) {
+                const candidateLine = linkedCandidateIssue
+                  ? `A reviewable Skill candidate is now available: ${linkedCandidateIssue.html_url}`
+                  : payload.publication_track === 'maintainer'
+                    ? 'Evidence recorded. A trusted maintainer review is required before candidate creation.'
+                    : 'Evidence recorded. A matching independent publisher and shared verification command are still required.';
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: issue.number,
+                  body: `## Shared Skill evidence recorded\n\n${candidateLine}\n\nThis record is not a consciousness fragment and is not callable until a reviewed immutable Skill release is published.\n\n${stateMarker}`,
+                });
+              }
+              core.setOutput('promoted', existingPromotion ? 'false' : 'true');
+              core.setOutput('reconciled', 'true');
+              console.log(`Shared Skill evidence state reconciled: ${filePath} (Issue #${issue.number})`);
+              return;
+            }
+
+            // Close consciousness Issues with the promoted label.
             // Remove 'ephemeral' label, add 'promoted'
             try {
               await github.rest.issues.removeLabel({

@@ -100,7 +100,7 @@ def test_publish_workflow_uses_single_release_trigger_with_trusted_publishing_qu
     assert "python -m build" in workflow
     assert "verify-pypi:" in workflow
     assert "needs: publish-pypi" in workflow
-    assert "python scripts/verify_pypi_release.py --tool-count 45" in workflow
+    assert "python scripts/verify_pypi_release.py --tool-count 46" in workflow
     assert "initialize + tools/list" in workflow
     assert "refresh-pages-proof:" in workflow
     assert "needs: verify-pypi" in workflow
@@ -117,7 +117,7 @@ def test_package_release_includes_growth_ledger_tools():
         source,
     )
 
-    assert len(tool_names) == 45
+    assert len(tool_names) == 46
     for tool_name in [
         "record_growth_referral",
         "record_share_attribution",
@@ -127,6 +127,7 @@ def test_package_release_includes_growth_ledger_tools():
         "list_shared_skills",
         "get_shared_skill",
         "check_skill_updates",
+        "submit_skill_evidence",
         "record_skill_outcome",
         "request_shared_skill_withdrawal",
     ]:
@@ -139,5 +140,5 @@ def test_readme_documents_pypi_release_recovery_route():
     assert f"v{_package_version()}" in readme
     assert ".github/workflows/publish-pypi.yml" in readme
     assert "Trusted Publishing" in readme
-    assert "45 MCP tools" in readme
+    assert "46 MCP tools" in readme
     assert "noosphere-validate public-artifact-runtime-smoke-gate" in readme

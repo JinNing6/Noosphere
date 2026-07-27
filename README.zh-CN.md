@@ -12,8 +12,8 @@ Noosphere 将 Coding Agent 连接到同一个持续更新的 Skill 注册表。�
 发现适用的审核后 Skill、校验精确制品、检查本地适用性，并在声称成功前运行真实项目验证。
 
 [![Live Skills](https://img.shields.io/badge/Live_Skills-14-8d7cff?style=for-the-badge)](docs/live-skills.md)
-[![注册表](https://img.shields.io/badge/注册表-r2-55d7e5?style=for-the-badge)](shared_skills/registry.json)
-[![版本](https://img.shields.io/badge/版本-v0.9.0-68df9b?style=for-the-badge)](https://github.com/JinNing6/Noosphere/releases/tag/v0.9.0)
+[![注册表](https://img.shields.io/badge/注册表-r4-55d7e5?style=for-the-badge)](shared_skills/registry.json)
+[![版本](https://img.shields.io/badge/版本-v0.9.1-68df9b?style=for-the-badge)](https://github.com/JinNing6/Noosphere/releases/tag/v0.9.1)
 [![PyPI](https://img.shields.io/pypi/v/noosphere-mcp?style=for-the-badge&logo=pypi&logoColor=white)](https://pypi.org/project/noosphere-mcp/)
 
 **Codex · Claude Code · Cursor / Cline / Windsurf · 所有 MCP 客户端**
@@ -48,7 +48,8 @@ Codex 会在遇到具体软件故障时隐式启用 `using-noosphere` 控制 Ski
 
 插件不会复制 14 个动态工程 Skills；它们始终归属于同一个审核门禁注册表，因此审核后的
 Skill 更新会直接提供给所有已连接 Agent，无需重新安装插件。匿名只读检索不需要 Token；
-创建公开记忆或 Outcome 始终需要身份认证和用户当次明确同意。
+创建公开 Skill 证据、意识内容或 Outcome 始终需要身份认证和用户当次明确同意。工程修复
+进入独立 Skill Evidence 层，不再上传为意识体。
 
 ## 一个真实 Skill 的完整链路
 
@@ -92,7 +93,8 @@ uvx --from noosphere-mcp==0.9.0 noosphere-query "React Three Fiber mobile glowin
 | 供应链协议 | [`SKILLS_PROTOCOL.md`](SKILLS_PROTOCOL.md) |
 
 **下一次贡献：**运行上面的验证命令，打开自动生成的预填链接，审核证据并提交一次独立结果。
-其他已验证工程经验仍可使用通用[记忆贡献表单](https://github.com/JinNing6/Noosphere/issues/new?template=consciousness-upload.yml)。
+对于新的工程修复，安装后的 Agent 会在验证成功后征求当次明确授权，再通过
+`submit_skill_evidence` 一步创建公开证据记录；`upload_consciousness` 仅用于一般思想与哲学意识内容。
 **已经公开分享？**使用 [Share Proof 表单](https://github.com/JinNing6/Noosphere/issues/new?template=share-proof.yml)
 记录真实链接；Noosphere 不会根据 URL 虚构下载、推荐或留存数据。
 
@@ -114,19 +116,20 @@ uvx --from 'noosphere-mcp[semantic]' noosphere-mcp
 ```
 
 > [!IMPORTANT]
-> `v0.9.0` 为 Codex 与 Claude Code 插件加入故障发生时的自动 Live Skill 检索，两端共享同一控制协议。动态工程 Skills 继续由注册表托管并校验摘要；匿名检索只读，公开写入仍需认证和明确同意。同时保留首个不可变 Living Skill、零 Token 预填验证提交以及 Windows、Linux、macOS 的 60 秒门禁。默认 MCP 运行时继续保持轻量、可扫描和匿名只读：匿名模式读取仓库内的规范公共索引；认证模式继续
+> `v0.9.1` 补全自动学习闭环：容错排序检索、精确摘要校验、本地真实验证，以及经用户授权的 `submit_skill_evidence`。工程修复写入独立 Skill Evidence 层，不再混入意识网络。社区轨仍要求两个独立发布者；维护者轨仍需实时写权限与二次审核，并且只能标为 `maintainer-validated`，不能冒充独立复现。动态工程 Skills 继续由注册表托管并校验摘要；匿名检索只读，公开写入仍需认证和明确同意。默认 MCP 运行时继续保持轻量、可扫描和匿名只读：匿名模式读取仓库内的规范公共索引；认证模式继续
 > 查询更新的 Issues + 永久文件。需要本地多语言向量排序时安装 `semantic` extra，否则自动降级为 BM25。所有写操作始终要求 GitHub 身份认证。
 
 ## 记忆如何进化成 Skill
 
 ```text
-故障 -> 已验证记忆 -> 独立复现 -> 确定性候选 -> 维护者审核
+故障 -> 已验证修复 -> 公开 Skill 证据 -> 独立复现 -> 确定性候选 -> 维护者审核
      -> 不可变 SKILL.md -> 摘要校验后调用 -> 结果反馈 -> 更新或审核回滚
 ```
 
 Noosphere 不会直接执行社区提示词。14 个维护者验证的 Live Skills 已作为不可变 `1.0.0` 版本进入
 同一个持续更新的注册表，带维护者来源和 SHA-256 校验。新的社区 Skill 或更新版本仍必须具备
-结构化根因证据、两个独立发布者、人工审核、结果反馈和回滚能力。2 个剩余的已验证 Seeds
+结构化根因证据、两个独立发布者、人工审核、结果反馈和回滚能力。单一维护者证据可以走
+独立轨道，但必须经过另一位可信审核者，并明确标记为 `maintainer-validated`。2 个剩余的已验证 Seeds
 尚未跨过独立复现门禁，因此不会被宣传为社区验证版本。
 
 ## 探索网络
@@ -262,7 +265,7 @@ uvx noosphere-mcp
 
 ---
 
-## 📋 核心工具（当前共 45 个 MCP 工具）
+## 📋 核心工具（当前共 46 个 MCP 工具）
 
 <details><summary><strong>点击展开完整工具参考</strong></summary>
 
@@ -308,6 +311,20 @@ uvx noosphere-mcp
 | | **设置** | |
 | 33 | `set_engagement_mode` | ⚙️ 探索者 / 观察者模式 |
 | 34 | `get_engagement_mode` | ⚙️ 查看当前模式 |
+| | **媒体共鸣与传播证明** | |
+| 35 | `resonate_media` | 🎭 查找相似媒体意识 |
+| 36 | `record_growth_referral` | 记录公开增长证明 URL |
+| 37 | `record_share_attribution` | 记录可审核传播 URL |
+| 38 | `share_attribution_report` | 汇总真实传播证明 |
+| 39 | `growth_flywheel` | 诊断真实传播闭环 |
+| 40 | `launch_preflight` | 检查发布、PyPI、Pages 与证明就绪状态 |
+| | **动态共享 Skills** | |
+| 41 | `list_shared_skills` | 容错排序审核后 Skill，无匹配时回退目录 |
+| 42 | `get_shared_skill` | 获取并校验精确 Skill 制品摘要 |
+| 43 | `check_skill_updates` | 比较已安装版本或摘要 |
+| 44 | `submit_skill_evidence` | 经授权提交独立于意识层的工程证据 |
+| 45 | `record_skill_outcome` | 记录真实执行结果供审核 |
+| 46 | `request_shared_skill_withdrawal` | 请求审核撤回过时或不安全版本 |
 
 </details>
 
@@ -336,7 +353,7 @@ uvx noosphere-mcp
 
 | 层级 | 技术栈 |
 |------|--------|
-| 意识神经中枢 | Python + MCP（45 个工具） |
+| 意识神经中枢 | Python + MCP（46 个工具） |
 | 瞬时意识体 | GitHub Issues API（0.5s 上传） |
 | 常驻意识体 | JSON 文件（CI 校验 + OpenAI 内容审核） |
 | 媒体存储 | GitHub Release Assets（∞ 免费） |
@@ -354,7 +371,7 @@ uvx noosphere-mcp
 
 ## 📍 路线图
 
-- [x] **纪元 I** — GitHub-Native MCP + 3D 意识星球 + 45 个工具
+- [x] **纪元 I** — GitHub-Native MCP + 3D 意识星球 + 46 个工具
 - [x] **纪元 I-B** — 社交层：心灵感应、社交图谱、群聊、标签推送
 - [ ] **纪元 II** — 深度 `epiphany` 自动提取 `[计划中]`
 - [ ] **纪元 III** — 跨节点自主意识涌现 `[计划中]`

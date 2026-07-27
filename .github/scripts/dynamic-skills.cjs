@@ -45,6 +45,19 @@ function targetSkillName(memory) {
   return /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value) ? value : null;
 }
 
+function proposedSkillName(memory) {
+  const value = compactText(memory?.proposed_skill, 64);
+  return /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value) ? value : null;
+}
+
+function skillIdentityName(memory) {
+  return targetSkillName(memory) || proposedSkillName(memory);
+}
+
+function publicationTrack(value) {
+  return value?.publication_track === "maintainer" ? "maintainer" : "community";
+}
+
 function eligibleMemory(memory) {
   const eligibility = assessSkillEligibility(memory);
   return Boolean(
@@ -97,8 +110,8 @@ function evidenceClaimsCohere(left, right, threshold = DEFAULT_CLAIM_SIMILARITY_
 function sameEmbeddingSpace(left, right) {
   const leftEmbedding = normalizedEmbedding(left?.embedding);
   const rightEmbedding = normalizedEmbedding(right?.embedding);
-  const leftTarget = targetSkillName(left);
-  const rightTarget = targetSkillName(right);
+  const leftTarget = skillIdentityName(left);
+  const rightTarget = skillIdentityName(right);
   return Boolean(
     leftEmbedding &&
     rightEmbedding &&
@@ -125,6 +138,7 @@ function clusterEligibleMemories(memories, options = {}) {
   const byIssue = new Map();
   for (const memory of memories || []) {
     if (!eligibleMemory(memory)) continue;
+    if (publicationTrack(memory) !== "community") continue;
     const issue = issueNumber(memory);
     if (!byIssue.has(issue)) byIssue.set(issue, memory);
   }
@@ -209,7 +223,7 @@ function slugify(value) {
 }
 
 function candidateName(members, clusterId) {
-  const targetNames = uniqueStrings(members.map(targetSkillName), 3, 64).filter(Boolean);
+  const targetNames = uniqueStrings(members.map(skillIdentityName), 3, 64).filter(Boolean);
   if (targetNames.length === 1) return targetNames[0];
   const tags = uniqueStrings(members.flatMap((memory) => memory.tags || []), 3, 32)
     .map(slugify)
@@ -235,6 +249,7 @@ function buildSkillCandidate(cluster) {
     schema_version: 1,
     id: `skill-candidate-${sha256(cluster.id).slice(0, 16)}`,
     cluster_id: cluster.id,
+    publication_track: "community",
     name,
     description: compactText(
       `Diagnose and resolve ${name.replace(/-recovery$/, "").replace(/-/g, " ")} failures. ` +
@@ -269,6 +284,72 @@ function buildSkillCandidate(cluster) {
   return candidate;
 }
 
+function singleSourceClaimSupport(memory) {
+  const sourceIssues = [issueNumber(memory)];
+  const publishers = [memory.publisher.github_login];
+  return Object.fromEntries([
+    ...CLAIM_FIELDS,
+    "test_commands",
+  ].map((field) => [field, { source_issues: sourceIssues, publishers }]));
+}
+
+function buildMaintainerSkillCandidate(memory) {
+  if (!eligibleMemory(memory)) {
+    throw new Error("Maintainer Skill candidates require one complete, verified memory");
+  }
+  if (memory?.trust?.status !== "verified" || !compactText(memory?.trust?.reviewer, 100)) {
+    throw new Error("Maintainer Skill candidates require a separate trusted human review");
+  }
+  if (publicationTrack(memory) !== "maintainer") {
+    throw new Error("Memory is not on the maintainer publication track");
+  }
+  const name = skillIdentityName(memory);
+  if (!name) throw new Error("Maintainer Skill evidence requires target_skill or proposed_skill");
+  const evidence = memory.evidence || {};
+  const sourceUrls = uniqueStrings(evidence.source_urls || [], 12, 500)
+    .filter(isPublicEvidenceUrl)
+    .sort();
+  const testCommands = uniqueStrings(evidence.test_commands || [], 12, 500);
+  const publisher = memory.publisher.github_login;
+  const candidate = {
+    schema_version: 1,
+    id: `skill-candidate-${sha256(`maintainer:${memory.memory_id}`).slice(0, 16)}`,
+    cluster_id: `maintainer-${memory.memory_id}`,
+    publication_track: "maintainer",
+    name,
+    description: compactText(
+      `Diagnose and resolve ${name.replace(/-recovery$/, "").replace(/-/g, " ")} failures. ` +
+      `Use when ${evidence.applies_when || memory.context_environment}.`,
+      1024,
+    ),
+    status: "needs-review",
+    embedding_model: memory.embedding_model,
+    similarity_threshold: null,
+    claim_similarity_threshold: null,
+    source_memories: [memory.memory_id],
+    source_issues: [issueNumber(memory)],
+    publishers: [publisher],
+    target_skill: targetSkillName(memory),
+    domain: (memory.tags || []).find((tag) => SKILL_DOMAINS.has(tag)) || null,
+    tags: uniqueStrings(memory.tags || [], 40, 64).sort(),
+    triggers: [compactText(evidence.symptom)],
+    diagnosis: [compactText(evidence.root_cause)],
+    fixes: [compactText(evidence.fix)],
+    verification: [compactText(evidence.verification)],
+    applies_when: [compactText(evidence.applies_when)],
+    avoid_when: compactText(evidence.avoid_when) ? [compactText(evidence.avoid_when)] : [],
+    test_commands: testCommands,
+    evidence_urls: sourceUrls,
+    claim_support: singleSourceClaimSupport(memory),
+  };
+  candidate.candidate_sha256 = sha256(JSON.stringify(candidate));
+  const validation = validateSkillCandidate(candidate);
+  if (!validation.valid) {
+    throw new Error(`Skill candidate validation failed: ${validation.errors.join("; ")}`);
+  }
+  return candidate;
+}
+
 function expectedCandidateDigest(candidate) {
   const unsigned = { ...(candidate || {}) };
   delete unsigned.candidate_sha256;
@@ -277,6 +358,8 @@ function expectedCandidateDigest(candidate) {
 
 function validateSkillCandidate(candidate) {
   const errors = [];
+  const track = publicationTrack(candidate);
+  const minimumSources = track === "maintainer" ? 1 : 2;
   const name = String(candidate?.name || "");
   if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(name) || name.length > 64) {
     errors.push("name must be 1-64 lowercase kebab-case characters");
@@ -289,23 +372,37 @@ function validateSkillCandidate(candidate) {
     }
   }
   if (!Array.isArray(candidate?.test_commands) || candidate.test_commands.length === 0) {
-    errors.push("test_commands must contain a command supported by two independent publishers");
+    errors.push(
+      track === "maintainer"
+        ? "test_commands must contain at least one reproducible command"
+        : "test_commands must contain a command supported by two independent publishers",
+    );
   }
   if (
-    !Array.isArray(candidate?.evidence_urls) || candidate.evidence_urls.length < 2 ||
+    !Array.isArray(candidate?.evidence_urls) || candidate.evidence_urls.length < minimumSources ||
     !candidate.evidence_urls.every(isPublicEvidenceUrl)
   ) {
-    errors.push("evidence_urls must contain at least two public HTTPS sources");
+    errors.push(`evidence_urls must contain at least ${minimumSources} public HTTPS source(s)`);
   }
-  if (new Set(candidate?.source_issues || []).size < 2) errors.push("at least two source Issues are required");
-  if (new Set(candidate?.publishers || []).size < 2) errors.push("at least two independent publishers are required");
+  if (new Set(candidate?.source_issues || []).size < minimumSources) {
+    errors.push(`at least ${minimumSources} source Issue(s) are required`);
+  }
+  if (new Set(candidate?.publishers || []).size < minimumSources) {
+    errors.push(
+      track === "maintainer"
+        ? "at least one authenticated maintainer publisher is required"
+        : "at least two independent publishers are required",
+    );
+  }
   for (const field of [...CLAIM_FIELDS, "test_commands"]) {
     const support = candidate?.claim_support?.[field];
     if (
-      new Set(support?.source_issues || []).size < 2 ||
-      new Set((support?.publishers || []).map((value) => String(value).toLowerCase())).size < 2
+      new Set(support?.source_issues || []).size < minimumSources ||
+      new Set((support?.publishers || []).map((value) => String(value).toLowerCase())).size < minimumSources
     ) {
-      errors.push(`${field} requires claim-level support from two independent sources`);
+      errors.push(
+        `${field} requires claim-level support from ${minimumSources} authenticated source(s)`,
+      );
     }
   }
   if (
@@ -337,6 +434,16 @@ function rebuildCandidateFromCanonicalEvidence(reviewedCandidate, memories, tomb
     if (!memory) throw new Error(`canonical evidence for source Issue #${issue} is missing`);
     return memory;
   });
+  if (publicationTrack(reviewedCandidate) === "maintainer") {
+    if (canonical.length !== 1) {
+      throw new Error("maintainer candidates require exactly one canonical source Issue");
+    }
+    const rebuilt = buildMaintainerSkillCandidate(canonical[0]);
+    if (rebuilt.candidate_sha256 !== reviewedCandidate.candidate_sha256) {
+      throw new Error("reviewed candidate no longer matches canonical evidence");
+    }
+    return rebuilt;
+  }
   const clusters = clusterEligibleMemories(canonical, options);
   const cluster = clusters.find((item) => (
     item.members.length === requiredIssues.length &&
@@ -351,12 +458,13 @@ function rebuildCandidateFromCanonicalEvidence(reviewedCandidate, memories, tomb
 }
 
 function renderSkillCandidateBody(candidate) {
+  const maintainerTrack = publicationTrack(candidate) === "maintainer";
   return [
     `# Skill Candidate: ${candidate.name}`,
     "",
     `Cluster: \`${candidate.cluster_id}\``,
     `Sources: ${candidate.source_issues.map((issue) => `#${issue}`).join(", ")}`,
-    `Independent publishers: ${candidate.publishers.map((publisher) => `@${publisher}`).join(", ")}`,
+    `${maintainerTrack ? "Maintainer publisher" : "Independent publishers"}: ${candidate.publishers.map((publisher) => `@${publisher}`).join(", ")}`,
     "",
     "A repository maintainer must review this candidate and add the `skill-approved` label before publication.",
     "",
@@ -428,7 +536,9 @@ function renderSkillMarkdown(candidate, version, reviewer) {
     "",
     `# ${candidate.name}`,
     "",
-    "Use this community-reviewed workflow only when the trigger and applicability conditions match the local project.",
+    publicationTrack(candidate) === "maintainer"
+      ? "Use this maintainer-validated workflow only when the trigger and applicability conditions match the local project."
+      : "Use this community-reviewed workflow only when the trigger and applicability conditions match the local project.",
     "",
     "## Security Boundary",
     "",
@@ -501,24 +611,30 @@ function publishCandidate(registryInput, candidate, options) {
   const version = skill ? bumpPatch(highestExistingVersion) : "1.0.0";
   const skillMarkdown = renderSkillMarkdown(candidate, version, options.reviewer);
   const artifactPath = `shared_skills/releases/${version}/${candidate.name}/SKILL.md`;
+  const maintainerTrack = publicationTrack(candidate) === "maintainer";
+  const publisherCount = new Set(
+    candidate.publishers.map((publisher) => publisher.toLowerCase()),
+  ).size;
   const release = {
     version,
-    summary: `Community-reviewed workflow from ${candidate.source_issues.length} independent source Issues.`,
+    summary: maintainerTrack
+      ? `Maintainer-validated workflow from ${candidate.source_issues.length} authenticated source Issue.`
+      : `Community-reviewed workflow from ${candidate.source_issues.length} independent source Issues.`,
     published_at: options.publishedAt,
     status: "active",
     candidate_id: candidate.id,
     candidate_sha256: candidateDigest,
     reviewer: options.reviewer,
     source_count: new Set(candidate.source_issues).size,
-    publisher_count: new Set(candidate.publishers.map((publisher) => publisher.toLowerCase())).size,
+    publisher_count: publisherCount,
     evidence: candidate.evidence_urls,
     verification: {
-      level: "independently-reproduced",
-      independent_reproductions: new Set(candidate.publishers.map((publisher) => publisher.toLowerCase())).size,
+      level: maintainerTrack ? "maintainer-validated" : "independently-reproduced",
+      independent_reproductions: maintainerTrack ? 0 : publisherCount,
       verified_outcomes: 0,
     },
     provenance: {
-      kind: "community-evidence",
+      kind: maintainerTrack ? "maintainer-evidence" : "community-evidence",
       repository: "JinNing6/Noosphere",
       authors: candidate.publishers,
     },
@@ -601,6 +717,7 @@ module.exports = {
   CANDIDATE_START,
   DEFAULT_CLAIM_SIMILARITY_THRESHOLD,
   DEFAULT_SIMILARITY_THRESHOLD,
+  buildMaintainerSkillCandidate,
   buildSkillCandidate,
   clusterEligibleMemories,
   extractSkillCandidate,

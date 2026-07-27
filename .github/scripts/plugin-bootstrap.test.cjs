@@ -44,6 +44,8 @@ test('Codex and Claude Code share one control-plane Skill contract', () => {
   assert.equal(claude, codex)
   assert.match(codex, /list_shared_skills/)
   assert.match(codex, /get_shared_skill/)
+  assert.match(codex, /submit_skill_evidence/)
+  assert.match(codex, /Do not use\s+`upload_consciousness` for software engineering evidence/)
   assert.match(codex, /explicit user consent/i)
   assert.match(codex, /do not use/i)
 })
@@ -76,6 +78,7 @@ test('SessionStart emits valid bounded context without network access', () => {
   assert.match(context, /software engineering failure/i)
   assert.match(context, /read-only discovery/i)
   assert.match(context, /explicit user consent/i)
+  assert.match(context, /submit_skill_evidence/)
   assert.ok(context.length <= 700)
 })
 

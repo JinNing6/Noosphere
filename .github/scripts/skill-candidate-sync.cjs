@@ -1,4 +1,5 @@
 const {
+  buildMaintainerSkillCandidate,
   buildSkillCandidate,
   clusterEligibleMemories,
   extractSkillCandidate,
@@ -17,6 +18,15 @@ function buildCanonicalSkillCandidates(memories, tombstones) {
       candidates.push(buildSkillCandidate(cluster));
     } catch (error) {
       console.warn(`Skipping non-publishable Skill candidate ${cluster.id}: ${error.message}`);
+    }
+  }
+  for (const memory of active.filter((item) => item.publication_track === "maintainer")) {
+    try {
+      candidates.push(buildMaintainerSkillCandidate(memory));
+    } catch (error) {
+      console.warn(
+        `Skipping non-publishable maintainer Skill evidence ${memory.memory_id}: ${error.message}`,
+      );
     }
   }
   return candidates.sort((left, right) => left.id.localeCompare(right.id));

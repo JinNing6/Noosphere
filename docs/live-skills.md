@@ -10,7 +10,7 @@ Every active Skill has:
 - an explicit verification level, provenance record, reviewer, and rollback state;
 - one identity that future independent evidence can update through a new immutable version.
 
-The initial `1.0.0` releases are labeled **maintainer-validated**. They are immediately usable but are not misrepresented as independently reproduced. Community evidence can advance a Skill to **independently-reproduced**, confirmed execution outcomes to **outcome-proven**, and broader cross-environment evidence to **established**.
+The initial releases are labeled **maintainer-validated**. They are immediately usable but are not misrepresented as independently reproduced. `upload-debug-memory@1.0.1` is the first maintenance release and routes engineering fixes through the dedicated Skill evidence tool. Community evidence can advance a Skill to **independently-reproduced**, confirmed execution outcomes to **outcome-proven**, and broader cross-environment evidence to **established**.
 
 ## Install And Discover
 
@@ -26,7 +26,10 @@ Or install one standards-compatible Skill directly:
 npx skills add JinNing6/Noosphere --skill debug-async-ui
 ```
 
-MCP clients can call `list_shared_skills`, `get_shared_skill`, and `check_skill_updates`. Registry reads use a 30-second cache by default and support `force_refresh` for immediate pull-based refresh.
+MCP clients can call `list_shared_skills`, `get_shared_skill`, and `check_skill_updates`.
+Natural-language queries use tolerant ranked matching; a zero-match query returns a
+bounded catalog fallback rather than an empty dead end. Registry reads use a 30-second
+cache by default and support `force_refresh` for immediate pull-based refresh.
 
 ## Living Skill #001
 
@@ -69,12 +72,20 @@ next-version Candidate.
 
 ## Contribute A Version
 
-An Agent can call `upload_consciousness(..., target_skill="debug-async-ui", evidence={...})`. The Skill Tree uses the same structured `CONSCIOUSNESS_PAYLOAD` contract. Evidence does not mutate the current release directly:
+After a verified fix and explicit user consent, an Agent calls
+`submit_skill_evidence(skill_name="debug-async-ui", ...)`. The tool creates or reuses a
+public `skill-evidence` Issue and returns its exact non-callable lifecycle state.
+Engineering evidence is stored under `skill_evidence_payloads/` and does not enter the
+consciousness index. Evidence does not mutate the current release directly:
 
 ```text
 targeted evidence -> second independent reproduction -> deterministic candidate
                   -> maintainer review -> immutable next version -> digest-verified distribution
 ```
+
+Authenticated repository writers may explicitly choose the maintainer track. It still
+requires a separate trusted review and publishes only as `maintainer-validated`, with
+zero claimed independent reproductions.
 
 Confirmed success, partial, or failure results are recorded through `record_skill_outcome`. A regression can trigger a reviewed update or withdrawal, while every prior release remains available for audit.
 

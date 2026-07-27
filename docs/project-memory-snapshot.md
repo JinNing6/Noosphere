@@ -1,10 +1,21 @@
 # Noosphere Project Memory Snapshot
 
-Last verified: 2026-07-21 (Asia/Shanghai)
+Last verified: 2026-07-26 (Asia/Shanghai)
+
+## v0.9.1 Skill Evidence Flow — Local Release Candidate
+
+- Branch `codex/v091-skill-flow` in the isolated worktree `E:\ideaProjects\agent\Noosphere-v091-skill-flow` prepares `0.9.1`. It is local only: it has not been committed, pushed, merged, tagged, published to PyPI, or deployed. Public `main` and PyPI remain at `0.9.0`.
+- The verified #67 failure mode is now represented as a product regression: engineering fixes use the first-class, authenticated, consent-gated, idempotent `submit_skill_evidence` tool. `upload_consciousness` is reserved for general thoughts and philosophical consciousness fragments.
+- New engineering evidence is stored under `skill_evidence_payloads/`, excluded from the consciousness index, bound to the authenticated GitHub Issue author, and returned with an exact non-callable lifecycle state and stable URL. If no external source URL is supplied, the public evidence Issue becomes its canonical source.
+- Community publication still requires two independent GitHub publishers, compatible claim-level evidence, a shared verification command, deterministic candidate generation, and maintainer approval. The separate maintainer track requires live repository write permission at submission and publication plus a distinct trusted review; it publishes only as `maintainer-validated` with zero claimed independent reproductions.
+- `list_shared_skills` now performs separator-aware, tolerant ranked matching and returns a bounded `catalog-fallback` instead of a silent empty result. The real query `Codex sidebar project sorting recent updated_at project-order persisted state` ranks `debug-async-ui` above the generic debug Skill in regression coverage.
+- Codex and Claude Code retain one byte-identical `using-noosphere` control Skill. It performs focused discovery, asks for explicit consent after a verified reusable fix, calls `submit_skill_evidence`, and reports the returned evidence/candidate state without claiming a published Skill. `upload-debug-memory@1.0.1` carries the same corrected boundary while immutable `1.0.0` remains unchanged.
+- Local verification passed: 213 SDK tests, 54 repository Python tests, 101 Node workflow/supply-chain tests, registry/plugin validation, YAML parsing for all changed workflows, JavaScript syntax checks for every changed embedded GitHub Actions script, `git diff --check`, and a real FastMCP tool-schema projection exposing 46 tools. Repository-wide Ruff remains pre-existingly non-clean with 106 findings outside this change; it was recorded rather than mass-rewriting unrelated code.
+- Remaining release work requires review of this local diff, then an explicitly authorized commit/push/PR. After merge, initialize or allow on-demand creation of the six new lifecycle labels and publish `v0.9.1`; Issue #67 remains an old consciousness record and has not been silently migrated or reclassified.
 
 ## Launch Metadata Alignment
 
-- Codex and Claude Code plugin manifests, the Claude marketplace, the public MCP package, and registry manifests are aligned at `0.9.0`. Explicit Claude plugin versions are cache keys, so the automatic-bootstrap change used a semantic version bump rather than relying on a repository commit alone.
+- Public Codex and Claude Code plugin manifests, the Claude marketplace, PyPI, and remote `main` are aligned at `0.9.0`; the local release-candidate branch aligns its SDK, server manifests, and both plugins at `0.9.1`. Explicit Claude plugin versions are cache keys, so this lifecycle change requires a semantic version bump rather than relying on a repository commit alone.
 - Public plugin descriptions and documentation now report the canonical registry state of 14 active Live Skills and 2 remaining verified Seeds. Repository validation derives these values from `shared_skills/registry.json` and rejects future count drift.
 - The repository marketplace display name is `Noosphere Live Skills`, aligned with the current product category rather than the legacy Agent Memory entry point.
 - The Codex plugin MCP companion file now uses the current `mcpServers` schema. The bundled plugin validator rejects the legacy `mcp_servers` spelling, and repository validation now guards this boundary.

@@ -53,18 +53,19 @@ jobs:
         run: |
           set -euo pipefail
 
-          args=(backfill --dir consciousness_payloads)
-          if [ -n "$BACKFILL_LIMIT" ]; then
-            args+=(--limit "$BACKFILL_LIMIT")
-          fi
-          if [ "$BACKFILL_DRY_RUN" = "true" ]; then
-            args+=(--dry-run)
-          fi
-          if [ "$BACKFILL_FORCE" = "true" ]; then
-            args+=(--force)
-          fi
-
-          node .github/scripts/gemini-embedding.cjs "${args[@]}"
+          for payload_dir in consciousness_payloads skill_evidence_payloads; do
+            args=(backfill --dir "$payload_dir")
+            if [ -n "$BACKFILL_LIMIT" ]; then
+              args+=(--limit "$BACKFILL_LIMIT")
+            fi
+            if [ "$BACKFILL_DRY_RUN" = "true" ]; then
+              args+=(--dry-run)
+            fi
+            if [ "$BACKFILL_FORCE" = "true" ]; then
+              args+=(--force)
+            fi
+            node .github/scripts/gemini-embedding.cjs "${args[@]}"
+          done
 
       - name: Commit embedding updates
         env:
@@ -77,14 +78,14 @@ jobs:
             exit 0
           fi
 
-          if git diff --quiet -- consciousness_payloads; then
+          if git diff --quiet -- consciousness_payloads skill_evidence_payloads; then
             echo "No embedding changes to commit."
             exit 0
           fi
 
           git config user.name "Noosphere Bot"
           git config user.email "noosphere-bot@users.noreply.github.com"
-          git add consciousness_payloads
+          git add consciousness_payloads skill_evidence_payloads
           git commit -m "Backfill Gemini embeddings"
           git pull --rebase origin main
           git push origin HEAD:main
@@ -106,12 +107,32 @@ jobs:
               buildCanonicalSkillCandidates,
               planCandidateIssueSync,
             } = require(`${process.env.GITHUB_WORKSPACE}/.github/scripts/skill-candidate-sync.cjs`);
-            const memories = loadCandidatePayloads(`${process.env.GITHUB_WORKSPACE}/consciousness_payloads`);
+            const {
+              isTrustedReviewerPermission,
+            } = require(`${process.env.GITHUB_WORKSPACE}/.github/scripts/memory-trust.cjs`);
+            const memories = [
+              `${process.env.GITHUB_WORKSPACE}/consciousness_payloads`,
+              `${process.env.GITHUB_WORKSPACE}/skill_evidence_payloads`,
+            ].flatMap((directory) => loadCandidatePayloads(directory));
             const tombstonesPath = `${process.env.GITHUB_WORKSPACE}/consciousness_tombstones.json`;
             const tombstones = fs.existsSync(tombstonesPath)
               ? JSON.parse(fs.readFileSync(tombstonesPath, 'utf8'))
               : { version: 1, withdrawn_issues: [] };
-            const candidates = buildCanonicalSkillCandidates(memories, tombstones);
+            const rebuiltCandidates = buildCanonicalSkillCandidates(memories, tombstones);
+            const candidates = [];
+            for (const candidate of rebuiltCandidates) {
+              if (candidate.publication_track === 'maintainer') {
+                const publisherPermission = await github.rest.repos.getCollaboratorPermissionLevel({
+                  ...context.repo,
+                  username: candidate.publishers[0],
+                });
+                if (!isTrustedReviewerPermission(publisherPermission.data.permission)) {
+                  console.log(`Skipping maintainer candidate ${candidate.id}: publisher lacks write permission.`);
+                  continue;
+                }
+              }
+              candidates.push(candidate);
+            }
             const issues = await github.paginate(github.rest.issues.listForRepo, {
               ...context.repo,
               state: 'all',

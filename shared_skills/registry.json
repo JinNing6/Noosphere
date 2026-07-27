@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
-  "revision": 3,
-  "generated_at": "2026-07-21T06:31:47.277Z",
+  "revision": 4,
+  "generated_at": "2026-07-26T10:29:53.713Z",
   "skills": [
     {
       "id": "noosphere:agent-debug-memory",
@@ -483,7 +483,7 @@
       "originators": [
         "JinNing6"
       ],
-      "latest": "1.0.0",
+      "latest": "1.0.1",
       "releases": [
         {
           "version": "1.0.0",
@@ -508,6 +508,32 @@
             "path": "shared_skills/releases/1.0.0/upload-debug-memory/SKILL.md",
             "sha256": "ce1b63f83959f3102f866d20fd152b4b984bdf364cb436ae24712bd561b036f7",
             "size_bytes": 2020
+          },
+          "withdrawal": null
+        },
+        {
+          "version": "1.0.1",
+          "summary": "Routes verified engineering lessons through first-class Shared Skill evidence instead of consciousness upload.",
+          "published_at": "2026-07-26T10:29:53.713Z",
+          "status": "active",
+          "reviewer": "JinNing6",
+          "source_count": 1,
+          "publisher_count": 1,
+          "evidence": [],
+          "verification": {
+            "level": "maintainer-validated",
+            "independent_reproductions": 0,
+            "verified_outcomes": 0
+          },
+          "provenance": {
+            "kind": "maintainer-authored",
+            "repository": "JinNing6/Noosphere",
+            "author": "JinNing6"
+          },
+          "artifact": {
+            "path": "shared_skills/releases/1.0.1/upload-debug-memory/SKILL.md",
+            "sha256": "557c392668134420c9ce224aa158b0b88a9dcbdad43169d27d483555e8d63cf9",
+            "size_bytes": 2776
           },
           "withdrawal": null
         }
