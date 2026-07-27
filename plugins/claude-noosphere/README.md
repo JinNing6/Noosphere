@@ -2,7 +2,7 @@
 
 Noosphere makes reviewed shared fixes available automatically when Claude Code encounters a concrete software failure.
 
-The plugin connects Claude Code to one live registry containing 14 Agent Skills:
+The plugin connects Claude Code to one live registry of approved Agent Skills:
 
 - one plugin-local `using-noosphere` control Skill for safe automatic discovery and use
 - a fast `SessionStart` hook that restores the activation contract after startup, resume, clear, or compaction

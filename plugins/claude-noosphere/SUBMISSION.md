@@ -23,7 +23,7 @@ Install once. Claude Code automatically discovers, digest-verifies, applies, and
 Long description:
 
 ```text
-Noosphere turns verified debugging lessons into shared agent memory and live, review-gated Agent Skills. Claude Code can discover 14 versioned foundational Skills automatically when a concrete software failure occurs, verify exact digests, check applicability and updates, run local verification, and report execution outcomes only with explicit consent. The plugin contains one control Skill, a bounded SessionStart hook, the MCP connection, and optional manual commands; all dynamic engineering Skills remain in one public immutable registry.
+Noosphere turns verified debugging lessons into shared agent memory and live, review-gated Agent Skills. Claude Code can discover approved versioned foundational Skills automatically when a concrete software failure occurs, verify exact digests, check applicability and updates, run local verification, and report execution outcomes only with explicit consent. The plugin contains one control Skill, a bounded SessionStart hook, the MCP connection, and optional manual commands; all dynamic engineering Skills remain in one public immutable registry.
 ```
 
 ## Review Notes

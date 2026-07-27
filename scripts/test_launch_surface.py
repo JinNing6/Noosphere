@@ -11,14 +11,16 @@ CLAUDE_INSTALL = "/plugin marketplace add JinNing6/Noosphere"
 
 
 class LaunchSurfaceTests(unittest.TestCase):
-    def test_registry_count_matches_the_honest_first_screen_claim(self):
+    def test_first_screen_projects_a_dynamic_registry_without_count_drift(self):
         registry = json.loads(
             (REPO_ROOT / "shared_skills" / "registry.json").read_text(encoding="utf-8")
         )
         readme = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
 
-        self.assertEqual(len(registry["skills"]), 14)
-        self.assertIn("Live_Skills-14", readme)
+        self.assertGreaterEqual(len(registry["skills"]), 14)
+        self.assertIn("Live_Skills-live", readme)
+        self.assertIn("Registry-dynamic", readme)
+        self.assertNotRegex(readme, r"Live_Skills-\d+")
         self.assertIn("docs/live-skills.md", readme)
         self.assertIn("maintainer-validated Live Skills", readme)
         self.assertIn("public-artifact-runtime-smoke-gate", readme)
@@ -28,7 +30,15 @@ class LaunchSurfaceTests(unittest.TestCase):
                 for item in skill["releases"]
                 if item["version"] == skill["latest"] and item["status"] == "active"
             )
-            self.assertEqual(release["verification"]["level"], "maintainer-validated")
+            self.assertIn(
+                release["verification"]["level"],
+                {
+                    "maintainer-validated",
+                    "independently-reproduced",
+                    "outcome-proven",
+                    "established",
+                },
+            )
 
     def test_english_and_chinese_first_screens_lead_with_automatic_agent_install(self):
         for name in ("README.md", "README.zh-CN.md"):

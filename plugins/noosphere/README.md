@@ -2,7 +2,7 @@
 
 Noosphere makes reviewed shared fixes available automatically when Codex encounters a concrete software failure.
 
-The plugin connects Codex to one live registry containing 14 Agent Skills:
+The plugin connects Codex to one live registry of approved Agent Skills:
 
 - one plugin-local `using-noosphere` control Skill that triggers discovery, digest verification, applicability checks, and project verification
 - Noosphere MCP tools through `uvx noosphere-mcp`

@@ -448,33 +448,29 @@ def validate_repository(root: Path) -> list[str]:
                     f"plugins={sorted(str(value) for value in versions)}"
                 )
 
-        active_skill_count = sum(
-            1
-            for skill in registry.get("skills", [])
-            if isinstance(skill, dict) and skill.get("latest")
-        )
         codex_description = manifests[0].get("interface", {}).get("longDescription", "")
-        expected_description = f"Discover {active_skill_count} versioned"
+        expected_description = "Discover approved versioned"
         if expected_description not in codex_description:
             errors.append(
-                f"Codex plugin Skill count drift: expected `{expected_description}`"
+                "Codex plugin must describe dynamic registry discovery: "
+                f"expected `{expected_description}`"
             )
 
-        count_copy = [
+        dynamic_registry_copy = [
             (
                 root / "plugins" / "noosphere" / "README.md",
-                f"containing {active_skill_count} Agent Skills",
+                "live registry of approved Agent Skills",
             ),
             (
                 root / "plugins" / "claude-noosphere" / "README.md",
-                f"containing {active_skill_count} Agent Skills",
+                "live registry of approved Agent Skills",
             ),
             (
                 root / "plugins" / "claude-noosphere" / "SUBMISSION.md",
-                f"discover {active_skill_count} versioned foundational Skills",
+                "discover approved versioned foundational Skills",
             ),
         ]
-        for path, expected in count_copy:
+        for path, expected in dynamic_registry_copy:
             try:
                 text = path.read_text(encoding="utf-8")
             except OSError as exc:
@@ -482,7 +478,8 @@ def validate_repository(root: Path) -> list[str]:
                 continue
             if expected not in text:
                 errors.append(
-                    f"Plugin Skill count drift in {path}: expected `{expected}`"
+                    f"Plugin must describe dynamic registry discovery in {path}: "
+                    f"expected `{expected}`"
                 )
     codex_mcp_path = root / "plugins" / "noosphere" / ".mcp.json"
     try:
