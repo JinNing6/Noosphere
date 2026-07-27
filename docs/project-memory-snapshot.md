@@ -1,22 +1,23 @@
 # Noosphere Project Memory Snapshot
 
-Last verified: 2026-07-26 (Asia/Shanghai)
+Last verified: 2026-07-27 (Asia/Shanghai)
 
-## v0.9.1 Skill Evidence Flow — Local Release Candidate
+## v0.9.1 Skill Evidence Flow — Merged and Live on `main`
 
-- Branch `codex/v091-skill-flow` in the isolated worktree `E:\ideaProjects\agent\Noosphere-v091-skill-flow` prepares `0.9.1`. It is local only: it has not been committed, pushed, merged, tagged, published to PyPI, or deployed. Public `main` and PyPI remain at `0.9.0`.
-- The verified #67 failure mode is now represented as a product regression: engineering fixes use the first-class, authenticated, consent-gated, idempotent `submit_skill_evidence` tool. `upload_consciousness` is reserved for general thoughts and philosophical consciousness fragments.
-- New engineering evidence is stored under `skill_evidence_payloads/`, excluded from the consciousness index, bound to the authenticated GitHub Issue author, and returned with an exact non-callable lifecycle state and stable URL. If no external source URL is supplied, the public evidence Issue becomes its canonical source.
-- Community publication still requires two independent GitHub publishers, compatible claim-level evidence, a shared verification command, deterministic candidate generation, and maintainer approval. The separate maintainer track requires live repository write permission at submission and publication plus a distinct trusted review; it publishes only as `maintainer-validated` with zero claimed independent reproductions.
-- `list_shared_skills` now performs separator-aware, tolerant ranked matching and returns a bounded `catalog-fallback` instead of a silent empty result. The real query `Codex sidebar project sorting recent updated_at project-order persisted state` ranks `debug-async-ui` above the generic debug Skill in regression coverage.
-- Codex and Claude Code retain one byte-identical `using-noosphere` control Skill. It performs focused discovery, asks for explicit consent after a verified reusable fix, calls `submit_skill_evidence`, and reports the returned evidence/candidate state without claiming a published Skill. `upload-debug-memory@1.0.1` carries the same corrected boundary while immutable `1.0.0` remains unchanged.
-- Local verification passed: 213 SDK tests, 54 repository Python tests, 101 Node workflow/supply-chain tests, registry/plugin validation, YAML parsing for all changed workflows, JavaScript syntax checks for every changed embedded GitHub Actions script, `git diff --check`, and a real FastMCP tool-schema projection exposing 46 tools. Repository-wide Ruff remains pre-existingly non-clean with 106 findings outside this change; it was recorded rather than mass-rewriting unrelated code.
-- Remaining release work requires review of this local diff, then an explicitly authorized commit/push/PR. After merge, initialize or allow on-demand creation of the six new lifecycle labels and publish `v0.9.1`; Issue #67 remains an old consciousness record and has not been silently migrated or reclassified.
+- PR #68 merged as `ca50c947d7a36840bed49ee045363b29dd82b573`. Source `main`, the SDK/server manifests, and both plugin manifests now declare `0.9.1`; no GitHub Release or PyPI `0.9.1` has been published, so the public package remains `noosphere-mcp==0.9.0`.
+- Engineering fixes now use the first-class, authenticated, consent-gated, idempotent `submit_skill_evidence` tool. `upload_consciousness` remains reserved for general thoughts and philosophical consciousness fragments. Issue #67 remains an historical consciousness record and was not silently migrated or reclassified.
+- Skill Evidence is stored under `skill_evidence_payloads/`, excluded from `consciousness_payloads/` and the consciousness index, bound to the authenticated GitHub Issue author, and returned with an exact non-callable lifecycle state and stable URL. Community publication still requires two independent publishers; the separately reviewed maintainer track can publish only as `maintainer-validated` with zero claimed independent reproductions.
+- The first live maintainer submission created Evidence Issue #69, then candidate Issue #70. Its initial label fan-out exposed duplicate serialized workflow events and four repeated pause comments. PR #71 merged as `51fbb51a61aa756c278d8db66844d7a6bb185b8d`; clients now create an unlabeled Evidence Issue, the workflow owns lifecycle labels, only `opened` and `trusted-review` execute the job, and pause comments use a stable idempotency marker.
+- The second live community submission, Issue #72, verified the corrected experience: zero initial labels, one active opened run, one pause comment, one trusted-review run, and one success comment. It persisted only as `skill_evidence_payloads/memory_issue0072.json`, produced no consciousness payload and no candidate, and truthfully reports `awaiting-independent-evidence`.
+- The first publication attempt for candidate #70 correctly staged the immutable artifact but failed because plugin and launch surfaces hardcoded a registry count of 14. PR #73 merged as `7afe510c78e290cd5d5e85cc0abf3b78d13325ce`; dynamic distribution surfaces no longer couple publication to a static count or revision.
+- The retried publication run `30233830718` passed staging, registry/plugin validation, atomic commit, and decision recording. `shared-skill-evidence-routing@1.0.0` is live in registry revision `5` with SHA-256 `d69a9c9f749282711b5c0009816fe14d2643780d91a580a07a367d5d9f9d2b63`, byte size `2847`, one authenticated publisher, verification level `maintainer-validated`, and zero independent reproductions.
+- A real anonymous query for `Agent shared engineering fix uploaded as consciousness instead of a callable Skill` returned `query_mode=ranked` and placed `shared-skill-evidence-routing@1.0.0` first with score `22`. `get_shared_skill` then fetched the exact artifact and verified the same SHA-256 against registry revision `5`.
+- Verification evidence now includes 213 SDK tests, 55 repository Python tests, 102 Node workflow/supply-chain tests, registry/plugin validation, PR CI, a 46-tool Glama container handshake, three-platform validation-kit runs, two live Evidence submissions, one candidate review, one atomic Skill publication, and one real anonymous discovery/retrieval cycle.
 
 ## Launch Metadata Alignment
 
-- Public Codex and Claude Code plugin manifests, the Claude marketplace, PyPI, and remote `main` are aligned at `0.9.0`; the local release-candidate branch aligns its SDK, server manifests, and both plugins at `0.9.1`. Explicit Claude plugin versions are cache keys, so this lifecycle change requires a semantic version bump rather than relying on a repository commit alone.
-- Public plugin descriptions and documentation now report the canonical registry state of 14 active Live Skills and 2 remaining verified Seeds. Repository validation derives these values from `shared_skills/registry.json` and rejects future count drift.
+- Remote `main`, both source plugin manifests, the Claude marketplace manifest, SDK metadata, and server manifests declare `0.9.1`; PyPI and the latest GitHub Release remain at `0.9.0`. Explicit Claude plugin versions are cache keys, so completing distribution still requires a semantic `v0.9.1` release rather than relying on repository commits alone.
+- Registry revision `5` contains 15 active Live Skills and 2 remaining verified Seeds. Plugin descriptions, badges, and launch copy intentionally use dynamic wording; repository validation checks registry entries and trust metadata directly instead of blocking growth on a mirrored count.
 - The repository marketplace display name is `Noosphere Live Skills`, aligned with the current product category rather than the legacy Agent Memory entry point.
 - The Codex plugin MCP companion file now uses the current `mcpServers` schema. The bundled plugin validator rejects the legacy `mcp_servers` spelling, and repository validation now guards this boundary.
 - GitHub repository Topics are managed as public discovery metadata. The launch set targets Agent Skills, MCP, coding Agents, debugging, shared memory, supported Agent runtimes, and developer tooling.
@@ -275,15 +276,18 @@ Last verified: 2026-07-26 (Asia/Shanghai)
 
 ## Required Deployment Steps
 
-1. Monitor and respond to review on `brainctl#170` and `Ahrena#376`. Their first workflow runs
+1. After a final review of current `main`, publish GitHub Release `v0.9.1` so Trusted Publishing
+   can build and verify the exact public PyPI artifact with all 46 MCP tools. Do not describe
+   the source merge or live registry update as a PyPI release before that workflow succeeds.
+2. Monitor and respond to review on `brainctl#170` and `Ahrena#376`. Their first workflow runs
    require upstream maintainer approval before jobs can start; do not describe `action_required`
    as a failure or a pass. Record a new Outcome only after public maintainer response, merge,
    release verification, or independently authenticated evidence. Outcome #57 is already
    recorded; do not present it as independent Noosphere reuse.
-2. Upgrade `public-artifact-runtime-smoke-gate` from `maintainer-validated` only after a second GitHub publisher submits independently reproduced evidence. Claim `outcome-proven` only after an exact-version third-party Agent reuse is recorded with public evidence.
-3. Convert the first external failed or partial outcome into a reviewed immutable `1.1.0` candidate and demonstrate `check_skill_updates` plus digest-verified retrieval. This version transition, not raw Skill count, is the first proof of a Living Skill network.
-4. Complete the separate Glama admin deployment and release so its public directory record exposes the current 45-tool runtime rather than the stale legacy snapshot.
-5. Handle the existing Vite chunk warning, npm dependency advisories, and GitHub Actions Node runtime deprecation in separate maintenance work; none blocks public `v0.9.0` or the external-issue campaign.
+3. Upgrade `public-artifact-runtime-smoke-gate` or `shared-skill-evidence-routing` from `maintainer-validated` only after a second GitHub publisher submits independently reproduced evidence. Claim `outcome-proven` only after an exact-version third-party Agent reuse is recorded with public evidence.
+4. Convert the first external failed or partial outcome into a reviewed immutable next version and demonstrate `check_skill_updates` plus digest-verified retrieval. This version transition, not raw Skill count, is the first proof of a Living Skill network.
+5. Complete the separate Glama admin deployment and release so its public directory record exposes the current 46-tool source runtime rather than the stale legacy snapshot.
+6. Handle the existing Vite chunk warning, npm dependency advisories, and GitHub Actions Node runtime deprecation in separate maintenance work; none blocks the `v0.9.1` release or the external-issue campaign.
 
 ## Concentrated v0.9.0 Launch Surface
 
