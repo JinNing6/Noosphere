@@ -112,12 +112,14 @@ def test_publish_workflow_uses_single_release_trigger_with_trusted_publishing_qu
 
 def test_package_release_includes_growth_ledger_tools():
     source = (SDK_ROOT / "noosphere" / "noosphere_mcp.py").read_text(encoding="utf-8")
+    ci_workflow = (REPO_ROOT / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
     tool_names = re.findall(
         r"@mcp\.tool\(\)\s*(?:\n[^\n]*)*?\n(?:async\s+def|def)\s+([a-zA-Z_][a-zA-Z0-9_]*)",
         source,
     )
 
     assert len(tool_names) == 46
+    assert "expected_tool_count=46" in ci_workflow
     for tool_name in [
         "record_growth_referral",
         "record_share_attribution",

@@ -254,7 +254,7 @@ jobs:
           result = parse_mcp_probe_output(
               completed["stdout"],
               expected_version=version_match.group(1),
-              expected_tool_count=45,
+              expected_tool_count=46,
           )
           print(
               f"Verified Glama source container: {result['runtime_tool_count']} tools, "

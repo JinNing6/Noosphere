@@ -173,16 +173,9 @@ async def test_shared_skill_discovery_ranks_tolerant_matches_and_falls_back():
         ]
     )
     for skill in registry["skills"][1:]:
-        skill["releases"][0]["artifact"]["path"] = (
-            f"shared_skills/releases/1.0.0/{skill['name']}/SKILL.md"
-        )
-    registry_url = (
-        "https://api.github.com/repos/test_owner/test_repo/contents/"
-        "shared_skills/registry.json"
-    )
-    respx.get(registry_url).mock(
-        return_value=Response(200, json={"content": encoded(registry)})
-    )
+        skill["releases"][0]["artifact"]["path"] = f"shared_skills/releases/1.0.0/{skill['name']}/SKILL.md"
+    registry_url = "https://api.github.com/repos/test_owner/test_repo/contents/shared_skills/registry.json"
+    respx.get(registry_url).mock(return_value=Response(200, json={"content": encoded(registry)}))
 
     _invalidate_cache()
     await _close_client()
@@ -233,17 +226,10 @@ async def test_submit_skill_evidence_rejects_non_public_source_evidence():
 @pytest.mark.asyncio
 @respx.mock
 async def test_submit_skill_evidence_creates_distinct_idempotent_record():
-    registry_url = (
-        "https://api.github.com/repos/test_owner/test_repo/contents/"
-        "shared_skills/registry.json"
-    )
+    registry_url = "https://api.github.com/repos/test_owner/test_repo/contents/shared_skills/registry.json"
     issue_url = "https://api.github.com/repos/test_owner/test_repo/issues"
-    respx.get("https://api.github.com/user").mock(
-        return_value=Response(200, json={"login": "validator-a"})
-    )
-    respx.get(registry_url).mock(
-        return_value=Response(200, json={"content": encoded(REGISTRY)})
-    )
+    respx.get("https://api.github.com/user").mock(return_value=Response(200, json={"login": "validator-a"}))
+    respx.get(registry_url).mock(return_value=Response(200, json={"content": encoded(REGISTRY)}))
     existing_route = respx.get(issue_url).mock(return_value=Response(200, json=[]))
     issue_route = respx.post(issue_url).mock(
         return_value=Response(
@@ -315,17 +301,10 @@ async def test_submit_skill_evidence_creates_distinct_idempotent_record():
 @pytest.mark.asyncio
 @respx.mock
 async def test_submit_skill_evidence_targets_an_existing_registry_skill():
-    registry_url = (
-        "https://api.github.com/repos/test_owner/test_repo/contents/"
-        "shared_skills/registry.json"
-    )
+    registry_url = "https://api.github.com/repos/test_owner/test_repo/contents/shared_skills/registry.json"
     issue_url = "https://api.github.com/repos/test_owner/test_repo/issues"
-    respx.get("https://api.github.com/user").mock(
-        return_value=Response(200, json={"login": "validator-a"})
-    )
-    respx.get(registry_url).mock(
-        return_value=Response(200, json={"content": encoded(REGISTRY)})
-    )
+    respx.get("https://api.github.com/user").mock(return_value=Response(200, json={"login": "validator-a"}))
+    respx.get(registry_url).mock(return_value=Response(200, json={"content": encoded(REGISTRY)}))
     respx.get(issue_url).mock(return_value=Response(200, json=[]))
     issue_route = respx.post(issue_url).mock(
         return_value=Response(
@@ -363,26 +342,14 @@ async def test_submit_skill_evidence_targets_an_existing_registry_skill():
 @pytest.mark.asyncio
 @respx.mock
 async def test_submit_skill_evidence_maintainer_track_checks_live_permission():
-    registry_url = (
-        "https://api.github.com/repos/test_owner/test_repo/contents/"
-        "shared_skills/registry.json"
+    registry_url = "https://api.github.com/repos/test_owner/test_repo/contents/shared_skills/registry.json"
+    permission_url = "https://api.github.com/repos/test_owner/test_repo/collaborators/external-user/permission"
+    post_route = respx.post("https://api.github.com/repos/test_owner/test_repo/issues").mock(
+        return_value=Response(500, json={"message": "must not post"})
     )
-    permission_url = (
-        "https://api.github.com/repos/test_owner/test_repo/collaborators/"
-        "external-user/permission"
-    )
-    post_route = respx.post(
-        "https://api.github.com/repos/test_owner/test_repo/issues"
-    ).mock(return_value=Response(500, json={"message": "must not post"}))
-    respx.get("https://api.github.com/user").mock(
-        return_value=Response(200, json={"login": "external-user"})
-    )
-    respx.get(permission_url).mock(
-        return_value=Response(200, json={"permission": "read"})
-    )
-    respx.get(registry_url).mock(
-        return_value=Response(200, json={"content": encoded(REGISTRY)})
-    )
+    respx.get("https://api.github.com/user").mock(return_value=Response(200, json={"login": "external-user"}))
+    respx.get(permission_url).mock(return_value=Response(200, json={"permission": "read"}))
+    respx.get(registry_url).mock(return_value=Response(200, json={"content": encoded(REGISTRY)}))
 
     _invalidate_cache()
     await _close_client()
