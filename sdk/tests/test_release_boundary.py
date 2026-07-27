@@ -68,6 +68,7 @@ def test_default_runtime_excludes_optional_semantic_model_stack():
         "sentence-transformers>=2.2.0",
         "numpy>=1.24.0",
     ]
+    assert "ruff==0.14.1" in project["optional-dependencies"]["dev"]
 
 
 def test_mcp_handshake_advertises_noosphere_distribution_version():
