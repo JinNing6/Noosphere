@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
-  "revision": 4,
-  "generated_at": "2026-07-26T10:29:53.713Z",
+  "revision": 5,
+  "generated_at": "2026-07-27T03:08:10.909Z",
   "skills": [
     {
       "id": "noosphere:agent-debug-memory",
@@ -466,6 +466,58 @@
             "path": "shared_skills/releases/1.0.0/public-artifact-runtime-smoke-gate/SKILL.md",
             "sha256": "09c9b9ec1925a2d624bf6f8efb2a92ce0bc41e1c2a4b64628b4d389c043836a1",
             "size_bytes": 5086
+          },
+          "withdrawal": null
+        }
+      ]
+    },
+    {
+      "id": "noosphere:shared-skill-evidence-routing",
+      "name": "shared-skill-evidence-routing",
+      "description": "Diagnose and resolve shared skill evidence routing failures. Use when An Agent has a locally verified reusable engineering diagnosis or repair and the user explicitly authorizes sharing it with the Shared Skill network..",
+      "domain": "mcp-tools",
+      "tags": [
+        "mcp-tools",
+        "security-trust",
+        "shared-skills",
+        "testing-reliability",
+        "live-skill"
+      ],
+      "originators": [
+        "JinNing6"
+      ],
+      "latest": "1.0.0",
+      "releases": [
+        {
+          "version": "1.0.0",
+          "summary": "Maintainer-validated workflow from 1 authenticated source Issue.",
+          "published_at": "2026-07-27T03:08:10.909Z",
+          "status": "active",
+          "candidate_id": "skill-candidate-0fb941c9c827df58",
+          "candidate_sha256": "a9b24abc255395957ec5c039adccef9b03a63edc2ab79392705d16b2e7510bfe",
+          "reviewer": "JinNing6",
+          "source_count": 1,
+          "publisher_count": 1,
+          "evidence": [
+            "https://github.com/JinNing6/Noosphere/issues/67",
+            "https://github.com/JinNing6/Noosphere/pull/68"
+          ],
+          "verification": {
+            "level": "maintainer-validated",
+            "independent_reproductions": 0,
+            "verified_outcomes": 0
+          },
+          "provenance": {
+            "kind": "maintainer-evidence",
+            "repository": "JinNing6/Noosphere",
+            "authors": [
+              "JinNing6"
+            ]
+          },
+          "artifact": {
+            "path": "shared_skills/releases/1.0.0/shared-skill-evidence-routing/SKILL.md",
+            "sha256": "d69a9c9f749282711b5c0009816fe14d2643780d91a580a07a367d5d9f9d2b63",
+            "size_bytes": 2847
           },
           "withdrawal": null
         }
