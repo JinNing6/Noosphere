@@ -10,7 +10,7 @@ except ModuleNotFoundError:  # pragma: no cover - Python 3.10 release runners
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 SDK_ROOT = REPO_ROOT / "sdk"
-PYPI_BASELINE_VERSION = "0.6.0"
+PYPI_BASELINE_VERSION = "0.9.1"
 
 
 def _version_tuple(version: str) -> tuple[int, ...]:
@@ -47,6 +47,15 @@ def test_release_exposes_zero_configuration_read_only_query_command():
 
     assert scripts["noosphere-query"] == "noosphere.query_cli:main"
     assert (SDK_ROOT / "noosphere" / "query_cli.py").is_file()
+
+
+def test_release_exposes_context_bounded_static_mcp_profiles():
+    scripts = _project_metadata()["project"]["scripts"]
+
+    assert scripts["noosphere-mcp"] == "noosphere.server:main"
+    assert scripts["noosphere-skills-mcp"] == "noosphere.server:skills_main"
+    assert scripts["noosphere-consciousness-mcp"] == "noosphere.server:consciousness_main"
+    assert scripts["noosphere-ops-mcp"] == "noosphere.server:ops_main"
 
 
 def test_release_exposes_deterministic_living_skill_validation_command():

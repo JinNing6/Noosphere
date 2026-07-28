@@ -189,10 +189,12 @@ def runtime_python_command(runtime_dir: Path) -> Path:
     return runtime_dir / "bin" / "python"
 
 
-def runtime_console_command(runtime_dir: Path) -> Path:
+def runtime_console_command(
+    runtime_dir: Path, entry_point: str = "noosphere-mcp"
+) -> Path:
     if os.name == "nt":
-        return runtime_dir / "Scripts" / "noosphere-mcp.exe"
-    return runtime_dir / "bin" / "noosphere-mcp"
+        return runtime_dir / "Scripts" / f"{entry_point}.exe"
+    return runtime_dir / "bin" / entry_point
 
 
 def runtime_validation_command(runtime_dir: Path) -> Path:
@@ -448,15 +450,19 @@ def probe_installed_mcp_runtime(
     *,
     expected_version: str,
     expected_tool_count: int,
+    entry_point: str = "noosphere-mcp",
+    env_overrides: dict[str, str] | None = None,
     timeout_seconds: float = 30.0,
 ) -> dict:
-    command = runtime_console_command(runtime_dir)
+    command = runtime_console_command(runtime_dir, entry_point)
     if not command.is_file():
         raise RuntimeError(f"Published MCP console entry point is missing: {command}")
 
     env = os.environ.copy()
     env.pop("GITHUB_TOKEN", None)
     env.pop("GH_TOKEN", None)
+    if env_overrides:
+        env.update(env_overrides)
 
     completed = probe_mcp_subprocess(
         [str(command)],
@@ -597,6 +603,9 @@ def inspect_installed_release(
 
     required_entry_points = {
         "noosphere-mcp = noosphere.server:main",
+        "noosphere-skills-mcp = noosphere.server:skills_main",
+        "noosphere-consciousness-mcp = noosphere.server:consciousness_main",
+        "noosphere-ops-mcp = noosphere.server:ops_main",
         "noosphere-query = noosphere.query_cli:main",
         "noosphere-validate = noosphere.validation_cli:main",
     }
@@ -651,6 +660,12 @@ def verify_pypi_release(
             expected_version=version,
             expected_tool_count=expected_tool_count,
         )
+        skills_runtime = probe_installed_mcp_runtime(
+            runtime_dir,
+            expected_version=version,
+            expected_tool_count=6,
+            env_overrides={"NOOSPHERE_MCP_PROFILE": "skills"},
+        )
         validation = probe_installed_validation_runtime(runtime_dir)
     finally:
         shutil.rmtree(temp_dir, ignore_errors=True)
@@ -662,6 +677,8 @@ def verify_pypi_release(
         "latest_files": latest_filenames,
         **installed,
         **runtime,
+        "skills_runtime_tool_count": skills_runtime["runtime_tool_count"],
+        "skills_runtime_seconds": skills_runtime["runtime_seconds"],
         **validation,
     }
 
@@ -685,7 +702,8 @@ def main(argv: list[str] | None = None) -> int:
     )
     print(
         f"Verified {result['project']}=={result['version']}: "
-        f"{result['runtime_tool_count']} MCP tools via initialize + tools/list in "
+        f"{result['runtime_tool_count']} full and {result['skills_runtime_tool_count']} default "
+        f"Skills MCP tools via initialize + tools/list in "
         f"{result['runtime_seconds']:.3f}s; growth ledger tools, noosphere-query and "
         f"the token-free validation path passed in {result['validation_seconds']:.2f}s."
     )

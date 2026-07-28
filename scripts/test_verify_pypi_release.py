@@ -5,7 +5,7 @@ import unittest
 import subprocess
 import json
 from pathlib import Path
-from unittest.mock import ANY, patch
+from unittest.mock import ANY, call, patch
 
 from scripts.verify_pypi_release import (
     REQUIRED_GROWTH_TOOLS,
@@ -90,6 +90,9 @@ class VerifyPypiReleaseTests(unittest.TestCase):
             (dist_info / "entry_points.txt").write_text(
                 "[console_scripts]\n"
                 "noosphere-mcp = noosphere.server:main\n"
+                "noosphere-skills-mcp = noosphere.server:skills_main\n"
+                "noosphere-consciousness-mcp = noosphere.server:consciousness_main\n"
+                "noosphere-ops-mcp = noosphere.server:ops_main\n"
                 "noosphere-query = noosphere.query_cli:main\n"
                 "noosphere-validate = noosphere.validation_cli:main\n",
                 encoding="utf-8",
@@ -127,6 +130,12 @@ class VerifyPypiReleaseTests(unittest.TestCase):
             self.assertEqual(
                 runtime_console_command(runtime_dir),
                 runtime_dir / "bin" / "noosphere-mcp",
+            )
+
+        with patch("scripts.verify_pypi_release.os.name", "nt"):
+            self.assertEqual(
+                runtime_console_command(runtime_dir, "noosphere-skills-mcp"),
+                runtime_dir / "Scripts" / "noosphere-skills-mcp.exe",
             )
 
         with patch("scripts.verify_pypi_release.os.name", "nt"):
@@ -294,12 +303,14 @@ print(json.dumps({
                     runtime_dir,
                     expected_version="0.8.2",
                     expected_tool_count=45,
+                    env_overrides={"NOOSPHERE_MCP_PROFILE": "skills"},
                     timeout_seconds=30,
                 )
 
         kwargs = probe.call_args.kwargs
         self.assertNotIn("GITHUB_TOKEN", kwargs["env"])
         self.assertNotIn("GH_TOKEN", kwargs["env"])
+        self.assertEqual(kwargs["env"]["NOOSPHERE_MCP_PROFILE"], "skills")
         self.assertEqual(kwargs["timeout_seconds"], 30)
         self.assertEqual(result["runtime_tool_count"], 45)
 
@@ -461,7 +472,14 @@ print(json.dumps({
             ) as install_runtime,
             patch(
                 "scripts.verify_pypi_release.probe_installed_mcp_runtime",
-                return_value=runtime,
+                side_effect=[
+                    runtime,
+                    {
+                        "server_version": "0.6.8",
+                        "runtime_tool_count": 6,
+                        "runtime_seconds": 0.5,
+                    },
+                ],
             ) as probe_runtime,
             patch(
                 "scripts.verify_pypi_release.probe_installed_validation_runtime",
@@ -481,11 +499,23 @@ print(json.dumps({
         install.assert_called_once_with("noosphere-mcp", "0.6.8", ANY, 1, 0)
         inspect.assert_called_once()
         install_runtime.assert_called_once()
-        probe_runtime.assert_called_once()
+        self.assertEqual(
+            probe_runtime.call_args_list,
+            [
+                call(ANY, expected_version="0.6.8", expected_tool_count=40),
+                call(
+                    ANY,
+                    expected_version="0.6.8",
+                    expected_tool_count=6,
+                    env_overrides={"NOOSPHERE_MCP_PROFILE": "skills"},
+                ),
+            ],
+        )
         probe_validation.assert_called_once()
         self.assertEqual(result["version"], "0.6.8")
         self.assertEqual(result["tool_count"], 40)
         self.assertEqual(result["runtime_tool_count"], 40)
+        self.assertEqual(result["skills_runtime_tool_count"], 6)
         self.assertEqual(result["validation_seconds"], 7.25)
         self.assertEqual(result["latest_files"], result["files"])
 

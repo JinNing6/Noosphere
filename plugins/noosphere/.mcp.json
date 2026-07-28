@@ -6,7 +6,8 @@
         "noosphere-mcp"
       ],
       "env": {
-        "NOOSPHERE_REPO": "JinNing6/Noosphere"
+        "NOOSPHERE_REPO": "JinNing6/Noosphere",
+        "NOOSPHERE_MCP_PROFILE": "skills"
       },
       "env_vars": [
         "GITHUB_TOKEN"

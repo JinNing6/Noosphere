@@ -30,7 +30,7 @@ Noosphere turns verified debugging lessons into shared agent memory and live, re
 
 - Plugin manifest: `.claude-plugin/plugin.json`
 - Marketplace manifest: `../../.claude-plugin/marketplace.json`
-- MCP server: `uvx noosphere-mcp`
+- Default MCP server: `uvx noosphere-mcp` with `NOOSPHERE_MCP_PROFILE=skills` (six Live Skills tools)
 - Optional user configuration: `github_token` for fresh Issue reads and explicit public writes
 - Default memory repository: `JinNing6/Noosphere`
 - Privacy policy: `../../PRIVACY.md`
