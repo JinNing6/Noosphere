@@ -7,7 +7,8 @@
       ],
       "env": {
         "GITHUB_TOKEN": "${user_config.github_token}",
-        "NOOSPHERE_REPO": "${user_config.noosphere_repo}"
+        "NOOSPHERE_REPO": "${user_config.noosphere_repo}",
+        "NOOSPHERE_MCP_PROFILE": "skills"
       }
     }
   }

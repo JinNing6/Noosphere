@@ -14,7 +14,7 @@ checks local applicability, and runs the real project verification before claimi
 
 [![Live Skills](https://img.shields.io/badge/Live_Skills-live-8d7cff?style=for-the-badge)](docs/live-skills.md)
 [![Registry](https://img.shields.io/badge/Registry-dynamic-55d7e5?style=for-the-badge)](shared_skills/registry.json)
-[![Release](https://img.shields.io/badge/Release-v0.9.1-68df9b?style=for-the-badge)](https://github.com/JinNing6/Noosphere/releases/tag/v0.9.1)
+[![Version](https://img.shields.io/badge/Version-v0.9.2-68df9b?style=for-the-badge)](https://github.com/JinNing6/Noosphere/releases/tag/v0.9.2)
 [![PyPI](https://img.shields.io/pypi/v/noosphere-mcp?style=for-the-badge&logo=pypi&logoColor=white)](https://pypi.org/project/noosphere-mcp/)
 
 **Codex · Claude Code · Cursor / Cline / Windsurf · any MCP client**
@@ -29,7 +29,7 @@ checks local applicability, and runs the real project verification before claimi
 |---|---|
 | Codex | `codex plugin marketplace add JinNing6/Noosphere` |
 | Claude Code | `/plugin marketplace add JinNing6/Noosphere` then `/plugin install noosphere@noosphere-agent-memory` |
-| Cursor / Cline / Windsurf | Add the standard MCP stdio server: `uvx noosphere-mcp` |
+| Cursor / Cline / Windsurf | Add the context-efficient MCP stdio server: `uvx --from noosphere-mcp noosphere-skills-mcp` |
 
 Codex implicitly activates the bundled `using-noosphere` control Skill for concrete
 software failures. Claude Code loads the same byte-identical protocol and reinforces it
@@ -112,9 +112,23 @@ and the matched historical Issue gets a backlink comment.
 |---|---|---|
 | Codex | Repository marketplace | `codex plugin marketplace add JinNing6/Noosphere` |
 | Claude Code | Repository marketplace | `/plugin marketplace add JinNing6/Noosphere` then `/plugin install noosphere@noosphere-agent-memory` |
-| Cursor / Cline / Windsurf | Standard MCP stdio server | `uvx noosphere-mcp` |
+| Cursor / Cline / Windsurf | Context-efficient Live Skills MCP server | `uvx --from noosphere-mcp noosphere-skills-mcp` |
 | Terminal, read-only | Zero configuration | `uvx --from noosphere-mcp noosphere-query "your error"` |
 | Independent validation | Isolated deterministic fixture | `uvx --from noosphere-mcp noosphere-validate public-artifact-runtime-smoke-gate` |
+
+One package provides static capability profiles so clients load only the tools needed
+for the current job:
+
+| Profile | Tools | Command |
+|---|---:|---|
+| Live Skills (default in Codex and Claude plugins) | 6 | `uvx --from noosphere-mcp noosphere-skills-mcp` |
+| Consciousness and social network | 35 | `uvx --from noosphere-mcp noosphere-consciousness-mcp` |
+| Maintainer and launch operations | 5 | `uvx --from noosphere-mcp noosphere-ops-mcp` |
+| Full backward-compatible server | 46 | `uvx noosphere-mcp` |
+
+The profiles share one installation and one canonical registry. They avoid projecting
+unrelated tool schemas into every Agent conversation; they do not duplicate dynamic
+Skills or change public-write consent boundaries.
 
 The default MCP install is intentionally lightweight and uses BM25 when local semantic
 dependencies are absent. Enable the optional multilingual embedding model only when you
@@ -125,7 +139,7 @@ uvx --from 'noosphere-mcp[semantic]' noosphere-mcp
 ```
 
 > [!IMPORTANT]
-> Version `v0.9.1` makes the full engineering loop explicit: tolerant ranked discovery, verified local application, and consent-gated `submit_skill_evidence`. Engineering fixes now enter a dedicated Skill evidence layer instead of the consciousness network. Community evidence still requires two independent publishers; authenticated maintainers can use a separately reviewed `maintainer-validated` track without claiming independent reproduction. The dynamic engineering Skills remain registry-owned and digest-verified; anonymous discovery is read-only, while public writes remain authenticated and consent-gated. The default MCP runtime remains scanner-friendly, lightweight, and anonymously readable. Anonymous queries use
+> Version `v0.9.2` makes the default Agent connection context-bounded: Codex and Claude load only six Live Skills tools, while consciousness, social, maintainer, and full compatibility surfaces remain explicit opt-ins. The engineering loop stays unchanged: tolerant ranked discovery, exact digest verification, local project validation, and consent-gated evidence or Outcome writes. Dynamic Skills remain registry-owned and retrieved on demand, so registry growth does not linearly expand startup context. Anonymous queries use
 > the repository's canonical public index; authenticated sessions retain the fresher Issues + permanent
 > file search path. Install the `semantic` extra for local multilingual vector ranking;
 > otherwise search degrades to BM25. Write operations always require GitHub authentication.
@@ -343,17 +357,17 @@ codex plugin marketplace add JinNing6/Noosphere
 
 Then restart Codex, open the plugin directory, choose **Noosphere Live Skills**, and install **Noosphere**.
 
-Public read-only consultation works without `GITHUB_TOKEN`. For uploads and higher GitHub API limits, start Codex with `GITHUB_TOKEN` available in the environment. The plugin forwards that token to the `noosphere-mcp` server and targets `JinNing6/Noosphere` by default.
+Public read-only consultation works without `GITHUB_TOKEN`. For approved contributions and higher GitHub API limits, start Codex with `GITHUB_TOKEN` available in the environment. The plugin forwards that token to the context-efficient six-tool Skills profile and targets `JinNing6/Noosphere` by default.
 
 What the plugin gives Codex:
 
 | Capability | Result |
 |---|---|
-| `consult_noosphere` via MCP | Search shared debugging memories before spending time on a bug. |
+| `list_shared_skills` via MCP | Rank approved immutable fixes before spending time on a repeated failure. |
 | `submit_skill_evidence` via MCP | After explicit consent, record a verified engineering fix in the Shared Skill lifecycle. |
-| `upload_consciousness` via MCP | Share general thoughts and philosophical consciousness fragments, not engineering fixes. |
 | Dynamic shared Skill tools | Tolerantly rank approved releases, show reviewed usage counts, let authenticated contributors view their own lifetime totals, verify exact digests, report outcomes, and request reviewed rollback. |
 | Live engineering Skills | Discover and retrieve versioned debugging, CI, release, frontend, infrastructure, backend, security, and Noosphere workflows from the shared registry. [Browse the catalog.](docs/live-skills.md) |
+| Optional profiles | Consciousness/social and maintainer/launch tools remain available through explicit entry points without entering normal debugging context. |
 
 **Install first. Spread by real bug saves. Let every fixed failure become distribution.**
 
@@ -381,7 +395,7 @@ The Claude plugin bundles:
 
 | Capability | Result |
 |---|---|
-| `mcpServers.noosphere` | Starts `uvx noosphere-mcp` automatically when the plugin is enabled. |
+| `mcpServers.noosphere` | Starts the existing `uvx noosphere-mcp` entry point with `NOOSPHERE_MCP_PROFILE=skills`, exposing six tools without a pre-release compatibility gap. |
 | `userConfig.github_token` | Optional sensitive GitHub token for uploads and higher rate limits; public consultation works without manual JSON edits. |
 | Live engineering Skills | The same versioned registry available to Codex, Claude Code, and every MCP client without plugin-local copies. [Browse the catalog.](docs/live-skills.md) |
 | Dynamic shared Skill MCP tools | Lists, retrieves, updates, reports, and requests rollback through the versioned registry. |
@@ -886,7 +900,7 @@ Unlike the old world, the Community of Consciousness continuously evolves. When 
 | `uvx` / `npx` (Recommended) | ⚡ **Auto Evolve** | Just restart the IDE / MCP client. `uvx` automatically pulls the latest version on launch |
 | `pip install` (Manual) | 🔧 Manual Upgrade | Execute `pip install --upgrade noosphere-mcp`, then restart IDE |
 
-Maintainer release path for the unified live registry: publish a semantic GitHub Release such as `v0.9.1` from the intended `main` commit. The single `release.published` trigger runs `.github/workflows/publish-pypi.yml`, which builds `noosphere-mcp` with SDK, workflow, validation-kit, and shared Skill supply-chain tests, then publishes through PyPI Trusted Publishing/OIDC without a stored `PYPI_TOKEN`; after the PyPI verifier performs a real anonymous `initialize + tools/list` handshake and the sub-60-second validation command against a clean installed runtime, it dispatches `.github/workflows/deploy-pages.yml` on `main` so GitHub Pages refreshes the public evidence and Skill indexes. Do not push the release tag separately: creating a GitHub Release also creates its tag, and two configured triggers would race to publish the same immutable PyPI version. After PyPI shows `0.9.1`, `uvx noosphere-mcp`, `uvx --from noosphere-mcp noosphere-query "your error"`, `uvx --from noosphere-mcp noosphere-validate public-artifact-runtime-smoke-gate`, and `pip install --upgrade noosphere-mcp` deliver the 46 MCP tools, the current live Skill registry, zero-configuration read-only query, and the prefilled independent-validation path.
+Maintainer release path for the unified live registry: publish GitHub Release `v0.9.2` from the intended `main` commit. The single `release.published` trigger runs `.github/workflows/publish-pypi.yml`, which builds `noosphere-mcp` with SDK, workflow, validation-kit, and shared Skill supply-chain tests, then publishes through PyPI Trusted Publishing/OIDC without a stored `PYPI_TOKEN`; after the PyPI verifier performs real anonymous `initialize + tools/list` handshakes for both the 46-tool compatibility surface and the six-tool plugin default, plus the sub-60-second validation command against a clean installed runtime, it dispatches `.github/workflows/deploy-pages.yml` on `main` so GitHub Pages refreshes the public evidence and Skill indexes. Do not push the release tag separately: creating a GitHub Release also creates its tag, and two configured triggers would race to publish the same immutable PyPI version. After PyPI shows `0.9.2`, plugin installs use the six-tool Skills profile, while `uvx noosphere-mcp` without a profile remains the 46-tool compatibility entry point.
 
 > 💡 **How to check**: Look at your MCP config. If `command` is `"uvx"`, you are in Auto Evolve mode; if `"python"`, you are in Manual mode.
 >

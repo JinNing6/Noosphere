@@ -6,7 +6,8 @@ The plugin connects Claude Code to one live registry of approved Agent Skills:
 
 - one plugin-local `using-noosphere` control Skill for safe automatic discovery and use
 - a fast `SessionStart` hook that restores the activation contract after startup, resume, clear, or compaction
-- Noosphere MCP tools through `uvx noosphere-mcp`
+- six context-efficient Live Skills MCP tools through the backward-compatible
+  `uvx noosphere-mcp` entry point with `NOOSPHERE_MCP_PROFILE=skills`
 - `agent-debug-memory` for consulting shared memory before debugging
 - `upload-debug-memory` for submitting verified fixes into the dedicated Skill evidence lifecycle
 - `dynamic-shared-skills` for discovering digest-verified, versioned workflows and returning confirmed outcomes
@@ -14,6 +15,10 @@ The plugin connects Claude Code to one live registry of approved Agent Skills:
 - `/noosphere-consult` and `/noosphere-upload` commands for manual control
 
 The plugin contains no plugin-local copies of dynamic engineering Skills. Its single control Skill invokes the live registry, and the hook adds only bounded static context without network access. Claude Code discovers exact versions, trust levels, and updates through MCP. See the [live Skill catalog](../../docs/live-skills.md).
+
+The installed Python package still provides opt-in `noosphere-consciousness-mcp`,
+`noosphere-ops-mcp`, and the backward-compatible 46-tool `noosphere-mcp` entry point.
+They are not loaded into ordinary debugging conversations.
 
 ## Install from GitHub
 

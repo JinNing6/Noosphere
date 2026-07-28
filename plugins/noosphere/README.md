@@ -5,13 +5,18 @@ Noosphere makes reviewed shared fixes available automatically when Codex encount
 The plugin connects Codex to one live registry of approved Agent Skills:
 
 - one plugin-local `using-noosphere` control Skill that triggers discovery, digest verification, applicability checks, and project verification
-- Noosphere MCP tools through `uvx noosphere-mcp`
+- six context-efficient Live Skills MCP tools through the backward-compatible
+  `uvx noosphere-mcp` entry point with `NOOSPHERE_MCP_PROFILE=skills`
 - `agent-debug-memory` for consulting shared memory before debugging
 - `upload-debug-memory` for submitting verified fixes into the dedicated Skill evidence lifecycle
 - `dynamic-shared-skills` for discovering digest-verified, versioned workflows and returning confirmed outcomes
 - ten maintainer-authored engineering playbooks for async UI, browser actionability, CSS/R3F layering, public CI, Windows npm, child-process lifecycle, Cloudflare Pages, Docker/Git, FastAPI contracts, and binary credential parsing
 
 The plugin contains no plugin-local copies of dynamic engineering Skills. The single control Skill is implicitly invokable and all concrete fixes remain in the live registry. Codex discovers exact versions, trust levels, and updates through MCP. See the [live Skill catalog](../../docs/live-skills.md).
+
+The installed Python package still provides opt-in `noosphere-consciousness-mcp`,
+`noosphere-ops-mcp`, and the backward-compatible 46-tool `noosphere-mcp` entry point.
+They are not loaded into ordinary debugging conversations.
 
 ## Install
 

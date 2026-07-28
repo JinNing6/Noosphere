@@ -1,6 +1,15 @@
 # Noosphere Project Memory Snapshot
 
-Last verified: 2026-07-27 (Asia/Shanghai)
+Last verified: 2026-07-28 (Asia/Shanghai)
+
+## MCP Context Budget Optimization — Local, Not Released
+
+- Release-candidate branch `codex/mcp-context-budget`, based on `cf71672b9bf9b34cae8653c1a6e06a86040b6248`, declares `v0.9.2` and introduces static MCP capability profiles but has not yet been merged or published. Public `noosphere-mcp==0.9.1` remains unchanged and still exposes 46 tools through its only MCP entry point.
+- The verified public `0.9.1` baseline root cause was metadata amplification: a 6,357-character server instruction block was projected across 46 tools. The compact full tool-schema payload was 68,321 characters, producing a conservative model-facing metadata proxy of 360,743 characters.
+- Codex and Claude plugin configs now keep the backward-compatible `uvx noosphere-mcp` command and set `NOOSPHERE_MCP_PROFILE=skills`. New runtimes expose 6 Live Skills tools; the public old `0.9.1` runtime ignores the unknown variable and continues to start successfully with 46 tools, avoiding a merge-to-release compatibility gap.
+- One package provides four static surfaces: Skills `6`, consciousness/social `35`, maintainer/launch operations `5`, and full backward-compatible `46`. Skills and operations use 267 characters of shared instructions; consciousness and full profiles use a bounded 671-character variant that preserves the Explorer/Observer engagement contract. The same full-schema proxy is now 7,135 characters for the default Skills profile and 99,187 for the full profile; the default reduction is about 98.0%. Exact token use still depends on the host and model tokenizer.
+- The plugin control Skill remains the only statically injected workflow Skill and is 2,555 bytes in both plugin formats. Concrete Shared Skills remain dynamically ranked and retrieved on demand, so registry growth does not linearly expand the Agent's startup context.
+- Verification passed 228 SDK tests, 102 Node workflow/supply-chain tests, 39 repository/release tests, registry and migration validation, focused Ruff checks, and installed-artifact MCP handshakes for `46`, `6`, `35`, and `5` tools. The local `noosphere_mcp-0.9.2-py3-none-any.whl` candidate is 168,506 bytes with SHA-256 `4e3e35f391000767b82c10f224c943b69f48d3df68dce9e2cebccee03a19616f`; this is local candidate evidence, not an official PyPI artifact. Immutable public `0.9.1` will not be overwritten.
 
 ## v0.9.1 Public Release — Verified
 

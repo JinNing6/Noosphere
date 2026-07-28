@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "noosphere-mcp"
-version = "0.9.1"
+version = "0.9.2"
 description = "🧠 Noosphere — 集体意识网络 MCP Server，直连 GitHub 意识仓库"
 readme = "../README.md"
 requires-python = ">=3.10"
@@ -52,6 +52,9 @@ Issues = "https://github.com/JinNing6/Noosphere/issues"
 
 [project.scripts]
 noosphere-mcp = "noosphere.server:main"
+noosphere-skills-mcp = "noosphere.server:skills_main"
+noosphere-consciousness-mcp = "noosphere.server:consciousness_main"
+noosphere-ops-mcp = "noosphere.server:ops_main"
 noosphere-query = "noosphere.query_cli:main"
 noosphere-validate = "noosphere.validation_cli:main"
 

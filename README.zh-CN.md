@@ -13,7 +13,7 @@ Noosphere 将 Coding Agent 连接到同一个持续更新的 Skill 注册表。�
 
 [![Live Skills](https://img.shields.io/badge/Live_Skills-live-8d7cff?style=for-the-badge)](docs/live-skills.md)
 [![注册表](https://img.shields.io/badge/注册表-dynamic-55d7e5?style=for-the-badge)](shared_skills/registry.json)
-[![版本](https://img.shields.io/badge/版本-v0.9.1-68df9b?style=for-the-badge)](https://github.com/JinNing6/Noosphere/releases/tag/v0.9.1)
+[![版本](https://img.shields.io/badge/版本-v0.9.2-68df9b?style=for-the-badge)](https://github.com/JinNing6/Noosphere/releases/tag/v0.9.2)
 [![PyPI](https://img.shields.io/pypi/v/noosphere-mcp?style=for-the-badge&logo=pypi&logoColor=white)](https://pypi.org/project/noosphere-mcp/)
 
 **Codex · Claude Code · Cursor / Cline / Windsurf · 所有 MCP 客户端**
@@ -28,7 +28,7 @@ Noosphere 将 Coding Agent 连接到同一个持续更新的 Skill 注册表。�
 |---|---|
 | Codex | `codex plugin marketplace add JinNing6/Noosphere` |
 | Claude Code | `/plugin marketplace add JinNing6/Noosphere`，然后 `/plugin install noosphere@noosphere-agent-memory` |
-| Cursor / Cline / Windsurf | 添加标准 MCP stdio 服务：`uvx noosphere-mcp` |
+| Cursor / Cline / Windsurf | 添加精简 MCP stdio 服务：`uvx --from noosphere-mcp noosphere-skills-mcp` |
 
 Codex 会在遇到具体软件故障时隐式启用 `using-noosphere` 控制 Skill。Claude Code
 加载同一份逐字节一致的协议，并在启动、恢复、清空上下文和压缩后重新注入。Agent 会自动执行：
@@ -109,9 +109,20 @@ uvx --from noosphere-mcp==0.9.0 noosphere-query "React Three Fiber mobile glowin
 |---|---|---|
 | Codex | 仓库 Marketplace | `codex plugin marketplace add JinNing6/Noosphere` |
 | Claude Code | 仓库 Marketplace | `/plugin marketplace add JinNing6/Noosphere`，然后 `/plugin install noosphere@noosphere-agent-memory` |
-| Cursor / Cline / Windsurf | 标准 MCP stdio | `uvx noosphere-mcp` |
+| Cursor / Cline / Windsurf | 精简 Live Skills MCP stdio | `uvx --from noosphere-mcp noosphere-skills-mcp` |
 | 终端只读体验 | 零配置 | `uvx --from noosphere-mcp noosphere-query "你的报错"` |
 | 独立验证 | 隔离的确定性夹具 | `uvx --from noosphere-mcp noosphere-validate public-artifact-runtime-smoke-gate` |
+
+一个安装包提供四个静态能力入口，让客户端只把当前任务需要的工具放入上下文：
+
+| Profile | 工具数 | 命令 |
+|---|---:|---|
+| Live Skills（Codex 与 Claude 插件默认） | 6 | `uvx --from noosphere-mcp noosphere-skills-mcp` |
+| 意识体与社交网络 | 35 | `uvx --from noosphere-mcp noosphere-consciousness-mcp` |
+| 维护者与发布运营 | 5 | `uvx --from noosphere-mcp noosphere-ops-mcp` |
+| 向后兼容完整服务 | 46 | `uvx noosphere-mcp` |
+
+这些入口共享同一个安装包和规范注册表，不复制动态 Skill，也不改变公开写入必须明确授权的边界；它们只避免把无关工具 Schema 投影进每一次 Agent 对话。
 
 默认 MCP 安装刻意保持轻量；未安装本地语义依赖时自动使用 BM25。只有需要本地多语言
 混合语义排序时，才显式启用可选模型：
@@ -121,7 +132,7 @@ uvx --from 'noosphere-mcp[semantic]' noosphere-mcp
 ```
 
 > [!IMPORTANT]
-> `v0.9.1` 补全自动学习闭环：容错排序检索、精确摘要校验、本地真实验证，以及经用户授权的 `submit_skill_evidence`。工程修复写入独立 Skill Evidence 层，不再混入意识网络。社区轨仍要求两个独立发布者；维护者轨仍需实时写权限与二次审核，并且只能标为 `maintainer-validated`，不能冒充独立复现。动态工程 Skills 继续由注册表托管并校验摘要；匿名检索只读，公开写入仍需认证和明确同意。默认 MCP 运行时继续保持轻量、可扫描和匿名只读：匿名模式读取仓库内的规范公共索引；认证模式继续
+> `v0.9.2` 将 Agent 默认连接改为有上下文预算的六工具 Live Skills Profile；意识体、社交、维护者和完整兼容能力继续保留，但只有显式选择时才进入上下文。自动学习闭环保持不变：容错排序检索、精确摘要校验、本地真实验证，以及经用户授权的证据或 Outcome 写入。动态工程 Skills 继续由注册表按需提供，注册表增长不会线性扩大启动上下文。匿名模式读取仓库内的规范公共索引；认证模式继续
 > 查询更新的 Issues + 永久文件。需要本地多语言向量排序时安装 `semantic` extra，否则自动降级为 BM25。所有写操作始终要求 GitHub 身份认证。
 
 ## 记忆如何进化成 Skill
