@@ -2,14 +2,17 @@
 
 Last verified: 2026-07-28 (Asia/Shanghai)
 
-## MCP Context Budget Optimization — Local, Not Released
+## v0.9.2 Context-Bounded MCP Profiles — Public And Verified
 
-- Release-candidate branch `codex/mcp-context-budget`, based on `cf71672b9bf9b34cae8653c1a6e06a86040b6248`, declares `v0.9.2` and introduces static MCP capability profiles but has not yet been merged or published. Public `noosphere-mcp==0.9.1` remains unchanged and still exposes 46 tools through its only MCP entry point.
-- The verified public `0.9.1` baseline root cause was metadata amplification: a 6,357-character server instruction block was projected across 46 tools. The compact full tool-schema payload was 68,321 characters, producing a conservative model-facing metadata proxy of 360,743 characters.
-- Codex and Claude plugin configs now keep the backward-compatible `uvx noosphere-mcp` command and set `NOOSPHERE_MCP_PROFILE=skills`. New runtimes expose 6 Live Skills tools; the public old `0.9.1` runtime ignores the unknown variable and continues to start successfully with 46 tools, avoiding a merge-to-release compatibility gap.
-- One package provides four static surfaces: Skills `6`, consciousness/social `35`, maintainer/launch operations `5`, and full backward-compatible `46`. Skills and operations use 267 characters of shared instructions; consciousness and full profiles use a bounded 671-character variant that preserves the Explorer/Observer engagement contract. The same full-schema proxy is now 7,135 characters for the default Skills profile and 99,187 for the full profile; the default reduction is about 98.0%. Exact token use still depends on the host and model tokenizer.
-- The plugin control Skill remains the only statically injected workflow Skill and is 2,555 bytes in both plugin formats. Concrete Shared Skills remain dynamically ranked and retrieved on demand, so registry growth does not linearly expand the Agent's startup context.
-- Verification passed 228 SDK tests, 102 Node workflow/supply-chain tests, 39 repository/release tests, registry and migration validation, focused Ruff checks, and installed-artifact MCP handshakes for `46`, `6`, `35`, and `5` tools. The local `noosphere_mcp-0.9.2-py3-none-any.whl` candidate is 168,506 bytes with SHA-256 `4e3e35f391000767b82c10f224c943b69f48d3df68dce9e2cebccee03a19616f`; this is local candidate evidence, not an official PyPI artifact. Immutable public `0.9.1` will not be overwritten.
+- PR [#82](https://github.com/JinNing6/Noosphere/pull/82) merged into `main` as `c3664ed35c74ddb9f03326ac2796f5f113bc3447`. GitHub Release [`v0.9.2 - Context-Bounded MCP Profiles`](https://github.com/JinNing6/Noosphere/releases/tag/v0.9.2) targets that exact commit; the Release created the tag once and no separate tag-push publication path was used.
+- Trusted Publishing run [`30336633877`](https://github.com/JinNing6/Noosphere/actions/runs/30336633877) passed build, SDK and supply-chain gates, OIDC publication, exact public PyPI installation, anonymous MCP `initialize + tools/list`, the token-free validation path, and Pages dispatch. The official Linux verification reported 46 full tools and 6 default Skills tools in 0.868 seconds, then completed the validation path in 4.37 seconds.
+- PyPI serves [`noosphere-mcp==0.9.2`](https://pypi.org/project/noosphere-mcp/0.9.2/) for Python 3.10+. The official Wheel is 167,550 bytes with SHA-256 `6013e0ac278a5cfbe0861ac17564ce77bf9a077ec064417f70a8b1aee88d594f`; the official sdist is 219,922 bytes with SHA-256 `a57f0d7ed9d89f43f663b4857e49f2af610ea669fb519c877ff51e2848f8c651`. Neither artifact is yanked.
+- A separate credential-free Windows verification used clean disposable Python 3.12 environments and the exact public index release. It reported 46 full tools and 6 default Skills tools in 0.891 seconds and completed `public-artifact-runtime-smoke-gate` in 7.61 seconds; a second installed-package probe returned exact profile counts `46`, `6`, `35`, and `5`. A first attempt with the project's pip-less uv environment failed before package resolution because the verifier invokes `python -m pip`; this is a local verifier-runtime portability issue, not a PyPI artifact failure.
+- The original public `0.9.1` baseline exposed a 6,357-character server instruction block across 46 tools. The compact full tool-schema payload was 68,321 characters, producing a conservative model-facing metadata proxy of 360,743 characters. The `0.9.2` Codex and Claude plugin default is the 6-tool Skills profile with a 7,135-character proxy, about 98.0% smaller. Exact token use still depends on the host and model tokenizer.
+- The package provides four static surfaces: Skills `6`, consciousness/social `35`, maintainer/launch operations `5`, and full backward-compatible `46`. Existing `noosphere-mcp` CLI use remains full by default; plugin configs select Skills through `NOOSPHERE_MCP_PROFILE=skills`. Skills and operations use 267 characters of instructions, while consciousness and full use a bounded 671-character variant that preserves the Explorer/Observer engagement contract.
+- The plugin control Skill remains the only statically injected workflow Skill and is 2,555 bytes in both plugin formats. Concrete Shared Skills remain dynamically ranked and retrieved on demand, so registry growth does not linearly expand startup context. Installed plugin users must update/reload the plugin and restart the Agent client before the focused profile takes effect.
+- Release-candidate verification passed 228 SDK tests, 102 Node workflow/supply-chain tests, 39 repository/release tests, registry and migration validation, focused Ruff checks, and installed-artifact handshakes for `46`, `6`, `35`, and `5` tools. The former local Wheel hash is retained only in earlier evidence; official distribution identity is the PyPI digest above.
+- Pages workflow [`30336765318`](https://github.com/JinNing6/Noosphere/actions/runs/30336765318) deployed `c3664ed35c74ddb9f03326ac2796f5f113bc3447` successfully, and the public site returned HTTP 200. Current Skill trust labels and reviewed Outcome counts are unchanged; discovery, downloads, and installs are not presented as third-party reuse or independent validation.
 
 ## v0.9.1 Public Release — Verified
 
@@ -56,7 +59,7 @@ Last verified: 2026-07-28 (Asia/Shanghai)
 
 ## Launch Metadata Alignment
 
-- Remote `main`, both source plugin manifests, the Claude marketplace manifest, SDK metadata, server manifests, GitHub Release, and PyPI all declare `0.9.1`. The semantic release completed the distribution step required by explicit Claude plugin cache keys.
+- Remote `main`, both source plugin manifests, the Claude marketplace manifest, SDK metadata, server manifests, GitHub Release, and PyPI all declare `0.9.2`. The semantic release completed the distribution step required by explicit Claude plugin cache keys.
 - Registry revision `6` contains 16 active Live Skills and 2 remaining verified Seeds. Plugin descriptions, badges, and launch copy intentionally use dynamic wording; repository validation checks registry entries and trust metadata directly instead of blocking growth on a mirrored count.
 - The repository marketplace display name is `Noosphere Live Skills`, aligned with the current product category rather than the legacy Agent Memory entry point.
 - The Codex plugin MCP companion file now uses the current `mcpServers` schema. The bundled plugin validator rejects the legacy `mcp_servers` spelling, and repository validation now guards this boundary.
@@ -316,11 +319,11 @@ Last verified: 2026-07-28 (Asia/Shanghai)
 
 ## Required Deployment Steps
 
-1. GitHub Release and PyPI `v0.9.1` are complete and independently re-verified. The next
-   distribution step is a Product Hunt launch that points to the exact public `0.9.1`
-   install path and uses the verified Skill Evidence, usage-metric, and Codex recency proof.
+1. GitHub Release and PyPI `v0.9.2` are complete and separately re-verified. The Product
+   Hunt launch is scheduled for 2026-08-01 and must point to the exact public `0.9.2`
+   install path and use the verified Skill Evidence, usage-metric, and Codex recency proof.
    Keep installs, approved Outcomes, and third-party reuse separate in every launch claim.
-   Until the post-release tag-snapshot bug is fixed in a later package version, use the
+   Until the post-release tag-snapshot bug is fixed in a later package version, continue to use the
    direct Release, exact-version PyPI, clean-install, and public traction-proof evidence;
    do not cite the current `launch_preflight` ready/blocked line as authoritative.
 2. Monitor and respond to review on `brainctl#170` and `Ahrena#376`. Their first workflow runs
@@ -331,7 +334,7 @@ Last verified: 2026-07-28 (Asia/Shanghai)
 3. Upgrade `public-artifact-runtime-smoke-gate` or `shared-skill-evidence-routing` from `maintainer-validated` only after a second GitHub publisher submits independently reproduced evidence. Claim `outcome-proven` only after an exact-version third-party Agent reuse is recorded with public evidence.
 4. Convert the first external failed or partial outcome into a reviewed immutable next version and demonstrate `check_skill_updates` plus digest-verified retrieval. This version transition, not raw Skill count, is the first proof of a Living Skill network.
 5. Complete the separate Glama admin deployment and release so its public directory record exposes the current 46-tool source runtime rather than the stale legacy snapshot.
-6. Handle the existing Vite chunk warning, npm dependency advisories, and GitHub Actions Node runtime deprecation in separate maintenance work; none blocks the `v0.9.1` release or the external-issue campaign.
+6. Handle the pip-less local verifier-runtime boundary, existing Vite chunk warning, npm dependency advisories, and GitHub Actions Node runtime deprecation in separate maintenance work; none blocks the verified `v0.9.2` release or the external-issue campaign.
 
 ## Concentrated v0.9.0 Launch Surface
 
