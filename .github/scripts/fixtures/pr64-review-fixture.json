@@ -1,0 +1,13 @@
+{
+  "source_pr": 64,
+  "reviewed_head_sha": "7a67d637610adcd88af58001c98ca0ac87d0901c",
+  "files": [
+    {
+      "filename": "SKILL.md",
+      "status": "added"
+    }
+  ],
+  "file_contents": {
+    "SKILL.md": "# Noosphere Core Contribution\n\nConceptual architecture and case studies without Agent Skills frontmatter.\n\n### Verification\n"
+  }
+}

@@ -1,6 +1,15 @@
 # Noosphere Project Memory Snapshot
 
-Last verified: 2026-07-28 (Asia/Shanghai)
+Last verified: 2026-07-29 (Asia/Shanghai)
+
+## GitHub Evidence Agent V0 — Implemented Locally, Not Yet Deployed
+
+- A zero-service Shared Skill evidence intake is implemented on local branch `codex/github-evidence-agent-v0` from current `origin/main` commit `8c0d7ae3fde8fc15f77b5655e9c39187803453ed`. It is not merged, pushed, or active on GitHub yet.
+- The GitHub Issue Form now emits schema V4 evidence with a public source repository, full commit SHA, successful workflow run URL, exact job and step names, and an optional artifact SHA-256. Issue creation is the accepted-draft state; successful API verification is `workflow-verified`; neither state means a Skill is published or callable.
+- Skill Evidence intake uses deterministic safety policy and public GitHub API metadata. It does not call OpenAI, Gemini, an always-on service, a database, a larger runner, or artifact storage. Matching workflow-verified V4 evidence can reach the existing two-publisher candidate gate through deterministic identity and claim comparison without embeddings.
+- A privileged `pull_request_target` adapter checks out only the exact trusted base SHA, reads a repository-root `SKILL.md` as untrusted text without executing it, and creates or updates one bot-authored routing comment. Contributor-controlled marker comments cannot suppress the bot receipt. The first ordinary merge/push that installs or changes the adapter automatically scans every existing Open PR; a `main`-only manual dispatch is retained solely as a recovery path because GitHub does not replay old PR events.
+- PR #64 was reviewed at head `7a67d637610adcd88af58001c98ca0ac87d0901c` and is not acceptable as-is: it adds a repository-root `SKILL.md`, fails the repository Skill frontmatter validator, lacks exact public workflow provenance, contains incomplete verification, and has a failing CLA check. No remote comment, label, close, or merge action was taken. Its observed structure is retained as a regression fixture for the PR adapter.
+- Local verification passed 122 Node workflow/supply-chain tests, including PR #64 routing, deployment-triggered Open-PR backfill, live-event single-PR isolation, base-only checkout, a two-publisher zero-model-key intake-to-candidate integration path, and an Issue Form/parser contract check; 15 repository migration/registry unit tests; the Shared Skill registry/plugin validator; YAML parsing for five changed forms/workflows; and `git diff --check`. Deployment still requires ordinary code review and merge; the first live backfill must confirm the bot receipt on PR #64, and the first live form submission must confirm GitHub-token access to an external public workflow run before the path is described as production-proven.
 
 ## v0.9.2 Context-Bounded MCP Profiles — Public And Verified
 

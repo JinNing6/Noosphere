@@ -4,7 +4,7 @@ name: 🌌 Noosphere Contribution Promotion
 # promotes Issues that contain a recognized Noosphere payload.
 on:
   issues:
-    types: [opened, labeled]
+    types: [opened, edited, labeled]
 
 concurrency:
   group: noosphere-main-writer
@@ -22,11 +22,11 @@ jobs:
     runs-on: ubuntu-latest
     if: >-
       github.event.issue.state == 'open' &&
-      (github.event.action == 'opened' || github.event.label.name == 'trusted-review')
+      (github.event.action == 'opened' || github.event.action == 'edited' || github.event.label.name == 'trusted-review')
 
     steps:
       - name: 🌐 Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Refresh serialized promotion state
         run: |
@@ -45,7 +45,7 @@ jobs:
 
       - name: 🛡️ AI Content Safety Check (NudeNet)
         id: content_safety
-        uses: actions/github-script@v7
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           result-encoding: string
@@ -102,7 +102,7 @@ jobs:
 
       - name: 🚫 Reject Unsafe Content
         if: steps.content_safety.outputs.result == 'CHECK' && steps.nudenet_check.outputs.safe == 'false'
-        uses: actions/github-script@v7
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
@@ -146,7 +146,7 @@ jobs:
       - name: 👁️ Extract, Validate & Promote Consciousness
         id: promote
         if: steps.content_safety.outputs.result != 'CHECK' || steps.nudenet_check.outputs.safe != 'false'
-        uses: actions/github-script@v7
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
@@ -187,7 +187,11 @@ jobs:
               isTrustedReviewerPermission,
               normalizeEngineeringEvidence,
               buildModerationText,
+              screenSkillEvidenceDeterministically,
             } = require(`${process.env.GITHUB_WORKSPACE}/.github/scripts/memory-trust.cjs`);
+            const {
+              verifyEvidenceProvenance,
+            } = require(`${process.env.GITHUB_WORKSPACE}/.github/scripts/evidence-provenance.cjs`);
             const {
               buildMaintainerSkillCandidate,
               buildSkillCandidate,
@@ -197,6 +201,7 @@ jobs:
             } = require(`${process.env.GITHUB_WORKSPACE}/.github/scripts/dynamic-skills.cjs`);
             const fs = require('node:fs');
             const path = require('node:path');
+            const isWorkflowBotComment = (comment) => comment?.user?.login === 'github-actions[bot]';
 
             // ── Step 1: Extract payload from Issue body ──
             const extracted = extractConsciousnessPayload(body);
@@ -207,6 +212,11 @@ jobs:
 
             const payload = bindVerifiedPublisher(extracted.payload, issue);
             const isSkillEvidence = payload.record_kind === 'skill-evidence';
+            const isWorkflowEvidence = isSkillEvidence && Number(payload.schema_version || 0) >= 4;
+            if (isSkillEvidence) {
+              // A self-declared creator cannot override the authenticated Issue author.
+              payload.creator_signature = payload.publisher.github_login;
+            }
             console.log(`Noosphere payload found via ${extracted.source}.`);
             if (isSkillEvidence) {
               const lifecycleLabels = [
@@ -399,10 +409,54 @@ jobs:
               return;
             }
 
-            // ── Step 3: Content Safety Check (OpenAI Moderation API) ──
+            // ── Step 3: Content safety policy ──
             const openaiKey = process.env.OPENAI_API_KEY;
             let textModerationPassed = Boolean(trustedReview || hasVerifiedExisting);
-            if (openaiKey && !trustedReview && !hasVerifiedExisting) {
+            let deterministicScreen = null;
+            if (isWorkflowEvidence && !trustedReview && !hasVerifiedExisting) {
+              deterministicScreen = screenSkillEvidenceDeterministically(payload);
+              if (deterministicScreen.status !== 'passed') {
+                await github.rest.issues.addLabels({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: issue.number,
+                  labels: ['skill-evidence', 'filtered', 'needs-review'],
+                });
+                const marker = `<!-- noosphere-skill-evidence-policy:issue-${issue.number} -->`;
+                const comments = await github.rest.issues.listComments({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: issue.number,
+                  per_page: 100,
+                });
+                if (!comments.data.some((comment) => (
+                  isWorkflowBotComment(comment) && String(comment.body || '').includes(marker)
+                ))) {
+                  await github.rest.issues.createComment({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: issue.number,
+                    body: `## Shared Skill evidence needs a safety review\n\nThe upload was accepted as a public Issue, but deterministic policy checks found: ${deterministicScreen.findings.join(', ')}. It was not added to the canonical evidence layer. Remove credentials or unsafe instructions, then edit the Issue to retry.\n\n${marker}`,
+                  });
+                }
+                core.setOutput('promoted', 'false');
+                return;
+              }
+              textModerationPassed = true;
+              for (const resolvedLabel of ['filtered', 'needs-review']) {
+                try {
+                  await github.rest.issues.removeLabel({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: issue.number,
+                    name: resolvedLabel,
+                  });
+                } catch (error) {
+                  if (error.status !== 404) throw error;
+                }
+              }
+            }
+            if (!isWorkflowEvidence && openaiKey && !trustedReview && !hasVerifiedExisting) {
               const textToModerate = buildModerationText(payload);
               try {
                 const modResponse = await fetch('https://api.openai.com/v1/moderations', {
@@ -484,14 +538,20 @@ jobs:
             } else if (!hasVerifiedExisting) {
               payload.content_safety = {
                 status: 'passed',
-                method: 'openai-moderation',
+                method: isWorkflowEvidence ? 'deterministic-policy-v1' : 'openai-moderation',
                 checked_at: new Date().toISOString(),
               };
               payload.trust = {
                 status: 'screened',
-                method: 'content-screening-only',
+                method: isWorkflowEvidence ? 'deterministic-policy-screening' : 'content-screening-only',
                 reviewer: null,
                 screened_at: new Date().toISOString(),
+              };
+            }
+            if (isWorkflowEvidence) {
+              payload.machine_verification = {
+                ...(await verifyEvidenceProvenance(payload, { github })),
+                checked_at: new Date().toISOString(),
               };
             }
             payload.skill_candidate = assessSkillEligibility(payload);
@@ -500,14 +560,37 @@ jobs:
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 issue_number: issue.number,
-                labels: ['skill-evidence', 'skill-evidence-incomplete', 'needs-review'],
+                labels: ['skill-evidence', 'skill-evidence-incomplete'],
               });
-              await github.rest.issues.createComment({
+              const marker = `<!-- noosphere-skill-evidence-incomplete:issue-${issue.number} -->`;
+              const comments = await github.rest.issues.listComments({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 issue_number: issue.number,
-                body: `Shared Skill evidence is incomplete and was not recorded. Missing or invalid requirements: ${payload.skill_candidate.missing.join(', ') || 'verified engineering evidence'}.`,
+                per_page: 100,
               });
+              const machineDetail = payload.machine_verification?.status === 'workflow-verified'
+                ? ''
+                : ` Machine verification: ${payload.machine_verification?.reason || 'not completed'}${payload.machine_verification?.findings?.length ? ` (${payload.machine_verification.findings.join('; ')})` : ''}.`;
+              const message = `## Shared Skill evidence accepted as a draft\n\nThe public upload succeeded, but it is not yet eligible for the canonical evidence layer. Missing or invalid requirements: ${payload.skill_candidate.missing.join(', ') || 'verified engineering evidence'}.${machineDetail} Edit this Issue after fixing the evidence; validation runs again automatically.\n\n${marker}`;
+              const existingComment = comments.data.find((comment) => (
+                isWorkflowBotComment(comment) && String(comment.body || '').includes(marker)
+              ));
+              if (existingComment) {
+                await github.rest.issues.updateComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  comment_id: existingComment.id,
+                  body: message,
+                });
+              } else {
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: issue.number,
+                  body: message,
+                });
+              }
               core.setOutput('promoted', 'false');
               return;
             }
@@ -518,7 +601,9 @@ jobs:
             );
             const embeddingResult = hasExistingEmbedding
               ? { status: 'existing', embedding: payload.embedding, model: payload.embedding_model }
-              : await applyEmbeddingToPayload(payload, {
+              : isWorkflowEvidence
+                ? { status: 'deterministic-v4' }
+                : await applyEmbeddingToPayload(payload, {
                   apiKey: process.env.GEMINI_API_KEY,
                   model: process.env.GEMINI_EMBEDDING_MODEL,
                   fetchImpl: fetch,
@@ -612,7 +697,8 @@ jobs:
             }
 
             let linkedCandidateIssue = null;
-            if (payload.skill_candidate?.eligible && ['ok', 'existing'].includes(embeddingResult.status)) {
+            const hasCandidateRoutingSignal = ['ok', 'existing', 'deterministic-v4'].includes(embeddingResult.status);
+            if (payload.skill_candidate?.eligible && hasCandidateRoutingSignal) {
               let candidate = null;
               try {
                 if (payload.publication_track === 'maintainer') {
@@ -706,6 +792,18 @@ jobs:
                 issue_number: issue.number,
                 labels: evidenceLabels,
               });
+              for (const removableLabel of ['skill-evidence-incomplete', 'filtered']) {
+                try {
+                  await github.rest.issues.removeLabel({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: issue.number,
+                    name: removableLabel,
+                  });
+                } catch (error) {
+                  if (error.status !== 404) throw error;
+                }
+              }
               if (trustedReview || payload.publication_track !== 'maintainer') {
                 try {
                   await github.rest.issues.removeLabel({
@@ -725,7 +823,25 @@ jobs:
                 issue_number: issue.number,
                 per_page: 100,
               });
-              if (!stateComments.data.some((comment) => String(comment.body || '').includes(stateMarker))) {
+              for (const resolvedMarker of [
+                `<!-- noosphere-skill-evidence-incomplete:issue-${issue.number} -->`,
+                `<!-- noosphere-skill-evidence-policy:issue-${issue.number} -->`,
+              ]) {
+                const resolvedComment = stateComments.data.find((comment) => (
+                  isWorkflowBotComment(comment) && String(comment.body || '').includes(resolvedMarker)
+                ));
+                if (resolvedComment && !String(resolvedComment.body || '').includes('Status: resolved')) {
+                  await github.rest.issues.updateComment({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    comment_id: resolvedComment.id,
+                    body: `Status: resolved by a later automatic validation.\n\n${resolvedMarker}`,
+                  });
+                }
+              }
+              if (!stateComments.data.some((comment) => (
+                isWorkflowBotComment(comment) && String(comment.body || '').includes(stateMarker)
+              ))) {
                 const candidateLine = linkedCandidateIssue
                   ? `A reviewable Skill candidate is now available: ${linkedCandidateIssue.html_url}`
                   : payload.publication_track === 'maintainer'
@@ -735,7 +851,7 @@ jobs:
                   owner: context.repo.owner,
                   repo: context.repo.repo,
                   issue_number: issue.number,
-                  body: `## Shared Skill evidence recorded\n\n${candidateLine}\n\nThis record is not a consciousness fragment and is not callable until a reviewed immutable Skill release is published.\n\n${stateMarker}`,
+                  body: `## Shared Skill evidence recorded\n\nMachine verification: **${payload.machine_verification?.status || 'legacy evidence'}**.\n\n${candidateLine}\n\nThis record is not a consciousness fragment and is not callable until a reviewed immutable Skill release is published.\n\n${stateMarker}`,
                 });
               }
               core.setOutput('promoted', existingPromotion ? 'false' : 'true');

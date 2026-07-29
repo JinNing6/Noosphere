@@ -60,14 +60,33 @@ function publicationTrack(value) {
 
 function eligibleMemory(memory) {
   const eligibility = assessSkillEligibility(memory);
+  const hasEmbedding = Boolean(
+    normalizedEmbedding(memory?.embedding) && memory?.embedding_model,
+  );
+  const hasDeterministicV4Identity = Boolean(
+    Number(memory?.schema_version || 0) >= 4 &&
+    memory?.machine_verification?.status === "workflow-verified" &&
+    skillIdentityName(memory),
+  );
   return Boolean(
     memory?.skill_candidate?.eligible === true &&
     eligibility.eligible &&
     memory?.publisher?.github_login &&
     issueNumber(memory) &&
     memory?.memory_id &&
-    normalizedEmbedding(memory?.embedding) &&
-    memory?.embedding_model,
+    (hasEmbedding || hasDeterministicV4Identity),
+  );
+}
+
+function sameDeterministicV4Space(left, right) {
+  const leftIdentity = skillIdentityName(left);
+  const rightIdentity = skillIdentityName(right);
+  return Boolean(
+    leftIdentity && leftIdentity === rightIdentity &&
+    Number(left?.schema_version || 0) >= 4 &&
+    Number(right?.schema_version || 0) >= 4 &&
+    left?.machine_verification?.status === "workflow-verified" &&
+    right?.machine_verification?.status === "workflow-verified",
   );
 }
 
@@ -123,10 +142,12 @@ function sameEmbeddingSpace(left, right) {
 
 function cohesiveWithCluster(memory, members, similarityThreshold, claimSimilarityThreshold) {
   return members.every((member) => {
-    if (!sameEmbeddingSpace(memory, member)) return false;
-    const score = cosineSimilarity(memory.embedding, member.embedding);
-    return score !== null && score >= similarityThreshold &&
-      evidenceClaimsCohere(memory, member, claimSimilarityThreshold);
+    const claimsCohere = evidenceClaimsCohere(memory, member, claimSimilarityThreshold);
+    if (sameEmbeddingSpace(memory, member)) {
+      const score = cosineSimilarity(memory.embedding, member.embedding);
+      return score !== null && score >= similarityThreshold && claimsCohere;
+    }
+    return sameDeterministicV4Space(memory, member) && claimsCohere;
   });
 }
 
@@ -165,10 +186,13 @@ function clusterEligibleMemories(memories, options = {}) {
     ))
     .map((members) => {
       const sortedMembers = [...members].sort((left, right) => issueNumber(left) - issueNumber(right));
+      const usesEmbeddings = sortedMembers.every((memory) => (
+        normalizedEmbedding(memory?.embedding) && memory?.embedding_model
+      ));
       return {
         id: `cluster-${sha256(sortedMembers.map((memory) => memory.memory_id).join("\n")).slice(0, 16)}`,
-        embedding_model: sortedMembers[0].embedding_model,
-        similarity_threshold: similarityThreshold,
+        embedding_model: usesEmbeddings ? sortedMembers[0].embedding_model : "deterministic-claim-v1",
+        similarity_threshold: usesEmbeddings ? similarityThreshold : null,
         claim_similarity_threshold: claimSimilarityThreshold,
         members: sortedMembers,
         publishers: uniqueStrings(sortedMembers.map((memory) => memory.publisher.github_login), 40, 64).sort(),

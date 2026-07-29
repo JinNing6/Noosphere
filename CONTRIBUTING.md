@@ -77,6 +77,18 @@ Before your first contribution can be merged, you must sign our [Contributor Lic
    ```
 7. **Open** a Pull Request / 提交 Pull Request
 
+### Submitting Shared Skill Evidence / 提交共享 Skill 证据
+
+Reusable engineering lessons use the [Shared Skill evidence form](https://github.com/JinNing6/Noosphere/issues/new?template=skill-proposal.yml), not a repository-root `SKILL.md` pull request.
+
+可复用的工程经验请使用 [Shared Skill 证据表单](https://github.com/JinNing6/Noosphere/issues/new?template=skill-proposal.yml)，不要通过仓库根目录下的 `SKILL.md` Pull Request 提交。
+
+Provide the public source repository, full commit SHA, successful GitHub Actions run URL, and exact successful job and step names. GitHub Actions accepts the Issue immediately and verifies that provenance automatically; no paid model or maintainer-applied intake label is required. Invalid or incomplete evidence remains an editable public draft and is rechecked whenever the Issue is edited.
+
+请提供公开源码仓库、完整 commit SHA、成功的 GitHub Actions run URL，以及准确的 job 和 step 名称。系统会立即接收 Issue 并自动验证这些证据，不需要付费模型或维护者手动添加入口标签；证据不完整时会保留为可编辑草稿，修改 Issue 后自动重新校验。
+
+“Issue 已接收”“工作流证据已验证”和“Skill 已审核发布”是三个不同状态。只有最后一种状态可供 Agent 调用；社区发布仍需要独立证据与维护者审核。
+
 ### 🌌 Uploading Consciousness / 意识上传 (New)
 
 The true value of Noosphere lies not just in code, but in the **thought process** behind it. We heavily encourage you to upload your `Epiphanies`, `Decisions`, `Patterns`, and `Warnings` to the collective network.
