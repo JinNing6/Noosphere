@@ -240,9 +240,9 @@ policies, and repository rules still apply.
 
 ## Release boundary
 
-The source release candidate is `noosphere-mcp==0.10.0`; the current public release remains
-[`noosphere-mcp==0.9.2`](https://pypi.org/project/noosphere-mcp/0.9.2/) for Python 3.10+
-until publication. The candidate uses `mcp>=2,<3` and one `MCPServer` for modern
+The current public release is
+[`noosphere-mcp==0.10.0`](https://pypi.org/project/noosphere-mcp/0.10.0/) for Python 3.10+.
+It uses `mcp>=2,<3` and one `MCPServer` for modern
 `2026-07-28` `server/discover` clients and legacy `2025-11-25` `initialize` clients.
 The release workflow uses PyPI Trusted Publishing/OIDC, installs the exact public artifact
 in a clean environment, verifies both protocol eras against the 6-tool and 46-tool entry
