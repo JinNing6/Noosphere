@@ -2,6 +2,12 @@
 
 Last verified: 2026-07-29 (Asia/Shanghai)
 
+## Main Branch Ruleset — Active And Automation-Compatible
+
+- Repository Ruleset [`Protect main`](https://github.com/JinNing6/Noosphere/rules/19963741), ID `19963741`, is active and targets only `refs/heads/main`. GitHub's effective-rules API reports exactly `deletion` and `non_fast_forward`, so `main` cannot be deleted or force-pushed. The bypass list is empty.
+- Normal fast-forward updates remain allowed. This deliberately preserves eight existing GitHub Actions writers that commit release records, Shared Skill state, indexes, traction history, or contributor data directly to `main`.
+- Do not enable `restrict updates`, required pull requests, required status checks, linear history, or signed commits until those direct writers are migrated to pull requests or an audited GitHub App bypass and their end-to-end publication paths are reverified. The current bounded ruleset is a compatibility decision, not the final desired protection level.
+
 ## GitHub Evidence Agent V0 — Deployed And Backfill Verified
 
 - PR [#84](https://github.com/JinNing6/Noosphere/pull/84) merged the zero-service Shared Skill evidence intake into `main` as `946d7e78ffa9b4806347e329d2aec3203e867af0` on 2026-07-29.
