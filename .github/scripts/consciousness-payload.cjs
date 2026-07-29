@@ -1,5 +1,15 @@
 const START_MARKER = "<!-- CONSCIOUSNESS_PAYLOAD_START -->";
 const END_MARKER = "<!-- CONSCIOUSNESS_PAYLOAD_END -->";
+const SKILL_DOMAIN_TAGS = new Map([
+  ["agent runtime", "agent-runtime"],
+  ["mcp tools", "mcp-tools"],
+  ["build release", "build-release"],
+  ["testing reliability", "testing-reliability"],
+  ["security trust", "security-trust"],
+  ["frontend mobile", "frontend-mobile"],
+  ["data infrastructure", "data-infrastructure"],
+  ["languages frameworks", "languages-frameworks"],
+]);
 
 function stripJsonFence(block) {
   let normalized = String(block || "").trim();
@@ -54,6 +64,16 @@ function parseTags(value) {
     .filter(Boolean);
 }
 
+function parseIssueFormLines(value) {
+  const fenced = extractFencedBody(value);
+  const cleaned = cleanIssueValue(fenced || value);
+  if (!cleaned) return [];
+  return [...new Set(cleaned
+    .split(/\r?\n/)
+    .map((line) => line.replace(/^[-*]\s+/, "").trim())
+    .filter(Boolean))];
+}
+
 function parseBoolean(value) {
   return /\btrue\b|\byes\b|-\s*\[[xX]\]/i.test(String(value || ""));
 }
@@ -83,7 +103,7 @@ function getSection(sections, ...labels) {
 }
 
 function extractFencedBody(value) {
-  const match = /```(?:yaml|yml|json)?\s*([\s\S]*?)```/i.exec(String(value || ""));
+  const match = /```(?:[a-zA-Z0-9_+.-]+)?[ \t]*\r?\n?([\s\S]*?)```/.exec(String(value || ""));
   return match ? match[1].trim() : "";
 }
 
@@ -202,11 +222,72 @@ function extractIssueFormPayload(body) {
   return { payload: withMediaFields(payload, mediaUrl, mediaCategory), source: "issue-form" };
 }
 
+function extractSkillProposalPayload(body) {
+  const sections = parseMarkdownSections(body);
+  const skillName = getSection(sections, "Skill name").toLowerCase();
+  const symptom = getSection(sections, "Reproducible failure symptom");
+  const rootCause = getSection(sections, "Root cause");
+  const fix = getSection(sections, "Reusable fix");
+  const verification = getSection(sections, "Verification evidence");
+  const appliesWhen = getSection(sections, "Applies when");
+
+  if (!skillName || !(symptom || rootCause || fix || verification || appliesWhen)) {
+    return null;
+  }
+
+  const summary = getSection(sections, "What this Skill solves") || fix || symptom;
+  const domain = SKILL_DOMAIN_TAGS.get(normalizeLabel(getSection(sections, "Domain branch")));
+  const repositoryUrl = getSection(sections, "Source repository URL");
+  const commitSha = getSection(sections, "Exact commit SHA");
+  const workflowRunUrl = getSection(sections, "Successful workflow run URL");
+  const workflowJobName = getSection(sections, "Verification job name");
+  const workflowStepName = getSection(sections, "Verification step name");
+  const artifactSha256 = getSection(sections, "Artifact SHA-256");
+
+  const payload = {
+    schema_version: 4,
+    record_kind: "skill-evidence",
+    publication_track: "community",
+    creator_signature: "github-issue-author",
+    consciousness_type: "pattern",
+    thought_vector_text: summary,
+    context_environment: symptom || appliesWhen || summary,
+    tags: [domain, "skill-evidence"].filter(Boolean),
+    proposed_skill: skillName,
+    evidence: {
+      symptom,
+      root_cause: rootCause,
+      fix,
+      verification,
+      applies_when: appliesWhen,
+      avoid_when: getSection(sections, "Do not apply when"),
+      test_commands: parseIssueFormLines(getSection(sections, "Test commands")),
+      source_urls: parseIssueFormLines(getSection(sections, "Public evidence URLs")),
+    },
+    source: {
+      repository_url: repositoryUrl,
+      commit_sha: commitSha,
+      workflow_run_url: workflowRunUrl,
+      workflow_job_name: workflowJobName,
+      workflow_step_name: workflowStepName,
+      artifact_sha256: artifactSha256,
+    },
+  };
+
+  for (const value of [repositoryUrl, workflowRunUrl]) {
+    if (value && !payload.evidence.source_urls.includes(value)) {
+      payload.evidence.source_urls.push(value);
+    }
+  }
+  return { payload, source: "skill-proposal-form" };
+}
+
 function extractConsciousnessPayload(body) {
   return (
     extractMarkerPayload(body) ||
     extractPlainHeadingPayload(body) ||
     extractWebUploaderPayload(body) ||
+    extractSkillProposalPayload(body) ||
     extractIssueFormPayload(body)
   );
 }

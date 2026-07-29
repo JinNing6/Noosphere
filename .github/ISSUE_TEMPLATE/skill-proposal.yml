@@ -2,12 +2,12 @@ name: Propose or update an Agent Skill
 description: Submit a reproducible engineering failure, reusable fix, and verification evidence.
 title: "Skill proposal: "
 labels:
-  - skill-candidate
+  - skill-evidence
 body:
   - type: markdown
     attributes:
       value: |
-        This form creates review input, not an immediately executable Skill. Publication requires independent evidence and maintainer approval.
+        This form accepts Shared Skill evidence without MCP, a paid API, or a maintainer-applied intake label. GitHub Actions validates the public source commit and successful workflow job automatically. A recorded evidence item is still not an executable Skill; publication requires independent evidence and maintainer approval.
   - type: input
     id: skill_name
     attributes:
@@ -85,6 +85,52 @@ body:
       render: shell
     validations:
       required: true
+  - type: input
+    id: source_repository
+    attributes:
+      label: Source repository URL
+      description: Public GitHub repository containing the exact reproduction or regression test.
+      placeholder: https://github.com/owner/repository
+    validations:
+      required: true
+  - type: input
+    id: source_commit
+    attributes:
+      label: Exact commit SHA
+      description: Full 40-character Git commit SHA tested by the workflow run.
+      placeholder: 0123456789abcdef0123456789abcdef01234567
+    validations:
+      required: true
+  - type: input
+    id: workflow_run
+    attributes:
+      label: Successful workflow run URL
+      description: Public GitHub Actions run for the exact commit above.
+      placeholder: https://github.com/owner/repository/actions/runs/123456789
+    validations:
+      required: true
+  - type: input
+    id: workflow_job
+    attributes:
+      label: Verification job name
+      description: Exact name of the successful job shown in the workflow run.
+      placeholder: regression-tests
+    validations:
+      required: true
+  - type: input
+    id: workflow_step
+    attributes:
+      label: Verification step name
+      description: Exact name of the successful step that ran the verification.
+      placeholder: Run regression tests
+    validations:
+      required: true
+  - type: input
+    id: artifact_sha256
+    attributes:
+      label: Artifact SHA-256
+      description: Optional SHA-256 digest for a public result bundle or immutable evidence artifact.
+      placeholder: sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
   - type: textarea
     id: source_urls
     attributes:

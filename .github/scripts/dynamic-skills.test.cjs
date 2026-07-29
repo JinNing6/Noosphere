@@ -51,6 +51,28 @@ function refreshCandidateDigest(candidate) {
   return value;
 }
 
+function workflowVerifiedV4(source) {
+  const value = {
+    ...source,
+    schema_version: 4,
+    proposed_skill: "android-webview-node-picking",
+    embedding: null,
+    embedding_model: null,
+    content_safety: { status: "passed" },
+    trust: { status: "screened" },
+    machine_verification: { status: "workflow-verified" },
+  };
+  value.source = {
+    repository_url: `https://github.com/${source.publisher.github_login}/reproduction`,
+    commit_sha: String(source.promoted_from_issue).padStart(40, "0"),
+    workflow_run_url: `https://github.com/${source.publisher.github_login}/reproduction/actions/runs/${source.promoted_from_issue}`,
+    workflow_job_name: "regression",
+    workflow_step_name: "Run regression",
+    artifact_sha256: "",
+  };
+  return value;
+}
+
 test("clusters only distinct verified sources with all-pairs semantic cohesion", () => {
   const memories = [
     memory({ issue: 1, publisher: "alice", embedding: [1, 0] }),
@@ -64,6 +86,22 @@ test("clusters only distinct verified sources with all-pairs semantic cohesion",
   assert.equal(clusters.length, 1);
   assert.deepEqual(clusters[0].members.map((item) => item.promoted_from_issue), [1, 2]);
   assert.equal(clusters[0].publishers.length, 2);
+});
+
+test("clusters matching workflow-verified V4 evidence without a paid embedding service", () => {
+  const left = workflowVerifiedV4(memory({ issue: 101, publisher: "alice", embedding: null }));
+  const right = workflowVerifiedV4(memory({ issue: 102, publisher: "bob", embedding: null }));
+
+  const clusters = clusterEligibleMemories([left, right]);
+
+  assert.equal(clusters.length, 1);
+  assert.equal(clusters[0].embedding_model, "deterministic-claim-v1");
+  assert.equal(clusters[0].similarity_threshold, null);
+  assert.deepEqual(clusters[0].publishers, ["alice", "bob"]);
+  assert.deepEqual(validateSkillCandidate(buildSkillCandidate(clusters[0])), {
+    valid: true,
+    errors: [],
+  });
 });
 
 test("candidate identity is deterministic regardless of input order", () => {

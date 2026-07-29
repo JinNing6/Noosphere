@@ -196,6 +196,139 @@ test("extracts GitHub issue form uploads", () => {
   });
 });
 
+test("extracts the zero-cost Shared Skill evidence form as a V4 payload", () => {
+  const body = [
+    "### Skill name",
+    "",
+    "browser-actionability-debug",
+    "",
+    "### Domain branch",
+    "",
+    "Frontend & Mobile",
+    "",
+    "### What this Skill solves",
+    "",
+    "Diagnose controls that are visible but not actionable in a real browser.",
+    "",
+    "### Reproducible failure symptom",
+    "",
+    "The control is visible but Playwright cannot click it.",
+    "",
+    "### Root cause",
+    "",
+    "A transparent overlay intercepts pointer events.",
+    "",
+    "### Reusable fix",
+    "",
+    "Inspect the hit-test stack and remove pointer events from decorative layers.",
+    "",
+    "### Verification evidence",
+    "",
+    "The browser test clicks the control and observes the state transition.",
+    "",
+    "### Applies when",
+    "",
+    "A DOM control paints correctly but real pointer input does not reach it.",
+    "",
+    "### Do not apply when",
+    "",
+    "The control is disabled by application state.",
+    "",
+    "### Test commands",
+    "",
+    "```shell",
+    "node --test tests/browser-actionability.test.cjs",
+    "```",
+    "",
+    "### Source repository URL",
+    "",
+    "https://github.com/example/browser-fixture",
+    "",
+    "### Exact commit SHA",
+    "",
+    "0123456789abcdef0123456789abcdef01234567",
+    "",
+    "### Successful workflow run URL",
+    "",
+    "https://github.com/example/browser-fixture/actions/runs/12345",
+    "",
+    "### Verification job name",
+    "",
+    "browser-regression",
+    "",
+    "### Verification step name",
+    "",
+    "Run browser regression",
+    "",
+    "### Artifact SHA-256",
+    "",
+    "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "",
+    "### Public evidence URLs",
+    "",
+    "https://github.com/example/browser-fixture/issues/7",
+    "",
+    "### Evidence declaration",
+    "",
+    "- [x] I have reproduced this behavior.",
+  ].join("\n");
+
+  const result = extractConsciousnessPayload(body);
+
+  assert.equal(result.source, "skill-proposal-form");
+  assert.equal(result.payload.schema_version, 4);
+  assert.equal(result.payload.record_kind, "skill-evidence");
+  assert.equal(result.payload.proposed_skill, "browser-actionability-debug");
+  assert.deepEqual(result.payload.tags, ["frontend-mobile", "skill-evidence"]);
+  assert.deepEqual(result.payload.evidence.test_commands, [
+    "node --test tests/browser-actionability.test.cjs",
+  ]);
+  assert.deepEqual(result.payload.evidence.source_urls, [
+    "https://github.com/example/browser-fixture/issues/7",
+    "https://github.com/example/browser-fixture",
+    "https://github.com/example/browser-fixture/actions/runs/12345",
+  ]);
+  assert.deepEqual(result.payload.source, {
+    repository_url: "https://github.com/example/browser-fixture",
+    commit_sha: "0123456789abcdef0123456789abcdef01234567",
+    workflow_run_url: "https://github.com/example/browser-fixture/actions/runs/12345",
+    workflow_job_name: "browser-regression",
+    workflow_step_name: "Run browser regression",
+    artifact_sha256:
+      "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  });
+});
+
+test("Shared Skill Issue Form labels stay aligned with the V4 parser contract", () => {
+  const form = fs.readFileSync(
+    path.join(__dirname, "..", "ISSUE_TEMPLATE", "skill-proposal.yml"),
+    "utf8",
+  );
+  for (const label of [
+    "Skill name",
+    "Domain branch",
+    "What this Skill solves",
+    "Reproducible failure symptom",
+    "Root cause",
+    "Reusable fix",
+    "Verification evidence",
+    "Applies when",
+    "Do not apply when",
+    "Test commands",
+    "Source repository URL",
+    "Exact commit SHA",
+    "Successful workflow run URL",
+    "Verification job name",
+    "Verification step name",
+    "Artifact SHA-256",
+    "Public evidence URLs",
+  ]) {
+    assert.match(form, new RegExp(`label: ${label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`));
+  }
+  assert.match(form, /labels:\s*\n\s*- skill-evidence/);
+  assert.doesNotMatch(form, /\n\s*- skill-candidate\s*$/m);
+});
+
 test("ignores unrelated fenced JSON without a consciousness heading", () => {
   const result = extractConsciousnessPayload(
     ["This is an ordinary issue.", "```json", JSON.stringify(validPayload), "```"].join("\n")

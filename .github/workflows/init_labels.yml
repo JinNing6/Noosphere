@@ -30,6 +30,7 @@ jobs:
               { name: 'needs-review', color: 'FBCA04', description: 'Requires trusted maintainer review' },
               { name: 'trusted-review', color: '0E8A16', description: 'Reviewed by a repository maintainer' },
               { name: 'skill-evidence', color: '8250DF', description: 'Structured engineering evidence for a shared Skill' },
+              { name: 'skill-evidence-pr-routed', color: '8250DF', description: 'Skill contribution routed to the evidence intake form' },
               { name: 'skill-evidence-recorded', color: '1D76DB', description: 'Skill evidence persisted in the canonical evidence layer' },
               { name: 'skill-evidence-incomplete', color: 'B60205', description: 'Skill evidence is missing required fields or public sources' },
               { name: 'awaiting-independent-evidence', color: 'FBCA04', description: 'Community evidence awaits an independent matching publisher' },
