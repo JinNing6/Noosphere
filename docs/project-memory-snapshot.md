@@ -10,6 +10,15 @@ Last verified: 2026-07-29 (Asia/Shanghai)
 - The growth-snapshot updater preserves this separation when Actions refresh the README. Regression tests now require the 6/35/5/46 profile contract and reject the stale “46 tools instantly available,” “46 core tools,” and “34 MCP Tools” narratives. The root README keeps the only automatically maintained contributor block; the extended guide links to it instead of carrying a second stale metric copy.
 - Source verification passed 228 SDK tests, 122 Node workflow/supply-chain tests, 42 repository/release tests, registry/plugin validation, README snapshot repair checks, all local README link/media resolution, and the formal `python -m build` path. The built Wheel metadata contains the new six-tool default statement and no stale 34-tool heading. The currently published PyPI `0.9.2` long description remains historical until a later package release; source correction does not rewrite an immutable public artifact.
 
+## v0.10.0 MCP v2 Dual-Era Compatibility — Locally Verified Candidate
+
+- Branch `codex/mcp-v2-compatibility` is based on remote `main` commit `7cf9e34b761fbec2f106094a0f3f39149f172e76`. Active SDK, server, Codex plugin, Claude plugin, and marketplace metadata declare candidate version `0.10.0`; the Python dependency boundary is `mcp>=2,<3` plus the existing direct `httpx>=0.28.0` dependency. This repository has no Python lockfile, so the actual candidate runtime was resolved and recorded separately.
+- The server now imports the public `MCPServer` API from MCP Python SDK v2 and passes `version=__version__` at construction. It no longer imports the removed `mcp.server.fastmcp.FastMCP` module or mutates private `_mcp_server` state. Static profile selection and exact membership remain unchanged at Skills `6`, consciousness/social `35`, operations `5`, and full `46`.
+- The release verifier now independently exercises both protocol eras over real stdio. Modern `2026-07-28` requests send `server/discover` and `tools/list` with the required per-request `_meta`; legacy `2025-11-25` clients send `initialize`, wait for its response, send `notifications/initialized`, and then request `tools/list`. The Glama source-container gate uses the same two probes. Both paths reject protocol-version, advertised product-version, or tool-count drift.
+- The formal candidate build produced `noosphere_mcp-0.10.0-py3-none-any.whl` (142,221 bytes, local SHA-256 `b60038486626a6d6067053f12a1d992b4f88d60b70d0d9f62a71682cb7972d54`) and sdist (163,971 bytes, local SHA-256 `001fc1d8552908c131e6d859d39d3b6576c7f9377b661429fbbe687854462a48`). Wheel metadata declares `Requires-Dist: mcp<3,>=2` and `Requires-Python: >=3.10`. A clean Python 3.10.19 wheel environment resolved `mcp==2.0.0` and `mcp-types==2.0.0` and returned exact tool counts `46`, `6`, `35`, and `5` under both protocol eras, always with `serverInfo.version=0.10.0`.
+- Local verification passed 229 SDK tests, 45 repository/release tests, 122 Node workflow/supply-chain tests, the registry/plugin validator, the critical Ruff gate, source and installed-wheel dual-protocol probes, and the installed wheel's deterministic `public-artifact-runtime-smoke-gate` in 12.86 seconds. These are candidate-build facts, not public-release evidence.
+- PR [#88](https://github.com/JinNing6/Noosphere/pull/88) is open, clean, and mergeable. Its first PR Quality Gate run [`30445776243`](https://github.com/JinNing6/Noosphere/actions/runs/30445776243) passed Python tests and critical lint, Shared Skill supply-chain checks, Glama container dual-protocol discovery, and the 60-second validation matrix on Ubuntu, Windows, and macOS; CLA and evidence-routing checks also passed. PyPI still reports `noosphere-mcp==0.9.2` as latest and the official `0.10.0` version endpoint returns HTTP 404. No merge, `v0.10.0` tag, GitHub Release, Trusted Publishing run, public artifact, or deployment is claimed; formal publication remains a separate release action after merge.
+
 ## Main Branch Ruleset — Active And Automation-Compatible
 
 - Repository Ruleset [`Protect main`](https://github.com/JinNing6/Noosphere/rules/19963741), ID `19963741`, is active and targets only `refs/heads/main`. GitHub's effective-rules API reports exactly `deletion` and `non_fast_forward`, so `main` cannot be deleted or force-pushed. The bypass list is empty.
@@ -342,22 +351,26 @@ Last verified: 2026-07-29 (Asia/Shanghai)
 
 ## Required Deployment Steps
 
-1. GitHub Release and PyPI `v0.9.2` are complete and separately re-verified. The Product
+1. Complete PR review and CI for the `v0.10.0` MCP v2 candidate. After merge, create the
+   `v0.10.0` GitHub Release exactly once so the existing `release.published` Trusted
+   Publishing path builds, publishes, installs, and dual-protocol-verifies the immutable
+   public artifact. Do not describe the local Wheel hashes above as PyPI artifact identity.
+2. GitHub Release and PyPI `v0.9.2` are complete and separately re-verified. The Product
    Hunt launch is scheduled for 2026-08-01 and must point to the exact public `0.9.2`
    install path and use the verified Skill Evidence, usage-metric, and Codex recency proof.
    Keep installs, approved Outcomes, and third-party reuse separate in every launch claim.
    Until the post-release tag-snapshot bug is fixed in a later package version, continue to use the
    direct Release, exact-version PyPI, clean-install, and public traction-proof evidence;
    do not cite the current `launch_preflight` ready/blocked line as authoritative.
-2. Monitor and respond to review on `brainctl#170` and `Ahrena#376`. Their first workflow runs
+3. Monitor and respond to review on `brainctl#170` and `Ahrena#376`. Their first workflow runs
    require upstream maintainer approval before jobs can start; do not describe `action_required`
    as a failure or a pass. Record a new Outcome only after public maintainer response, merge,
    release verification, or independently authenticated evidence. Outcome #57 is already
    recorded; do not present it as independent Noosphere reuse.
-3. Upgrade `public-artifact-runtime-smoke-gate` or `shared-skill-evidence-routing` from `maintainer-validated` only after a second GitHub publisher submits independently reproduced evidence. Claim `outcome-proven` only after an exact-version third-party Agent reuse is recorded with public evidence.
-4. Convert the first external failed or partial outcome into a reviewed immutable next version and demonstrate `check_skill_updates` plus digest-verified retrieval. This version transition, not raw Skill count, is the first proof of a Living Skill network.
-5. Complete the separate Glama admin deployment and release so its public directory record exposes the current 46-tool source runtime rather than the stale legacy snapshot.
-6. Handle the pip-less local verifier-runtime boundary, existing Vite chunk warning, npm dependency advisories, and GitHub Actions Node runtime deprecation in separate maintenance work; none blocks the verified `v0.9.2` release or the external-issue campaign.
+4. Upgrade `public-artifact-runtime-smoke-gate` or `shared-skill-evidence-routing` from `maintainer-validated` only after a second GitHub publisher submits independently reproduced evidence. Claim `outcome-proven` only after an exact-version third-party Agent reuse is recorded with public evidence.
+5. Convert the first external failed or partial outcome into a reviewed immutable next version and demonstrate `check_skill_updates` plus digest-verified retrieval. This version transition, not raw Skill count, is the first proof of a Living Skill network.
+6. Complete the separate Glama admin deployment and release so its public directory record exposes the current 46-tool source runtime rather than the stale legacy snapshot.
+7. Handle the pip-less local verifier-runtime boundary, existing Vite chunk warning, npm dependency advisories, and GitHub Actions Node runtime deprecation in separate maintenance work; none blocks the verified `v0.9.2` release or the external-issue campaign.
 
 ## Concentrated v0.9.0 Launch Surface
 

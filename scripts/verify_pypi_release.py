@@ -30,7 +30,9 @@ REQUIRED_GROWTH_TOOLS = [
     "growth_flywheel",
     "launch_preflight",
 ]
-MCP_PROBE_PROTOCOL_VERSION = "2024-11-05"
+MODERN_MCP_PROTOCOL_VERSION = "2026-07-28"
+LEGACY_MCP_PROTOCOL_VERSION = "2025-11-25"
+MCP_SERVER_INFO_META_KEY = "io.modelcontextprotocol/serverInfo"
 
 
 def read_project_version(
@@ -227,37 +229,71 @@ def install_runtime_environment(
     )
 
 
-def build_mcp_probe_messages() -> list[dict]:
-    return [
-        {
-            "jsonrpc": "2.0",
-            "id": 1,
-            "method": "initialize",
-            "params": {
-                "protocolVersion": MCP_PROBE_PROTOCOL_VERSION,
-                "capabilities": {},
-                "clientInfo": {
-                    "name": "noosphere-release-verifier",
-                    "version": "1.0",
+def _modern_request_meta() -> dict:
+    return {
+        "io.modelcontextprotocol/protocolVersion": MODERN_MCP_PROTOCOL_VERSION,
+        "io.modelcontextprotocol/clientInfo": {
+            "name": "noosphere-release-verifier",
+            "version": "1.0",
+        },
+        "io.modelcontextprotocol/clientCapabilities": {},
+    }
+
+
+def build_mcp_probe_messages(
+    protocol_version: str = MODERN_MCP_PROTOCOL_VERSION,
+) -> list[dict]:
+    if protocol_version == MODERN_MCP_PROTOCOL_VERSION:
+        return [
+            {
+                "jsonrpc": "2.0",
+                "id": 1,
+                "method": "server/discover",
+                "params": {"_meta": _modern_request_meta()},
+            },
+            {
+                "jsonrpc": "2.0",
+                "id": 2,
+                "method": "tools/list",
+                "params": {"_meta": _modern_request_meta()},
+            },
+        ]
+
+    if protocol_version == LEGACY_MCP_PROTOCOL_VERSION:
+        return [
+            {
+                "jsonrpc": "2.0",
+                "id": 1,
+                "method": "initialize",
+                "params": {
+                    "protocolVersion": LEGACY_MCP_PROTOCOL_VERSION,
+                    "capabilities": {},
+                    "clientInfo": {
+                        "name": "noosphere-release-verifier",
+                        "version": "1.0",
+                    },
                 },
             },
-        },
-        {
-            "jsonrpc": "2.0",
-            "method": "notifications/initialized",
-            "params": {},
-        },
-        {
-            "jsonrpc": "2.0",
-            "id": 2,
-            "method": "tools/list",
-            "params": {},
-        },
-    ]
+            {
+                "jsonrpc": "2.0",
+                "method": "notifications/initialized",
+                "params": {},
+            },
+            {
+                "jsonrpc": "2.0",
+                "id": 2,
+                "method": "tools/list",
+                "params": {},
+            },
+        ]
+
+    raise ValueError(f"Unsupported MCP probe protocol version: {protocol_version}")
 
 
-def build_mcp_probe_input() -> str:
-    messages = build_mcp_probe_messages()
+def build_mcp_probe_input(
+    protocol_version: str = MODERN_MCP_PROTOCOL_VERSION,
+) -> str:
+    messages = build_mcp_probe_messages(protocol_version)
     return "".join(
         json.dumps(message, separators=(",", ":")) + "\n" for message in messages
     )
@@ -268,6 +304,7 @@ def probe_mcp_subprocess(
     *,
     env: dict[str, str] | None = None,
     timeout_seconds: float = 30.0,
+    protocol_version: str = MODERN_MCP_PROTOCOL_VERSION,
 ) -> dict:
     started = time.monotonic()
     process = subprocess.Popen(
@@ -343,12 +380,13 @@ def probe_mcp_subprocess(
             if isinstance(payload, dict) and payload.get("id") == request_id:
                 return payload
 
-    messages = build_mcp_probe_messages()
+    messages = build_mcp_probe_messages(protocol_version)
     try:
         send(messages[0])
         wait_for_response(1)
-        send(messages[1])
-        send(messages[2])
+        for message in messages[1:-1]:
+            send(message)
+        send(messages[-1])
         wait_for_response(2)
         process.stdin.close()
 
@@ -396,7 +434,14 @@ def parse_mcp_probe_output(
     *,
     expected_version: str,
     expected_tool_count: int,
+    protocol_version: str = MODERN_MCP_PROTOCOL_VERSION,
 ) -> dict:
+    if protocol_version not in {
+        MODERN_MCP_PROTOCOL_VERSION,
+        LEGACY_MCP_PROTOCOL_VERSION,
+    }:
+        raise ValueError(f"Unsupported MCP probe protocol version: {protocol_version}")
+
     payloads: list[dict] = []
     for line in stdout.splitlines():
         try:
@@ -406,15 +451,45 @@ def parse_mcp_probe_output(
         if isinstance(payload, dict):
             payloads.append(payload)
 
-    initialize = next((payload for payload in payloads if payload.get("id") == 1), None)
-    if not initialize:
+    negotiation = next(
+        (payload for payload in payloads if payload.get("id") == 1), None
+    )
+    negotiation_name = (
+        "server/discover"
+        if protocol_version == MODERN_MCP_PROTOCOL_VERSION
+        else "initialize"
+    )
+    if not negotiation:
         raise RuntimeError(
-            "Published MCP runtime did not return an initialize response"
+            f"Published MCP runtime did not return a {negotiation_name} response"
         )
-    if "error" in initialize:
-        raise RuntimeError(f"Published MCP initialize failed: {initialize['error']}")
+    if "error" in negotiation:
+        raise RuntimeError(
+            f"Published MCP {negotiation_name} failed: {negotiation['error']}"
+        )
 
-    server_info = initialize.get("result", {}).get("serverInfo", {})
+    negotiation_result = negotiation.get("result", {})
+    if protocol_version == MODERN_MCP_PROTOCOL_VERSION:
+        supported_versions = negotiation_result.get("supportedVersions")
+        if (
+            not isinstance(supported_versions, list)
+            or MODERN_MCP_PROTOCOL_VERSION not in supported_versions
+        ):
+            raise RuntimeError(
+                "Published MCP server/discover did not advertise "
+                f"{MODERN_MCP_PROTOCOL_VERSION}"
+            )
+        server_info = negotiation_result.get("_meta", {}).get(
+            MCP_SERVER_INFO_META_KEY, {}
+        )
+    elif protocol_version == LEGACY_MCP_PROTOCOL_VERSION:
+        negotiated_version = negotiation_result.get("protocolVersion")
+        if negotiated_version != LEGACY_MCP_PROTOCOL_VERSION:
+            raise RuntimeError(
+                "Published MCP initialize negotiated "
+                f"{negotiated_version!r}, expected {LEGACY_MCP_PROTOCOL_VERSION!r}"
+            )
+        server_info = negotiation_result.get("serverInfo", {})
     server_version = str(server_info.get("version", ""))
     if server_version != expected_version:
         raise RuntimeError(
@@ -440,6 +515,7 @@ def parse_mcp_probe_output(
         )
 
     return {
+        "protocol_version": protocol_version,
         "server_version": server_version,
         "runtime_tool_count": len(tools),
     }
@@ -453,6 +529,7 @@ def probe_installed_mcp_runtime(
     entry_point: str = "noosphere-mcp",
     env_overrides: dict[str, str] | None = None,
     timeout_seconds: float = 30.0,
+    protocol_version: str = MODERN_MCP_PROTOCOL_VERSION,
 ) -> dict:
     command = runtime_console_command(runtime_dir, entry_point)
     if not command.is_file():
@@ -468,12 +545,14 @@ def probe_installed_mcp_runtime(
         [str(command)],
         env=env,
         timeout_seconds=timeout_seconds,
+        protocol_version=protocol_version,
     )
 
     result = parse_mcp_probe_output(
         completed["stdout"],
         expected_version=expected_version,
         expected_tool_count=expected_tool_count,
+        protocol_version=protocol_version,
     )
     result["runtime_seconds"] = completed["runtime_seconds"]
     return result
@@ -659,12 +738,27 @@ def verify_pypi_release(
             runtime_dir,
             expected_version=version,
             expected_tool_count=expected_tool_count,
+            protocol_version=MODERN_MCP_PROTOCOL_VERSION,
+        )
+        legacy_runtime = probe_installed_mcp_runtime(
+            runtime_dir,
+            expected_version=version,
+            expected_tool_count=expected_tool_count,
+            protocol_version=LEGACY_MCP_PROTOCOL_VERSION,
         )
         skills_runtime = probe_installed_mcp_runtime(
             runtime_dir,
             expected_version=version,
             expected_tool_count=6,
             env_overrides={"NOOSPHERE_MCP_PROFILE": "skills"},
+            protocol_version=MODERN_MCP_PROTOCOL_VERSION,
+        )
+        skills_legacy_runtime = probe_installed_mcp_runtime(
+            runtime_dir,
+            expected_version=version,
+            expected_tool_count=6,
+            env_overrides={"NOOSPHERE_MCP_PROFILE": "skills"},
+            protocol_version=LEGACY_MCP_PROTOCOL_VERSION,
         )
         validation = probe_installed_validation_runtime(runtime_dir)
     finally:
@@ -677,8 +771,14 @@ def verify_pypi_release(
         "latest_files": latest_filenames,
         **installed,
         **runtime,
+        "legacy_runtime_tool_count": legacy_runtime["runtime_tool_count"],
+        "legacy_runtime_seconds": legacy_runtime["runtime_seconds"],
         "skills_runtime_tool_count": skills_runtime["runtime_tool_count"],
         "skills_runtime_seconds": skills_runtime["runtime_seconds"],
+        "skills_legacy_runtime_tool_count": skills_legacy_runtime[
+            "runtime_tool_count"
+        ],
+        "skills_legacy_runtime_seconds": skills_legacy_runtime["runtime_seconds"],
         **validation,
     }
 
@@ -703,8 +803,10 @@ def main(argv: list[str] | None = None) -> int:
     print(
         f"Verified {result['project']}=={result['version']}: "
         f"{result['runtime_tool_count']} full and {result['skills_runtime_tool_count']} default "
-        f"Skills MCP tools via initialize + tools/list in "
-        f"{result['runtime_seconds']:.3f}s; growth ledger tools, noosphere-query and "
+        f"Skills MCP tools via {MODERN_MCP_PROTOCOL_VERSION} server/discover + tools/list "
+        f"and {LEGACY_MCP_PROTOCOL_VERSION} initialize + tools/list; "
+        f"modern full discovery completed in {result['runtime_seconds']:.3f}s; "
+        f"growth ledger tools, noosphere-query and "
         f"the token-free validation path passed in {result['validation_seconds']:.2f}s."
     )
     return 0

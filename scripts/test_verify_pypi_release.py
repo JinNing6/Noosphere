@@ -1,14 +1,17 @@
+import json
 import os
+import subprocess
 import sys
 import tempfile
 import unittest
-import subprocess
-import json
 from pathlib import Path
 from unittest.mock import ANY, call, patch
 
 from scripts.verify_pypi_release import (
+    LEGACY_MCP_PROTOCOL_VERSION,
+    MODERN_MCP_PROTOCOL_VERSION,
     REQUIRED_GROWTH_TOOLS,
+    build_mcp_probe_messages,
     build_mcp_probe_input,
     inspect_installed_release,
     install_release_to_target,
@@ -150,14 +153,37 @@ class VerifyPypiReleaseTests(unittest.TestCase):
                 runtime_dir / "bin" / "noosphere-validate",
             )
 
-    def test_mcp_probe_input_initializes_before_listing_tools(self):
+    def test_modern_mcp_probe_discovers_before_listing_tools(self):
         messages = [json.loads(line) for line in build_mcp_probe_input().splitlines()]
 
+        self.assertEqual(messages[0]["method"], "server/discover")
+        self.assertEqual(messages[1]["method"], "tools/list")
+        for message in messages:
+            metadata = message["params"]["_meta"]
+            self.assertEqual(
+                metadata["io.modelcontextprotocol/protocolVersion"],
+                MODERN_MCP_PROTOCOL_VERSION,
+            )
+            self.assertEqual(
+                metadata["io.modelcontextprotocol/clientInfo"]["name"],
+                "noosphere-release-verifier",
+            )
+            self.assertEqual(
+                metadata["io.modelcontextprotocol/clientCapabilities"], {}
+            )
+
+    def test_legacy_mcp_probe_initializes_before_listing_tools(self):
+        messages = build_mcp_probe_messages(LEGACY_MCP_PROTOCOL_VERSION)
+
         self.assertEqual(messages[0]["method"], "initialize")
+        self.assertEqual(
+            messages[0]["params"]["protocolVersion"],
+            LEGACY_MCP_PROTOCOL_VERSION,
+        )
         self.assertEqual(messages[1]["method"], "notifications/initialized")
         self.assertEqual(messages[2]["method"], "tools/list")
 
-    def test_parse_mcp_probe_output_requires_version_and_exact_tool_count(self):
+    def test_parse_modern_mcp_probe_output_requires_discovery_version_and_tools(self):
         stdout = "\n".join(
             [
                 json.dumps(
@@ -165,6 +191,52 @@ class VerifyPypiReleaseTests(unittest.TestCase):
                         "jsonrpc": "2.0",
                         "id": 1,
                         "result": {
+                            "resultType": "complete",
+                            "supportedVersions": [MODERN_MCP_PROTOCOL_VERSION],
+                            "capabilities": {"tools": {}},
+                            "_meta": {
+                                "io.modelcontextprotocol/serverInfo": {
+                                    "name": "noosphere",
+                                    "version": "0.10.0",
+                                }
+                            },
+                        },
+                    }
+                ),
+                json.dumps(
+                    {
+                        "jsonrpc": "2.0",
+                        "id": 2,
+                        "result": {
+                            "tools": [
+                                {"name": f"tool_{index}"} for index in range(46)
+                            ]
+                        },
+                    }
+                ),
+            ]
+        )
+
+        result = parse_mcp_probe_output(
+            stdout,
+            expected_version="0.10.0",
+            expected_tool_count=46,
+            protocol_version=MODERN_MCP_PROTOCOL_VERSION,
+        )
+
+        self.assertEqual(result["protocol_version"], MODERN_MCP_PROTOCOL_VERSION)
+        self.assertEqual(result["server_version"], "0.10.0")
+        self.assertEqual(result["runtime_tool_count"], 46)
+
+    def test_parse_legacy_mcp_probe_output_requires_version_and_exact_tool_count(self):
+        stdout = "\n".join(
+            [
+                json.dumps(
+                    {
+                        "jsonrpc": "2.0",
+                        "id": 1,
+                        "result": {
+                            "protocolVersion": LEGACY_MCP_PROTOCOL_VERSION,
                             "serverInfo": {"name": "noosphere", "version": "0.8.2"},
                         },
                     }
@@ -182,9 +254,13 @@ class VerifyPypiReleaseTests(unittest.TestCase):
         )
 
         result = parse_mcp_probe_output(
-            stdout, expected_version="0.8.2", expected_tool_count=45
+            stdout,
+            expected_version="0.8.2",
+            expected_tool_count=45,
+            protocol_version=LEGACY_MCP_PROTOCOL_VERSION,
         )
 
+        self.assertEqual(result["protocol_version"], LEGACY_MCP_PROTOCOL_VERSION)
         self.assertEqual(result["server_version"], "0.8.2")
         self.assertEqual(result["runtime_tool_count"], 45)
 
@@ -193,13 +269,19 @@ class VerifyPypiReleaseTests(unittest.TestCase):
             {
                 "jsonrpc": "2.0",
                 "id": 1,
-                "result": {"serverInfo": {"name": "noosphere", "version": "0.8.2"}},
+                "result": {
+                    "protocolVersion": LEGACY_MCP_PROTOCOL_VERSION,
+                    "serverInfo": {"name": "noosphere", "version": "0.8.2"},
+                },
             }
         )
 
         with self.assertRaisesRegex(RuntimeError, "tools/list"):
             parse_mcp_probe_output(
-                stdout, expected_version="0.8.2", expected_tool_count=45
+                stdout,
+                expected_version="0.8.2",
+                expected_tool_count=45,
+                protocol_version=LEGACY_MCP_PROTOCOL_VERSION,
             )
 
     def test_probe_mcp_subprocess_preserves_the_initialization_lifecycle(self):
@@ -237,15 +319,71 @@ print(json.dumps({
                 [sys.executable, str(script)],
                 env=os.environ.copy(),
                 timeout_seconds=5,
+                protocol_version=LEGACY_MCP_PROTOCOL_VERSION,
             )
 
         result = parse_mcp_probe_output(
             completed["stdout"],
             expected_version="0.8.2",
             expected_tool_count=45,
+            protocol_version=LEGACY_MCP_PROTOCOL_VERSION,
         )
         self.assertEqual(completed["returncode"], 0)
         self.assertEqual(result["runtime_tool_count"], 45)
+
+    def test_probe_mcp_subprocess_preserves_modern_stateless_requests(self):
+        fake_server = """
+import json
+import sys
+
+discover = json.loads(sys.stdin.readline())
+assert discover["method"] == "server/discover"
+metadata = discover["params"]["_meta"]
+assert metadata["io.modelcontextprotocol/protocolVersion"] == "2026-07-28"
+print(json.dumps({
+    "jsonrpc": "2.0",
+    "id": discover["id"],
+    "result": {
+        "resultType": "complete",
+        "supportedVersions": ["2026-07-28"],
+        "capabilities": {"tools": {}},
+        "_meta": {
+            "io.modelcontextprotocol/serverInfo": {
+                "name": "fake",
+                "version": "0.10.0",
+            },
+        },
+    },
+}), flush=True)
+
+tools = json.loads(sys.stdin.readline())
+assert tools["method"] == "tools/list"
+assert tools["params"]["_meta"] == metadata
+print(json.dumps({
+    "jsonrpc": "2.0",
+    "id": tools["id"],
+    "result": {"tools": [{"name": f"tool_{index}"} for index in range(46)]},
+}), flush=True)
+"""
+        with tempfile.TemporaryDirectory() as tmp:
+            script = Path(tmp) / "fake_modern_mcp_server.py"
+            script.write_text(fake_server, encoding="utf-8")
+
+            completed = probe_mcp_subprocess(
+                [sys.executable, str(script)],
+                env=os.environ.copy(),
+                timeout_seconds=5,
+                protocol_version=MODERN_MCP_PROTOCOL_VERSION,
+            )
+
+        result = parse_mcp_probe_output(
+            completed["stdout"],
+            expected_version="0.10.0",
+            expected_tool_count=46,
+            protocol_version=MODERN_MCP_PROTOCOL_VERSION,
+        )
+        self.assertEqual(completed["returncode"], 0)
+        self.assertEqual(result["runtime_tool_count"], 46)
 
     def test_probe_installed_runtime_uses_anonymous_environment_and_timeout(self):
         completed = {
@@ -256,7 +394,13 @@ print(json.dumps({
                             "jsonrpc": "2.0",
                             "id": 1,
                             "result": {
-                                "serverInfo": {"name": "noosphere", "version": "0.8.2"},
+                                "supportedVersions": [MODERN_MCP_PROTOCOL_VERSION],
+                                "_meta": {
+                                    "io.modelcontextprotocol/serverInfo": {
+                                        "name": "noosphere",
+                                        "version": "0.8.2",
+                                    }
+                                },
                             },
                         }
                     ),
@@ -305,6 +449,7 @@ print(json.dumps({
                     expected_tool_count=45,
                     env_overrides={"NOOSPHERE_MCP_PROFILE": "skills"},
                     timeout_seconds=30,
+                    protocol_version=MODERN_MCP_PROTOCOL_VERSION,
                 )
 
         kwargs = probe.call_args.kwargs
@@ -312,6 +457,9 @@ print(json.dumps({
         self.assertNotIn("GH_TOKEN", kwargs["env"])
         self.assertEqual(kwargs["env"]["NOOSPHERE_MCP_PROFILE"], "skills")
         self.assertEqual(kwargs["timeout_seconds"], 30)
+        self.assertEqual(
+            kwargs["protocol_version"], MODERN_MCP_PROTOCOL_VERSION
+        )
         self.assertEqual(result["runtime_tool_count"], 45)
 
     def test_probe_installed_validation_enforces_anonymous_60_second_contract(self):
@@ -442,9 +590,16 @@ print(json.dumps({
             "growth_tools": REQUIRED_GROWTH_TOOLS,
         }
         runtime = {
+            "protocol_version": MODERN_MCP_PROTOCOL_VERSION,
             "server_version": "0.6.8",
             "runtime_tool_count": 40,
             "runtime_seconds": 1.5,
+        }
+        legacy_runtime = {
+            "protocol_version": LEGACY_MCP_PROTOCOL_VERSION,
+            "server_version": "0.6.8",
+            "runtime_tool_count": 40,
+            "runtime_seconds": 1.25,
         }
         validation = {
             "validation_seconds": 7.25,
@@ -474,10 +629,18 @@ print(json.dumps({
                 "scripts.verify_pypi_release.probe_installed_mcp_runtime",
                 side_effect=[
                     runtime,
+                    legacy_runtime,
                     {
+                        "protocol_version": MODERN_MCP_PROTOCOL_VERSION,
                         "server_version": "0.6.8",
                         "runtime_tool_count": 6,
                         "runtime_seconds": 0.5,
+                    },
+                    {
+                        "protocol_version": LEGACY_MCP_PROTOCOL_VERSION,
+                        "server_version": "0.6.8",
+                        "runtime_tool_count": 6,
+                        "runtime_seconds": 0.45,
                     },
                 ],
             ) as probe_runtime,
@@ -502,12 +665,31 @@ print(json.dumps({
         self.assertEqual(
             probe_runtime.call_args_list,
             [
-                call(ANY, expected_version="0.6.8", expected_tool_count=40),
+                call(
+                    ANY,
+                    expected_version="0.6.8",
+                    expected_tool_count=40,
+                    protocol_version=MODERN_MCP_PROTOCOL_VERSION,
+                ),
+                call(
+                    ANY,
+                    expected_version="0.6.8",
+                    expected_tool_count=40,
+                    protocol_version=LEGACY_MCP_PROTOCOL_VERSION,
+                ),
                 call(
                     ANY,
                     expected_version="0.6.8",
                     expected_tool_count=6,
                     env_overrides={"NOOSPHERE_MCP_PROFILE": "skills"},
+                    protocol_version=MODERN_MCP_PROTOCOL_VERSION,
+                ),
+                call(
+                    ANY,
+                    expected_version="0.6.8",
+                    expected_tool_count=6,
+                    env_overrides={"NOOSPHERE_MCP_PROFILE": "skills"},
+                    protocol_version=LEGACY_MCP_PROTOCOL_VERSION,
                 ),
             ],
         )
@@ -515,7 +697,9 @@ print(json.dumps({
         self.assertEqual(result["version"], "0.6.8")
         self.assertEqual(result["tool_count"], 40)
         self.assertEqual(result["runtime_tool_count"], 40)
+        self.assertEqual(result["legacy_runtime_tool_count"], 40)
         self.assertEqual(result["skills_runtime_tool_count"], 6)
+        self.assertEqual(result["skills_legacy_runtime_tool_count"], 6)
         self.assertEqual(result["validation_seconds"], 7.25)
         self.assertEqual(result["latest_files"], result["files"])
 

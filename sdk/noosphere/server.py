@@ -39,7 +39,7 @@ def _run(profile: str, *, start_notifications: bool) -> None:
     normalized_profile = normalize_profile(profile)
     os.environ["NOOSPHERE_MCP_PROFILE"] = normalized_profile
 
-    # Import after selecting the profile so FastMCP receives the matching
+    # Import after selecting the profile so MCPServer receives the matching
     # bounded server instructions without mutating private SDK internals.
     from noosphere.noosphere_mcp import mcp
 

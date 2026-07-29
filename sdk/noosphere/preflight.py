@@ -76,7 +76,7 @@ class PreflightResult:
 
 _REQUIRED_DEPS = [
     ("httpx", "pip install httpx", "HTTP client for GitHub API calls"),
-    ("mcp", "pip install 'mcp>=1.3.0'", "Model Context Protocol library"),
+    ("mcp", "pip install 'mcp>=2,<3'", "Model Context Protocol library"),
 ]
 
 

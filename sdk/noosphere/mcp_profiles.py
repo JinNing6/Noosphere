@@ -3,7 +3,7 @@
 from collections.abc import Mapping
 from typing import Final, Literal, cast
 
-from mcp.server.fastmcp import FastMCP
+from mcp.server import MCPServer
 
 McpProfile = Literal["full", "skills", "consciousness", "ops"]
 
@@ -113,7 +113,7 @@ def instructions_for_profile(profile: str) -> str:
     return PROFILE_INSTRUCTIONS[normalize_profile(profile)]
 
 
-async def apply_tool_profile(server: FastMCP, profile: str) -> frozenset[str]:
+async def apply_tool_profile(server: MCPServer, profile: str) -> frozenset[str]:
     """Keep exactly the tools assigned to one static capability profile.
 
     The strict full-set check is intentional: adding a new tool requires an
