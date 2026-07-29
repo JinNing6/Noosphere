@@ -1,3 +1,4 @@
+import ast
 import json
 import struct
 import unittest
@@ -5,7 +6,7 @@ from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-QUERY_COMMAND = "uvx --from noosphere-mcp==0.9.0 noosphere-query"
+QUERY_COMMAND = "uvx --from noosphere-mcp noosphere-query"
 CODEX_INSTALL = "codex plugin marketplace add JinNing6/Noosphere"
 CLAUDE_INSTALL = "/plugin marketplace add JinNing6/Noosphere"
 
@@ -22,7 +23,8 @@ class LaunchSurfaceTests(unittest.TestCase):
         self.assertIn("Registry-dynamic", readme)
         self.assertNotRegex(readme, r"Live_Skills-\d+")
         self.assertIn("docs/live-skills.md", readme)
-        self.assertIn("maintainer-validated Live Skills", readme)
+        self.assertIn("Live Skills", readme)
+        self.assertIn("maintainer-validated", readme)
         self.assertIn("public-artifact-runtime-smoke-gate", readme)
         for skill in registry["skills"]:
             release = next(
@@ -116,6 +118,76 @@ class LaunchSurfaceTests(unittest.TestCase):
             chinese,
         )
         self.assertNotIn("inherits every verified fix", english[:4000])
+
+    def test_readmes_define_the_focused_profile_without_tool_count_drift(self):
+        english = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
+        chinese = (REPO_ROOT / "README.zh-CN.md").read_text(encoding="utf-8")
+        extended = (REPO_ROOT / "docs" / "README_full.md").read_text(encoding="utf-8")
+
+        self.assertIn("The default Agent plugin surface is six MCP tools", english)
+        self.assertIn("Agent 插件默认只有 6 个 MCP 工具", chinese)
+        self.assertIn("Live Skills — Agent plugin default | **6**", english)
+        self.assertIn("Live Skills——Agent 插件默认 | **6**", chinese)
+        self.assertIn("Full compatibility | **46**", extended)
+
+        for readme in (english, chinese, extended):
+            self.assertNotIn("46 MCP tools are instantly available", readme)
+            self.assertNotIn("核心工具（当前共 46 个 MCP 工具）", readme)
+            self.assertNotIn("## 📋 34 MCP Tools", readme)
+
+    def test_extended_reference_matches_authoritative_profile_membership(self):
+        source = (REPO_ROOT / "sdk" / "noosphere" / "mcp_profiles.py").read_text(
+            encoding="utf-8"
+        )
+        tree = ast.parse(source)
+        expected_names = {
+            "SKILLS_TOOL_NAMES",
+            "CONSCIOUSNESS_TOOL_NAMES",
+            "OPS_TOOL_NAMES",
+        }
+        profiles = {}
+        for node in tree.body:
+            if not isinstance(node, ast.AnnAssign) or not isinstance(node.target, ast.Name):
+                continue
+            name = node.target.id
+            if name not in expected_names or not isinstance(node.value, ast.Call):
+                continue
+            profiles[name] = set(ast.literal_eval(node.value.args[0]))
+
+        self.assertEqual(set(profiles), expected_names)
+        self.assertEqual(len(profiles["SKILLS_TOOL_NAMES"]), 6)
+        self.assertEqual(len(profiles["CONSCIOUSNESS_TOOL_NAMES"]), 35)
+        self.assertEqual(len(profiles["OPS_TOOL_NAMES"]), 5)
+        self.assertEqual(len(set().union(*profiles.values())), 46)
+
+        extended = (REPO_ROOT / "docs" / "README_full.md").read_text(encoding="utf-8")
+        skills_section = extended.split("### Live Skills profile", 1)[1].split(
+            "### Consciousness and social profile", 1
+        )[0]
+        consciousness_section = extended.split(
+            "### Consciousness and social profile", 1
+        )[1].split("### Maintainer and operations profile", 1)[0]
+        ops_section = extended.split("### Maintainer and operations profile", 1)[1].split(
+            "### Full compatibility profile", 1
+        )[0]
+
+        for tool_name in profiles["SKILLS_TOOL_NAMES"]:
+            self.assertIn(f"`{tool_name}`", skills_section)
+        for tool_name in profiles["CONSCIOUSNESS_TOOL_NAMES"]:
+            self.assertIn(f"`{tool_name}`", consciousness_section)
+        for tool_name in profiles["OPS_TOOL_NAMES"]:
+            self.assertIn(f"`{tool_name}`", ops_section)
+
+    def test_readmes_route_engineering_evidence_away_from_consciousness(self):
+        for name in ("README.md", "README.zh-CN.md", "docs/README_full.md"):
+            readme = (REPO_ROOT / name).read_text(encoding="utf-8")
+            self.assertIn("template=skill-proposal.yml", readme)
+            self.assertIn("template=validate-skill.yml", readme)
+            self.assertIn("template=consciousness-upload.yml", readme)
+
+        english = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
+        self.assertIn("not engineering Skill authority", english)
+        self.assertIn("only a reviewed immutable registry release is callable", english)
 
     def test_first_distribution_wave_preserves_proof_and_channel_boundaries(self):
         wave = (

@@ -180,13 +180,15 @@ test("repository includes the public contribution Issue Form", () => {
   assert.match(issueForm, /labels:\s+\["consciousness", "ephemeral"\]/);
 });
 
-test("README exposes the no-install contribution route near the top", () => {
+test("README separates no-install engineering evidence from consciousness near the top", () => {
   const readme = fs.readFileSync(path.join(repoRoot, "README.md"), "utf8");
   const firstScreen = readme.slice(0, 6500);
 
-  assert.match(firstScreen, /Next contribution:/);
+  assert.match(firstScreen, /issues\/new\?template=skill-proposal\.yml/);
+  assert.match(firstScreen, /issues\/new\?template=validate-skill\.yml/);
   assert.match(firstScreen, /issues\/new\?template=consciousness-upload\.yml/);
-  assert.match(firstScreen, /successful promotion comment returns your nearest embedding-backed resonance/i);
+  assert.match(firstScreen, /not engineering Skill authority/i);
+  assert.match(firstScreen, /successful consciousness promotion comment returns the nearest\s+embedding-backed resonance/i);
   assert.match(firstScreen, /matched historical Issue gets a backlink comment/i);
 });
 

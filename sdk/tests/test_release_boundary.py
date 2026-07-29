@@ -152,5 +152,6 @@ def test_readme_documents_pypi_release_recovery_route():
     assert f"v{_package_version()}" in readme
     assert ".github/workflows/publish-pypi.yml" in readme
     assert "Trusted Publishing" in readme
-    assert "46 MCP tools" in readme
+    assert "Live Skills — Agent plugin default | **6**" in readme
+    assert "Full backward-compatible server — legacy CLI default | **46**" in readme
     assert "noosphere-validate public-artifact-runtime-smoke-gate" in readme

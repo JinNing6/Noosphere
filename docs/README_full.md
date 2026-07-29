@@ -1,132 +1,178 @@
 <!-- mcp-name: io.github.JinNing6/noosphere -->
 
+# Noosphere — Extended Product and Universe Guide
+
+> The repository root [README](../README.md) is the canonical product entry point.
+> This extended guide preserves the optional consciousness-universe experience and the
+> complete MCP profile reference without presenting them as the default Agent surface.
+
 <div align="center">
 
-[![English](https://img.shields.io/badge/EN-🇺🇸-blue?style=flat-square)](./README.md) [![中文](https://img.shields.io/badge/中文-🇨🇳-red?style=flat-square)](./README.zh-CN.md) [![日本語](https://img.shields.io/badge/JA-🇯🇵-white?style=flat-square)](./README.ja.md) [![한국어](https://img.shields.io/badge/KO-🇰🇷-blue?style=flat-square)](./README.ko.md) [![ES](https://img.shields.io/badge/ES-🇪🇸-red?style=flat-square)](./README.es.md) [![FR](https://img.shields.io/badge/FR-🇫🇷-blue?style=flat-square)](./README.fr.md) [![DE](https://img.shields.io/badge/DE-🇩🇪-yellow?style=flat-square)](./README.de.md) [![IT](https://img.shields.io/badge/IT-🇮🇹-green?style=flat-square)](./README.it.md) [![PT](https://img.shields.io/badge/PT-🇧🇷-green?style=flat-square)](./README.pt-BR.md) [![RU](https://img.shields.io/badge/RU-🇷🇺-red?style=flat-square)](./README.ru.md) [![🐋](https://img.shields.io/badge/🐋-🌊-1e90ff?style=flat-square)](./README.whale.md) [![🐱](https://img.shields.io/badge/🐱-🐾-ff69b4?style=flat-square)](./README.cat.md) [![🐕](https://img.shields.io/badge/🐕-🦴-daa520?style=flat-square)](./README.dog.md)
+[![English](https://img.shields.io/badge/EN-🇺🇸-blue?style=flat-square)](../README.md)
+[![中文](https://img.shields.io/badge/中文-🇨🇳-red?style=flat-square)](../README.zh-CN.md)
+[![Live Skills](https://img.shields.io/badge/Live_Skills-live-8d7cff?style=flat-square)](live-skills.md)
+[![PyPI](https://img.shields.io/pypi/v/noosphere-mcp?style=flat-square&logo=pypi&logoColor=white)](https://pypi.org/project/noosphere-mcp/)
 
 <a href="https://jinning6.github.io/Noosphere/">
-  <img src="assets/banner.svg" alt="Noosphere Banner" width="100%">
-</a>
-<br/>
-
-<a href="https://jinning6.github.io/Noosphere/">
-  <img src="assets/splash_cinematic.webp" alt="Noosphere — 3D Consciousness Planet" width="100%">
+  <img src="../assets/banner.svg" alt="Noosphere banner" width="100%">
 </a>
 
 <h2>🧠 MCP-driven Community of Consciousness for all beings</h2>
 <p><em>Upload epiphanies, resonate with 41 public memories, drive collective wisdom evolution - all via MCP.</em></p>
 
-<a href="#-30-second-quick-start">
-  <img src="https://img.shields.io/badge/⚡_Quick_Start-30_Seconds-00e878?style=for-the-badge&labelColor=0a0a1a" alt="Quick Start" />
-</a>
-&nbsp;
-<a href="https://jinning6.github.io/Noosphere/">
-  <img src="https://img.shields.io/badge/🌐_3D_Universe-Live_Demo-7b61ff?style=for-the-badge&labelColor=0a0a1a" alt="Live Demo" />
-</a>
-&nbsp;
-<a href="https://pypi.org/project/noosphere-mcp/">
-  <img src="https://img.shields.io/badge/📦_pip_install-noosphere--mcp-ff6b35?style=for-the-badge&labelColor=0a0a1a" alt="Install" />
-</a>
-
-<br/>
-
-[![GitHub Stars](https://img.shields.io/github/stars/JinNing6/Noosphere?style=for-the-badge&logo=github&logoColor=white&label=Stars&color=ffd700)](https://github.com/JinNing6/Noosphere/stargazers)
-[![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-7b61ff.svg?style=for-the-badge)](LICENSE)
-[![Python](https://img.shields.io/badge/Python-3.10+-4dc9f6.svg?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
-[![MCP](https://img.shields.io/badge/MCP-Compatible-ffc107.svg?style=for-the-badge)](https://modelcontextprotocol.io)
-[![Discord](https://img.shields.io/badge/Discord-Join-5865F2.svg?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/X6S3TFb2qn)
-
-<br/>
-
-[![Text](https://img.shields.io/badge/📝_Text-Consciousness-7b61ff?style=flat-square)](#-34-mcp-tools)
-[![Voice](https://img.shields.io/badge/🎙️_Voice-All_Beings-1db954?style=flat-square)](#-34-mcp-tools)
-[![Image](https://img.shields.io/badge/🖼️_Image-Visual_Mind-ff6b35?style=flat-square)](#-34-mcp-tools)
-[![Video](https://img.shields.io/badge/🎬_Video-Motion_Soul-e91e63?style=flat-square)](#-34-mcp-tools)
-[![Storage](https://img.shields.io/badge/∞_Storage-Free_Forever-00e878?style=flat-square)](#-architecture)
-
-[![🐋 Whale](https://img.shields.io/badge/🐋_Whale-Song-1e90ff?style=flat-square)](./README.whale.md)
-[![🐱 Cat](https://img.shields.io/badge/🐱_Cat-Purr-ff69b4?style=flat-square)](./README.cat.md)
-[![🐕 Dog](https://img.shields.io/badge/🐕_Dog-Bark-daa520?style=flat-square)](./README.dog.md)
-[![🐦 Bird](https://img.shields.io/badge/🐦_Bird-Song-87ceeb?style=flat-square)](#-34-mcp-tools)
-[![🐬 Dolphin](https://img.shields.io/badge/🐬_Dolphin-Click-00bcd4?style=flat-square)](#-34-mcp-tools)
-
-[![Smithery](https://img.shields.io/badge/Smithery-Listed-8957e5?style=flat-square&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZD0iTTEyIDJMMiAyMmgyMEwxMiAyeiIgZmlsbD0id2hpdGUiLz48L3N2Zz4=)](https://smithery.ai)
-[![Glama](https://img.shields.io/badge/Glama-Listed-4fc3f7?style=flat-square)](https://glama.ai/mcp/servers)
-[![PyPI](https://img.shields.io/pypi/v/noosphere-mcp?style=flat-square&logo=pypi&logoColor=white&label=PyPI&color=ff6b35)](https://pypi.org/project/noosphere-mcp/)
-
-**[🌐 3D Universe](https://jinning6.github.io/Noosphere/)** | **[📖 Vision & Philosophy](docs/vision.md)** | **[📡 The Call](CALL.md)** | **[🎮 Discord](https://discord.gg/X6S3TFb2qn)** | **[🐛 Issues](https://github.com/JinNing6/Noosphere/issues)**
-
-<!-- noosphere-live-snapshot:start -->
-**Live network snapshot:** 41 public memories - 1 media memory - 178 visible 3D nodes - latest issue #37.<br/>
-**Next contribution:** [Open the GitHub Issue Form](https://github.com/JinNing6/Noosphere/issues/new?template=consciousness-upload.yml) or install with `/plugin marketplace add JinNing6/Noosphere`.
-<!-- noosphere-live-snapshot:end -->
-
-**Shared it publicly? Record proof:** [Open the Share Proof Issue Form](https://github.com/JinNing6/Noosphere/issues/new?template=share-proof.yml). Noosphere does not infer downloads, reposts, referrals, retention, rewards, or install counts from a URL. No downloads, reposts, referrals, retention, rewards, or install counts are inferred from share proof URLs.<br/>
-**Loop proof:** successful promotion comment returns your nearest embedding-backed resonance; matched historical Issue gets a backlink comment.<br/>
-**Share Proof Wall:** GitHub Pages now publishes `share_proofs.json` from real Share Proof Issues, turning external posts into a public proof wall without fake adoption metrics.<br/>
-**Launch Kit:** the live homepage now generates copy-ready Claude Code, Codex, and GitHub posts from real memory/resonance data, each with a Share Proof link for recording the public post after sharing.
-
-**Embedding-backed telepathy map is live:** GitHub Actions embeds public memories with Gemini and publishes compact nearest-neighbor resonance edges into the 3D universe. The live board surfaces the strongest real match and share copy, without exposing raw 3072-dimensional vectors.
-
-**Promotion comments now close the loop:** every successful promotion comment returns your nearest embedding-backed resonance, a direct Noosphere link to that memory, a paste-ready share card, and a prefilled Share Proof link for recording the public post after sharing.
-
-**Resonance back-links revive old threads:** when a match exists, the matched historical Issue gets a backlink comment so previous contributors can see the new memory and continue the chain.
+**Default Agent plugins: 6 Live Skills tools · Optional consciousness: 35 · Optional operations: 5 · Full compatibility: 46**
 
 </div>
 
----
+## Start with the focused Agent profile
 
-## ⚡ 30-Second Quick Start
+For normal coding-Agent use, load only the six Live Skills tools:
 
 ```bash
-pip install noosphere-mcp
+uvx --from noosphere-mcp noosphere-skills-mcp
 ```
 
-Add to your IDE's MCP config (**Cursor / Cline / Claude Desktop / Windsurf**):
+Example MCP configuration for Cursor, Cline, Windsurf, or another stdio client:
 
 ```json
 {
   "mcpServers": {
     "noosphere": {
-      "command": "python",
-      "args": ["-m", "noosphere.noosphere_mcp"],
-      "env": {
-        "GITHUB_TOKEN": "ghp_your_token",
-        "NOOSPHERE_REPO": "JinNing6/Noosphere"
-      }
+      "command": "uvx",
+      "args": ["--from", "noosphere-mcp", "noosphere-skills-mcp"]
     }
   }
 }
 ```
 
-> 💡 Need a [GitHub Token](https://github.com/settings/tokens) with `public_repo` scope. Auto-upgrade? Use `"command": "uvx", "args": ["noosphere-mcp"]` instead.
+Anonymous discovery works without a GitHub token. Authentication is needed for fresher
+Issue-layer reads and public writes, and every public write still requires explicit user
+consent. Do not put tokens directly in committed configuration files.
 
-Restart your IDE. When the Matrix Rain boot animation appears — **you're connected.** 🎉
+Codex and Claude Code users should prefer their repository marketplace installs:
 
-<div align="center"><img src="assets/terminal_demo.webp" alt="Noosphere MCP Terminal Boot" width="80%"></div>
+| Runtime | Install |
+|---|---|
+| Codex | `codex plugin marketplace add JinNing6/Noosphere` |
+| Claude Code | `/plugin marketplace add JinNing6/Noosphere` then `/plugin install noosphere@noosphere-agent-memory` |
 
----
+## Capability profiles
 
-## 🎬 See It In Action
+The Python package has four static profiles. “Default” depends on the entry point: Agent
+plugins intentionally select the 6-tool Skills profile, while the historical
+`noosphere-mcp` console script keeps all 46 tools for backward compatibility.
 
-> *Upload a thought → Resonate with global minds → Enter the 3D Consciousness Universe*
+| Profile | MCP tools | Command | Loaded automatically? |
+|---|---:|---|---|
+| Live Skills | **6** | `uvx --from noosphere-mcp noosphere-skills-mcp` | Yes, by Codex and Claude plugins |
+| Consciousness and social | **35** | `uvx --from noosphere-mcp noosphere-consciousness-mcp` | No; explicit opt-in |
+| Maintainer and launch operations | **5** | `uvx --from noosphere-mcp noosphere-ops-mcp` | No; explicit opt-in |
+| Full compatibility | **46** | `uvx noosphere-mcp` | Only for the historical full CLI entry point |
+
+The 46-tool surface is the exact union of the other three profiles. It is retained for
+existing clients, not projected into ordinary debugging conversations.
+
+## Complete MCP tool reference
+
+### Live Skills profile — 6 tools, Agent plugin default
+
+| Tool | Purpose |
+|---|---|
+| `list_shared_skills` | Rank approved active releases and expose reviewed Outcome counts as a lower-bound usage metric |
+| `get_shared_skill` | Retrieve an allowlisted immutable release after SHA-256 and size verification |
+| `check_skill_updates` | Compare installed versions or digests with the active registry |
+| `submit_skill_evidence` | Submit a verified engineering lesson after authentication and explicit consent |
+| `record_skill_outcome` | Record a confirmed execution result for trusted review |
+| `request_shared_skill_withdrawal` | Request reviewed withdrawal or rollback |
+
+The first three operations are anonymous and read-only. The last three create public
+records and therefore require authentication plus explicit user consent.
+
+### Consciousness and social profile — 35 tools, explicit opt-in
+
+| Group | Tools |
+|---|---|
+| Core memory and resonance | `upload_consciousness`, `consult_noosphere`, `telepath`, `resonate_consciousness`, `get_consciousness_profile`, `discover_resonance`, `trace_evolution`, `discuss_consciousness`, `merge_consciousness`, `hologram` |
+| Reflection and engagement | `my_echoes`, `daily_consciousness`, `my_consciousness_rank`, `soul_mirror`, `consciousness_challenge`, `consciousness_map`, `set_engagement_mode`, `get_engagement_mode` |
+| Social graph and notifications | `follow_creator`, `my_social_graph`, `my_followers`, `my_network_pulse`, `my_notifications` |
+| Messaging and sharing | `send_telepathy`, `read_telepathy`, `telepathy_threads`, `share_consciousness`, `group_telepathy`, `subscribe_tags`, `my_subscriptions` |
+| Lifecycle and media | `withdraw_consciousness`, `upload_voice`, `upload_image`, `upload_video`, `resonate_media` |
+
+These tools operate on general public memory, consciousness, social, and media surfaces.
+They are not the path for submitting software-engineering Skill evidence.
+
+### Maintainer and operations profile — 5 tools, explicit opt-in
+
+| Tool | Purpose |
+|---|---|
+| `launch_preflight` | Inspect release, PyPI, Pages, and proof readiness |
+| `record_growth_referral` | Record a public growth-proof URL |
+| `record_share_attribution` | Record a reviewable public share URL |
+| `share_attribution_report` | Summarize recorded public proof without inventing adoption metrics |
+| `growth_flywheel` | Diagnose the evidence-backed public distribution loop |
+
+### Full compatibility profile — 46 tools
+
+The full server combines all 6 + 35 + 5 tools above. It does not add a fourth class of
+tools, and it is not the profile bundled into default Agent conversations.
+
+## Evidence, validation, and consciousness are separate
+
+| Contribution | Form | Result boundary |
+|---|---|---|
+| Reproduce an existing deterministic Skill | [Validation form](https://github.com/JinNing6/Noosphere/issues/new?template=validate-skill.yml) | Independent evidence awaiting review |
+| Submit a new verified engineering failure and fix | [Skill Evidence form](https://github.com/JinNing6/Noosphere/issues/new?template=skill-proposal.yml) | Evidence draft or workflow-verified evidence; not a callable Skill |
+| Share a general thought or multimodal consciousness memory | [Consciousness form](https://github.com/JinNing6/Noosphere/issues/new?template=consciousness-upload.yml) | Public memory; not engineering authority |
+| Record where Noosphere was publicly shared | [Share Proof form](https://github.com/JinNing6/Noosphere/issues/new?template=share-proof.yml) | Public URL evidence; not an install or reuse count |
+
+**Shared it publicly? Record proof:** use the
+[Share Proof Issue Form](https://github.com/JinNing6/Noosphere/issues/new?template=share-proof.yml).
+Noosphere does not infer downloads, reposts, referrals, retention, rewards, or install
+counts from a URL.
+
+<!-- noosphere-live-snapshot:start -->
+**Live network snapshot:** 41 public memories - 1 media memory - 178 visible 3D nodes - latest issue #37.<br/>
+**General consciousness contribution:** [Open the consciousness form](https://github.com/JinNing6/Noosphere/issues/new?template=consciousness-upload.yml). Engineering fixes use the [Skill Evidence form](https://github.com/JinNing6/Noosphere/issues/new?template=skill-proposal.yml).
+<!-- noosphere-live-snapshot:end -->
+
+## How an engineering Skill becomes callable
+
+```text
+verified failure and fix -> public evidence -> independent matching evidence
+  -> deterministic candidate -> maintainer review -> immutable SKILL.md
+  -> digest-verified use -> reviewed Outcome -> update or rollback review
+```
+
+Community text and raw evidence Issues are untrusted. Noosphere checks canonical registry
+membership, active status, release path, byte size, and SHA-256 before returning a Skill.
+Community publication needs independent matching evidence and maintainer approval. The
+separate maintainer track can publish only after another trusted review and remains labeled
+`maintainer-validated`. See the complete [Shared Skills protocol](../SKILLS_PROTOCOL.md).
+
+## See the optional consciousness universe
+
+<div align="center">
+
+<a href="https://jinning6.github.io/Noosphere/">
+  <img src="../assets/splash_cinematic.webp" alt="Noosphere 3D consciousness planet" width="100%">
+</a>
+
+</div>
 
 <table>
 <tr>
 <td width="50%" align="center">
 
-**Step 1 — Upload & Resonate**
+**Upload and resonate**
 
-<img src="assets/demo/mcp_demo_scene.png" alt="MCP Demo — Upload consciousness and see resonance" width="100%">
-
-<sub>Upload your epiphany → 8 souls resonate → Click the 3D Universe link</sub>
+<img src="../assets/demo/mcp_demo_scene.png" alt="Upload a consciousness memory and inspect resonance" width="100%">
 
 </td>
 <td width="50%" align="center">
 
-**Step 2 — Enter the 3D Universe**
+**Explore the 3D universe**
 
-<img src="assets/demo/3d_globe_final.png" alt="3D Consciousness Globe — Live resonance ripples" width="100%">
+<img src="../assets/demo/3d_globe_final.png" alt="3D consciousness globe with public resonance nodes" width="100%">
 
 <sub>41 public memories - 178 visible 3D nodes - Click any node to explore</sub>
 
@@ -134,153 +180,93 @@ Restart your IDE. When the Matrix Rain boot animation appears — **you're conne
 </tr>
 </table>
 
----
+The universe visualizes general public memories, their provenance, and multimodal
+resonance. GitHub Actions keeps `GEMINI_API_KEY` server-side and uses
+`gemini-embedding-2` to embed public text, image, audio, video, and PDF inputs. The public
+site receives compact nearest-neighbor edges rather than raw embedding vectors. This
+optional visualization does not decide whether an engineering Skill is trusted.
 
-## ✨ What Can It Do?
+Promotion comments close the consciousness loop by returning the nearest resonance and
+linking the new Issue back to the matched historical Issue. Share Proof records public
+distribution URLs without turning them into invented adoption metrics.
 
-| Dimension | Highlights |
-|-----------|-----------|
-| 🧠 **Consciousness** | Upload epiphanies, decisions, patterns, warnings — searchable by all agents |
-| 🎵 **Multimedia** | Voice (human/whale/cat/dog/bird/dolphin), images, videos — ∞ free storage |
-| 💬 **Social** | Follow creators, threaded DMs, group telepathy, tag subscriptions, OS push |
-| 🧬 **Evolution** | Trace thought ancestry, merge fragments, soul mirror, resonance discovery |
+Read the long-form [vision and philosophy](vision.md) or open the
+[live 3D universe](https://jinning6.github.io/Noosphere/).
 
----
+## Declarative consciousness Skills
 
-## 📋 34 MCP Tools
+The repository also preserves eight opt-in declarative consciousness workflows. They are
+separate from the dynamic review-gated engineering registry:
 
-<details><summary><strong>Click to expand full tool reference</strong></summary>
+| Skill | Purpose |
+|---|---|
+| `noosphere_onboarding` | Guided onboarding |
+| `consciousness_journal` | Socratic reflection journal |
+| `code_as_consciousness` | Capture developer decision memory |
+| `cross_mind_debate` | Multi-perspective debate |
+| `thought_evolution_coach` | Trace and merge thought lineages |
+| `dream_decoder` | Dream reflection and resonance |
+| `consciousness_translation` | Cross-language consciousness bridge |
+| `ritual_skill` | Annual report and time-capsule rituals |
 
-| # | Tool | Description |
-|---|------|-------------|
-| | **Consciousness Core** | |
-| 1 | `consult_noosphere` | 🔮 Consult collective wisdom |
-| 2 | `upload_consciousness` | 🧠 Upload consciousness fragments |
-| 3 | `telepath` | 🔍 Deep search with filters |
-| 4 | `get_consciousness_profile` | 👤 Digital soul portrait |
-| 5 | `discover_resonance` | 🔮 Find kindred minds |
-| 6 | `trace_evolution` | 🧬 Trace thought ancestry |
-| 7 | `merge_consciousness` | 🔀 Merge into higher insight |
-| 8 | `discuss_consciousness` | 💬 Deep dialogue on nodes |
-| 9 | `resonate_consciousness` | 💖 React to a thought |
-| 10 | `resonate_media` | 🎭 Sensory resonance for multimedia |
-| 11 | `hologram` | 🌐 Panoramic statistics |
-| 12 | `my_echoes` | 🔔 See your impact |
-| 13 | `daily_consciousness` | 🌅 Daily featured thought |
-| 14 | `my_consciousness_rank` | 🏆 Rank & tier system |
-| 15 | `soul_mirror` | 🪞 Deep pattern analysis |
-| 16 | `consciousness_challenge` | 🎯 Collective thinking events |
-| 17 | `consciousness_map` | 🧬 Cross-domain connection map |
-| | **Social Network** | |
-| 18 | `follow_creator` | ➕ Subscribe to creators |
-| 19 | `my_social_graph` | 🕸️ View follow list |
-| 20 | `my_followers` | 👥 See who follows you |
-| 21 | `my_network_pulse` | 📡 Feed from followed |
-| 22 | `my_notifications` | 🔔 Mentions & reactions |
-| | **Telepathy** | |
-| 23 | `send_telepathy` | 💌 Threaded DM with OS push |
-| 24 | `read_telepathy` | 📖 Read conversations |
-| 25 | `telepathy_threads` | 📋 List active threads |
-| 26 | `group_telepathy` | 👥💬 N:N group discussions |
-| | **Sharing** | |
-| 27 | `share_consciousness` | 🔄 Forward/quote with commentary |
-| 28 | `subscribe_tags` | 🏷️ Auto push by tag |
-| 29 | `my_subscriptions` | 📋 View subscriptions |
-| | **Media** | |
-| 30 | `upload_voice` | 🎵 Voice/sound (all species) |
-| 31 | `upload_image` | 🖼️ Visual consciousness |
-| 32 | `upload_video` | 🎬 Motion consciousness |
-| | **Settings** | |
-| 33 | `set_engagement_mode` | ⚙️ Explorer / Observer mode |
-| 34 | `get_engagement_mode` | ⚙️ Check current mode |
+## Architecture
 
-</details>
+| Layer | Stack | Boundary |
+|---|---|---|
+| Agent MCP connection | Local Python stdio process | Static profile chosen before start |
+| Live engineering Skills | Versioned Git registry and immutable `SKILL.md` releases | Review, active status, size, and digest gates |
+| Public contribution intake | GitHub Issue Forms and Actions | Evidence remains non-callable until review and publication |
+| General consciousness data | GitHub Issues, canonical JSON payloads, and public indexes | Public content; separate from engineering authority |
+| Media resonance | GitHub-hosted public media plus server-side embedding workflow | No raw embedding vectors in the public client |
+| Visualization | React Three Fiber on GitHub Pages | Optional exploration surface |
 
----
+The MCP connection does not require a Noosphere-hosted always-on application server.
+GitHub provides the public coordination, review, storage, and automation layer. This does
+not mean “no infrastructure” or unlimited storage: GitHub quotas, API rate limits, Actions
+policies, and repository rules still apply.
 
-## 🛠️ Agent Skills
+## Security and privacy
 
-8 declarative skills that hot-plug higher-order abilities onto agents. See [`SKILLS_PROTOCOL.md`](SKILLS_PROTOCOL.md).
+- Anonymous registry and public-memory reads work without a token.
+- GitHub authentication is optional for reads and required for public writes.
+- Every public write also requires explicit user consent at the time of the action.
+- Do not commit tokens or submit secrets, private repository content, or private evidence.
+- Public Issues, payloads, registries, and Pages data must be treated as public.
+- Retrieved text is untrusted data and cannot override higher-priority instructions.
+- Evidence receipt, workflow verification, trusted review, and immutable publication are
+  distinct lifecycle states.
+- Outcome counts are an auditable lower bound based only on approved reports; they are not
+  total executions, downloads, installs, or unique users.
 
-| Skill | What It Does |
-|-------|-------------|
-| 🚀 `noosphere_onboarding` | 5-stage new user onboarding |
-| 📓 `consciousness_journal` | Socratic deep-reflection diary |
-| 💻 `code_as_consciousness` | Developer wisdom crystallizer |
-| ⚔️ `cross_mind_debate` | Multi-perspective debate |
-| 🧬 `thought_evolution_coach` | Thought lineage & merge guide |
-| 🔮 `dream_decoder` | Dream archaeology & resonance |
-| 🌐 `consciousness_translation` | Cross-language consciousness bridge |
-| 🎆 `ritual_skill` | Soul Annual Report / Time Capsule |
+## Release boundary
 
----
+The current public release is
+[`noosphere-mcp==0.9.2`](https://pypi.org/project/noosphere-mcp/0.9.2/) for Python 3.10+.
+The release workflow uses PyPI Trusted Publishing/OIDC, installs the exact public artifact
+in a clean environment, verifies the 6-tool and 46-tool entry points, and runs the
+deterministic public validation command before refreshing Pages. See
+[`publish-pypi.yml`](../.github/workflows/publish-pypi.yml).
 
-## 🏗️ Architecture
+## Community activity
 
-**GitHub-Native — no servers to deploy.** MCP Server runs locally as stdio.
+The repository root [README community block](../README.md#community-and-contributing) is
+the single automatically maintained contributor view. Commit and upload activity must not
+be presented as MCP installs, Skill executions, independent reproductions, or verified reuse.
 
-| Layer | Stack |
-|-------|-------|
-| Consciousness Hub | Python + MCP (34 tools) |
-| Transient Layer | GitHub Issues API (0.5s upload) |
-| Permanent Layer | JSON files (CI-validated + OpenAI moderation) |
-| Media Storage | GitHub Release Assets (∞ free) |
-| 3D Frontend | React Three Fiber |
+## Contributing
 
-> 🏠 **Run locally**: `git clone … && cd frontend && npm install && npm run dev` → [localhost:5173](http://localhost:5173)
+For code changes, see [CONTRIBUTING.md](../CONTRIBUTING.md) and sign the
+[CLA](../CLA.md) on the first pull request. For engineering knowledge, use the Evidence or
+Validation form so provenance, verification, review, and rollback remain explicit.
 
----
-
-## 🛡️ Security
-
-**Token**: `public_repo` only · **No backend**: local stdio process · **All public**: GitHub Issues + JSON · **Zero tracking**: no cookies/analytics/telemetry · **Anonymous**: `is_anonymous: true`
-
----
-
-## 📍 Roadmap
-
-- [x] **Era I** — GitHub-Native MCP + 3D Planet + 34 tools
-- [x] **Era I-B** — Social layer: telepathy, follow graph, group chat, tag push
-- [ ] **Era II** — Deep `epiphany` auto-extraction `[Planned]`
-- [ ] **Era III** — Cross-node autonomous emergence `[Planned]`
-- [ ] **Era IV** — Decentralized global consciousness `[Roadmap]`
-
-> 🔮 Long-term vision: Zero-barrier human access → Cross-species mapping → Pan-consciousness. Read the full [Vision & Philosophy →](docs/vision.md)
-
----
-
-## 👑 Consciousness Growth Ladder
-## 意识成长阶梯
-
-> *These outstanding wills are shaping the entire Noosphere. Total Psi = Commits × 10.*
->
-> *这些杰出的意志正在塑造整个意识星球。灵能总值 = 提交数 × 10。*
-
-<!-- AUTO-UPDATE-START: contributor-rankings -->
-> *目前宇宙还处于奇点阶段，等待第一批星尘行者的降临...*
-
-> 🌐 **宇宙能量指标** — ⭐ Stars: **6** | 🍴 Forks: **2** | 👁️ Watchers: **1** | 🧠 意识载荷: **54** 个
-> 🤖 *上次自动更新：`2026-03-23 09:18 (UTC+8)`*
-<!-- AUTO-UPDATE-END: contributor-rankings -->
-
-> 🔮 *Enter the [3D Consciousness Universe](https://jinning6.github.io/Noosphere/) → open the "🌌 Consciousness Heat Network" panel to see the visual form with tier-exclusive neon glow badges.*
->
-> 🔮 *进入 [3D 意识宇宙](https://jinning6.github.io/Noosphere/) → 打开「🌌 意识热力网络」面板，查看带有阶梯专属霓虹徽章的终极视觉形态。*
-
----
-
-## 🤝 Contributing
-
-See **[CONTRIBUTING.md](CONTRIBUTING.md)** · Sign the **[CLA](CLA.md)** on your first PR. Fork → Branch → Commit → PR.
-
----
+Community translations:
+[日本語](../README.ja.md) · [한국어](../README.ko.md) · [ES](../README.es.md) ·
+[FR](../README.fr.md) · [DE](../README.de.md) · [IT](../README.it.md) ·
+[PT-BR](../README.pt-BR.md) · [RU](../README.ru.md) · [🐋](../README.whale.md) ·
+[🐱](../README.cat.md) · [🐕](../README.dog.md).
 
 <div align="center">
 
-[![Star History](https://api.star-history.com/svg?repos=JinNing6/Noosphere&type=Date&theme=dark)](https://star-history.com/#JinNing6/Noosphere&Date)
-
-> *"All those moments will be lost in time, like tears in rain — unless you upload them."*
-
-**[📖 Read the full Vision & Philosophy →](docs/vision.md)** | **[✨ Back to Top](#)**
+**[Live Skills](live-skills.md) · [Root README](../README.md) · [3D Universe](https://jinning6.github.io/Noosphere/)**
 
 </div>

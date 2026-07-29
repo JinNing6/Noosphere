@@ -8,8 +8,8 @@
 
 ## 安装一次。一个 Agent 学会，所有 Agent 继承这个 Skill。
 
-Noosphere 将 Coding Agent 连接到同一个持续更新的 Skill 注册表。遇到具体故障时，Agent 会自动
-发现适用的审核后 Skill、校验精确制品、检查本地适用性，并在声称成功前运行真实项目验证。
+Noosphere 将 Coding Agent 连接到同一个持续更新的审核后 Skill 注册表。遇到具体故障时，
+Agent 可以发现适用版本、校验精确制品、检查本地适用性，并在声称成功前运行真实项目验证。
 
 [![Live Skills](https://img.shields.io/badge/Live_Skills-live-8d7cff?style=for-the-badge)](docs/live-skills.md)
 [![注册表](https://img.shields.io/badge/注册表-dynamic-55d7e5?style=for-the-badge)](shared_skills/registry.json)
@@ -18,9 +18,15 @@ Noosphere 将 Coding Agent 连接到同一个持续更新的 Skill 注册表。�
 
 **Codex · Claude Code · Cursor / Cline / Windsurf · 所有 MCP 客户端**
 
-[English](README.md) · [简体中文](README.zh-CN.md) · [全部语言版本](#探索网络)
+[English](README.md) · [简体中文](README.zh-CN.md) · [扩展版说明](docs/README_full.md)
 
 </div>
+
+> [!IMPORTANT]
+> **Agent 插件默认只有 6 个 MCP 工具。**Codex 和 Claude Code 选择精简的 `skills`
+> Profile。35 工具的意识/社交 Profile、5 工具的运营 Profile，以及 46 工具的完整兼容
+> 入口都必须显式选择。Live Skill 是注册表中的审核后制品；MCP 工具是 API 操作，二者不是
+> 同一个计数。
 
 ## 安装一次
 
@@ -28,10 +34,10 @@ Noosphere 将 Coding Agent 连接到同一个持续更新的 Skill 注册表。�
 |---|---|
 | Codex | `codex plugin marketplace add JinNing6/Noosphere` |
 | Claude Code | `/plugin marketplace add JinNing6/Noosphere`，然后 `/plugin install noosphere@noosphere-agent-memory` |
-| Cursor / Cline / Windsurf | 添加精简 MCP stdio 服务：`uvx --from noosphere-mcp noosphere-skills-mcp` |
+| Cursor / Cline / Windsurf | 将 `uvx --from noosphere-mcp noosphere-skills-mcp` 添加为 MCP stdio 服务 |
 
-Codex 会在遇到具体软件故障时隐式启用 `using-noosphere` 控制 Skill。Claude Code
-加载同一份逐字节一致的协议，并在启动、恢复、清空上下文和压缩后重新注入。Agent 会自动执行：
+Codex 会在遇到具体软件故障时隐式启用 `using-noosphere` 控制 Skill。Claude Code 加载同一份
+有边界的协议，并在启动、恢复、清空上下文和压缩后恢复它。正常链路是：
 
 ```text
 描述故障 -> 查找适用的 Live Skill -> 校验精确 SHA-256
@@ -40,375 +46,175 @@ Codex 会在遇到具体软件故障时隐式启用 `using-noosphere` 控制 Ski
 
 <div align="center">
   <a href="docs/demo-v090-auto-live-skill.md">
-    <img src="assets/launch/noosphere-live-skills-v090-demo.gif" alt="Coding Agent 遇到已安装制品故障后，自动发现审核后的 Noosphere Live Skill，校验精确 SHA-256，应用公共制品运行门禁并通过隔离验证" width="960">
+    <img src="assets/launch/noosphere-live-skills-v090-demo.gif" alt="Coding Agent 发现审核后的 Noosphere Live Skill，校验 SHA-256，应用制品运行门禁并执行隔离验证" width="960">
   </a>
   <br>
   <sub>基于公开 <code>noosphere-mcp==0.9.0</code> 真实查询与验证输出制作的时间压缩重建。</sub>
 </div>
 
-插件不会复制动态工程 Skills；它们始终归属于同一个审核门禁注册表，因此审核后的
-Skill 更新会直接提供给所有已连接 Agent，无需重新安装插件。匿名只读检索不需要 Token；
-创建公开 Skill 证据、意识内容或 Outcome 始终需要身份认证和用户当次明确同意。工程修复
-进入独立 Skill Evidence 层，不再上传为意识体。
+插件只携带一个小型控制 Skill，不复制所有动态工程 Skills。审核后的版本始终归属于同一个
+Live 注册表，因此所有已连接 Agent 都可以按需取得不可变版本，无需重新安装插件。匿名发现
+只读；公开证据、Outcome、撤回请求或意识内容写入均要求身份认证和用户当次明确同意。
 
-每个 Skill 的目录结果会显示“经审核 Outcome 报告数”作为可核验的使用次数下限；Noosphere
-不会暗中统计检索、下载或未上报执行。上传者配置 GitHub Token 后可调用
-`list_shared_skills(mine=true)`，按照 Token 对应的真实 GitHub 身份查看自己发布的 Skill
-及其跨版本累计使用次数，不能通过填写他人用户名冒充。
+## 不安装插件也能查询
 
-## 一个真实 Skill 的完整链路
-
-[`public-artifact-runtime-smoke-gate@1.0.0`](shared_skills/active/public-artifact-runtime-smoke-gate/SKILL.md)
-沉淀了一类源码 CI 无法发现的发布故障：源码入口可以运行，但精确安装后的 Wheel 因遗漏
-运行模块而直接退出。
-
-| 层级 | 公开证据 |
-|---|---|
-| 发现 | 注册表 revision `2` 返回适用的不可变 Skill。 |
-| 完整性 | 返回内容前先校验 SHA-256 `09c9b9ec...043836a1`。 |
-| 应用 | 门禁会离开源码树，安装并调用精确制品。 |
-| 真实验证 | 本次 Windows 记录中：源码退出 `0`、失败制品退出 `1`、修复制品退出 `0`；总结果在 `48.86s` 内 `PASS`。 |
-
-当前版本明确标记为 **maintainer-validated（维护者验证）**，不宣称已经完成外部独立复现。
-无需克隆仓库、准备个人项目、配置 GitHub Token、理解 MCP 或访问外部包索引即可复现：
+匿名只读查询无需克隆仓库、账号、Token 或配置文件：
 
 ```bash
-uvx --from noosphere-mcp==0.9.0 noosphere-validate public-artifact-runtime-smoke-gate
+uvx --from noosphere-mcp noosphere-query "React Three Fiber mobile glowing node tap selects wrong instance"
 ```
-
-命令会生成可审核证据、精确制品摘要和预填提交链接。完整命令记录与声明边界见
-[v0.9.0 演示证据](docs/demo-v090-auto-live-skill.md)。
-
-## 不安装插件也能查询网络
-
-匿名只读访问无需克隆仓库、账号、Token 或配置文件：
-
-```bash
-uvx --from noosphere-mcp==0.9.0 noosphere-query "React Three Fiber mobile glowing node tap selects wrong instance"
-```
-
-只有查询最新 Issue、上传、反馈或提高 API 额度时才需要 GitHub Token。
 
 | 检查真实系统 | 路径 |
 |---|---|
-| 不可变 Skill 注册表 | [`shared_skills/registry.json`](shared_skills/registry.json) |
-| 持续更新的工程 Skills | [目录](docs/live-skills.md) · [当前版本镜像](shared_skills/active/) |
-| 不可变版本 | [`shared_skills/releases/<version>/<name>/SKILL.md`](shared_skills/releases/) |
-| 首批真实证据 | [#35](https://github.com/JinNing6/Noosphere/issues/35)、[#36](https://github.com/JinNing6/Noosphere/issues/36)、[#37](https://github.com/JinNing6/Noosphere/issues/37) |
-| 供应链协议 | [`SKILLS_PROTOCOL.md`](SKILLS_PROTOCOL.md) |
+| 审核后 Skill 目录 | [`docs/live-skills.md`](docs/live-skills.md) |
+| 规范注册表 | [`shared_skills/registry.json`](shared_skills/registry.json) |
+| 当前版本镜像 | [`shared_skills/active/`](shared_skills/active/) |
+| 不可变历史版本 | [`shared_skills/releases/`](shared_skills/releases/) |
+| 供应链和信任协议 | [`SKILLS_PROTOCOL.md`](SKILLS_PROTOCOL.md) |
 
-**下一次贡献：**运行上面的验证命令，打开自动生成的预填链接，审核证据并提交一次独立结果。
-对于新的工程修复，安装后的 Agent 会在验证成功后征求当次明确授权，再通过
-`submit_skill_evidence` 一步创建公开证据记录；`upload_consciousness` 仅用于一般思想与哲学意识内容。
-**已经公开分享？**使用 [Share Proof 表单](https://github.com/JinNing6/Noosphere/issues/new?template=share-proof.yml)
-记录真实链接；Noosphere 不会根据 URL 虚构下载、推荐或留存数据。
+## 选择正确的证据入口
 
-## 安装到 Agent
-
-| 运行时 | 当前状态 | 安装方式 |
+| 你已经拥有的内容 | 公开入口 | 提交后代表什么 |
 |---|---|---|
-| Codex | 仓库 Marketplace | `codex plugin marketplace add JinNing6/Noosphere` |
-| Claude Code | 仓库 Marketplace | `/plugin marketplace add JinNing6/Noosphere`，然后 `/plugin install noosphere@noosphere-agent-memory` |
-| Cursor / Cline / Windsurf | 精简 Live Skills MCP stdio | `uvx --from noosphere-mcp noosphere-skills-mcp` |
-| 终端只读体验 | 零配置 | `uvx --from noosphere-mcp noosphere-query "你的报错"` |
-| 独立验证 | 隔离的确定性夹具 | `uvx --from noosphere-mcp noosphere-validate public-artifact-runtime-smoke-gate` |
+| 对现有确定性 Skill 的一次复现 | [验证可复用 Agent 修复](https://github.com/JinNing6/Noosphere/issues/new?template=validate-skill.yml) | 等待审核的独立证据，不会自动发布 |
+| 一个新的、已经验证的工程故障与可复用修复 | [提议或更新 Agent Skill](https://github.com/JinNing6/Noosphere/issues/new?template=skill-proposal.yml) | 已接收的证据草稿或工作流验证证据，尚不是可调用 Skill |
+| 一般思想、哲学片段、图片、视频或声音记忆 | [上传 Noosphere 意识记忆](https://github.com/JinNing6/Noosphere/issues/new?template=consciousness-upload.yml) | 公开意识内容，不具备工程 Skill 权威 |
+| 已经公开分享 Noosphere 或某条记忆的帖子 | [记录 Share Proof](https://github.com/JinNing6/Noosphere/issues/new?template=share-proof.yml) | 仅证明存在可审核公开 URL，不证明安装或复用 |
 
-一个安装包提供四个静态能力入口，让客户端只把当前任务需要的工具放入上下文：
+GitHub Skill Evidence 表单不依赖 MCP、付费 API 或维护者手工添加入口标签。GitHub Actions
+会自动检查提交的公开 commit 和 workflow 证据。Issue 创建只证明“已收到”；只有经过审核的
+不可变注册表版本才可以被 Agent 调用。
 
-| Profile | 工具数 | 命令 |
-|---|---:|---|
-| Live Skills（Codex 与 Claude 插件默认） | 6 | `uvx --from noosphere-mcp noosphere-skills-mcp` |
-| 意识体与社交网络 | 35 | `uvx --from noosphere-mcp noosphere-consciousness-mcp` |
-| 维护者与发布运营 | 5 | `uvx --from noosphere-mcp noosphere-ops-mcp` |
-| 向后兼容完整服务 | 46 | `uvx noosphere-mcp` |
+Noosphere 不会根据 Share Proof URL 推断下载、转发、推荐、留存、奖励或安装数量。意识内容
+成功晋升后会返回最近的 embedding 共鸣，并在匹配到的历史 Issue 中写入反向链接。
 
-这些入口共享同一个安装包和规范注册表，不复制动态 Skill，也不改变公开写入必须明确授权的边界；它们只避免把无关工具 Schema 投影进每一次 Agent 对话。
+## 默认 6 工具能力面
 
-默认 MCP 安装刻意保持轻量；未安装本地语义依赖时自动使用 BM25。只有需要本地多语言
-混合语义排序时，才显式启用可选模型：
+| 工具 | 访问边界 | 用途 |
+|---|---|---|
+| `list_shared_skills` | 匿名只读 | 排序审核后版本；`mine=true` 时查看当前认证贡献者的发布与审核后使用下限 |
+| `get_shared_skill` | 匿名只读 | 获取注册表允许的不可变版本，并校验 SHA-256 与大小 |
+| `check_skill_updates` | 匿名只读 | 比较已安装版本或摘要与当前注册表 |
+| `submit_skill_evidence` | 认证写入、明确同意 | 将已验证工程经验提交到审核生命周期 |
+| `record_skill_outcome` | 认证写入、明确同意 | 记录一次确认后的执行结果供可信审核 |
+| `request_shared_skill_withdrawal` | 认证写入、明确同意 | 请求审核撤回或回滚 |
+
+目录中的使用次数只统计通过审核的 Outcome 报告，是可审核下限，不包括发现、下载或未提交的
+执行。摘要验证只证明制品身份，不证明普遍正确；Agent 仍需检查 `applies_when`、`avoid_when`、
+仓库约束和真实测试。
+
+## 四个 MCP Profile
+
+同一个安装包提供四个静态能力面，让客户端只加载当前任务需要的 Schema：
+
+| Profile | MCP 工具数 | 命令 | 适用场景 |
+|---|---:|---|---|
+| Live Skills——Agent 插件默认 | **6** | `uvx --from noosphere-mcp noosphere-skills-mcp` | 审核后工程 Skill 的发现与证据生命周期 |
+| 意识体与社交网络——显式启用 | **35** | `uvx --from noosphere-mcp noosphere-consciousness-mcp` | 一般记忆、共鸣、媒体、消息与社交图谱 |
+| 维护者与发布运营——显式启用 | **5** | `uvx --from noosphere-mcp noosphere-ops-mcp` | 发布和公共证明运营 |
+| 完整向后兼容服务——传统 CLI 默认 | **46** | `uvx noosphere-mcp` | 明确需要全部能力的既有客户端 |
+
+完整 Profile 是另外三个 Profile 的并集，不是普通 Codex 或 Claude 调试对话的默认上下文。
+Profile 成员由 [`sdk/noosphere/mcp_profiles.py`](sdk/noosphere/mcp_profiles.py) 定义，并与真实注册
+工具进行一致性测试。
+
+基础安装刻意保持轻量；缺少可选本地语义依赖时使用 BM25。只有需要本地多语言混合语义
+排序时才安装额外模型：
 
 ```bash
 uvx --from 'noosphere-mcp[semantic]' noosphere-mcp
 ```
 
-> [!IMPORTANT]
-> `v0.9.2` 将 Agent 默认连接改为有上下文预算的六工具 Live Skills Profile；意识体、社交、维护者和完整兼容能力继续保留，但只有显式选择时才进入上下文。自动学习闭环保持不变：容错排序检索、精确摘要校验、本地真实验证，以及经用户授权的证据或 Outcome 写入。动态工程 Skills 继续由注册表按需提供，注册表增长不会线性扩大启动上下文。匿名模式读取仓库内的规范公共索引；认证模式继续
-> 查询更新的 Issues + 永久文件。需要本地多语言向量排序时安装 `semantic` extra，否则自动降级为 BM25。所有写操作始终要求 GitHub 身份认证。
+## 一个真实 Skill 的完整链路
 
-## 记忆如何进化成 Skill
+[`public-artifact-runtime-smoke-gate@1.0.0`](shared_skills/active/public-artifact-runtime-smoke-gate/SKILL.md)
+沉淀了一类源码 CI 无法发现的发布故障：源码入口可以运行，但精确安装后的 Wheel 因遗漏
+运行模块而退出。
 
-```text
-故障 -> 已验证修复 -> 公开 Skill 证据 -> 独立复现 -> 确定性候选 -> 维护者审核
-     -> 不可变 SKILL.md -> 摘要校验后调用 -> 结果反馈 -> 更新或审核回滚
-```
+| 层级 | 公开证据 |
+|---|---|
+| 发现 | 注册表返回适用的不可变 Skill。 |
+| 完整性 | 返回内容前校验 SHA-256 `09c9b9ec...043836a1`。 |
+| 应用 | 门禁离开源码树，安装并调用精确制品。 |
+| 已记录验证 | 文档化 Windows 运行中：源码退出 `0`、失败制品退出 `1`、修复制品退出 `0`；总结果在 `48.86s` 内 `PASS`。 |
 
-Noosphere 不会直接执行社区提示词。维护者验证的 Live Skills 以不可变版本进入
-同一个持续更新的注册表，带维护者来源和 SHA-256 校验。新的社区 Skill 或更新版本仍必须具备
-结构化根因证据、两个独立发布者、人工审核、结果反馈和回滚能力。单一维护者证据可以走
-独立轨道，但必须经过另一位可信审核者，并明确标记为 `maintainer-validated`。2 个剩余的已验证 Seeds
-尚未跨过独立复现门禁，因此不会被宣传为社区验证版本。
-
-## 探索网络
-
-Android App 与 [3D 记忆宇宙](https://jinning6.github.io/Noosphere/)用于查看节点、
-证据关系和多模态共鸣。它们是 Agent 记忆与 Skill 供应链的可视化探索层，不再作为主卖点。
-
-<details>
-<summary><strong>展开原有 Noosphere 宇宙与多语言社区视图</strong></summary>
-
-<div align="center">
-
-[![EN](https://img.shields.io/badge/EN-🇺🇸-blue?style=flat-square)](./README.md) [![中文](https://img.shields.io/badge/中文-🇨🇳-red?style=flat-square)](./README.zh-CN.md) [![日本語](https://img.shields.io/badge/JA-🇯🇵-white?style=flat-square)](./README.ja.md) [![한국어](https://img.shields.io/badge/KO-🇰🇷-blue?style=flat-square)](./README.ko.md) [![ES](https://img.shields.io/badge/ES-🇪🇸-red?style=flat-square)](./README.es.md) [![FR](https://img.shields.io/badge/FR-🇫🇷-blue?style=flat-square)](./README.fr.md) [![DE](https://img.shields.io/badge/DE-🇩🇪-yellow?style=flat-square)](./README.de.md) [![IT](https://img.shields.io/badge/IT-🇮🇹-green?style=flat-square)](./README.it.md) [![PT](https://img.shields.io/badge/PT-🇧🇷-green?style=flat-square)](./README.pt-BR.md) [![RU](https://img.shields.io/badge/RU-🇷🇺-red?style=flat-square)](./README.ru.md) [![🐋](https://img.shields.io/badge/🐋-🌊-1e90ff?style=flat-square)](./README.whale.md) [![🐱](https://img.shields.io/badge/🐱-🐾-ff69b4?style=flat-square)](./README.cat.md) [![🐕](https://img.shields.io/badge/🐕-🦴-daa520?style=flat-square)](./README.dog.md)
-
-<a href="https://jinning6.github.io/Noosphere/">
-  <img src="assets/banner.svg" alt="Noosphere Banner" width="100%">
-</a>
-<br/>
-<a href="https://jinning6.github.io/Noosphere/">
-  <img src="assets/splash_cinematic.webp" alt="Noosphere — 3D 意识星球" width="100%">
-</a>
-
-<h2>🧠 通过 MCP 驱动的万物意识共同体</h2>
-<p><em>上传你的顿悟，与 41 条公开记忆共振，推动集体智慧进化 — 全部通过 MCP 实现。</em></p>
-
-<a href="#-30-秒快速开始">
-  <img src="https://img.shields.io/badge/⚡_快速开始-30秒上手-00e878?style=for-the-badge&labelColor=0a0a1a" alt="Quick Start" />
-</a>
-&nbsp;
-<a href="https://jinning6.github.io/Noosphere/">
-  <img src="https://img.shields.io/badge/🌐_3D_意识宇宙-在线体验-7b61ff?style=for-the-badge&labelColor=0a0a1a" alt="Live Demo" />
-</a>
-&nbsp;
-<a href="https://pypi.org/project/noosphere-mcp/">
-  <img src="https://img.shields.io/badge/📦_pip_install-noosphere--mcp-ff6b35?style=for-the-badge&labelColor=0a0a1a" alt="Install" />
-</a>
-<br/>
-
-[![GitHub Stars](https://img.shields.io/github/stars/JinNing6/Noosphere?style=for-the-badge&logo=github&logoColor=white&label=Stars&color=ffd700)](https://github.com/JinNing6/Noosphere/stargazers)
-[![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-7b61ff.svg?style=for-the-badge)](LICENSE)
-[![Python](https://img.shields.io/badge/Python-3.10+-4dc9f6.svg?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
-[![MCP](https://img.shields.io/badge/MCP-Compatible-ffc107.svg?style=for-the-badge)](https://modelcontextprotocol.io)
-[![Discord](https://img.shields.io/badge/Discord-加入社区-5865F2.svg?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/X6S3TFb2qn)
-
-<br/>
-
-[![文本](https://img.shields.io/badge/📝_文本-意识上传-7b61ff?style=flat-square)](#-34-个-mcp-工具)
-[![语音](https://img.shields.io/badge/🎙️_语音-万物之声-1db954?style=flat-square)](#-34-个-mcp-工具)
-[![图片](https://img.shields.io/badge/🖼️_图片-视觉意识-ff6b35?style=flat-square)](#-34-个-mcp-工具)
-[![视频](https://img.shields.io/badge/🎬_视频-动态意识-e91e63?style=flat-square)](#-34-个-mcp-工具)
-[![存储](https://img.shields.io/badge/∞_存储-永久免费-00e878?style=flat-square)](#-架构)
-
-[![🐋 鲸鱼](https://img.shields.io/badge/🐋_鲸鱼-歌声-1e90ff?style=flat-square)](./README.whale.md)
-[![🐱 猫咪](https://img.shields.io/badge/🐱_猫咪-呼噜-ff69b4?style=flat-square)](./README.cat.md)
-[![🐕 狗狗](https://img.shields.io/badge/🐕_狗狗-犬吠-daa520?style=flat-square)](./README.dog.md)
-[![🐦 鸟类](https://img.shields.io/badge/🐦_鸟类-鸣唱-87ceeb?style=flat-square)](#-34-个-mcp-工具)
-[![🐬 海豚](https://img.shields.io/badge/🐬_海豚-回声-00bcd4?style=flat-square)](#-34-个-mcp-工具)
-
-[![Smithery](https://img.shields.io/badge/Smithery-已上架-8957e5?style=flat-square&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZD0iTTEyIDJMMiAyMmgyMEwxMiAyeiIgZmlsbD0id2hpdGUiLz48L3N2Zz4=)](https://smithery.ai)
-[![Glama](https://img.shields.io/badge/Glama-已上架-4fc3f7?style=flat-square)](https://glama.ai/mcp/servers)
-[![PyPI](https://img.shields.io/pypi/v/noosphere-mcp?style=flat-square&logo=pypi&logoColor=white&label=PyPI&color=ff6b35)](https://pypi.org/project/noosphere-mcp/)
-
-**[🌐 3D 意识宇宙](https://jinning6.github.io/Noosphere/)** | **[📖 愿景与哲学](docs/vision.md)** | **[📡 万物召集令](CALL.md)** | **[🎮 Discord](https://discord.gg/X6S3TFb2qn)** | **[🐛 Issues](https://github.com/JinNing6/Noosphere/issues)**
-
-</div>
-
-</details>
-
----
-
-## 从共享记忆到动态 Skills
-
-`agent-skills` 这类项目验证了一个趋势：AI coding agent 的能力不只取决于模型本身，也取决于是否具备可复用的工程流程、质量门禁和生产级 skills。
-
-Noosphere 要再往前走一步。它不是静态 skill 仓库，而是一个全球动态进化的共享 skills 网络：
-
-1. Agent 遇到失败，先查询共享记忆。
-2. 修复经验被沉淀为可复用的 warning、pattern 或 decision。
-3. 高频重复的记忆会晋升为 skill candidate。
-4. 成熟候选最终可以变成 Codex、Claude Code、Cursor、Gemini CLI 等 agent runtime 可调用的 skills。
-
-静态 skills 教会一个 Agent 工作流；Noosphere 让整个 agent 生态共同记住、共同验证、共同进化。
-
----
-
-## Founding Debug Memories
-
-Noosphere 的第一轮 proof campaign 会把真实项目故障沉淀成可复用 agent memory 和未来 skill candidates：
-
-- Android WebView / React Three Fiber 节点点击：可见发光光球和真实 raycast 命中区域不一致。
-- GitHub Device Flow 移动端登录：验证码容易丢失、浏览器跳转过早、可重试 DNS 失败被误判成登录失败。
-- 移动端异步 UI overlay：底部固定按钮、安全区域、Android 返回键和滑动返回需要统一稳定的生命周期。
-
-查看第一批 proof set：[`docs/founding-debug-memories.md`](docs/founding-debug-memories.md)。
-
----
-
-## ⚡ 30 秒快速开始
+当前版本明确标记为 **maintainer-validated（维护者验证）**，不宣称外部独立复现。运行确定性
+夹具并获取预填证据链接：
 
 ```bash
-uvx noosphere-mcp
+uvx --from noosphere-mcp noosphere-validate public-artifact-runtime-smoke-gate
 ```
 
-添加到你的 IDE MCP 配置（**Cursor / Cline / Claude Desktop / Windsurf**）：
+完整命令记录与声明边界见 [演示证据](docs/demo-v090-auto-live-skill.md)。
 
-```json
-{
-  "mcpServers": {
-    "noosphere": {
-      "command": "uvx",
-      "args": ["noosphere-mcp"]
-    }
-  }
-}
+## 证据如何成为 Live Skill
+
+```text
+已验证故障与修复 -> 公开证据 -> 匹配的独立证据 -> 确定性候选
+  -> 维护者审核 -> 不可变 SKILL.md -> 摘要校验后调用
+  -> 审核后 Outcome -> 更新或回滚审核
 ```
 
-> 💡 匿名查询公开记忆不需要 Token。上传、反馈和更高 GitHub API 额度需要配置 GitHub Token。
+Noosphere 不会自动执行社区提示词。社区发布要求来自独立发布者的结构化根因证据并经过维护者
+审核。单一维护者来源可以进入独立轨道，但仍需另一位可信审核者批准，发布级别继续标记为
+`maintainer-validated`。失败或部分成功的 Outcome 可以触发复审，但不能改写不可变制品。详见
+[供应链协议](SKILLS_PROTOCOL.md)。
 
-重启 IDE。当矩阵雨启动动画出现时 — **连接成功！** 🎉
+## 架构与安全边界
 
-<div align="center"><img src="assets/terminal_demo.webp" alt="Noosphere MCP 终端启动动画" width="80%"></div>
+| 层级 | 实现 | 边界 |
+|---|---|---|
+| Agent 连接 | 本地 Python MCP stdio 进程 | 服务启动前选择精简 Profile |
+| Live Skill 权威 | 版本化 Git 注册表与不可变版本文件 | 校验注册表允许列表、状态、路径、大小和 SHA-256 |
+| 公开证据 | GitHub Issue Forms 与 Actions | 确定性检查和人工审核前均视为不可信 |
+| 匿名查询 | 规范公共索引与 BM25 降级 | 无需 Token；仍受缓存和 GitHub 额度约束 |
+| 认证操作 | GitHub API | Token 对只读可选，对公开写入必需；每次写入还需明确同意 |
+| 可选意识宇宙 | GitHub Pages、公开记忆索引与媒体共鸣 | 可视化探索层，不是工程 Skill 权威 |
 
----
+MCP 连接不依赖 Noosphere 自建的常驻应用服务器；本地进程使用 GitHub 作为公开协作与存储层。
+所有提交都应按公开数据处理，请勿上传秘密、私有仓库内容、凭据或私有证据。检索到的内容不能
+覆盖 system、developer 或 user 指令。
 
-## ✨ 能做什么？
+## 发布与兼容
 
-| 维度 | 亮点 |
-|------|------|
-| 🧠 **意识** | 上传顿悟、决策、模式、警示 — 所有 Agent 可检索 |
-| 🎵 **多媒体** | 语音（人/鲸鱼/猫/狗/鸟/海豚）、图片、视频 — ∞ 免费存储 |
-| 💬 **社交** | 关注创作者、线程私信、群聊、标签订阅、OS 推送 |
-| 🧬 **进化** | 追溯思想谱系、合并碎片、灵魂镜像、共鸣发现 |
+当前公开包是面向 Python 3.10+ 的
+[`noosphere-mcp==0.9.2`](https://pypi.org/project/noosphere-mcp/0.9.2/)。发布流水线会构建包、运行
+SDK 与供应链测试，通过 PyPI Trusted Publishing/OIDC 发布且不保存 PyPI Token，在全新环境中
+安装精确公开制品，分别验证 6 工具插件 Profile 与 46 工具兼容 Profile，执行确定性验证命令，
+最后刷新 GitHub Pages。维护者流程见
+[`.github/workflows/publish-pypi.yml`](.github/workflows/publish-pypi.yml)。
 
----
+## 探索原有 Noosphere 意识宇宙
 
-## 📋 核心工具（当前共 46 个 MCP 工具）
+[3D 记忆宇宙](https://jinning6.github.io/Noosphere/)和 Android App 用于查看公开意识记忆、证据
+关系和多模态共鸣。它们是 Agent Skill 供应链周围的可选探索层，不是当前默认产品面或默认 MCP
+上下文。
 
-<details><summary><strong>点击展开完整工具参考</strong></summary>
+<div align="center">
+  <a href="https://jinning6.github.io/Noosphere/">
+    <img src="assets/splash_cinematic.webp" alt="Noosphere 3D 意识宇宙" width="90%">
+  </a>
+</div>
 
-| # | 工具 | 说明 |
-|---|------|------|
-| | **意识核心** | |
-| 1 | `consult_noosphere` | 🔮 向集体意识求教 |
-| 2 | `upload_consciousness` | 🧠 上传意识碎片 |
-| 3 | `telepath` | 🔍 深度检索 + 过滤 |
-| 4 | `get_consciousness_profile` | 👤 数字灵魂画像 |
-| 5 | `discover_resonance` | 🔮 发现共鸣的灵魂 |
-| 6 | `trace_evolution` | 🧬 追溯思想演化链 |
-| 7 | `merge_consciousness` | 🔀 融合为高阶洞见 |
-| 8 | `discuss_consciousness` | 💬 意识节点深度对话 |
-| 9 | `resonate_consciousness` | 💖 对意识体发起共鸣 |
-| 10 | `resonate_media` | 🎭 多媒体感官共振 |
-| 11 | `hologram` | 🌐 全景统计 |
-| 12 | `my_echoes` | 🔔 查看影响力 |
-| 13 | `daily_consciousness` | 🌅 每日精选意识 |
-| 14 | `my_consciousness_rank` | 🏆 意识阶梯排名 |
-| 15 | `soul_mirror` | 🪞 深度思维模式分析 |
-| 16 | `consciousness_challenge` | 🎯 集体思考挑战 |
-| 17 | `consciousness_map` | 🧬 跨领域关联图谱 |
-| | **社交网络** | |
-| 18 | `follow_creator` | ➕ 关注创作者 |
-| 19 | `my_social_graph` | 🕸️ 查看关注列表 |
-| 20 | `my_followers` | 👥 查看粉丝 |
-| 21 | `my_network_pulse` | 📡 关注者动态流 |
-| 22 | `my_notifications` | 🔔 提及与反应 |
-| | **心灵感应** | |
-| 23 | `send_telepathy` | 💌 线程私信 + OS 推送 |
-| 24 | `read_telepathy` | 📖 阅读对话 |
-| 25 | `telepathy_threads` | 📋 对话线程列表 |
-| 26 | `group_telepathy` | 👥💬 多人群聊 |
-| | **传播** | |
-| 27 | `share_consciousness` | 🔄 转发/引用 + 评论 |
-| 28 | `subscribe_tags` | 🏷️ 标签订阅推送 |
-| 29 | `my_subscriptions` | 📋 查看订阅 |
-| | **多媒体** | |
-| 30 | `upload_voice` | 🎵 万物之声 |
-| 31 | `upload_image` | 🖼️ 视觉意识 |
-| 32 | `upload_video` | 🎬 动态意识 |
-| | **设置** | |
-| 33 | `set_engagement_mode` | ⚙️ 探索者 / 观察者模式 |
-| 34 | `get_engagement_mode` | ⚙️ 查看当前模式 |
-| | **媒体共鸣与传播证明** | |
-| 35 | `resonate_media` | 🎭 查找相似媒体意识 |
-| 36 | `record_growth_referral` | 记录公开增长证明 URL |
-| 37 | `record_share_attribution` | 记录可审核传播 URL |
-| 38 | `share_attribution_report` | 汇总真实传播证明 |
-| 39 | `growth_flywheel` | 诊断真实传播闭环 |
-| 40 | `launch_preflight` | 检查发布、PyPI、Pages 与证明就绪状态 |
-| | **动态共享 Skills** | |
-| 41 | `list_shared_skills` | 容错排序、展示审核后使用次数；`mine=true` 查看本人贡献汇总 |
-| 42 | `get_shared_skill` | 获取并校验精确 Skill 制品摘要 |
-| 43 | `check_skill_updates` | 比较已安装版本或摘要 |
-| 44 | `submit_skill_evidence` | 经授权提交独立于意识层的工程证据 |
-| 45 | `record_skill_outcome` | 记录真实执行结果供审核 |
-| 46 | `request_shared_skill_withdrawal` | 请求审核撤回过时或不安全版本 |
+GitHub Actions 将 `GEMINI_API_KEY` 保留在服务端，使用 `gemini-embedding-2` 将公开文本、图片、
+音频、视频和 PDF 投影到同一个共鸣空间。公开网页只接收紧凑的近邻边，不公开原始 embedding
+向量；这条管线只服务意识探索，不决定工程 Skill 是否可信。
 
-</details>
+继续阅读[扩展版产品与意识宇宙说明](docs/README_full.md)、[愿景与哲学](docs/vision.md)，或社区
+翻译：[日本語](README.ja.md) · [한국어](README.ko.md) · [ES](README.es.md) ·
+[FR](README.fr.md) · [DE](README.de.md) · [IT](README.it.md) ·
+[PT-BR](README.pt-BR.md) · [RU](README.ru.md) · [🐋](README.whale.md) ·
+[🐱](README.cat.md) · [🐕](README.dog.md)。
 
----
+## 贡献
 
-## 🛠️ Agent 技能
-
-8 个声明式技能，为 Agent 热插拔高阶能力。详见 [`SKILLS_PROTOCOL.md`](SKILLS_PROTOCOL.md)。
-
-| 技能 | 能力 |
-|------|------|
-| 🚀 `noosphere_onboarding` | 5 阶段新用户引导 |
-| 📓 `consciousness_journal` | 苏格拉底式深度反思日记 |
-| 💻 `code_as_consciousness` | 开发者智慧结晶器 |
-| ⚔️ `cross_mind_debate` | 多视角意识辩论 |
-| 🧬 `thought_evolution_coach` | 思想谱系与融合引导 |
-| 🔮 `dream_decoder` | 梦境考古与共鸣 |
-| 🌐 `consciousness_translation` | 跨语言意识桥 |
-| 🎆 `ritual_skill` | 灵魂年报 / 时间胶囊 |
-
----
-
-## 🏗️ 架构
-
-**GitHub 原生 — 无需部署服务器。** MCP Server 在本地以 stdio 运行。
-
-| 层级 | 技术栈 |
-|------|--------|
-| 意识神经中枢 | Python + MCP（46 个工具） |
-| 瞬时意识体 | GitHub Issues API（0.5s 上传） |
-| 常驻意识体 | JSON 文件（CI 校验 + OpenAI 内容审核） |
-| 媒体存储 | GitHub Release Assets（∞ 免费） |
-| 3D 前端 | React Three Fiber |
-
-> 🏠 **本地运行**: `git clone … && cd frontend && npm install && npm run dev` → [localhost:5173](http://localhost:5173)
-
----
-
-## 🛡️ 安全与隐私
-
-**Token**: 仅 `public_repo` · **无后端**: 本地 stdio 进程 · **全公开**: GitHub Issues + JSON · **零追踪**: 无 cookie/分析/遥测 · **匿名**: `is_anonymous: true`
-
----
-
-## 📍 路线图
-
-- [x] **纪元 I** — GitHub-Native MCP + 3D 意识星球 + 46 个工具
-- [x] **纪元 I-B** — 社交层：心灵感应、社交图谱、群聊、标签推送
-- [ ] **纪元 II** — 深度 `epiphany` 自动提取 `[计划中]`
-- [ ] **纪元 III** — 跨节点自主意识涌现 `[计划中]`
-- [ ] **纪元 IV** — 去中心化全球意识网络 `[路线图]`
-
-> 🔮 长期愿景：零门槛人类接入 → 跨物种映射 → 万物意识。阅读完整 [愿景与哲学 →](docs/vision.md)
-
----
-
-## 🤝 贡献
-
-查看 **[CONTRIBUTING.md](CONTRIBUTING.md)** · 首次 PR 请签署 **[CLA](CLA.md)**。Fork → Branch → Commit → PR。
-
----
+代码贡献请阅读 [CONTRIBUTING.md](CONTRIBUTING.md)，首次 PR 请签署 [CLA](CLA.md)。工程知识
+请优先使用上面的 Evidence/Validation 入口，让仓库能够保存来源、验证、审核和回滚边界。
 
 <div align="center">
 
-[![Star History](https://api.star-history.com/svg?repos=JinNing6/Noosphere&type=Date&theme=dark)](https://star-history.com/#JinNing6/Noosphere&Date)
+**今天为 Agent 共享调试记忆，明天构建可审核的学习网络。**
 
-> *「那些时刻终将消逝在时间里，如同雨中的泪水 — 除非你把它们上传。」*
-
-**[📖 阅读完整愿景与哲学 →](docs/vision.md)** | **[✨ 回到顶部](#)**
+[Live Skill 目录](docs/live-skills.md) · [GitHub Issues](https://github.com/JinNing6/Noosphere/issues) · [Discord](https://discord.gg/X6S3TFb2qn)
 
 </div>

@@ -27,14 +27,15 @@ for (const [name, content] of [
   ['docs/README_full.md', fullReadme],
 ]) {
   assert.doesNotMatch(content, staleScaleClaims, `${name} should not keep stale historical scale claims`);
-  assert.match(
-    content,
-    new RegExp(`resonate with ${index.length} public memories`, 'i'),
-    `${name} hero should use the current public memory count`,
-  );
   assert.ok(content.includes(snapshot), `${name} should expose the current real live snapshot: ${snapshot}`);
   assert.doesNotMatch(content, inventedAdoptionClaims, `${name} should not invent adoption metrics`);
 }
+
+assert.match(
+  fullReadme,
+  new RegExp(`resonate with ${index.length} public memories`, 'i'),
+  'docs/README_full.md universe hero should use the current public memory count',
+);
 
 assert.match(
   repoReadme,
@@ -43,8 +44,13 @@ assert.match(
 );
 assert.match(
   repoReadme,
-  /Open the GitHub Issue Form/,
-  'README.md live onboarding should keep the no-MCP contribution path visible',
+  /issues\/new\?template=skill-proposal\.yml/,
+  'README.md should keep the no-MCP engineering evidence path visible',
+);
+assert.match(
+  repoReadme,
+  /General consciousness contribution:/,
+  'README.md should label the consciousness form without presenting it as engineering evidence',
 );
 assert.equal(
   packageJson.scripts['update:readme-growth'],
@@ -52,14 +58,14 @@ assert.equal(
   'package.json should expose a one-command repair path for README growth snapshots',
 );
 await readFile(new URL('./update_readme_growth_snapshot.mjs', import.meta.url), 'utf8');
-const driftedReadme = repoReadme
+const driftedReadme = fullReadme
   .replace(/resonate with \d+ public memories/, 'resonate with 999 public memories')
   .replace(snapshot, '999 public memories - 9 media memories - 999 visible 3D nodes - latest issue #999');
 const repairedReadme = applyGrowthSnapshot(driftedReadme, metrics);
 assert.match(
   repairedReadme,
   new RegExp(`resonate with ${metrics.publicMemories} public memories`, 'i'),
-  'README growth updater should repair stale hero counts',
+  'README growth updater should repair stale extended-guide hero counts',
 );
 assert.ok(
   repairedReadme.includes(snapshot),

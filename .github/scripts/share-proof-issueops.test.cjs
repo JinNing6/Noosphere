@@ -57,19 +57,17 @@ test("Share Proof IssueOps workflow is a safe comment-only loop", () => {
   assert.doesNotMatch(workflow, /\bgit\s+(clone|checkout|commit|push|pull)\b/);
 });
 
-test("README first screen links to the Share Proof Issue Form", () => {
+test("README contribution routes link to the Share Proof Issue Form", () => {
   const readme = readRepoFile("README.md");
-  const firstScreen = readme.slice(0, 6500);
 
-  assert.match(firstScreen, /Shared it publicly\? Record proof/);
-  assert.match(firstScreen, /issues\/new\?template=share-proof\.yml/);
-  assert.match(firstScreen, /Noosphere does not infer downloads, reposts, referrals, retention, rewards, or install counts from a URL/);
+  assert.match(readme, /Shared it publicly\? Record proof/);
+  assert.match(readme, /issues\/new\?template=share-proof\.yml/);
+  assert.match(readme, /Noosphere does not infer downloads, reposts, referrals, retention, rewards, or install\s+counts from a URL/);
 });
 
 test("full README mirror also documents the Share Proof route", () => {
   const readme = readRepoFile("docs", "README_full.md");
-  const firstScreen = readme.slice(0, 6500);
 
-  assert.match(firstScreen, /Shared it publicly\? Record proof/);
-  assert.match(firstScreen, /issues\/new\?template=share-proof\.yml/);
+  assert.match(readme, /Shared it publicly\? Record proof/);
+  assert.match(readme, /issues\/new\?template=share-proof\.yml/);
 });
