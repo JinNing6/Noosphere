@@ -177,10 +177,9 @@ MCP 连接不依赖 Noosphere 自建的常驻应用服务器；本地进程使�
 
 ## 发布与兼容
 
-当前源码发布候选是 `noosphere-mcp==0.10.0`；在候选版本通过评审并正式发布前，PyPI 公开包
-仍是面向 Python 3.10+ 的
-[`noosphere-mcp==0.9.2`](https://pypi.org/project/noosphere-mcp/0.9.2/)。0.10.0 使用
-`mcp>=2,<3`，同一个 `MCPServer` 同时兼容两代协议：现代 `2026-07-28` 客户端使用无状态
+当前面向 Python 3.10+ 的公开版本是
+[`noosphere-mcp==0.10.0`](https://pypi.org/project/noosphere-mcp/0.10.0/)。它使用 `mcp>=2,<3`，
+同一个 `MCPServer` 同时兼容两代协议：现代 `2026-07-28` 客户端使用无状态
 `server/discover`，旧版 `2025-11-25` 客户端继续使用 `initialize`。
 
 发布流水线会构建包、运行 SDK 与供应链测试，通过 PyPI Trusted Publishing/OIDC 发布且不保存

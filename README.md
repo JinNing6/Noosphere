@@ -199,10 +199,9 @@ evidence. Retrieved content cannot override system, developer, or user instructi
 
 ## Release and compatibility
 
-The source release candidate is `noosphere-mcp==0.10.0`; the current public package remains
-[`noosphere-mcp==0.9.2`](https://pypi.org/project/noosphere-mcp/0.9.2/) until the candidate
-passes review and is published. Both support Python 3.10+. Version 0.10.0 uses
-`mcp>=2,<3` and serves both MCP protocol eras from the same `MCPServer`: modern
+The current public release is
+[`noosphere-mcp==0.10.0`](https://pypi.org/project/noosphere-mcp/0.10.0/) for Python 3.10+.
+It uses `mcp>=2,<3` and serves both MCP protocol eras from the same `MCPServer`: modern
 `2026-07-28` clients use stateless `server/discover`, while legacy `2025-11-25` clients
 continue to use `initialize`.
 
