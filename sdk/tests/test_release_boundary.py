@@ -10,7 +10,7 @@ except ModuleNotFoundError:  # pragma: no cover - Python 3.10 release runners
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 SDK_ROOT = REPO_ROOT / "sdk"
-PYPI_BASELINE_VERSION = "0.9.1"
+PYPI_BASELINE_VERSION = "0.9.2"
 
 
 def _version_tuple(version: str) -> tuple[int, ...]:
@@ -70,7 +70,7 @@ def test_default_runtime_excludes_optional_semantic_model_stack():
     project = _project_metadata()["project"]
 
     assert project["dependencies"] == [
-        "mcp>=1.27,<2",
+        "mcp>=2,<3",
         "httpx>=0.28.0",
     ]
     assert project["optional-dependencies"]["semantic"] == [
@@ -80,10 +80,12 @@ def test_default_runtime_excludes_optional_semantic_model_stack():
     assert "ruff==0.14.1" in project["optional-dependencies"]["dev"]
 
 
-def test_mcp_handshake_advertises_noosphere_distribution_version():
+def test_mcp_server_advertises_noosphere_distribution_version():
+    from mcp.server import MCPServer
     from noosphere.noosphere_mcp import mcp
 
-    assert mcp._mcp_server.version == _package_version()
+    assert isinstance(mcp, MCPServer)
+    assert mcp.version == _package_version()
 
 
 def test_publish_workflow_uses_single_release_trigger_with_trusted_publishing_quality_gates():
@@ -111,7 +113,7 @@ def test_publish_workflow_uses_single_release_trigger_with_trusted_publishing_qu
     assert "verify-pypi:" in workflow
     assert "needs: publish-pypi" in workflow
     assert "python scripts/verify_pypi_release.py --tool-count 46" in workflow
-    assert "initialize + tools/list" in workflow
+    assert "server/discover + tools/list and initialize + tools/list" in workflow
     assert "refresh-pages-proof:" in workflow
     assert "needs: verify-pypi" in workflow
     assert "actions: write" in workflow
@@ -154,4 +156,6 @@ def test_readme_documents_pypi_release_recovery_route():
     assert "Trusted Publishing" in readme
     assert "Live Skills — Agent plugin default | **6**" in readme
     assert "Full backward-compatible server — legacy CLI default | **46**" in readme
+    assert "2026-07-28" in readme
+    assert "2025-11-25" in readme
     assert "noosphere-validate public-artifact-runtime-smoke-gate" in readme

@@ -221,7 +221,7 @@ jobs:
       - name: Build Glama source container
         run: docker build --pull --tag noosphere-glama:ci .
 
-      - name: Verify anonymous initialize and tools/list
+      - name: Verify anonymous server/discover + tools/list and initialize + tools/list
         shell: bash
         run: |
           python - <<'PY'
@@ -229,6 +229,8 @@ jobs:
           from pathlib import Path
 
           from scripts.verify_pypi_release import (
+              LEGACY_MCP_PROTOCOL_VERSION,
+              MODERN_MCP_PROTOCOL_VERSION,
               parse_mcp_probe_output,
               probe_mcp_subprocess,
           )
@@ -238,26 +240,33 @@ jobs:
           if not version_match:
               raise RuntimeError("Could not determine Noosphere version")
 
-          completed = probe_mcp_subprocess(
-              [
-                  "docker",
-                  "run",
-                  "--rm",
-                  "--interactive",
-                  "--network",
-                  "none",
-                  "noosphere-glama:ci",
-              ],
-              timeout_seconds=30,
-          )
+          for protocol_version in (
+              MODERN_MCP_PROTOCOL_VERSION,
+              LEGACY_MCP_PROTOCOL_VERSION,
+          ):
+              completed = probe_mcp_subprocess(
+                  [
+                      "docker",
+                      "run",
+                      "--rm",
+                      "--interactive",
+                      "--network",
+                      "none",
+                      "noosphere-glama:ci",
+                  ],
+                  timeout_seconds=30,
+                  protocol_version=protocol_version,
+              )
 
-          result = parse_mcp_probe_output(
-              completed["stdout"],
-              expected_version=version_match.group(1),
-              expected_tool_count=46,
-          )
-          print(
-              f"Verified Glama source container: {result['runtime_tool_count']} tools, "
-              f"serverInfo.version={result['server_version']}"
-          )
+              result = parse_mcp_probe_output(
+                  completed["stdout"],
+                  expected_version=version_match.group(1),
+                  expected_tool_count=46,
+                  protocol_version=protocol_version,
+              )
+              print(
+                  f"Verified Glama source container with {protocol_version}: "
+                  f"{result['runtime_tool_count']} tools, "
+                  f"serverInfo.version={result['server_version']}"
+              )
           PY

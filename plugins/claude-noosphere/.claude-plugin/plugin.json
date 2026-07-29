@@ -1,6 +1,6 @@
 {
   "name": "noosphere",
-  "version": "0.9.2",
+  "version": "0.10.0",
   "description": "Live, versioned shared Skills and debug memory for Claude Code agents.",
   "author": {
     "name": "JinNing6",

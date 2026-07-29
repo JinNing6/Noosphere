@@ -46,7 +46,7 @@ from typing import TYPE_CHECKING
 from urllib.parse import parse_qsl, urlsplit
 
 import httpx
-from mcp.server.fastmcp import FastMCP
+from mcp.server import MCPServer
 
 from noosphere import __version__
 from noosphere.engine.memory_integrity import (
@@ -1130,14 +1130,11 @@ async def _build_post_upload_sections(
 
 
 # ── Create MCP Server ──
-mcp = FastMCP(
+mcp = MCPServer(
     "noosphere",
+    version=__version__,
     instructions=instructions_for_profile(os.environ.get("NOOSPHERE_MCP_PROFILE", "full")),
 )
-# FastMCP 1.x otherwise falls back to the SDK distribution version in
-# initialize.serverInfo.version. Directory scanners and clients need the
-# Noosphere release version that matches server.json and PyPI.
-mcp._mcp_server.version = __version__
 
 
 # ────────────────── Text Utilities ──────────────────

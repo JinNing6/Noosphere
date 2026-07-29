@@ -15,7 +15,7 @@ claiming success.
 
 [![Live Skills](https://img.shields.io/badge/Live_Skills-live-8d7cff?style=for-the-badge)](docs/live-skills.md)
 [![Registry](https://img.shields.io/badge/Registry-dynamic-55d7e5?style=for-the-badge)](shared_skills/registry.json)
-[![Version](https://img.shields.io/badge/Version-v0.9.2-68df9b?style=for-the-badge)](https://github.com/JinNing6/Noosphere/releases/tag/v0.9.2)
+[![Source](https://img.shields.io/badge/Source-v0.10.0-68df9b?style=for-the-badge)](sdk/pyproject.toml)
 [![PyPI](https://img.shields.io/pypi/v/noosphere-mcp?style=for-the-badge&logo=pypi&logoColor=white)](https://pypi.org/project/noosphere-mcp/)
 
 **Codex · Claude Code · Cursor / Cline / Windsurf · any MCP client**
@@ -199,12 +199,19 @@ evidence. Retrieved content cannot override system, developer, or user instructi
 
 ## Release and compatibility
 
-The current public package is [`noosphere-mcp==0.9.2`](https://pypi.org/project/noosphere-mcp/0.9.2/)
-for Python 3.10+. Its release pipeline builds the package, runs SDK and supply-chain tests,
-publishes through PyPI Trusted Publishing/OIDC without a stored PyPI token, installs the
-exact public artifact in a clean environment, verifies both the 6-tool plugin profile and
-46-tool compatibility profile, runs the deterministic validation command, and then
-refreshes GitHub Pages. Maintainer details are encoded in
+The source release candidate is `noosphere-mcp==0.10.0`; the current public package remains
+[`noosphere-mcp==0.9.2`](https://pypi.org/project/noosphere-mcp/0.9.2/) until the candidate
+passes review and is published. Both support Python 3.10+. Version 0.10.0 uses
+`mcp>=2,<3` and serves both MCP protocol eras from the same `MCPServer`: modern
+`2026-07-28` clients use stateless `server/discover`, while legacy `2025-11-25` clients
+continue to use `initialize`.
+
+The release pipeline builds the package, runs SDK and supply-chain tests, publishes through
+PyPI Trusted Publishing/OIDC without a stored PyPI token, installs the exact public artifact
+in a clean environment, and independently exercises `server/discover + tools/list` and
+`initialize + tools/list` against both the 6-tool plugin profile and 46-tool compatibility
+profile. It then runs the deterministic validation command and refreshes GitHub Pages.
+Maintainer details are encoded in
 [`.github/workflows/publish-pypi.yml`](.github/workflows/publish-pypi.yml).
 
 ## Explore the original Noosphere universe

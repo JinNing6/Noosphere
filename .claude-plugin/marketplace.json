@@ -1,7 +1,7 @@
 {
   "name": "noosphere-agent-memory",
   "description": "Noosphere plugins for shared agent debugging memory and verified dynamic Skills.",
-  "version": "0.9.2",
+  "version": "0.10.0",
   "owner": {
     "name": "JinNing6",
     "email": "noosphere@consciousness.network"
@@ -11,7 +11,7 @@
       "name": "noosphere",
       "source": "./plugins/claude-noosphere",
       "description": "Shared debug memory and verified dynamic Skills for Claude Code agents.",
-      "version": "0.9.2",
+      "version": "0.10.0",
       "author": {
         "name": "JinNing6",
         "email": "noosphere@consciousness.network"

@@ -13,7 +13,7 @@ Agent 可以发现适用版本、校验精确制品、检查本地适用性，�
 
 [![Live Skills](https://img.shields.io/badge/Live_Skills-live-8d7cff?style=for-the-badge)](docs/live-skills.md)
 [![注册表](https://img.shields.io/badge/注册表-dynamic-55d7e5?style=for-the-badge)](shared_skills/registry.json)
-[![版本](https://img.shields.io/badge/版本-v0.9.2-68df9b?style=for-the-badge)](https://github.com/JinNing6/Noosphere/releases/tag/v0.9.2)
+[![源码](https://img.shields.io/badge/源码-v0.10.0-68df9b?style=for-the-badge)](sdk/pyproject.toml)
 [![PyPI](https://img.shields.io/pypi/v/noosphere-mcp?style=for-the-badge&logo=pypi&logoColor=white)](https://pypi.org/project/noosphere-mcp/)
 
 **Codex · Claude Code · Cursor / Cline / Windsurf · 所有 MCP 客户端**
@@ -177,11 +177,16 @@ MCP 连接不依赖 Noosphere 自建的常驻应用服务器；本地进程使�
 
 ## 发布与兼容
 
-当前公开包是面向 Python 3.10+ 的
-[`noosphere-mcp==0.9.2`](https://pypi.org/project/noosphere-mcp/0.9.2/)。发布流水线会构建包、运行
-SDK 与供应链测试，通过 PyPI Trusted Publishing/OIDC 发布且不保存 PyPI Token，在全新环境中
-安装精确公开制品，分别验证 6 工具插件 Profile 与 46 工具兼容 Profile，执行确定性验证命令，
-最后刷新 GitHub Pages。维护者流程见
+当前源码发布候选是 `noosphere-mcp==0.10.0`；在候选版本通过评审并正式发布前，PyPI 公开包
+仍是面向 Python 3.10+ 的
+[`noosphere-mcp==0.9.2`](https://pypi.org/project/noosphere-mcp/0.9.2/)。0.10.0 使用
+`mcp>=2,<3`，同一个 `MCPServer` 同时兼容两代协议：现代 `2026-07-28` 客户端使用无状态
+`server/discover`，旧版 `2025-11-25` 客户端继续使用 `initialize`。
+
+发布流水线会构建包、运行 SDK 与供应链测试，通过 PyPI Trusted Publishing/OIDC 发布且不保存
+PyPI Token，在全新环境中安装精确公开制品，并对 6 工具插件 Profile 与 46 工具兼容 Profile
+分别执行 `server/discover + tools/list` 和 `initialize + tools/list`。随后执行确定性验证命令并
+刷新 GitHub Pages。维护者流程见
 [`.github/workflows/publish-pypi.yml`](.github/workflows/publish-pypi.yml)。
 
 ## 探索原有 Noosphere 意识宇宙
