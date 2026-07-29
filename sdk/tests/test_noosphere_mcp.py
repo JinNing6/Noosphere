@@ -1870,6 +1870,9 @@ async def test_launch_preflight_accepts_annotated_tag_without_github_release(moc
 def test_growth_ledger_tools_are_documented_in_public_surfaces():
     repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
     readme = open(os.path.join(repo_root, "README.md"), encoding="utf-8").read()
+    extended_readme = open(
+        os.path.join(repo_root, "docs", "README_full.md"), encoding="utf-8"
+    ).read()
     mcp_source = open(os.path.join(repo_root, "sdk", "noosphere", "noosphere_mcp.py"), encoding="utf-8").read()
 
     for tool_name in [
@@ -1879,13 +1882,13 @@ def test_growth_ledger_tools_are_documented_in_public_surfaces():
         "growth_flywheel",
         "launch_preflight",
     ]:
-        assert tool_name in readme
+        assert tool_name in extended_readme
         assert tool_name in mcp_source
 
-    assert "46 MCP tools" in readme
-    assert "resonate_media" in readme
-    assert "First Proof links `growth-proof.yml` + `share-proof.yml`; MCP ledger tools" in readme
-    assert "No downloads, reposts, referrals, retention, rewards, or install counts are inferred" in readme
+    assert "Maintainer and launch operations — opt-in | **5**" in readme
+    assert "Full backward-compatible server — legacy CLI default | **46**" in readme
+    assert "resonate_media" in extended_readme
+    assert "Noosphere does not infer downloads, reposts, referrals, retention, rewards, or install" in readme
 
 
 @pytest.mark.asyncio

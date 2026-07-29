@@ -62,7 +62,7 @@ export function buildSnapshotBlock(metrics, lineEnding = '\n') {
   return [
     '<!-- noosphere-live-snapshot:start -->',
     `**Live network snapshot:** ${formatGrowthSnapshot(metrics)}.<br/>`,
-    '**Next contribution:** [Open the GitHub Issue Form](https://github.com/JinNing6/Noosphere/issues/new?template=consciousness-upload.yml) or install with `/plugin marketplace add JinNing6/Noosphere`.',
+    '**General consciousness contribution:** [Open the consciousness form](https://github.com/JinNing6/Noosphere/issues/new?template=consciousness-upload.yml). Engineering fixes use the [Skill Evidence form](https://github.com/JinNing6/Noosphere/issues/new?template=skill-proposal.yml).',
     '<!-- noosphere-live-snapshot:end -->',
   ].join(lineEnding);
 }

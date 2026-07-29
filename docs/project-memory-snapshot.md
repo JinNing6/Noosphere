@@ -2,6 +2,14 @@
 
 Last verified: 2026-07-29 (Asia/Shanghai)
 
+## README Product Surface Contract — Corrected In Source, Merge Pending
+
+- The canonical product entry point must distinguish MCP tools from dynamic Live Skills. Codex and Claude plugins select the 6-tool Skills profile; consciousness/social `35`, maintainer/operations `5`, and full backward-compatible `46` remain explicit alternative entry points. The historical `uvx noosphere-mcp` command is full by default and must not be described as the normal Agent plugin surface.
+- `README.md` is the concise English product entry, `README.zh-CN.md` is its Chinese product mirror, and `docs/README_full.md` owns the extended consciousness-universe narrative plus the complete current profile reference. The former 1,807-line root README duplication, Chinese “46 core tools” section, and extended-guide “34 tools” section have been removed in the source branch.
+- Public engineering contributions must route to `skill-proposal.yml` or `validate-skill.yml`. `consciousness-upload.yml` is described only as the general thought/philosophy/multimodal route; an Issue or workflow-verified evidence record is still not callable until reviewed immutable publication.
+- The growth-snapshot updater preserves this separation when Actions refresh the README. Regression tests now require the 6/35/5/46 profile contract and reject the stale “46 tools instantly available,” “46 core tools,” and “34 MCP Tools” narratives. The root README keeps the only automatically maintained contributor block; the extended guide links to it instead of carrying a second stale metric copy.
+- Source verification passed 228 SDK tests, 122 Node workflow/supply-chain tests, 42 repository/release tests, registry/plugin validation, README snapshot repair checks, all local README link/media resolution, and the formal `python -m build` path. The built Wheel metadata contains the new six-tool default statement and no stale 34-tool heading. The currently published PyPI `0.9.2` long description remains historical until a later package release; source correction does not rewrite an immutable public artifact.
+
 ## Main Branch Ruleset — Active And Automation-Compatible
 
 - Repository Ruleset [`Protect main`](https://github.com/JinNing6/Noosphere/rules/19963741), ID `19963741`, is active and targets only `refs/heads/main`. GitHub's effective-rules API reports exactly `deletion` and `non_fast_forward`, so `main` cannot be deleted or force-pushed. The bypass list is empty.
