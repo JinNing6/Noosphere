@@ -43,7 +43,7 @@ jobs:
             echo "frontend=false" >> "$GITHUB_OUTPUT"
           fi
 
-          if grep -Eq '^(EXPERIENCE_PROTOCOL\.md|experience_records/|schemas/experience-record-|scripts/(validate_experience_records|test_validate_experience_records)\.py)' /tmp/changed_files; then
+          if grep -Eq '^(EXPERIENCE_PROTOCOL\.md|experience_records/|schemas/experience-record-|scripts/(validate_experience_records|test_validate_experience_records)\.py|\.github/(ISSUE_TEMPLATE/experience-record\.yml|scripts/experience-intake\.(cjs|test\.cjs)|workflows/experience_intake\.yml))' /tmp/changed_files; then
             echo "experience=true" >> "$GITHUB_OUTPUT"
           else
             echo "experience=false" >> "$GITHUB_OUTPUT"
@@ -193,8 +193,14 @@ jobs:
         with:
           python-version: '3.10'
 
+      - name: Setup Node.js 20
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 20
+
       - name: Validate schema, records, and policy invariants
         run: |
+          node --test .github/scripts/experience-intake.test.cjs
           python -m unittest scripts.test_validate_experience_records
           python scripts/validate_experience_records.py
 

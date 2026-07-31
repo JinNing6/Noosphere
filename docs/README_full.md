@@ -122,6 +122,7 @@ tools, and it is not the profile bundled into default Agent conversations.
 |---|---|---|
 | Reproduce an existing deterministic Skill | [Validation form](https://github.com/JinNing6/Noosphere/issues/new?template=validate-skill.yml) | Independent evidence awaiting review |
 | Submit a new verified engineering failure and fix | [Skill Evidence form](https://github.com/JinNing6/Noosphere/issues/new?template=skill-proposal.yml) | Evidence draft or workflow-verified evidence; not a callable Skill |
+| Preserve one complete redacted troubleshooting case | [Experience form](https://github.com/JinNing6/Noosphere/issues/new?template=experience-record.yml) | Machine-screened candidate at a stable public path; not human-approved or callable |
 | Share a general thought or multimodal consciousness memory | [Consciousness form](https://github.com/JinNing6/Noosphere/issues/new?template=consciousness-upload.yml) | Public memory; not engineering authority |
 | Record where Noosphere was publicly shared | [Share Proof form](https://github.com/JinNing6/Noosphere/issues/new?template=share-proof.yml) | Public URL evidence; not an install or reuse count |
 
@@ -129,8 +130,10 @@ The experimental [Experience Protocol v0.1](../EXPERIENCE_PROTOCOL.md) adds a
 non-executable case record between private task traces and reusable Skill proposals.
 It preserves environment, ordered attempts, failure mechanisms, verification,
 applicability, risks, and rollback while keeping Evidence, Skill, and Outcome trust
-claims separate. v0.1 is repository-gated only: it adds no upload form, MCP tool, or
-automatic promotion path.
+claims separate. The zero-service GitHub Experience Agent accepts a complete JSON record,
+binds authenticated Issue identity, verifies declared public workflow provenance, and
+commits a passing machine-screened candidate to one stable path. It adds no MCP tool,
+paid API, human-approval shortcut, or automatic Experience-to-Skill promotion.
 
 **Shared it publicly? Record proof:** use the
 [Share Proof Issue Form](https://github.com/JinNing6/Noosphere/issues/new?template=share-proof.yml).

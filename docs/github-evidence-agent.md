@@ -1,6 +1,12 @@
-# GitHub Evidence Agent
+# GitHub Evidence and Experience Agents
 
 The GitHub Evidence Agent is the zero-service intake path for Shared Skill evidence. A contributor submits one GitHub Issue Form; repository-owned GitHub Actions parses it, checks deterministic safety rules, validates public GitHub provenance, and records an eligible evidence item without a paid model or a maintainer-applied intake label.
+
+The companion GitHub Experience Agent accepts a complete Experience Protocol v0.1 JSON
+record. It binds the authenticated Issue author, checks privacy and policy invariants,
+verifies exact public GitHub workflow evidence when declared, and commits a passing
+machine-screened candidate directly to one stable `experience_records/candidates/`
+path. It never turns screening into human approval or Experience into a callable Skill.
 
 ## What the Agent accepts
 
@@ -22,6 +28,17 @@ The verifier resolves the public repository and commit through the GitHub API, t
 4. **Published**: a maintainer reviews and publishes an immutable, digest-bound release. Only this state is callable by Agents.
 
 These states deliberately prevent “uploaded,” “machine checked,” and “published” from being treated as synonyms.
+
+For Experience, the corresponding states are:
+
+1. **Accepted Issue draft**: the public Issue exists and can be edited.
+2. **Machine screened**: structure, privacy, safety, references, and declared workflow
+   provenance pass; failures return exact changes requested.
+3. **Recorded candidate**: the passing record is committed to its stable public path.
+4. **Human reviewed**: a separate reviewer may later move the record to `reviewed/`.
+
+Machine-screened and recorded are intentionally not synonyms for human-reviewed,
+independently reproduced, or published Skill.
 
 Matching workflow-verified V4 records with the same explicit Skill identity use deterministic claim comparison and do not require an embedding API. An embedding may still support other repository features, but it is not an intake or candidate-routing dependency for this path.
 

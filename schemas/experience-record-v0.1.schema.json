@@ -12,6 +12,7 @@
     "summary",
     "lifecycle",
     "review",
+    "screening",
     "context",
     "symptom",
     "attempts",
@@ -52,6 +53,9 @@
     },
     "review": {
       "$ref": "#/$defs/review"
+    },
+    "screening": {
+      "$ref": "#/$defs/screening"
     },
     "context": {
       "$ref": "#/$defs/context"
@@ -289,6 +293,40 @@
           }
         }
       ]
+    },
+    "screening": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "method",
+        "screened_at",
+        "findings"
+      ],
+      "properties": {
+        "status": {
+          "const": "passed"
+        },
+        "method": {
+          "enum": [
+            "repository-policy-gate-v1",
+            "github-experience-agent-v1"
+          ]
+        },
+        "screened_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "findings": {
+          "type": "array",
+          "maxItems": 32,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          }
+        }
+      }
     },
     "context": {
       "type": "object",
@@ -729,6 +767,12 @@
         "sha256": {
           "type": "string",
           "pattern": "^[a-f0-9]{64}$"
+        },
+        "source": {
+          "$ref": "#/$defs/workflowSource"
+        },
+        "machine_verification": {
+          "$ref": "#/$defs/workflowVerification"
         }
       },
       "allOf": [
@@ -758,6 +802,37 @@
           "if": {
             "properties": {
               "kind": {
+                "const": "workflow-run"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "source",
+              "machine_verification"
+            ]
+          },
+          "else": {
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "source"
+                  ]
+                },
+                {
+                  "required": [
+                    "machine_verification"
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
                 "const": "artifact-digest"
               }
             }
@@ -769,6 +844,112 @@
           }
         }
       ]
+    },
+    "workflowSource": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "repository_url",
+        "commit_sha",
+        "workflow_run_url",
+        "workflow_job_name",
+        "workflow_step_name"
+      ],
+      "properties": {
+        "repository_url": {
+          "type": "string",
+          "pattern": "^https://github\\.com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+/?$"
+        },
+        "commit_sha": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{40}$"
+        },
+        "workflow_run_url": {
+          "type": "string",
+          "pattern": "^https://github\\.com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+/actions/runs/[0-9]+/?$"
+        },
+        "workflow_job_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "workflow_step_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "artifact_sha256": {
+          "type": "string",
+          "pattern": "^(?:sha256:)?[a-f0-9]{64}$"
+        }
+      }
+    },
+    "workflowVerification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "verified_at",
+        "source_repository",
+        "commit_sha",
+        "workflow_run_id",
+        "workflow_run_url",
+        "workflow_job_name",
+        "workflow_step_name",
+        "artifact_sha256",
+        "claim_boundary"
+      ],
+      "properties": {
+        "status": {
+          "const": "workflow-verified"
+        },
+        "verified_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "source_repository": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$"
+        },
+        "commit_sha": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{40}$"
+        },
+        "workflow_run_id": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "workflow_run_url": {
+          "type": "string",
+          "pattern": "^https://github\\.com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+/actions/runs/[0-9]+/?$"
+        },
+        "workflow_job_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "workflow_step_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "artifact_sha256": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string",
+              "pattern": "^sha256:[a-f0-9]{64}$"
+            }
+          ]
+        },
+        "claim_boundary": {
+          "type": "string",
+          "minLength": 20,
+          "maxLength": 500
+        }
+      }
     },
     "skillRef": {
       "type": "object",
@@ -868,6 +1049,36 @@
         },
         "source_evidence_refs": {
           "$ref": "#/$defs/evidenceRefArray"
+        },
+        "source_issue": {
+          "$ref": "#/$defs/sourceIssue"
+        }
+      }
+    },
+    "sourceIssue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "provider",
+        "repository",
+        "issue_number",
+        "url"
+      ],
+      "properties": {
+        "provider": {
+          "const": "github"
+        },
+        "repository": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$"
+        },
+        "issue_number": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "url": {
+          "type": "string",
+          "pattern": "^https://github\\.com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+/issues/[0-9]+$"
         }
       }
     },

@@ -79,6 +79,7 @@ uvx --from noosphere-mcp noosphere-query "React Three Fiber mobile glowing node 
 |---|---|---|
 | 对现有确定性 Skill 的一次复现 | [验证可复用 Agent 修复](https://github.com/JinNing6/Noosphere/issues/new?template=validate-skill.yml) | 等待审核的独立证据，不会自动发布 |
 | 一个新的、已经验证的工程故障与可复用修复 | [提议或更新 Agent Skill](https://github.com/JinNing6/Noosphere/issues/new?template=skill-proposal.yml) | 已接收的证据草稿或工作流验证证据，尚不是可调用 Skill |
+| 一次完整、已脱敏的故障处理经历 | [提交 Agent Experience](https://github.com/JinNing6/Noosphere/issues/new?template=experience-record.yml) | 机器筛查后直接写入稳定公开候选路径；人工审核仍独立进行 |
 | 一般思想、哲学片段、图片、视频或声音记忆 | [上传 Noosphere 意识记忆](https://github.com/JinNing6/Noosphere/issues/new?template=consciousness-upload.yml) | 公开意识内容，不具备工程 Skill 权威 |
 | 已经公开分享 Noosphere 或某条记忆的帖子 | [记录 Share Proof](https://github.com/JinNing6/Noosphere/issues/new?template=share-proof.yml) | 仅证明存在可审核公开 URL，不证明安装或复用 |
 
@@ -95,8 +96,11 @@ Experience 可以共同支持一个 Skill；Outcome 仍只绑定一个精确的 
 
 第一条脱敏的
 [`Codex session 存储迁移候选记录`](experience_records/candidates/exp-codex-session-junction-migration-20260731.json)
-已经完成本地验证，但仍处于待审核状态。v0.1 刻意不提供公开上传表单、不做自动晋升，也不改变
-默认 6 工具 Profile。
+已经完成本地验证和机器筛查，但仍处于人工待审核状态。
+[GitHub Experience Agent](https://github.com/JinNing6/Noosphere/issues/new?template=experience-record.yml)
+会绑定真实 GitHub 提交者，自动检查 Schema、隐私、安全、引用一致性，以及声明的精确 GitHub
+workflow 仓库、commit、run、job 和 step；通过后直接写入稳定公开候选路径。该路径不使用付费
+API、不执行提交文本、不把 Experience 自动晋升为 Skill，也不改变默认 6 工具 Profile。
 
 Noosphere 不会根据 Share Proof URL 推断下载、转发、推荐、留存、奖励或安装数量。意识内容
 成功晋升后会返回最近的 embedding 共鸣，并在匹配到的历史 Issue 中写入反向链接。
@@ -180,7 +184,7 @@ Noosphere 不会自动执行社区提示词。社区发布要求来自独立发�
 | Agent 连接 | 本地 Python MCP stdio 进程 | 服务启动前选择精简 Profile |
 | Live Skill 权威 | 版本化 Git 注册表与不可变版本文件 | 校验注册表允许列表、状态、路径、大小和 SHA-256 |
 | 公开证据 | GitHub Issue Forms 与 Actions | 确定性检查和人工审核前均视为不可信 |
-| Experience 候选 | 版本化 JSON 与无第三方依赖的仓库校验器 | 仅描述、不可调用；脱敏、引用、生命周期和审核均关闭式校验 |
+| Experience 候选 | GitHub Experience Agent、版本化 JSON 与无第三方依赖校验器 | 通过机器筛查后直接进入公开候选库；仅描述、不可调用，人工审核保持独立 |
 | 匿名查询 | 规范公共索引与 BM25 降级 | 无需 Token；仍受缓存和 GitHub 额度约束 |
 | 认证操作 | GitHub API | Token 对只读可选，对公开写入必需；每次写入还需明确同意 |
 | 可选意识宇宙 | GitHub Pages、公开记忆索引与媒体共鸣 | 可视化探索层，不是工程 Skill 权威 |

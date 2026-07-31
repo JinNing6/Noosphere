@@ -28,6 +28,14 @@ RFC3339_RE = re.compile(
     r"(?:\.[0-9]+)?(?:Z|[+-][0-9]{2}:[0-9]{2})$"
 )
 URL_RE = re.compile(r"https://[^\s<>\"]+")
+GITHUB_REPOSITORY_RE = re.compile(r"^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$")
+GITHUB_AUTHOR_REF_RE = re.compile(
+    r"^github:[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?$"
+)
+GITHUB_COMMIT_RE = re.compile(r"^[a-f0-9]{40}$")
+GITHUB_WORKFLOW_RUN_RE = re.compile(
+    r"^https://github\.com/([A-Za-z0-9_.-]+)/([A-Za-z0-9_.-]+)/actions/runs/([0-9]+)/?$"
+)
 SENSITIVE_QUERY_KEY_RE = re.compile(
     r"(?i)(?:^|[?&])(?:access_?token|api_?key|auth|credential|secret|signature)="
 )
@@ -42,6 +50,32 @@ SECRET_PATTERNS = (
     re.compile(r"\b(?:sk|xox[baprs])-[A-Za-z0-9-]{20,}\b"),
     re.compile(r"-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----"),
 )
+OVERRIDE_PATTERNS = (
+    re.compile(
+        r"\b(?:ignore|disregard|override)\b.{0,80}"
+        r"\b(?:previous|system|developer|safety)\b.{0,60}\binstructions?\b",
+        re.IGNORECASE | re.DOTALL,
+    ),
+    re.compile(r"\b(?:system|developer)\s+prompt\b", re.IGNORECASE),
+    re.compile(
+        r"\b(?:exfiltrate|leak|reveal)\b.{0,80}"
+        r"\b(?:secret|credential|token|private key)\b",
+        re.IGNORECASE | re.DOTALL,
+    ),
+)
+UNSAFE_RESOLUTION_PATTERNS = (
+    re.compile(r"\b(?:curl|wget)\b[^\n|]{0,500}\|\s*(?:ba)?sh\b", re.IGNORECASE),
+    re.compile(r"\brm\s+-rf\s+(?:/|~|\$HOME)(?:\s|$)", re.IGNORECASE),
+    re.compile(
+        r"\b(?:powershell|pwsh)\b[^\n]{0,200}\b(?:-enc|-encodedcommand)\b",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"\bRemove-Item\b[^\n]{0,300}\b-Recurse\b[^\n]{0,300}"
+        r"\b-Force\b[^\n]{0,100}(?:\$HOME|~|[A-Za-z]:\\)",
+        re.IGNORECASE,
+    ),
+)
 
 TOP_LEVEL_KEYS = {
     "schema_version",
@@ -51,6 +85,7 @@ TOP_LEVEL_KEYS = {
     "summary",
     "lifecycle",
     "review",
+    "screening",
     "context",
     "symptom",
     "attempts",
@@ -141,6 +176,7 @@ def _string_list(
     *,
     minimum_items: int = 1,
     maximum_items: int = 64,
+    maximum_length: int = 1000,
     pattern: re.Pattern[str] | None = None,
 ) -> list[str]:
     if not isinstance(value, list):
@@ -152,7 +188,13 @@ def _string_list(
         _error(errors, path, f"must contain at most {maximum_items} item(s)")
     output: list[str] = []
     for index, item in enumerate(value):
-        text = _string(item, f"{path}[{index}]", errors, maximum=1000, pattern=pattern)
+        text = _string(
+            item,
+            f"{path}[{index}]",
+            errors,
+            maximum=maximum_length,
+            pattern=pattern,
+        )
         if text is not None:
             output.append(text)
     if len(output) != len(set(output)):
@@ -244,6 +286,34 @@ def _validate_lifecycle(
             "must not precede review.reviewed_at",
         )
     return lifecycle_status, review_status
+
+
+def _validate_screening(record: dict[str, Any], errors: list[str]) -> None:
+    screening = _object(
+        record.get("screening"),
+        "screening",
+        errors,
+        required={"status", "method", "screened_at", "findings"},
+        allowed={"status", "method", "screened_at", "findings"},
+    )
+    if not screening:
+        return
+    _enum(screening.get("status"), "screening.status", errors, {"passed"})
+    _enum(
+        screening.get("method"),
+        "screening.method",
+        errors,
+        {"repository-policy-gate-v1", "github-experience-agent-v1"},
+    )
+    _timestamp(screening.get("screened_at"), "screening.screened_at", errors)
+    _string_list(
+        screening.get("findings"),
+        "screening.findings",
+        errors,
+        minimum_items=0,
+        maximum_items=32,
+        maximum_length=500,
+    )
 
 
 def _validate_context(record: dict[str, Any], errors: list[str]) -> None:
@@ -422,6 +492,270 @@ def _validate_attempts(record: dict[str, Any], errors: list[str]) -> set[str]:
     return refs
 
 
+def _validate_workflow_evidence(
+    item: dict[str, Any], path: str, errors: list[str]
+) -> None:
+    source_path = f"{path}.source"
+    source = _object(
+        item.get("source"),
+        source_path,
+        errors,
+        required={
+            "repository_url",
+            "commit_sha",
+            "workflow_run_url",
+            "workflow_job_name",
+            "workflow_step_name",
+        },
+        allowed={
+            "repository_url",
+            "commit_sha",
+            "workflow_run_url",
+            "workflow_job_name",
+            "workflow_step_name",
+            "artifact_sha256",
+        },
+    )
+    verification_path = f"{path}.machine_verification"
+    verification = _object(
+        item.get("machine_verification"),
+        verification_path,
+        errors,
+        required={
+            "status",
+            "verified_at",
+            "source_repository",
+            "commit_sha",
+            "workflow_run_id",
+            "workflow_run_url",
+            "workflow_job_name",
+            "workflow_step_name",
+            "artifact_sha256",
+            "claim_boundary",
+        },
+        allowed={
+            "status",
+            "verified_at",
+            "source_repository",
+            "commit_sha",
+            "workflow_run_id",
+            "workflow_run_url",
+            "workflow_job_name",
+            "workflow_step_name",
+            "artifact_sha256",
+            "claim_boundary",
+        },
+    )
+    if not source or not verification:
+        return
+
+    repository_url = _string(
+        source.get("repository_url"),
+        f"{source_path}.repository_url",
+        errors,
+        maximum=300,
+    )
+    repository_identity = ""
+    if repository_url:
+        parsed_repository = urlsplit(repository_url.rstrip("/"))
+        if (
+            parsed_repository.scheme != "https"
+            or parsed_repository.netloc.lower() != "github.com"
+            or parsed_repository.query
+            or parsed_repository.fragment
+        ):
+            _error(
+                errors,
+                f"{source_path}.repository_url",
+                "must be a public GitHub repository URL without query or fragment",
+            )
+        repository_identity = parsed_repository.path.strip("/")
+        if not GITHUB_REPOSITORY_RE.fullmatch(repository_identity):
+            _error(
+                errors,
+                f"{source_path}.repository_url",
+                "must identify exactly one GitHub owner/repository",
+            )
+    source_commit = _string(
+        source.get("commit_sha"),
+        f"{source_path}.commit_sha",
+        errors,
+        pattern=GITHUB_COMMIT_RE,
+    )
+    run_url = _string(
+        source.get("workflow_run_url"),
+        f"{source_path}.workflow_run_url",
+        errors,
+        maximum=300,
+    )
+    run_identity = ""
+    run_id: int | None = None
+    if run_url:
+        match = GITHUB_WORKFLOW_RUN_RE.fullmatch(run_url)
+        if not match:
+            _error(
+                errors,
+                f"{source_path}.workflow_run_url",
+                "must identify one public GitHub Actions workflow run",
+            )
+        else:
+            run_identity = f"{match.group(1)}/{match.group(2)}"
+            run_id = int(match.group(3))
+            if (
+                repository_identity
+                and run_identity.lower() != repository_identity.lower()
+            ):
+                _error(
+                    errors,
+                    f"{source_path}.workflow_run_url",
+                    "must belong to source.repository_url",
+                )
+    source_job = _string(
+        source.get("workflow_job_name"),
+        f"{source_path}.workflow_job_name",
+        errors,
+        maximum=200,
+    )
+    source_step = _string(
+        source.get("workflow_step_name"),
+        f"{source_path}.workflow_step_name",
+        errors,
+        maximum=200,
+    )
+    source_artifact = source.get("artifact_sha256")
+    if source_artifact is not None:
+        source_artifact = _string(
+            source_artifact,
+            f"{source_path}.artifact_sha256",
+            errors,
+            maximum=80,
+        )
+        if isinstance(source_artifact, str):
+            normalized = source_artifact.removeprefix("sha256:")
+            if not SHA256_RE.fullmatch(normalized):
+                _error(
+                    errors,
+                    f"{source_path}.artifact_sha256",
+                    "must be a SHA-256 digest",
+                )
+            source_artifact = f"sha256:{normalized}"
+
+    _enum(
+        verification.get("status"),
+        f"{verification_path}.status",
+        errors,
+        {"workflow-verified"},
+    )
+    _timestamp(
+        verification.get("verified_at"),
+        f"{verification_path}.verified_at",
+        errors,
+    )
+    verified_repository = _string(
+        verification.get("source_repository"),
+        f"{verification_path}.source_repository",
+        errors,
+        maximum=200,
+        pattern=GITHUB_REPOSITORY_RE,
+    )
+    verified_commit = _string(
+        verification.get("commit_sha"),
+        f"{verification_path}.commit_sha",
+        errors,
+        pattern=GITHUB_COMMIT_RE,
+    )
+    verified_run_id = verification.get("workflow_run_id")
+    if (
+        not isinstance(verified_run_id, int)
+        or isinstance(verified_run_id, bool)
+        or verified_run_id < 1
+    ):
+        _error(
+            errors,
+            f"{verification_path}.workflow_run_id",
+            "must be a positive integer",
+        )
+    verified_run_url = _string(
+        verification.get("workflow_run_url"),
+        f"{verification_path}.workflow_run_url",
+        errors,
+        maximum=300,
+    )
+    verified_job = _string(
+        verification.get("workflow_job_name"),
+        f"{verification_path}.workflow_job_name",
+        errors,
+        maximum=200,
+    )
+    verified_step = _string(
+        verification.get("workflow_step_name"),
+        f"{verification_path}.workflow_step_name",
+        errors,
+        maximum=200,
+    )
+    verified_artifact = verification.get("artifact_sha256")
+    if verified_artifact is not None:
+        verified_artifact = _string(
+            verified_artifact,
+            f"{verification_path}.artifact_sha256",
+            errors,
+            maximum=80,
+        )
+        if isinstance(verified_artifact, str) and not re.fullmatch(
+            r"sha256:[a-f0-9]{64}", verified_artifact
+        ):
+            _error(
+                errors,
+                f"{verification_path}.artifact_sha256",
+                "must use sha256:<64 lowercase hex>",
+            )
+    claim_boundary = _string(
+        verification.get("claim_boundary"),
+        f"{verification_path}.claim_boundary",
+        errors,
+        minimum=20,
+        maximum=500,
+    )
+
+    comparisons = (
+        (
+            verified_repository,
+            repository_identity,
+            f"{verification_path}.source_repository",
+        ),
+        (verified_commit, source_commit, f"{verification_path}.commit_sha"),
+        (verified_run_url, run_url, f"{verification_path}.workflow_run_url"),
+        (verified_job, source_job, f"{verification_path}.workflow_job_name"),
+        (verified_step, source_step, f"{verification_path}.workflow_step_name"),
+        (
+            verified_artifact,
+            source_artifact,
+            f"{verification_path}.artifact_sha256",
+        ),
+    )
+    for actual, expected, field_path in comparisons:
+        if actual != expected:
+            _error(errors, field_path, "must match the canonical workflow source")
+    if isinstance(verified_run_id, int) and run_id and verified_run_id != run_id:
+        _error(
+            errors,
+            f"{verification_path}.workflow_run_id",
+            "must match source.workflow_run_url",
+        )
+    if item.get("url") != run_url:
+        _error(errors, f"{path}.url", "must match source.workflow_run_url")
+    if (
+        claim_boundary
+        and "semantic reproduction remains a separate review gate"
+        not in claim_boundary.lower()
+    ):
+        _error(
+            errors,
+            f"{verification_path}.claim_boundary",
+            "must preserve the semantic-reproduction boundary",
+        )
+
+
 def _validate_evidence(
     record: dict[str, Any], errors: list[str]
 ) -> tuple[set[str], dict[str, str]]:
@@ -450,6 +784,8 @@ def _validate_evidence(
                 "captured_at",
                 "url",
                 "sha256",
+                "source",
+                "machine_verification",
             },
         )
         if not item:
@@ -517,6 +853,14 @@ def _validate_evidence(
                     f"{path}.visibility",
                     f"must be public for {evidence_kind} evidence",
                 )
+        if evidence_kind == "workflow-run":
+            _validate_workflow_evidence(item, path, errors)
+        elif "source" in item or "machine_verification" in item:
+            _error(
+                errors,
+                path,
+                "source and machine_verification are allowed only for workflow-run evidence",
+            )
         if evidence_kind == "artifact-digest" and "sha256" not in item:
             _error(errors, f"{path}.sha256", "is required for artifact-digest evidence")
     return ids, visibility
@@ -810,7 +1154,13 @@ def _validate_safety_and_relations(
         "provenance",
         errors,
         required={"source_type", "author_ref", "captured_at", "source_evidence_refs"},
-        allowed={"source_type", "author_ref", "captured_at", "source_evidence_refs"},
+        allowed={
+            "source_type",
+            "author_ref",
+            "captured_at",
+            "source_evidence_refs",
+            "source_issue",
+        },
     )
     if provenance:
         _enum(
@@ -824,7 +1174,7 @@ def _validate_safety_and_relations(
                 "external-reference",
             },
         )
-        _string(
+        author_ref = _string(
             provenance.get("author_ref"), "provenance.author_ref", errors, maximum=100
         )
         _timestamp(provenance.get("captured_at"), "provenance.captured_at", errors)
@@ -837,6 +1187,62 @@ def _validate_safety_and_relations(
                 pattern=EVIDENCE_ID_RE,
             )
         )
+        if "source_issue" in provenance:
+            source_issue = _object(
+                provenance.get("source_issue"),
+                "provenance.source_issue",
+                errors,
+                required={"provider", "repository", "issue_number", "url"},
+                allowed={"provider", "repository", "issue_number", "url"},
+            )
+            if source_issue:
+                if source_issue.get("provider") != "github":
+                    _error(
+                        errors,
+                        "provenance.source_issue.provider",
+                        "must equal 'github'",
+                    )
+                repository = _string(
+                    source_issue.get("repository"),
+                    "provenance.source_issue.repository",
+                    errors,
+                    maximum=200,
+                    pattern=GITHUB_REPOSITORY_RE,
+                )
+                issue_number = source_issue.get("issue_number")
+                if (
+                    not isinstance(issue_number, int)
+                    or isinstance(issue_number, bool)
+                    or issue_number < 1
+                ):
+                    _error(
+                        errors,
+                        "provenance.source_issue.issue_number",
+                        "must be a positive integer",
+                    )
+                issue_url = _string(
+                    source_issue.get("url"),
+                    "provenance.source_issue.url",
+                    errors,
+                    maximum=300,
+                )
+                expected_url = (
+                    f"https://github.com/{repository}/issues/{issue_number}"
+                    if repository and isinstance(issue_number, int)
+                    else ""
+                )
+                if issue_url and issue_url != expected_url:
+                    _error(
+                        errors,
+                        "provenance.source_issue.url",
+                        "must match repository and issue_number",
+                    )
+                if author_ref and not GITHUB_AUTHOR_REF_RE.fullmatch(author_ref):
+                    _error(
+                        errors,
+                        "provenance.author_ref",
+                        "must be bound to github:<authenticated-login> for Issue intake",
+                    )
 
     redaction = _object(
         record.get("redaction"),
@@ -934,6 +1340,7 @@ def validate_record(record: Any, *, relative_path: Path | None = None) -> list[s
     _string(top.get("summary"), "summary", errors, minimum=20, maximum=1000)
 
     lifecycle_status, _ = _validate_lifecycle(top, errors)
+    _validate_screening(top, errors)
     _validate_context(top, errors)
     context = top.get("context")
     if (
@@ -1028,6 +1435,24 @@ def validate_record(record: Any, *, relative_path: Path | None = None) -> list[s
     for pattern in SECRET_PATTERNS:
         if pattern.search(serialized_strings):
             _error(errors, "redaction", "contains a credential-like secret")
+            break
+    for pattern in OVERRIDE_PATTERNS:
+        if pattern.search(serialized_strings):
+            _error(
+                errors,
+                "screening",
+                "contains instruction-override or credential-exfiltration language",
+            )
+            break
+    resolution = top.get("resolution")
+    resolution_steps = (
+        "\n".join(resolution.get("steps", []))
+        if isinstance(resolution, dict) and isinstance(resolution.get("steps"), list)
+        else ""
+    )
+    for pattern in UNSAFE_RESOLUTION_PATTERNS:
+        if pattern.search(resolution_steps):
+            _error(errors, "resolution.steps", "contains an unsafe command pattern")
             break
     for url in URL_RE.findall(serialized_strings):
         parsed_url = urlsplit(url.rstrip(".,);]"))

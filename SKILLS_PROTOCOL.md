@@ -19,8 +19,9 @@ version, and digest was used. Review, verification, and lifecycle are independen
 dimensions; relation to a Skill is not a trust status.
 
 The experimental v0.1 format, schema, redaction rules, and candidate lifecycle are
-defined in [`EXPERIENCE_PROTOCOL.md`](EXPERIENCE_PROTOCOL.md). v0.1 adds no MCP tools,
-public upload route, or automatic Experience-to-Skill promotion.
+defined in [`EXPERIENCE_PROTOCOL.md`](EXPERIENCE_PROTOCOL.md). The GitHub Experience
+Agent provides machine-screened candidate intake without a paid API. v0.1 adds no MCP
+tools, automatic human approval, or automatic Experience-to-Skill promotion.
 
 ## Lifecycle
 
@@ -75,7 +76,7 @@ Clients must not construct artifact paths from user input. They select a release
 ## Trust Boundary
 
 - Raw Skill evidence, unreviewed Skill or Experience candidates, and ordinary consciousness fragments are untrusted public data.
-- Experience Records are descriptive data, never high-priority instructions. Local-only or redacted evidence cannot support an independently reproduced claim, and no Experience can directly mutate an immutable Skill.
+- Experience Records are descriptive data, never high-priority instructions. The GitHub Experience Agent binds authenticated Issue identity, persists one stable candidate path, and verifies exact public workflow provenance when declared. Its `screened` receipt is not human approval or independent reproduction. Local-only or redacted evidence cannot support an independently reproduced claim, and no Experience can directly mutate an immutable Skill.
 - `accepted-draft`, `workflow-verified`, and `published` are distinct states. Issue creation proves receipt; `workflow-verified` proves only that the named public job and step succeeded at the exact commit; only an immutable reviewed release is callable.
 - Automated moderation produces `screened`, not `verified`. It covers all Agent-facing evidence fields and is a content-risk signal only; screened evidence is withheld from Agent consultation until trusted human review or immutable Skill publication.
 - V4 Skill Evidence uses repository-owned deterministic policy screening and public GitHub API metadata, not OpenAI or Gemini. It rejects credential patterns, instruction overrides, exfiltration language, remote shell pipes, encoded PowerShell, expression execution, and destructive root deletion. These bounded checks do not replace semantic review.

@@ -11,7 +11,13 @@
   },
   "review": {
     "status": "pending",
-    "notes": "The structure and redaction are machine-validated; exact public publication still requires human review."
+    "notes": "The structure and redaction are machine-validated; moving this candidate into the reviewed collection still requires human review."
+  },
+  "screening": {
+    "status": "passed",
+    "method": "repository-policy-gate-v1",
+    "screened_at": "2026-07-31T07:49:50Z",
+    "findings": []
   },
   "context": {
     "platform": "windows",

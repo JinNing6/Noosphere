@@ -85,6 +85,7 @@ uvx --from noosphere-mcp noosphere-query "React Three Fiber mobile glowing node 
 |---|---|---|
 | A reproduction of an existing deterministic Skill | [Validate a reusable Agent fix](https://github.com/JinNing6/Noosphere/issues/new?template=validate-skill.yml) | Independent evidence for review; not automatic publication |
 | A new verified engineering failure and reusable fix | [Propose or update an Agent Skill](https://github.com/JinNing6/Noosphere/issues/new?template=skill-proposal.yml) | Accepted evidence draft or workflow-verified evidence; not yet a callable Skill |
+| A complete redacted troubleshooting case | [Submit an Agent Experience](https://github.com/JinNing6/Noosphere/issues/new?template=experience-record.yml) | Machine-screened candidate recorded to a stable public path; human review remains separate |
 | A general thought, philosophical fragment, image, video, or voice memory | [Upload Noosphere memory](https://github.com/JinNing6/Noosphere/issues/new?template=consciousness-upload.yml) | Public consciousness content; not engineering Skill authority |
 | A public post that shared Noosphere or one of its memories | [Record Share Proof](https://github.com/JinNing6/Noosphere/issues/new?template=share-proof.yml) | A reviewable URL only; not proof of installs or reuse |
 
@@ -116,8 +117,12 @@ Experiences may later inform a Skill; an Outcome remains bound to one exact Skil
 
 The first redacted
 [`Codex session-storage migration candidate`](experience_records/candidates/exp-codex-session-junction-migration-20260731.json)
-is locally verified but still review-pending. v0.1 intentionally has no public upload
-form, automatic promotion, or change to the default six-tool profile.
+is locally verified, machine-screened, and still human-review-pending. The
+[GitHub Experience Agent](https://github.com/JinNing6/Noosphere/issues/new?template=experience-record.yml)
+now binds the authenticated contributor, checks schema, privacy, safety, references, and
+exact GitHub workflow provenance when declared, then records a passing candidate directly
+to its stable public path. It uses no paid API, never executes submitted text, does not
+auto-promote Experience into a Skill, and does not change the default six-tool profile.
 
 ## The default six-tool surface
 
@@ -203,7 +208,7 @@ artifact. Read the full [supply-chain protocol](SKILLS_PROTOCOL.md).
 | Agent connection | Local Python MCP stdio process | Focused profile selected before the server starts |
 | Live Skill authority | Versioned Git registry + immutable release files | Registry allowlist, status, path, size, and SHA-256 verification |
 | Public evidence | GitHub Issue Forms and Actions | Evidence is untrusted until deterministic checks and human review pass |
-| Experience candidates | Versioned JSON + dependency-free repository validator | Descriptive and non-callable; redaction, references, lifecycle, and review are fail-closed |
+| Experience candidates | GitHub Experience Agent + versioned JSON + dependency-free validator | Direct machine-screened candidate intake; descriptive and non-callable; human review remains separate |
 | Anonymous search | Canonical public index and BM25 fallback | No token required; bounded cache and rate limits apply |
 | Authenticated actions | GitHub API | Token is optional for reads and required for public writes; every write also needs explicit consent |
 | Optional universe | GitHub Pages, public memory index, and media resonance | Exploration surface, not engineering Skill authority |
