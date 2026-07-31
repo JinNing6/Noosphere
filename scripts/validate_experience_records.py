@@ -228,10 +228,11 @@ def _validate_lifecycle(
         "review",
         errors,
         required={"status"},
-        allowed={"status", "reviewer", "reviewed_at", "notes"},
+        allowed={"status", "mode", "reviewer", "reviewed_at", "notes"},
     )
     lifecycle_status = None
     review_status = None
+    review_mode = None
     updated: datetime | None = None
     review_decided_at: datetime | None = None
     if lifecycle:
@@ -259,18 +260,55 @@ def _validate_lifecycle(
         if "notes" in review:
             _string(review["notes"], "review.notes", errors, maximum=1000)
         if review_status in {"approved", "changes-requested"}:
+            review_mode = _enum(
+                review.get("mode"),
+                "review.mode",
+                errors,
+                {"human", "automated-policy"},
+            )
             _string(review.get("reviewer"), "review.reviewer", errors, maximum=100)
             review_decided_at = _timestamp(
                 review.get("reviewed_at"), "review.reviewed_at", errors
             )
             if review_status == "changes-requested":
                 _string(review.get("notes"), "review.notes", errors, maximum=1000)
-        elif "reviewer" in review or "reviewed_at" in review:
+        elif any(field in review for field in {"mode", "reviewer", "reviewed_at"}):
             _error(
                 errors,
                 "review",
-                "reviewer and reviewed_at are allowed only after a review decision",
+                "mode, reviewer, and reviewed_at are allowed only after a review decision",
             )
+        if review_mode == "automated-policy":
+            reviewer = review.get("reviewer")
+            if review_status != "approved":
+                _error(
+                    errors,
+                    "review.status",
+                    "automated-policy review can only approve a passing record",
+                )
+            if reviewer not in {
+                "repository-policy-gate-v1",
+                "github-experience-agent-v1",
+            }:
+                _error(
+                    errors,
+                    "review.reviewer",
+                    "must identify a recognized automated Experience policy gate",
+                )
+            screening = record.get("screening")
+            if isinstance(screening, dict):
+                if screening.get("method") != reviewer:
+                    _error(
+                        errors,
+                        "review.reviewer",
+                        "must match screening.method for automated-policy review",
+                    )
+                if screening.get("screened_at") != review.get("reviewed_at"):
+                    _error(
+                        errors,
+                        "review.reviewed_at",
+                        "must equal screening.screened_at for automated-policy review",
+                    )
     if lifecycle_status in {"reviewed", "superseded"} and review_status != "approved":
         _error(
             errors,

@@ -1,6 +1,6 @@
 # Noosphere Experience Protocol v0.1
 
-Status: **experimental candidate protocol**
+Status: **experimental automated-review protocol**
 
 An Experience Record preserves a bounded account of what happened in one real
 troubleshooting episode: its environment, constraints, attempts, failure mechanisms,
@@ -21,8 +21,9 @@ The intended relationship is:
 ```text
 private task trace
   -> redacted Experience candidate
-  -> deterministic machine screening and canonical candidate recording
-  -> review and, where possible, independent reproduction
+  -> authenticated deterministic screening and automated policy review
+  -> accepted canonical Experience record
+  -> optional human review and, where possible, independent reproduction
   -> one or more Skill proposals or updates
   -> immutable Skill release
   -> version-bound Outcomes
@@ -40,7 +41,8 @@ The protocol keeps four independent dimensions:
    `superseded`, or `withdrawn`.
 2. `screening.status` records whether the repository's bounded deterministic policy
    gate passed. Screening is not semantic verification or human approval.
-3. `review.status` records human review independently of lifecycle.
+3. `review.status` records a review decision, while `review.mode` distinguishes
+   `automated-policy` from `human`.
 4. `verification.level` distinguishes `self-observed`, `locally-verified`, and
    `independently-reproduced`.
 
@@ -78,11 +80,13 @@ registry.
 - Canonical record JSON is bounded to 64 KiB, with bounded arrays and strings. Raw logs
   and per-file evidence remain external references rather than being copied into the
   protocol object.
-- Candidate records require completed redaction and remain unapproved; review can be
-  `pending` or `changes-requested`.
+- Submitted candidate records require completed redaction and a pending review decision.
+  The repository-owned Agent, not the submitter, may turn a passing candidate into an
+  approved reviewed record.
 - Every tracked record must be machine-screened and carry a passing receipt. The recognized
   methods are the repository policy gate and the GitHub Experience Agent. A passing
-  receipt does not change `review.status` or `verification.level`.
+  receipt is required for automated approval but does not change
+  `verification.level`.
 - GitHub Issue intake binds `provenance.author_ref` to the authenticated Issue author
   and stores one immutable source-Issue identity. Edits reconcile the same canonical
   path instead of creating timestamped duplicates.
@@ -90,7 +94,9 @@ registry.
   SHA, workflow run, job, and step. The Agent verifies all five through the GitHub API
   and stores the bounded receipt. This proves workflow provenance, not semantic or
   independent reproduction.
-- A reviewed record requires an identified reviewer and review timestamp.
+- A reviewed record requires an identified reviewer, explicit `human` or
+  `automated-policy` mode, and review timestamp. Automated review must name the same
+  recognized gate as its screening receipt and use the same timestamp.
 - A `changes-requested` candidate also records its reviewer, timestamp, and notes while
   remaining under `candidates/`.
 - No Experience is automatically converted into a Skill or allowed to mutate an
@@ -102,9 +108,11 @@ The public Issue Form accepts a complete v0.1 JSON record. The repository-owned 
 treats the Issue body as untrusted data, checks out only trusted `main`, binds the
 authenticated GitHub author, screens secrets, prompt overrides, unsafe resolution
 commands, redaction, paths, references, and evidence claims, then runs the canonical
-Python tests and validator. A passing record is committed directly to its stable
-`experience_records/candidates/<experience_id>.json` path and the Issue receives one
-idempotent status comment and public link.
+Python tests and validator. A passing record receives an `automated-policy` approval,
+is committed directly to its stable
+`experience_records/reviewed/<experience_id>.json` path on `main`, and the Issue
+receives one idempotent status comment, exact state labels, a public link, and an
+automatic completed closure.
 
 Edits retry the same source Issue and path. Invalid edits do not overwrite the last
 passing record. All canonical branch writers share the `noosphere-main-writer` queue.
@@ -117,22 +125,26 @@ writing. It does not run any submitted code.
 
 GitHub Issue workflows become active only after their workflow file reaches the default
 branch. The first repository-authored Experience ships in the same bootstrap PR and
-therefore carries a `repository-policy-gate-v1` screening receipt; it is not falsely
-described as having been processed by the not-yet-deployed Issue workflow.
+therefore carries matching `repository-policy-gate-v1` screening and
+`automated-policy` review receipts; it is not falsely described as having been
+processed by the not-yet-deployed Issue workflow.
 `workflow_dispatch` on `main` is the recovery path for an existing Experience Issue.
 
 ## v0.1 publication boundary
 
-This version adds no MCP tools, no automatic Experience-to-Skill promotion, and no
-automatic human approval. The GitHub Experience Agent automates only bounded candidate
-intake and machine screening. A successful result is reported as `recorded candidate`,
-never as `reviewed`, `independently reproduced`, or a callable Skill. The protocol also
-does not import the legacy frontend's hard-coded `Experience` examples or their
-unverified trust scores.
+This version adds no MCP tools and no automatic Experience-to-Skill promotion. The
+GitHub Experience Agent automates candidate intake, evidence verification, policy
+review, acceptance, canonical `main` persistence, status reconciliation, and Issue
+closure. A successful result is reported as `automatically reviewed and accepted`.
+Its review mode is explicitly `automated-policy`, never human review, independent
+reproduction, or publication as a callable Skill. The protocol also does not import
+the legacy frontend's hard-coded `Experience` examples or their unverified trust
+scores.
 
-## Candidate review checklist
+## Automated acceptance checklist
 
-Before moving a record from `candidates/` to `reviewed/`, a reviewer must confirm:
+Before moving a submitted candidate to `reviewed/`, the repository-owned Agent must
+confirm:
 
 1. the case is a real observation rather than a synthetic fixture;
 2. environment and constraints are specific enough to bound applicability;
@@ -140,7 +152,12 @@ Before moving a record from `candidates/` to `reviewed/`, a reviewer must confir
 4. every verification claim resolves to declared evidence;
 5. private identifiers and raw content have been removed;
 6. lifecycle, review, and verification claims remain independent; and
-7. machine screening is reported separately from human review and does not overstate
-   workflow provenance; and
+7. automated policy review is reported separately from human review and does not
+   overstate workflow provenance; and
 8. any related Skill reference identifies a real immutable release or is explicitly a
    candidate slug.
+
+Failure at any gate leaves the Issue open with exact findings. Editing or reopening the
+same Issue reruns the entire policy against the authenticated author and stable record
+identity. No maintainer approval or merge action is required for a passing Experience
+submission.

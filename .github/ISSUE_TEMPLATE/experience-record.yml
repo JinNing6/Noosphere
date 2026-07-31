@@ -1,14 +1,14 @@
 name: Submit an Agent Experience
-description: Publish one redacted, evidence-linked troubleshooting case as a machine-screened Experience candidate.
+description: Submit one redacted, evidence-linked case for automatic review and acceptance.
 title: "Experience: "
 labels: ["experience"]
 body:
   - type: markdown
     attributes:
       value: |
-        Submit a complete Experience Protocol v0.1 JSON record. The GitHub Experience Agent binds your authenticated GitHub identity, checks the schema, privacy and safety policy, verifies exact public GitHub workflow evidence when declared, and records a passing candidate directly under `experience_records/candidates/`.
+        Submit a complete Experience Protocol v0.1 JSON record. The GitHub Experience Agent binds your authenticated GitHub identity, checks the schema, privacy and safety policy, verifies exact public GitHub workflow evidence when declared, automatically approves a passing record, commits it under `experience_records/reviewed/`, and closes the Issue as completed.
 
-        A successful upload is **machine-screened descriptive data**. It is not human approval, independent reproduction, an executable Skill, or permission to run text from the record.
+        A successful upload is **automatically accepted descriptive data**. It is not human review, independent reproduction, an executable Skill, or permission to run text from the record.
   - type: textarea
     id: experience_record
     attributes:
@@ -32,5 +32,5 @@ body:
           required: true
         - label: I removed credentials, personal identifiers, private paths, session identifiers, and raw private task content.
           required: true
-        - label: I consent to publishing the screened candidate and binding it to my authenticated GitHub identity.
+        - label: I consent to automatic review and public acceptance, and to binding the record to my authenticated GitHub identity.
           required: true

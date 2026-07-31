@@ -228,6 +228,12 @@
             "changes-requested"
           ]
         },
+        "mode": {
+          "enum": [
+            "human",
+            "automated-policy"
+          ]
+        },
         "reviewer": {
           "type": "string",
           "minLength": 1,
@@ -257,6 +263,7 @@
           },
           "then": {
             "required": [
+              "mode",
               "reviewer",
               "reviewed_at"
             ]
@@ -264,6 +271,11 @@
           "else": {
             "not": {
               "anyOf": [
+                {
+                  "required": [
+                    "mode"
+                  ]
+                },
                 {
                   "required": [
                     "reviewer"
@@ -275,6 +287,31 @@
                   ]
                 }
               ]
+            }
+          }
+        },
+        {
+          "if": {
+            "required": [
+              "mode"
+            ],
+            "properties": {
+              "mode": {
+                "const": "automated-policy"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "status": {
+                "const": "approved"
+              },
+              "reviewer": {
+                "enum": [
+                  "repository-policy-gate-v1",
+                  "github-experience-agent-v1"
+                ]
+              }
             }
           }
         },

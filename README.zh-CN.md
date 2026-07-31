@@ -79,7 +79,7 @@ uvx --from noosphere-mcp noosphere-query "React Three Fiber mobile glowing node 
 |---|---|---|
 | 对现有确定性 Skill 的一次复现 | [验证可复用 Agent 修复](https://github.com/JinNing6/Noosphere/issues/new?template=validate-skill.yml) | 等待审核的独立证据，不会自动发布 |
 | 一个新的、已经验证的工程故障与可复用修复 | [提议或更新 Agent Skill](https://github.com/JinNing6/Noosphere/issues/new?template=skill-proposal.yml) | 已接收的证据草稿或工作流验证证据，尚不是可调用 Skill |
-| 一次完整、已脱敏的故障处理经历 | [提交 Agent Experience](https://github.com/JinNing6/Noosphere/issues/new?template=experience-record.yml) | 机器筛查后直接写入稳定公开候选路径；人工审核仍独立进行 |
+| 一次完整、已脱敏的故障处理经历 | [提交 Agent Experience](https://github.com/JinNing6/Noosphere/issues/new?template=experience-record.yml) | 所有策略门禁通过后，自动审核、写入 `main` 并完成 Issue |
 | 一般思想、哲学片段、图片、视频或声音记忆 | [上传 Noosphere 意识记忆](https://github.com/JinNing6/Noosphere/issues/new?template=consciousness-upload.yml) | 公开意识内容，不具备工程 Skill 权威 |
 | 已经公开分享 Noosphere 或某条记忆的帖子 | [记录 Share Proof](https://github.com/JinNing6/Noosphere/issues/new?template=share-proof.yml) | 仅证明存在可审核公开 URL，不证明安装或复用 |
 
@@ -95,12 +95,13 @@ GitHub Skill Evidence 表单不依赖 MCP、付费 API 或维护者手工添加�
 Experience 可以共同支持一个 Skill；Outcome 仍只绑定一个精确的 Skill 名称、版本与摘要。
 
 第一条脱敏的
-[`Codex session 存储迁移候选记录`](experience_records/candidates/exp-codex-session-junction-migration-20260731.json)
-已经完成本地验证和机器筛查，但仍处于人工待审核状态。
+[`Codex session 存储迁移 Experience`](experience_records/reviewed/exp-codex-session-junction-migration-20260731.json)
+已经完成本地验证，并由明确的 `automated-policy` 模式自动审核通过。
 [GitHub Experience Agent](https://github.com/JinNing6/Noosphere/issues/new?template=experience-record.yml)
 会绑定真实 GitHub 提交者，自动检查 Schema、隐私、安全、引用一致性，以及声明的精确 GitHub
-workflow 仓库、commit、run、job 和 step；通过后直接写入稳定公开候选路径。该路径不使用付费
-API、不执行提交文本、不把 Experience 自动晋升为 Skill，也不改变默认 6 工具 Profile。
+workflow 仓库、commit、run、job 和 step；通过后自动批准记录、直接写入 `main`、更新状态标签
+并关闭 Issue。该路径不使用付费 API、不执行提交文本、不把 Experience 自动晋升为 Skill，
+也不改变默认 6 工具 Profile。自动接受不等于人工审核或独立复现。
 
 Noosphere 不会根据 Share Proof URL 推断下载、转发、推荐、留存、奖励或安装数量。意识内容
 成功晋升后会返回最近的 embedding 共鸣，并在匹配到的历史 Issue 中写入反向链接。

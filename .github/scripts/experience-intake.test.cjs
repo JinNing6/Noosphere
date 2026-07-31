@@ -28,7 +28,7 @@ function candidate() {
       "..",
       "..",
       "experience_records",
-      "candidates",
+      "reviewed",
       "exp-codex-session-junction-migration-20260731.json",
     ),
     "utf8",
@@ -36,9 +36,10 @@ function candidate() {
   delete record.screening;
   record.experience_id = "exp-github-agent-intake-20260731";
   record.context.observed_at = "2026-07-31T08:59:59Z";
+  record.lifecycle.status = "candidate";
   record.lifecycle.created_at = ISSUE.created_at;
   record.lifecycle.updated_at = ISSUE.updated_at;
-  record.review = { status: "pending", notes: "Awaiting human review after machine screening." };
+  record.review = { status: "pending", notes: "Awaiting automated review." };
   return record;
 }
 
@@ -94,7 +95,8 @@ test("binds authenticated identity and one stable Issue path", () => {
   });
 
   assert.equal(result.ready, true);
-  assert.equal(result.path, "experience_records/candidates/exp-github-agent-intake-20260731.json");
+  assert.equal(result.path, "experience_records/reviewed/exp-github-agent-intake-20260731.json");
+  assert.equal(result.record.lifecycle.status, "reviewed");
   assert.equal(result.record.provenance.author_ref, "github:example-contributor");
   assert.deepEqual(result.record.provenance.source_issue, {
     provider: "github",
@@ -107,6 +109,13 @@ test("binds authenticated identity and one stable Issue path", () => {
     method: "github-experience-agent-v1",
     screened_at: ISSUE.updated_at,
     findings: [],
+  });
+  assert.deepEqual(result.record.review, {
+    status: "approved",
+    mode: "automated-policy",
+    reviewer: "github-experience-agent-v1",
+    reviewed_at: ISSUE.updated_at,
+    notes: "Automatically approved after authenticated identity binding, deterministic policy screening, declared workflow-evidence verification, and canonical repository validation.",
   });
 });
 
@@ -129,10 +138,34 @@ test("rejects identity changes and collisions instead of creating duplicate reco
   assert.equal(result.findings[0].code, "EXPERIENCE_ID_IMMUTABLE");
 });
 
+test("an authenticated Issue edit revalidates and updates the same accepted record", () => {
+  const first = prepareExperienceIssue({
+    record: candidate(),
+    issue: ISSUE,
+    repository: REPOSITORY,
+  });
+  const edited = candidate();
+  edited.summary = `${edited.summary} The contributor added a bounded clarification.`;
+  const result = prepareExperienceIssue({
+    record: edited,
+    issue: { ...ISSUE, updated_at: "2026-07-31T09:05:00Z" },
+    repository: REPOSITORY,
+    existingRecords: [{ path: first.path, record: first.record }],
+  });
+
+  assert.equal(result.ready, true);
+  assert.equal(result.path, first.path);
+  assert.equal(result.previousPath, first.path);
+  assert.equal(result.record.lifecycle.created_at, ISSUE.created_at);
+  assert.equal(result.record.lifecycle.updated_at, "2026-07-31T09:05:00Z");
+  assert.equal(result.record.review.mode, "automated-policy");
+});
+
 test("machine screening rejects approval claims, prompt overrides, credentials, and unsafe resolutions", () => {
   const approved = candidate();
   approved.review = {
     status: "approved",
+    mode: "human",
     reviewer: "self",
     reviewed_at: "2026-07-31T09:00:00Z",
   };
@@ -243,15 +276,17 @@ test("fails closed when declared workflow evidence is unavailable", async () => 
   assert.match(result.findings[0].message, /public-source-not-found/);
 });
 
-test("renders exact screened-versus-reviewed state with one idempotency marker", () => {
+test("renders an exact automatically accepted state with one idempotency marker", () => {
   const body = renderExperienceIntakeComment({
-    state: "recorded",
-    recordUrl: "https://github.com/JinNing6/Noosphere/blob/main/experience_records/candidates/example.json",
+    state: "accepted",
+    recordUrl: "https://github.com/JinNing6/Noosphere/blob/main/experience_records/reviewed/example.json",
     issueNumber: 91,
   });
 
-  assert.match(body, /recorded candidate/);
-  assert.match(body, /not human approval, independent reproduction, or a callable Skill/);
+  assert.match(body, /automatically reviewed and accepted/);
+  assert.match(body, /committed to `main`/);
+  assert.match(body, /Issue was completed automatically/);
+  assert.match(body, /not human review, independent reproduction, or publication as a callable Skill/);
   assert.ok(body.endsWith(COMMENT_MARKER));
 });
 
@@ -274,6 +309,11 @@ test("workflow uses a trusted checkout, serialized writer queue, canonical valid
   assert.match(workflow, /python -m unittest scripts\.test_validate_experience_records/);
   assert.match(workflow, /python scripts\/validate_experience_records\.py/);
   assert.match(workflow, /git add -- "\$TARGET_PATH"/);
+  assert.match(workflow, /git add -u -- "\$PREVIOUS_PATH"/);
+  assert.match(workflow, /state_reason:\s*'completed'/);
+  assert.match(workflow, /state:\s*'open'/);
+  assert.match(workflow, /removeLabel/);
+  assert.match(workflow, /experience-auto-approved/);
   assert.match(workflow, /github-actions\[bot\]/);
   assert.doesNotMatch(workflow, /pull_request_target/);
   assert.doesNotMatch(workflow, /OPENAI_API_KEY|GEMINI_API_KEY|ANTHROPIC_API_KEY/);
@@ -292,10 +332,11 @@ test("Issue Form and label initializer expose the automated Experience states", 
   assert.match(form, /name:\s*Submit an Agent Experience/);
   assert.match(form, /labels:\s*\["experience"\]/);
   assert.match(form, /label:\s*Experience record JSON/);
-  assert.match(form, /consent to publishing the screened candidate/);
+  assert.match(form, /consent to automatic review and public acceptance/);
   for (const label of [
     "experience",
     "experience-screened",
+    "experience-auto-approved",
     "experience-recorded",
     "experience-incomplete",
   ]) {

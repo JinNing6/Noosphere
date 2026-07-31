@@ -162,7 +162,7 @@ function screenExperienceRecord(record) {
     findings.push(finding("EXPERIENCE_LIFECYCLE_INVALID", "Automated intake accepts candidate records only."));
   }
   if (record?.review?.status !== "pending") {
-    findings.push(finding("EXPERIENCE_REVIEW_INVALID", "Automated intake cannot claim a human review decision."));
+    findings.push(finding("EXPERIENCE_REVIEW_INVALID", "Submitted records must leave the review decision pending for the Experience Agent."));
   }
   if (!["applied", "not-required"].includes(record?.redaction?.status)) {
     findings.push(finding("EXPERIENCE_REDACTION_INCOMPLETE", "Redaction must be applied or explicitly not required."));
@@ -248,14 +248,6 @@ function prepareExperienceIssue({
       path: "",
     };
   }
-  if (sourceMatch?.path?.startsWith("experience_records/reviewed/")) {
-    return {
-      ready: false,
-      findings: [finding("EXPERIENCE_ALREADY_REVIEWED", "A reviewed Experience cannot be rewritten through automated intake.")],
-      record: null,
-      path: "",
-    };
-  }
   if (idMatch && !sameSourceIssue(idMatch.record, sourceIssue)) {
     return {
       ready: false,
@@ -267,6 +259,7 @@ function prepareExperienceIssue({
 
   const eventTimestamp = String(issue.updated_at || issue.created_at || "").trim();
   const prepared = JSON.parse(JSON.stringify(record));
+  prepared.lifecycle.status = "reviewed";
   prepared.lifecycle.updated_at = eventTimestamp;
   if (sourceMatch?.record?.lifecycle?.created_at) {
     prepared.lifecycle.created_at = sourceMatch.record.lifecycle.created_at;
@@ -284,12 +277,20 @@ function prepareExperienceIssue({
     screened_at: eventTimestamp,
     findings: [],
   };
+  prepared.review = {
+    status: "approved",
+    mode: "automated-policy",
+    reviewer: "github-experience-agent-v1",
+    reviewed_at: eventTimestamp,
+    notes: "Automatically approved after authenticated identity binding, deterministic policy screening, declared workflow-evidence verification, and canonical repository validation.",
+  };
 
   return {
     ready: true,
     findings: [],
     record: prepared,
-    path: `experience_records/candidates/${prepared.experience_id}.json`,
+    path: `experience_records/reviewed/${prepared.experience_id}.json`,
+    previousPath: sourceMatch?.path || "",
   };
 }
 
@@ -337,15 +338,17 @@ function renderExperienceIntakeComment({
   issueNumber,
 }) {
   const lines = ["## GitHub Experience Agent", ""];
-  if (state === "recorded") {
+  if (state === "accepted") {
     lines.push(
-      "Status: **recorded candidate**",
+      "Status: **automatically reviewed and accepted**",
       "",
-      `The Experience passed deterministic policy screening and was recorded at [its stable public path](${recordUrl}).`,
+      `The Experience passed the complete automated review policy and was committed to \`main\` at [its stable public path](${recordUrl}).`,
       "",
       "- GitHub author identity was bound from the authenticated Issue author.",
       "- Declared workflow evidence, when present, was checked against the exact public repository, commit, run, job, and step.",
-      "- This is machine-screened descriptive data, not human approval, independent reproduction, or a callable Skill.",
+      "- Canonical schema, privacy, safety, evidence, and repository policy gates passed.",
+      "- The Issue was completed automatically; no maintainer merge step remains.",
+      "- Automated acceptance is not human review, independent reproduction, or publication as a callable Skill.",
     );
   } else {
     lines.push("Status: **changes requested**", "");

@@ -21,7 +21,7 @@ from scripts.validate_experience_records import (
 class ExperienceRecordValidatorTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
-        cls.record_path = next((RECORDS_ROOT / "candidates").glob("*.json"))
+        cls.record_path = next((RECORDS_ROOT / "reviewed").glob("*.json"))
         cls.record = json.loads(cls.record_path.read_text(encoding="utf-8"))
 
     def assert_has_error(self, errors: list[str], fragment: str) -> None:
@@ -30,7 +30,7 @@ class ExperienceRecordValidatorTests(unittest.TestCase):
             f"expected an error containing {fragment!r}, got {errors!r}",
         )
 
-    def test_repository_candidate_is_valid(self) -> None:
+    def test_repository_automatically_accepted_record_is_valid(self) -> None:
         self.assertEqual([], validate_repository())
 
     def test_schema_declares_current_draft_and_closed_top_level(self) -> None:
@@ -98,15 +98,17 @@ class ExperienceRecordValidatorTests(unittest.TestCase):
 
     def test_candidate_cannot_claim_approved_review(self) -> None:
         record = copy.deepcopy(self.record)
+        record["lifecycle"]["status"] = "candidate"
         record["review"] = {
             "status": "approved",
+            "mode": "human",
             "reviewer": "maintainer",
             "reviewed_at": "2026-07-31T08:00:00Z",
         }
         errors = validate_record(record)
         self.assert_has_error(errors, "a candidate cannot already be approved")
 
-    def test_machine_screening_is_required_but_remains_separate_from_review(
+    def test_machine_screening_is_required_and_automated_review_stays_explicit(
         self,
     ) -> None:
         record = copy.deepcopy(self.record)
@@ -122,13 +124,27 @@ class ExperienceRecordValidatorTests(unittest.TestCase):
         }
         errors = validate_record(record)
         self.assert_has_error(errors, "repository-policy-gate-v1")
-        self.assertEqual("pending", record["review"]["status"])
+        self.assertEqual("automated-policy", record["review"]["mode"])
+        self.assertEqual("locally-verified", record["verification"]["level"])
+
+    def test_automated_review_must_match_its_screening_receipt(self) -> None:
+        record = copy.deepcopy(self.record)
+        record["review"]["reviewer"] = "github-experience-agent-v1"
+        errors = validate_record(record)
+        self.assert_has_error(errors, "must match screening.method")
+
+        record = copy.deepcopy(self.record)
+        record["review"]["reviewed_at"] = "2026-07-31T08:00:00Z"
+        errors = validate_record(record)
+        self.assert_has_error(errors, "must equal screening.screened_at")
 
     def test_changes_requested_records_reviewer_and_stays_candidate(self) -> None:
         record = copy.deepcopy(self.record)
+        record["lifecycle"]["status"] = "candidate"
         record["lifecycle"]["updated_at"] = "2026-07-31T08:00:00Z"
         record["review"] = {
             "status": "changes-requested",
+            "mode": "human",
             "reviewer": "maintainer",
             "reviewed_at": "2026-07-31T08:00:00Z",
             "notes": "Clarify the independent evidence boundary.",
@@ -145,6 +161,7 @@ class ExperienceRecordValidatorTests(unittest.TestCase):
         record["lifecycle"]["updated_at"] = "2026-07-31T08:00:00Z"
         record["review"] = {
             "status": "approved",
+            "mode": "human",
             "reviewer": "maintainer",
             "reviewed_at": "2026-07-31T08:00:00Z",
         }
@@ -340,9 +357,11 @@ class ExperienceRecordValidatorTests(unittest.TestCase):
         self.assertIn("python scripts/validate_experience_records.py", release)
         self.assertIn("adds no MCP tools", protocol)
         self.assertIn("GitHub Experience Agent", protocol)
-        self.assertIn("machine-screened", protocol)
+        self.assertIn("automated-policy", protocol)
+        self.assertIn("canonical `main` persistence", protocol)
         self.assertIn("GitHub Experience Agent", readme)
         self.assertIn("python scripts/validate_experience_records.py", intake)
+        self.assertIn("state_reason: 'completed'", intake)
         self.assertIn("default six-tool profile", readme)
 
     def test_repository_rejects_duplicate_ids(self) -> None:
@@ -353,10 +372,13 @@ class ExperienceRecordValidatorTests(unittest.TestCase):
             candidates.mkdir()
             reviewed.mkdir()
             first = copy.deepcopy(self.record)
+            first["lifecycle"]["status"] = "candidate"
+            first["review"] = {"status": "pending"}
             second = copy.deepcopy(self.record)
             second["lifecycle"]["status"] = "reviewed"
             second["review"] = {
                 "status": "approved",
+                "mode": "human",
                 "reviewer": "maintainer",
                 "reviewed_at": "2026-07-31T08:00:00Z",
             }
@@ -369,8 +391,8 @@ class ExperienceRecordValidatorTests(unittest.TestCase):
     def test_repository_rejects_unknown_immutable_skill_relation(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             root = Path(temp_dir)
-            candidates = root / "candidates"
-            candidates.mkdir()
+            reviewed = root / "reviewed"
+            reviewed.mkdir()
             record = copy.deepcopy(self.record)
             record["relations"]["related_skills"] = [
                 {
@@ -379,7 +401,7 @@ class ExperienceRecordValidatorTests(unittest.TestCase):
                     "sha256": "a" * 64,
                 }
             ]
-            path = candidates / f"{record['experience_id']}.json"
+            path = reviewed / f"{record['experience_id']}.json"
             path.write_text(json.dumps(record), encoding="utf-8")
             errors = validate_repository(records_root=root)
         self.assert_has_error(errors, "does not identify an exact immutable release")
@@ -387,13 +409,13 @@ class ExperienceRecordValidatorTests(unittest.TestCase):
     def test_repository_rejects_dangling_experience_relation(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             root = Path(temp_dir)
-            candidates = root / "candidates"
-            candidates.mkdir()
+            reviewed = root / "reviewed"
+            reviewed.mkdir()
             record = copy.deepcopy(self.record)
             record["relations"]["related_experiences"] = [
                 "exp-missing-related-case-20260731"
             ]
-            path = candidates / f"{record['experience_id']}.json"
+            path = reviewed / f"{record['experience_id']}.json"
             path.write_text(json.dumps(record), encoding="utf-8")
             errors = validate_repository(records_root=root)
         self.assert_has_error(errors, "unknown Experience Record")

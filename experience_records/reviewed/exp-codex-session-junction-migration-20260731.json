@@ -5,13 +5,16 @@
   "title": "Migrating growing Codex session storage with a verified NTFS junction",
   "summary": "A Windows Codex Desktop workspace moved a rapidly growing session tree from the system volume to a larger NTFS volume while preserving the original logical path, historical task access, a rollback window, and continued append writes.",
   "lifecycle": {
-    "status": "candidate",
+    "status": "reviewed",
     "created_at": "2026-07-31T07:08:15Z",
-    "updated_at": "2026-07-31T07:08:15Z"
+    "updated_at": "2026-07-31T07:49:50Z"
   },
   "review": {
-    "status": "pending",
-    "notes": "The structure and redaction are machine-validated; moving this candidate into the reviewed collection still requires human review."
+    "status": "approved",
+    "mode": "automated-policy",
+    "reviewer": "repository-policy-gate-v1",
+    "reviewed_at": "2026-07-31T07:49:50Z",
+    "notes": "Automatically approved by the repository policy gate after deterministic schema, privacy, safety, provenance, and evidence-boundary validation. This is not human review or independent reproduction."
   },
   "screening": {
     "status": "passed",
