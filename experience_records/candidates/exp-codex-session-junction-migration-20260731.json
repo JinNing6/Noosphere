@@ -1,0 +1,222 @@
+{
+  "schema_version": "0.1",
+  "record_kind": "experience",
+  "experience_id": "exp-codex-session-junction-migration-20260731",
+  "title": "Migrating growing Codex session storage with a verified NTFS junction",
+  "summary": "A Windows Codex Desktop workspace moved a rapidly growing session tree from the system volume to a larger NTFS volume while preserving the original logical path, historical task access, a rollback window, and continued append writes.",
+  "lifecycle": {
+    "status": "candidate",
+    "created_at": "2026-07-31T07:08:15Z",
+    "updated_at": "2026-07-31T07:08:15Z"
+  },
+  "review": {
+    "status": "pending",
+    "notes": "The structure and redaction are machine-validated; exact public publication still requires human review."
+  },
+  "context": {
+    "platform": "windows",
+    "environment": [
+      "Codex Desktop with multi-agent session rollouts",
+      "NTFS system and destination volumes",
+      "The application continued to resolve its standard %USERPROFILE%\\.codex\\sessions path"
+    ],
+    "constraints": [
+      "Preserve existing task history and the application's logical session path",
+      "Do not migrate credentials, configuration, plugins, or the complete Codex state root",
+      "Do not switch storage while Codex-related processes are active",
+      "Keep a verified rollback copy until post-switch writes are confirmed"
+    ],
+    "observed_at": "2026-07-31T07:08:14Z"
+  },
+  "symptom": {
+    "summary": "Parallel agent sessions caused the session tree on the system volume to grow much faster than ordinary cache or history files.",
+    "impact": "The system volume fell to roughly 13.1 GiB free while session data occupied about 83.46 GiB, creating a near-term risk of disk exhaustion.",
+    "signals": [
+      "The initial inventory found 1,863 session files totaling about 83.46 GiB",
+      "One day accounted for about 42.21 GiB, mostly in forked sub-agent rollouts",
+      "The configured history size limit did not govern rollout JSONL files"
+    ]
+  },
+  "attempts": [
+    {
+      "sequence": 1,
+      "action": "Evaluate redirecting the complete Codex state root.",
+      "rationale": "The documented state-root variable could relocate sessions together with all other Codex state.",
+      "result": "skipped",
+      "observation": "Existing absolute paths and unrelated credentials, configuration, and plugin state made the blast radius unnecessarily broad.",
+      "evidence_refs": [
+        "ev-migration-receipt"
+      ]
+    },
+    {
+      "sequence": 2,
+      "action": "Prepare a two-phase session-only migration with process preflight, a byte-preserving copy, file-count and digest checks, and an NTFS junction at the original path.",
+      "rationale": "This preserved application path semantics and a recoverable source copy while moving only the dominant storage tree.",
+      "result": "succeeded",
+      "observation": "The first phase copied and verified 1,863 files, then exposed the destination through the original session path.",
+      "evidence_refs": [
+        "ev-migration-receipt"
+      ]
+    },
+    {
+      "sequence": 3,
+      "action": "Test junction removal behavior under Windows PowerShell 5.1 and PowerShell 7.",
+      "rationale": "Rollback and finalization needed to remove the link itself without traversing into or deleting the destination tree.",
+      "result": "partial",
+      "observation": "The normal removal command was reliable in PowerShell 7 but raised a NullReferenceException for a directory junction in Windows PowerShell 5.1.",
+      "failure_mechanism": "Windows PowerShell 5.1 mishandled directory-junction removal through Remove-Item; the safe implementation first verified the ReparsePoint and target, then removed only the link through the non-recursive .NET directory API.",
+      "evidence_refs": [
+        "ev-migration-receipt"
+      ]
+    },
+    {
+      "sequence": 4,
+      "action": "Restart Codex, verify historical access and physical append writes through the junction, then finalize by deleting the verified rollback copy while Codex was stopped.",
+      "rationale": "The source copy should be removed only after the redirected workload proves it can read and continue writing.",
+      "result": "succeeded",
+      "observation": "The migration receipt reported continued writes, a finalized state, no leftover source backup, and about 83.462 GiB released on the system volume.",
+      "evidence_refs": [
+        "ev-migration-receipt",
+        "ev-live-junction-inspection"
+      ]
+    }
+  ],
+  "root_cause": {
+    "summary": "Forked multi-agent session rollouts persisted large repeated histories under the default user-profile session root.",
+    "mechanism": "High-parallelism work created many large rollout JSONL files, while the available history-size setting governed a different history file. Because the session root remained on the constrained system volume, continued append-only growth consumed that volume even though another NTFS volume had more capacity."
+  },
+  "resolution": {
+    "summary": "Relocate only the physical session tree and preserve its logical path with a verified NTFS directory junction.",
+    "steps": [
+      "Stop Codex completely and fail closed if any relevant process still owns session state.",
+      "Copy the complete session tree to a dedicated directory on a larger NTFS volume while preserving metadata.",
+      "Compare file count, total bytes, and full file digests before switching paths.",
+      "Keep the original tree as a temporary rollback copy and create an NTFS directory junction from %USERPROFILE%\\.codex\\sessions to <target-volume>:\\CodexData\\sessions.",
+      "Restart Codex and verify historical task access plus new physical writes on the destination volume.",
+      "Stop Codex again, revalidate the destination, and remove the rollback copy only after explicit finalization."
+    ]
+  },
+  "verification": {
+    "level": "locally-verified",
+    "summary": "The migration had an internally verified completion receipt and a later read-only inspection confirmed that the junction, accumulated data, and continued writes remain present.",
+    "checks": [
+      {
+        "check_id": "check-initial-copy",
+        "method": "measurement",
+        "result": "pass",
+        "observed_at": "2026-07-31T06:47:00Z",
+        "summary": "The user-provided completion receipt reports 1,863 files and 83.463 GiB after full SHA-256 comparison.",
+        "evidence_refs": [
+          "ev-migration-receipt"
+        ]
+      },
+      {
+        "check_id": "check-finalization",
+        "method": "inspection",
+        "result": "pass",
+        "observed_at": "2026-07-31T06:50:00Z",
+        "summary": "The completion receipt reports finalized state, no residual rollback directory, about 83.462 GiB released, and continued writes through the link.",
+        "evidence_refs": [
+          "ev-migration-receipt"
+        ]
+      },
+      {
+        "check_id": "check-live-junction",
+        "method": "measurement",
+        "result": "pass",
+        "observed_at": "2026-07-31T07:08:14Z",
+        "summary": "A later local inspection found a directory ReparsePoint of link type Junction, 1,903 files totaling 92,292,470,686 bytes, and a newest write timestamp on the same day.",
+        "evidence_refs": [
+          "ev-live-junction-inspection"
+        ]
+      }
+    ]
+  },
+  "applicability": {
+    "applies_when": [
+      "A Windows application requires a stable logical session path but its session tree is exhausting the current NTFS volume",
+      "The destination is a local NTFS volume with enough capacity for the live tree, rollback window, and expected near-term growth",
+      "The application can be fully stopped for the copy, switch, and finalization boundaries"
+    ],
+    "avoid_when": [
+      "The destination filesystem does not support NTFS directory junction semantics",
+      "Relevant application processes cannot be stopped or the live source may change during verification",
+      "The destination lacks capacity for both the migrated data and realistic continued high-parallelism growth",
+      "The requirement is to relocate credentials, configuration, plugins, or the complete application state root"
+    ]
+  },
+  "risks": [
+    {
+      "severity": "high",
+      "description": "Switching or finalizing while Codex is active can produce an inconsistent copy or lose writes.",
+      "mitigation": "Use a process preflight that refuses to continue while relevant processes are present, and repeat it before finalization."
+    },
+    {
+      "severity": "high",
+      "description": "Recursive link removal can traverse into the destination or behave inconsistently across PowerShell versions.",
+      "mitigation": "Verify the path is the expected ReparsePoint with the expected target, then remove only the junction through a tested non-recursive API."
+    },
+    {
+      "severity": "medium",
+      "description": "Moving the existing tree may only transfer the capacity problem to a destination volume with limited remaining headroom.",
+      "mitigation": "Budget capacity from observed peak growth, monitor the destination, and archive closed sessions through a separately reviewed retention process."
+    }
+  ],
+  "rollback": {
+    "available": true,
+    "conditions": [
+      "The temporary source backup still exists and finalization has not been confirmed",
+      "Codex and related processes are fully stopped",
+      "Any writes made after the switch are reconciled before restoring the source path"
+    ],
+    "steps": [
+      "Verify the junction and its expected destination before changing either path.",
+      "Synchronize any post-switch files back into the rollback tree and verify the result.",
+      "Remove only the junction, restore the rollback tree to the original session path, and verify historical task access before deleting destination data."
+    ]
+  },
+  "evidence": [
+    {
+      "evidence_id": "ev-migration-receipt",
+      "kind": "user-attestation",
+      "visibility": "private-redacted",
+      "summary": "A redacted task receipt records the initial storage inventory, tested two-phase migration tool, full-file verification, junction switch, continued writes, finalization, and released capacity. Raw task text, user paths, session identifiers, and per-file hashes are intentionally not published.",
+      "captured_at": "2026-07-31T06:50:00Z"
+    },
+    {
+      "evidence_id": "ev-live-junction-inspection",
+      "kind": "filesystem-metadata",
+      "visibility": "local-only",
+      "summary": "A read-only follow-up inspection confirmed the standard session path is still a Junction on the secondary volume and measured 1,903 files totaling 92,292,470,686 bytes with a current-day latest write. The absolute user and destination paths are redacted.",
+      "captured_at": "2026-07-31T07:08:14Z"
+    }
+  ],
+  "relations": {
+    "related_experiences": [],
+    "related_skills": [],
+    "derived_skill_candidates": [
+      "codex-session-storage-junction-migration"
+    ],
+    "supersedes": []
+  },
+  "provenance": {
+    "source_type": "user-report",
+    "author_ref": "redacted-workspace-user",
+    "captured_at": "2026-07-31T07:08:15Z",
+    "source_evidence_refs": [
+      "ev-migration-receipt",
+      "ev-live-junction-inspection"
+    ]
+  },
+  "redaction": {
+    "status": "applied",
+    "removed_categories": [
+      "personal-identifiers",
+      "absolute-user-paths",
+      "session-identifiers",
+      "raw-content",
+      "secrets"
+    ],
+    "notes": "The record retains aggregate counts, byte totals, generalized paths, failure mechanisms, and verification boundaries while removing raw session content, filenames, user identity, exact private paths, and individual file digests."
+  }
+}

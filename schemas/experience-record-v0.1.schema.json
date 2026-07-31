@@ -1,0 +1,947 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Noosphere Experience Record v0.1",
+  "description": "A non-executable, evidence-linked record of one bounded troubleshooting episode.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "record_kind",
+    "experience_id",
+    "title",
+    "summary",
+    "lifecycle",
+    "review",
+    "context",
+    "symptom",
+    "attempts",
+    "root_cause",
+    "resolution",
+    "verification",
+    "applicability",
+    "risks",
+    "rollback",
+    "evidence",
+    "relations",
+    "provenance",
+    "redaction"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "0.1"
+    },
+    "record_kind": {
+      "const": "experience"
+    },
+    "experience_id": {
+      "type": "string",
+      "pattern": "^exp-[a-z0-9]+(?:-[a-z0-9]+)*-[0-9]{8}$"
+    },
+    "title": {
+      "type": "string",
+      "minLength": 8,
+      "maxLength": 160
+    },
+    "summary": {
+      "type": "string",
+      "minLength": 20,
+      "maxLength": 1000
+    },
+    "lifecycle": {
+      "$ref": "#/$defs/lifecycle"
+    },
+    "review": {
+      "$ref": "#/$defs/review"
+    },
+    "context": {
+      "$ref": "#/$defs/context"
+    },
+    "symptom": {
+      "$ref": "#/$defs/symptom"
+    },
+    "attempts": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 32,
+      "items": {
+        "$ref": "#/$defs/attempt"
+      }
+    },
+    "root_cause": {
+      "$ref": "#/$defs/rootCause"
+    },
+    "resolution": {
+      "$ref": "#/$defs/resolution"
+    },
+    "verification": {
+      "$ref": "#/$defs/verification"
+    },
+    "applicability": {
+      "$ref": "#/$defs/applicability"
+    },
+    "risks": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 32,
+      "items": {
+        "$ref": "#/$defs/risk"
+      }
+    },
+    "rollback": {
+      "$ref": "#/$defs/rollback"
+    },
+    "evidence": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 64,
+      "items": {
+        "$ref": "#/$defs/evidence"
+      }
+    },
+    "relations": {
+      "$ref": "#/$defs/relations"
+    },
+    "provenance": {
+      "$ref": "#/$defs/provenance"
+    },
+    "redaction": {
+      "$ref": "#/$defs/redaction"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "lifecycle": {
+            "properties": {
+              "status": {
+                "enum": [
+                  "reviewed",
+                  "superseded"
+                ]
+              }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "review": {
+            "properties": {
+              "status": {
+                "const": "approved"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "lifecycle": {
+            "properties": {
+              "status": {
+                "const": "candidate"
+              }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "review": {
+            "properties": {
+              "status": {
+                "not": {
+                  "const": "approved"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "nonEmptyStringArray": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 64,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 1000
+      }
+    },
+    "evidenceRefArray": {
+      "type": "array",
+      "maxItems": 64,
+      "items": {
+        "type": "string",
+        "pattern": "^ev-[a-z0-9]+(?:-[a-z0-9]+)*$"
+      },
+      "uniqueItems": true
+    },
+    "lifecycle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "created_at",
+        "updated_at"
+      ],
+      "properties": {
+        "status": {
+          "enum": [
+            "candidate",
+            "reviewed",
+            "superseded",
+            "withdrawn"
+          ]
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updated_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "review": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status"
+      ],
+      "properties": {
+        "status": {
+          "enum": [
+            "pending",
+            "approved",
+            "changes-requested"
+          ]
+        },
+        "reviewer": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "reviewed_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "notes": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "enum": [
+                  "approved",
+                  "changes-requested"
+                ]
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "reviewer",
+              "reviewed_at"
+            ]
+          },
+          "else": {
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "reviewer"
+                  ]
+                },
+                {
+                  "required": [
+                    "reviewed_at"
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "changes-requested"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "notes"
+            ]
+          }
+        }
+      ]
+    },
+    "context": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "platform",
+        "environment",
+        "constraints",
+        "observed_at"
+      ],
+      "properties": {
+        "platform": {
+          "enum": [
+            "windows",
+            "macos",
+            "linux",
+            "cross-platform",
+            "other"
+          ]
+        },
+        "environment": {
+          "$ref": "#/$defs/nonEmptyStringArray"
+        },
+        "constraints": {
+          "$ref": "#/$defs/nonEmptyStringArray"
+        },
+        "observed_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "symptom": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "summary",
+        "impact",
+        "signals"
+      ],
+      "properties": {
+        "summary": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 1000
+        },
+        "impact": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 1000
+        },
+        "signals": {
+          "$ref": "#/$defs/nonEmptyStringArray"
+        }
+      }
+    },
+    "attempt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sequence",
+        "action",
+        "rationale",
+        "result",
+        "observation",
+        "evidence_refs"
+      ],
+      "properties": {
+        "sequence": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "action": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 1000
+        },
+        "rationale": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 1000
+        },
+        "result": {
+          "enum": [
+            "failed",
+            "partial",
+            "succeeded",
+            "skipped"
+          ]
+        },
+        "observation": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 1000
+        },
+        "failure_mechanism": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 1000
+        },
+        "evidence_refs": {
+          "$ref": "#/$defs/evidenceRefArray"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "result": {
+                "enum": [
+                  "failed",
+                  "partial"
+                ]
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "failure_mechanism"
+            ]
+          },
+          "else": {
+            "not": {
+              "required": [
+                "failure_mechanism"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "rootCause": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "summary",
+        "mechanism"
+      ],
+      "properties": {
+        "summary": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 1000
+        },
+        "mechanism": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 2000
+        }
+      }
+    },
+    "resolution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "summary",
+        "steps"
+      ],
+      "properties": {
+        "summary": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 1000
+        },
+        "steps": {
+          "$ref": "#/$defs/nonEmptyStringArray"
+        }
+      }
+    },
+    "verificationCheck": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "check_id",
+        "method",
+        "result",
+        "observed_at",
+        "summary",
+        "evidence_refs"
+      ],
+      "properties": {
+        "check_id": {
+          "type": "string",
+          "pattern": "^check-[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "method": {
+          "enum": [
+            "command",
+            "inspection",
+            "measurement",
+            "external-run"
+          ]
+        },
+        "result": {
+          "enum": [
+            "pass",
+            "fail",
+            "partial"
+          ]
+        },
+        "observed_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "summary": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 1000
+        },
+        "evidence_refs": {
+          "$ref": "#/$defs/evidenceRefArray"
+        }
+      }
+    },
+    "verification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "level",
+        "summary",
+        "checks"
+      ],
+      "properties": {
+        "level": {
+          "enum": [
+            "self-observed",
+            "locally-verified",
+            "independently-reproduced"
+          ]
+        },
+        "summary": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 1000
+        },
+        "checks": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "items": {
+            "$ref": "#/$defs/verificationCheck"
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "level": {
+                "const": "independently-reproduced"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "checks": {
+                "contains": {
+                  "properties": {
+                    "method": {
+                      "const": "external-run"
+                    },
+                    "result": {
+                      "const": "pass"
+                    }
+                  },
+                  "required": [
+                    "method",
+                    "result"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "applicability": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "applies_when",
+        "avoid_when"
+      ],
+      "properties": {
+        "applies_when": {
+          "$ref": "#/$defs/nonEmptyStringArray"
+        },
+        "avoid_when": {
+          "$ref": "#/$defs/nonEmptyStringArray"
+        }
+      }
+    },
+    "risk": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "severity",
+        "description",
+        "mitigation"
+      ],
+      "properties": {
+        "severity": {
+          "enum": [
+            "low",
+            "medium",
+            "high"
+          ]
+        },
+        "description": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 1000
+        },
+        "mitigation": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 1000
+        }
+      }
+    },
+    "rollback": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "available",
+        "conditions",
+        "steps"
+      ],
+      "properties": {
+        "available": {
+          "type": "boolean"
+        },
+        "conditions": {
+          "type": "array",
+          "maxItems": 64,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1000
+          }
+        },
+        "steps": {
+          "type": "array",
+          "maxItems": 64,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1000
+          }
+        },
+        "notes": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 1000
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "available": {
+                "const": true
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "conditions": {
+                "minItems": 1
+              },
+              "steps": {
+                "minItems": 1
+              }
+            }
+          },
+          "else": {
+            "required": [
+              "notes"
+            ],
+            "properties": {
+              "conditions": {
+                "maxItems": 0
+              },
+              "steps": {
+                "maxItems": 0
+              }
+            }
+          }
+        }
+      ]
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "evidence_id",
+        "kind",
+        "visibility",
+        "summary",
+        "captured_at"
+      ],
+      "properties": {
+        "evidence_id": {
+          "type": "string",
+          "pattern": "^ev-[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "kind": {
+          "enum": [
+            "user-attestation",
+            "filesystem-metadata",
+            "command-receipt",
+            "public-url",
+            "artifact-digest",
+            "workflow-run"
+          ]
+        },
+        "visibility": {
+          "enum": [
+            "public",
+            "private-redacted",
+            "local-only"
+          ]
+        },
+        "summary": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 2000
+        },
+        "captured_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "url": {
+          "type": "string",
+          "format": "uri",
+          "pattern": "^https://"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "enum": [
+                  "public-url",
+                  "workflow-run"
+                ]
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "url"
+            ],
+            "properties": {
+              "visibility": {
+                "const": "public"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "artifact-digest"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "sha256"
+            ]
+          }
+        }
+      ]
+    },
+    "skillRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "version",
+        "sha256"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "version": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "relations": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "related_experiences",
+        "related_skills",
+        "derived_skill_candidates",
+        "supersedes"
+      ],
+      "properties": {
+        "related_experiences": {
+          "type": "array",
+          "maxItems": 64,
+          "items": {
+            "type": "string",
+            "pattern": "^exp-[a-z0-9]+(?:-[a-z0-9]+)*-[0-9]{8}$"
+          },
+          "uniqueItems": true
+        },
+        "related_skills": {
+          "type": "array",
+          "maxItems": 32,
+          "items": {
+            "$ref": "#/$defs/skillRef"
+          }
+        },
+        "derived_skill_candidates": {
+          "type": "array",
+          "maxItems": 64,
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "uniqueItems": true
+        },
+        "supersedes": {
+          "type": "array",
+          "maxItems": 64,
+          "items": {
+            "type": "string",
+            "pattern": "^exp-[a-z0-9]+(?:-[a-z0-9]+)*-[0-9]{8}$"
+          },
+          "uniqueItems": true
+        }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_type",
+        "author_ref",
+        "captured_at",
+        "source_evidence_refs"
+      ],
+      "properties": {
+        "source_type": {
+          "enum": [
+            "user-report",
+            "maintainer-observation",
+            "public-issue",
+            "external-reference"
+          ]
+        },
+        "author_ref": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "captured_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "source_evidence_refs": {
+          "$ref": "#/$defs/evidenceRefArray"
+        }
+      }
+    },
+    "redaction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "removed_categories",
+        "notes"
+      ],
+      "properties": {
+        "status": {
+          "enum": [
+            "applied",
+            "not-required",
+            "pending"
+          ]
+        },
+        "removed_categories": {
+          "type": "array",
+          "maxItems": 6,
+          "items": {
+            "enum": [
+              "personal-identifiers",
+              "absolute-user-paths",
+              "session-identifiers",
+              "raw-content",
+              "secrets",
+              "other"
+            ]
+          },
+          "uniqueItems": true
+        },
+        "notes": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 1000
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "applied"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "removed_categories": {
+                "minItems": 1
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "not-required"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "removed_categories": {
+                "maxItems": 0
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

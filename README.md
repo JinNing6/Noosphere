@@ -77,6 +77,7 @@ uvx --from noosphere-mcp noosphere-query "React Three Fiber mobile glowing node 
 | Active release mirrors | [`shared_skills/active/`](shared_skills/active/) |
 | Immutable releases | [`shared_skills/releases/`](shared_skills/releases/) |
 | Supply-chain and trust protocol | [`SKILLS_PROTOCOL.md`](SKILLS_PROTOCOL.md) |
+| Experimental Experience protocol | [`EXPERIENCE_PROTOCOL.md`](EXPERIENCE_PROTOCOL.md) |
 
 ## Contribute through the right evidence path
 
@@ -103,6 +104,20 @@ embedding-backed resonance, and the matched historical Issue gets a backlink com
 **Live network snapshot:** 41 public memories - 1 media memory - 178 visible 3D nodes - latest issue #37.<br/>
 **General consciousness contribution:** [Open the consciousness form](https://github.com/JinNing6/Noosphere/issues/new?template=consciousness-upload.yml). Engineering fixes use the [Skill Evidence form](https://github.com/JinNing6/Noosphere/issues/new?template=skill-proposal.yml).
 <!-- noosphere-live-snapshot:end -->
+
+### Experience Records preserve the case before it becomes a Skill
+
+The experimental
+[`Experience Protocol v0.1`](EXPERIENCE_PROTOCOL.md) records what happened in one bounded
+case: environment, constraints, ordered attempts, failure mechanisms, resolution,
+verification, applicability, risk, and rollback. Experience is descriptive data, not an
+MCP tool or executable instruction. Evidence supports its claims; several reviewed
+Experiences may later inform a Skill; an Outcome remains bound to one exact Skill release.
+
+The first redacted
+[`Codex session-storage migration candidate`](experience_records/candidates/exp-codex-session-junction-migration-20260731.json)
+is locally verified but still review-pending. v0.1 intentionally has no public upload
+form, automatic promotion, or change to the default six-tool profile.
 
 ## The default six-tool surface
 
@@ -188,6 +203,7 @@ artifact. Read the full [supply-chain protocol](SKILLS_PROTOCOL.md).
 | Agent connection | Local Python MCP stdio process | Focused profile selected before the server starts |
 | Live Skill authority | Versioned Git registry + immutable release files | Registry allowlist, status, path, size, and SHA-256 verification |
 | Public evidence | GitHub Issue Forms and Actions | Evidence is untrusted until deterministic checks and human review pass |
+| Experience candidates | Versioned JSON + dependency-free repository validator | Descriptive and non-callable; redaction, references, lifecycle, and review are fail-closed |
 | Anonymous search | Canonical public index and BM25 fallback | No token required; bounded cache and rate limits apply |
 | Authenticated actions | GitHub API | Token is optional for reads and required for public writes; every write also needs explicit consent |
 | Optional universe | GitHub Pages, public memory index, and media resonance | Exploration surface, not engineering Skill authority |

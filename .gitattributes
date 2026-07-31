@@ -1,2 +1,4 @@
 shared_skills/**/SKILL.md text eol=lf
 shared_skills/registry.json text eol=lf
+experience_records/**/*.json text eol=lf
+schemas/*.json text eol=lf

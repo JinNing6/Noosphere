@@ -1,6 +1,16 @@
 # Noosphere Project Memory Snapshot
 
-Last verified: 2026-07-29 (Asia/Shanghai)
+Last verified: 2026-07-31 (Asia/Shanghai)
+
+## Experience Protocol v0.1 — Local Candidate, Awaiting Public Review
+
+- Branch `codex/experience-protocol-v0` is based on remote `main` commit `5738a176428f34d6befa1979196de183a3ad9cd1`. It introduces an experimental first-class Experience Record as descriptive, non-executable case data. Experience, Evidence, Skill, and Outcome remain separate objects: Evidence supports claims, multiple Experiences may inform a Skill, and Outcomes remain bound to an exact immutable Skill release.
+- `EXPERIENCE_PROTOCOL.md` and `schemas/experience-record-v0.1.schema.json` define the v0.1 lifecycle, review, verification, relations, provenance, and redaction boundaries using JSON Schema Draft 2020-12. Lifecycle, human review, and verification level are independent; Skill relation is not a trust or promotion state.
+- The first candidate, `exp-codex-session-junction-migration-20260731`, is a redacted projection of the completed Windows Codex session-storage migration. The private receipt reported 1,863 verified files, 83.463 GiB moved, about 83.462 GiB released, and continued writes. A separate read-only inspection on 2026-07-31 confirmed a live NTFS Junction, 1,903 files, 92,292,470,686 bytes, and a same-day latest write. This is `locally-verified`, not independently reproduced.
+- The tracked candidate excludes the local username, absolute private source and target paths, session identifiers, raw task content, and individual file hashes. Its evidence is explicitly `private-redacted` or `local-only`, so the validator rejects any attempt to label it independently reproduced.
+- `scripts/validate_experience_records.py` is the zero-runtime-dependency canonical repository gate. It checks a 64 KiB record cap and bounded arrays, closed fields, IDs and canonical paths, ordered attempts, failed/partial mechanisms, cross-record evidence references, exact immutable Skill name/version/digest relations, review/lifecycle invariants, public-evidence requirements, RFC 3339 timestamps, HTTPS hygiene, secret patterns, user-home paths, redaction status, risks, and rollback.
+- PR and PyPI release workflows run the Experience tests and validator. The Experience-specific PR job is path-gated, and the existing Python job also lints and tests the validator. v0.1 deliberately adds no MCP tool, public upload form, automatic promotion, registry mutation, or change to the default 6-tool Agent profile.
+- Local verification passed 25 Experience unit tests on Python 3.10 and 3.13, all 52 repository tests, all 122 Node workflow/supply-chain tests, and all 229 SDK tests; both repository validators; migration canonicalization; Ruff `0.14.1`; GitHub workflow YAML parsing; and `jsonschema==4.26.0` Draft 2020-12 positive and negative checks. The strict remote-facing hygiene scan passed 469 files. A field-aware credential scan found no credential-shaped material in Experience files; its only repository-wide provider-token hit is the unchanged explicit placeholder fixture in `sdk/tests/test_preflight.py`. The user explicitly authorized public submission on 2026-07-31. This branch is the reviewed publication candidate; merge and production status remain pending GitHub PR and CI evidence.
 
 ## README Product Surface Contract — Verified
 

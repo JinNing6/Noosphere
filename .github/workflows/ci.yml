@@ -16,6 +16,7 @@ jobs:
       frontend: ${{ steps.filter.outputs.frontend }}
       python: ${{ steps.filter.outputs.python }}
       shared: ${{ steps.filter.outputs.shared }}
+      experience: ${{ steps.filter.outputs.experience }}
       glama: ${{ steps.filter.outputs.glama }}
       validation: ${{ steps.filter.outputs.validation }}
     steps:
@@ -40,6 +41,12 @@ jobs:
             echo "frontend=true" >> "$GITHUB_OUTPUT"
           else
             echo "frontend=false" >> "$GITHUB_OUTPUT"
+          fi
+
+          if grep -Eq '^(EXPERIENCE_PROTOCOL\.md|experience_records/|schemas/experience-record-|scripts/(validate_experience_records|test_validate_experience_records)\.py)' /tmp/changed_files; then
+            echo "experience=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "experience=false" >> "$GITHUB_OUTPUT"
           fi
 
           if grep -Eq '^(\.github/scripts/|\.github/workflows/(backfill_embeddings|consciousness_promote|consciousness_withdraw|skill_evidence_pr_adapter|skill_outcome|skill_publish|skill_withdraw)\.yml|shared_skills/|plugins/(noosphere|claude-noosphere)/|SKILLS_PROTOCOL\.md|scripts/(validate_shared_skills|test_validate_shared_skills|migrate_consciousness_promotions|test_migrate_consciousness_promotions)\.py)' /tmp/changed_files; then
@@ -116,7 +123,7 @@ jobs:
       - name: SDK and repository tests
         run: |
           python -m pytest sdk/tests
-          python -m unittest scripts.test_validate_shared_skills scripts.test_migrate_consciousness_promotions scripts.test_launch_surface scripts.test_check_validation_result
+          python -m unittest scripts.test_validate_shared_skills scripts.test_validate_experience_records scripts.test_migrate_consciousness_promotions scripts.test_launch_surface scripts.test_check_validation_result
 
       - name: Syntax and undefined-name gate
         run: |
@@ -136,8 +143,8 @@ jobs:
 
       - name: Repository validator lint
         run: |
-          ruff check scripts/validate_shared_skills.py scripts/test_validate_shared_skills.py scripts/migrate_consciousness_promotions.py scripts/test_migrate_consciousness_promotions.py
-          ruff format --check scripts/validate_shared_skills.py scripts/test_validate_shared_skills.py scripts/migrate_consciousness_promotions.py scripts/test_migrate_consciousness_promotions.py
+          ruff check scripts/validate_shared_skills.py scripts/test_validate_shared_skills.py scripts/validate_experience_records.py scripts/test_validate_experience_records.py scripts/migrate_consciousness_promotions.py scripts/test_migrate_consciousness_promotions.py
+          ruff format --check scripts/validate_shared_skills.py scripts/test_validate_shared_skills.py scripts/validate_experience_records.py scripts/test_validate_experience_records.py scripts/migrate_consciousness_promotions.py scripts/test_migrate_consciousness_promotions.py
 
   shared-skill-check:
     name: Shared Skill Supply Chain
@@ -170,6 +177,26 @@ jobs:
           python -m unittest scripts.test_validate_shared_skills scripts.test_migrate_consciousness_promotions
           python scripts/validate_shared_skills.py
           python scripts/migrate_consciousness_promotions.py --check
+
+  experience-record-check:
+    name: Experience Protocol v0.1
+    runs-on: ubuntu-latest
+    needs: detect-changes
+    if: needs.detect-changes.outputs.experience == 'true'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Validate schema, records, and policy invariants
+        run: |
+          python -m unittest scripts.test_validate_experience_records
+          python scripts/validate_experience_records.py
 
   validation-kit-matrix:
     name: 60s Validation Kit (${{ matrix.os }})

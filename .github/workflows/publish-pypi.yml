@@ -36,8 +36,9 @@ jobs:
         working-directory: .
         run: |
           node --test .github/scripts/*.test.cjs
-          python -m unittest scripts.test_validate_shared_skills scripts.test_migrate_consciousness_promotions scripts.test_launch_surface scripts.test_check_validation_result
+          python -m unittest scripts.test_validate_shared_skills scripts.test_validate_experience_records scripts.test_migrate_consciousness_promotions scripts.test_launch_surface scripts.test_check_validation_result
           python scripts/validate_shared_skills.py
+          python scripts/validate_experience_records.py
           python scripts/migrate_consciousness_promotions.py --check
 
       - name: Run PyPI verifier tests
