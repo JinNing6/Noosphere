@@ -1,6 +1,14 @@
-# GitHub Evidence Agent
+# GitHub Evidence and Experience Agents
 
 The GitHub Evidence Agent is the zero-service intake path for Shared Skill evidence. A contributor submits one GitHub Issue Form; repository-owned GitHub Actions parses it, checks deterministic safety rules, validates public GitHub provenance, and records an eligible evidence item without a paid model or a maintainer-applied intake label.
+
+The companion GitHub Experience Agent accepts a complete Experience Protocol v0.1 JSON
+record. It binds the authenticated Issue author, checks privacy and policy invariants,
+verifies exact public GitHub workflow evidence when declared, and commits a passing
+record directly to one stable `experience_records/reviewed/` path on `main`. It
+automatically approves the record with an explicit `automated-policy` receipt, updates
+the Issue status, and closes the Issue as completed. This is not human review,
+independent reproduction, or publication as a callable Skill.
 
 ## What the Agent accepts
 
@@ -23,6 +31,19 @@ The verifier resolves the public repository and commit through the GitHub API, t
 
 These states deliberately prevent “uploaded,” “machine checked,” and “published” from being treated as synonyms.
 
+For Experience, the corresponding states are:
+
+1. **Accepted Issue draft**: the public Issue exists and can be edited.
+2. **Machine screened**: structure, privacy, safety, references, and declared workflow
+   provenance pass; failures return exact changes requested.
+3. **Automatically reviewed**: the canonical repository gates approve the record under
+   the explicit `automated-policy` mode.
+4. **Accepted and completed**: the reviewed record is committed to `main`, exact state
+   labels are reconciled, and the Issue is closed without a maintainer merge step.
+
+Automatically accepted is intentionally not a synonym for human-reviewed, independently
+reproduced, or published Skill.
+
 Matching workflow-verified V4 records with the same explicit Skill identity use deterministic claim comparison and do not require an embedding API. An embedding may still support other repository features, but it is not an intake or candidate-routing dependency for this path.
 
 ## Pull request adapter
@@ -38,5 +59,6 @@ The MVP uses standard GitHub-hosted runners in a public repository, the reposito
 - Fork code is never checked out or executed by the privileged PR adapter.
 - Evidence text is treated as untrusted and scanned for credential material, instruction overrides, exfiltration language, remote shell pipes, encoded PowerShell, and destructive root deletion.
 - Public HTTPS URLs cannot contain credential-like query parameters.
-- Machine screening grants `screened`, never `verified` human trust.
+- Automated Experience review grants repository acceptance, never `verified` human
+  trust or independent reproduction.
 - A successful external workflow proves only the named public CI event at the exact commit; independent reproduction and publication remain separate gates.

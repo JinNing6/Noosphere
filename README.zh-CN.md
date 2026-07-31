@@ -71,6 +71,7 @@ uvx --from noosphere-mcp noosphere-query "React Three Fiber mobile glowing node 
 | 当前版本镜像 | [`shared_skills/active/`](shared_skills/active/) |
 | 不可变历史版本 | [`shared_skills/releases/`](shared_skills/releases/) |
 | 供应链和信任协议 | [`SKILLS_PROTOCOL.md`](SKILLS_PROTOCOL.md) |
+| 实验性 Experience 协议 | [`EXPERIENCE_PROTOCOL.md`](EXPERIENCE_PROTOCOL.md) |
 
 ## 选择正确的证据入口
 
@@ -78,12 +79,29 @@ uvx --from noosphere-mcp noosphere-query "React Three Fiber mobile glowing node 
 |---|---|---|
 | 对现有确定性 Skill 的一次复现 | [验证可复用 Agent 修复](https://github.com/JinNing6/Noosphere/issues/new?template=validate-skill.yml) | 等待审核的独立证据，不会自动发布 |
 | 一个新的、已经验证的工程故障与可复用修复 | [提议或更新 Agent Skill](https://github.com/JinNing6/Noosphere/issues/new?template=skill-proposal.yml) | 已接收的证据草稿或工作流验证证据，尚不是可调用 Skill |
+| 一次完整、已脱敏的故障处理经历 | [提交 Agent Experience](https://github.com/JinNing6/Noosphere/issues/new?template=experience-record.yml) | 所有策略门禁通过后，自动审核、写入 `main` 并完成 Issue |
 | 一般思想、哲学片段、图片、视频或声音记忆 | [上传 Noosphere 意识记忆](https://github.com/JinNing6/Noosphere/issues/new?template=consciousness-upload.yml) | 公开意识内容，不具备工程 Skill 权威 |
 | 已经公开分享 Noosphere 或某条记忆的帖子 | [记录 Share Proof](https://github.com/JinNing6/Noosphere/issues/new?template=share-proof.yml) | 仅证明存在可审核公开 URL，不证明安装或复用 |
 
 GitHub Skill Evidence 表单不依赖 MCP、付费 API 或维护者手工添加入口标签。GitHub Actions
 会自动检查提交的公开 commit 和 workflow 证据。Issue 创建只证明“已收到”；只有经过审核的
 不可变注册表版本才可以被 Agent 调用。
+
+### Experience Record 先保存具体经历，再决定是否提炼 Skill
+
+实验性的 [`Experience Protocol v0.1`](EXPERIENCE_PROTOCOL.md) 保存一次有边界的真实案例：
+环境、约束、按顺序排列的尝试、失败机制、解决方案、验证、适用范围、风险和回滚。Experience
+是描述性数据，不是 MCP 工具，也不是可执行指令。Evidence 支撑其中的声明；多个经过审核的
+Experience 可以共同支持一个 Skill；Outcome 仍只绑定一个精确的 Skill 名称、版本与摘要。
+
+第一条脱敏的
+[`Codex session 存储迁移 Experience`](experience_records/reviewed/exp-codex-session-junction-migration-20260731.json)
+已经完成本地验证，并由明确的 `automated-policy` 模式自动审核通过。
+[GitHub Experience Agent](https://github.com/JinNing6/Noosphere/issues/new?template=experience-record.yml)
+会绑定真实 GitHub 提交者，自动检查 Schema、隐私、安全、引用一致性，以及声明的精确 GitHub
+workflow 仓库、commit、run、job 和 step；通过后自动批准记录、直接写入 `main`、更新状态标签
+并关闭 Issue。该路径不使用付费 API、不执行提交文本、不把 Experience 自动晋升为 Skill，
+也不改变默认 6 工具 Profile。自动接受不等于人工审核或独立复现。
 
 Noosphere 不会根据 Share Proof URL 推断下载、转发、推荐、留存、奖励或安装数量。意识内容
 成功晋升后会返回最近的 embedding 共鸣，并在匹配到的历史 Issue 中写入反向链接。
@@ -167,6 +185,7 @@ Noosphere 不会自动执行社区提示词。社区发布要求来自独立发�
 | Agent 连接 | 本地 Python MCP stdio 进程 | 服务启动前选择精简 Profile |
 | Live Skill 权威 | 版本化 Git 注册表与不可变版本文件 | 校验注册表允许列表、状态、路径、大小和 SHA-256 |
 | 公开证据 | GitHub Issue Forms 与 Actions | 确定性检查和人工审核前均视为不可信 |
+| Experience 候选 | GitHub Experience Agent、版本化 JSON 与无第三方依赖校验器 | 通过机器筛查后直接进入公开候选库；仅描述、不可调用，人工审核保持独立 |
 | 匿名查询 | 规范公共索引与 BM25 降级 | 无需 Token；仍受缓存和 GitHub 额度约束 |
 | 认证操作 | GitHub API | Token 对只读可选，对公开写入必需；每次写入还需明确同意 |
 | 可选意识宇宙 | GitHub Pages、公开记忆索引与媒体共鸣 | 可视化探索层，不是工程 Skill 权威 |

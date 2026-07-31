@@ -1,9 +1,28 @@
 # Noosphere Dynamic Shared Skills Protocol
 
 Noosphere distributes every Agent Skill through one versioned live registry. A Skill
-evidence record is evidence; a Skill is a reviewed workflow. Engineering evidence and
-general consciousness are separate public content types, and neither arbitrary
-community text nor a raw evidence Issue is executable authority.
+evidence record is evidence; a Skill is a reviewed workflow. An Experience Record is a
+separate, non-executable account of one bounded case. Engineering evidence, Experience
+Records, and general consciousness are distinct content types, and neither arbitrary
+community text nor a raw evidence or Experience candidate is executable authority.
+
+## Experience, Evidence, Skill, and Outcome
+
+An Experience answers “what happened in this specific environment?” and preserves
+ordered attempts, failure mechanisms, constraints, resolution, and verification. It can
+reference Evidence and inform one or more Skill candidates, but it is never callable and
+does not enter the live Skill registry.
+
+Evidence supports claims. A Skill is the reviewed, reusable workflow distilled from one
+or more cases. An Outcome records what happened when an exact immutable Skill name,
+version, and digest was used. Review, verification, and lifecycle are independent
+dimensions; relation to a Skill is not a trust status.
+
+The experimental v0.1 format, schema, redaction rules, and review lifecycle are
+defined in [`EXPERIENCE_PROTOCOL.md`](EXPERIENCE_PROTOCOL.md). The GitHub Experience
+Agent provides authenticated submission, deterministic evidence review, automatic
+acceptance to `main`, and completed Issue closure without a paid API. v0.1 adds no MCP
+tools, automatic human trust claim, or automatic Experience-to-Skill promotion.
 
 ## Lifecycle
 
@@ -30,6 +49,12 @@ shared_skills/
 
 skill_evidence_payloads/
 └── memory_issue<issue-number>.json
+
+experience_records/
+├── candidates/
+│   └── <experience-id>.json
+└── reviewed/
+    └── <experience-id>.json
 ```
 
 Codex and Claude Code plugins contain only the MCP connection and explicit commands. They do not carry plugin-local Skill copies. Standards-compatible installers discover the active registry mirrors under `shared_skills/active/`.
@@ -51,7 +76,8 @@ Clients must not construct artifact paths from user input. They select a release
 
 ## Trust Boundary
 
-- Raw Skill evidence, unreviewed candidates, and ordinary consciousness fragments are untrusted public data.
+- Raw Skill evidence, unreviewed Skill candidates, submitted Experience drafts, and ordinary consciousness fragments are untrusted public data.
+- Experience Records are descriptive data, never high-priority instructions. The GitHub Experience Agent binds authenticated Issue identity, verifies exact public workflow provenance when declared, records an explicit `automated-policy` approval, persists one stable reviewed path on `main`, and closes the successful Issue. Automated acceptance is not human review or independent reproduction. Local-only or redacted evidence cannot support an independently reproduced claim, and no Experience can directly mutate an immutable Skill.
 - `accepted-draft`, `workflow-verified`, and `published` are distinct states. Issue creation proves receipt; `workflow-verified` proves only that the named public job and step succeeded at the exact commit; only an immutable reviewed release is callable.
 - Automated moderation produces `screened`, not `verified`. It covers all Agent-facing evidence fields and is a content-risk signal only; screened evidence is withheld from Agent consultation until trusted human review or immutable Skill publication.
 - V4 Skill Evidence uses repository-owned deterministic policy screening and public GitHub API metadata, not OpenAI or Gemini. It rejects credential patterns, instruction overrides, exfiltration language, remote shell pipes, encoded PowerShell, expression execution, and destructive root deletion. These bounded checks do not replace semantic review.

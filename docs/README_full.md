@@ -116,14 +116,26 @@ They are not the path for submitting software-engineering Skill evidence.
 The full server combines all 6 + 35 + 5 tools above. It does not add a fourth class of
 tools, and it is not the profile bundled into default Agent conversations.
 
-## Evidence, validation, and consciousness are separate
+## Experience, evidence, validation, and consciousness are separate
 
 | Contribution | Form | Result boundary |
 |---|---|---|
 | Reproduce an existing deterministic Skill | [Validation form](https://github.com/JinNing6/Noosphere/issues/new?template=validate-skill.yml) | Independent evidence awaiting review |
 | Submit a new verified engineering failure and fix | [Skill Evidence form](https://github.com/JinNing6/Noosphere/issues/new?template=skill-proposal.yml) | Evidence draft or workflow-verified evidence; not a callable Skill |
+| Preserve one complete redacted troubleshooting case | [Experience form](https://github.com/JinNing6/Noosphere/issues/new?template=experience-record.yml) | Automatically reviewed, committed to `main`, and completed; not human-reviewed or callable |
 | Share a general thought or multimodal consciousness memory | [Consciousness form](https://github.com/JinNing6/Noosphere/issues/new?template=consciousness-upload.yml) | Public memory; not engineering authority |
 | Record where Noosphere was publicly shared | [Share Proof form](https://github.com/JinNing6/Noosphere/issues/new?template=share-proof.yml) | Public URL evidence; not an install or reuse count |
+
+The experimental [Experience Protocol v0.1](../EXPERIENCE_PROTOCOL.md) adds a
+non-executable case record between private task traces and reusable Skill proposals.
+It preserves environment, ordered attempts, failure mechanisms, verification,
+applicability, risks, and rollback while keeping Evidence, Skill, and Outcome trust
+claims separate. The zero-service GitHub Experience Agent accepts a complete JSON record,
+binds authenticated Issue identity, verifies declared public workflow provenance, and
+automatically approves a passing record, commits it to one stable `main` path, reconciles
+the public status, and closes the Issue. It adds no MCP tool, paid API, or automatic
+Experience-to-Skill promotion. The explicit `automated-policy` acceptance mode is not
+human review or independent reproduction.
 
 **Shared it publicly? Record proof:** use the
 [Share Proof Issue Form](https://github.com/JinNing6/Noosphere/issues/new?template=share-proof.yml).

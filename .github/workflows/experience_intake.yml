@@ -1,0 +1,343 @@
+name: GitHub Experience Agent
+
+on:
+  issues:
+    types: [opened, edited, reopened]
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: Existing Experience Issue number to reconcile
+        required: true
+        type: number
+
+concurrency:
+  group: noosphere-main-writer
+  cancel-in-progress: false
+  queue: max
+
+permissions:
+  actions: read
+  contents: write
+  issues: write
+
+jobs:
+  review_and_accept:
+    name: Automatically review and accept Experience
+    runs-on: ubuntu-latest
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      contains(github.event.issue.labels.*.name, 'experience') ||
+      startsWith(github.event.issue.title, 'Experience:') ||
+      contains(github.event.issue.body, '### Experience record JSON')
+
+    steps:
+      - name: Checkout trusted main revision
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Set up Python 3.13
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.13'
+
+      - name: Parse, bind, and screen untrusted Issue data
+        id: prepare
+        uses: actions/github-script@d746ffe35508b1917358783b479e04febd2b8f71 # v9.0.0
+        env:
+          REQUESTED_ISSUE_NUMBER: ${{ inputs.issue_number || '' }}
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('node:fs');
+            const path = require('node:path');
+            const {
+              extractExperienceIssue,
+              loadExperienceRecords,
+              prepareExperienceIssue,
+              verifyExperienceWorkflowEvidence,
+            } = require(`${process.env.GITHUB_WORKSPACE}/.github/scripts/experience-intake.cjs`);
+
+            let issue = context.payload.issue;
+            if (context.eventName === 'workflow_dispatch') {
+              const issueNumber = Number.parseInt(process.env.REQUESTED_ISSUE_NUMBER, 10);
+              const response = await github.rest.issues.get({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issueNumber,
+              });
+              issue = response.data;
+            }
+            const extracted = extractExperienceIssue(issue.body || '');
+            let result = extracted;
+            if (!extracted.relevant) {
+              result = {
+                ready: false,
+                findings: [{
+                  code: 'EXPERIENCE_FORM_NOT_FOUND',
+                  message: 'The Issue does not contain the dedicated Experience record JSON field.',
+                }],
+                record: null,
+                path: '',
+              };
+            } else if (extracted.record) {
+              result = prepareExperienceIssue({
+                record: extracted.record,
+                issue,
+                repository: `${context.repo.owner}/${context.repo.repo}`,
+                existingRecords: loadExperienceRecords(process.env.GITHUB_WORKSPACE),
+              });
+              if (result.ready) {
+                const verified = await verifyExperienceWorkflowEvidence(result.record, {
+                  github,
+                  verifiedAt: issue.updated_at || issue.created_at,
+                });
+                if (verified.findings.length) {
+                  result = {
+                    ready: false,
+                    findings: verified.findings,
+                    record: null,
+                    path: '',
+                  };
+                } else {
+                  result.record = verified.record;
+                }
+              }
+            } else {
+              result = {
+                ready: false,
+                findings: extracted.findings,
+                record: null,
+                path: '',
+              };
+            }
+
+            fs.writeFileSync(
+              path.join(process.env.GITHUB_WORKSPACE, '.experience-agent-result.json'),
+              `${JSON.stringify({ ...result, issue_number: issue.number }, null, 2)}\n`,
+              'utf8',
+            );
+            if (result.ready) {
+              const destination = path.resolve(process.env.GITHUB_WORKSPACE, result.path);
+              const recordsRoot = path.resolve(process.env.GITHUB_WORKSPACE, 'experience_records');
+              if (!destination.startsWith(`${recordsRoot}${path.sep}`)) {
+                throw new Error('Canonical Experience path escaped experience_records/.');
+              }
+              fs.mkdirSync(path.dirname(destination), { recursive: true });
+              fs.writeFileSync(destination, `${JSON.stringify(result.record, null, 2)}\n`, 'utf8');
+              if (result.previousPath && result.previousPath !== result.path) {
+                const previous = path.resolve(process.env.GITHUB_WORKSPACE, result.previousPath);
+                if (!previous.startsWith(`${recordsRoot}${path.sep}`)) {
+                  throw new Error('Previous Experience path escaped experience_records/.');
+                }
+                if (fs.existsSync(previous)) fs.rmSync(previous);
+              }
+            }
+            core.setOutput('ready', result.ready ? 'true' : 'false');
+            core.setOutput('path', result.path || '');
+            core.setOutput('previous_path', result.previousPath || '');
+            core.setOutput('issue_number', String(issue.number));
+
+      - name: Run canonical Experience gates
+        id: validate
+        if: steps.prepare.outputs.ready == 'true'
+        continue-on-error: true
+        shell: bash
+        run: |
+          set +e
+          python -m unittest scripts.test_validate_experience_records > experience-agent-validation.txt 2>&1
+          status=$?
+          if [ "$status" -eq 0 ]; then
+            python scripts/validate_experience_records.py >> experience-agent-validation.txt 2>&1
+            status=$?
+          fi
+          cat experience-agent-validation.txt
+          exit "$status"
+
+      - name: Commit automatically accepted record to main
+        id: commit
+        if: steps.prepare.outputs.ready == 'true' && steps.validate.outcome == 'success'
+        shell: bash
+        env:
+          TARGET_PATH: ${{ steps.prepare.outputs.path }}
+          PREVIOUS_PATH: ${{ steps.prepare.outputs.previous_path }}
+          ISSUE_NUMBER: ${{ steps.prepare.outputs.issue_number }}
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          if [ "$(git rev-parse HEAD)" != "$(git rev-parse origin/main)" ]; then
+            echo "main advanced after checkout; retry the Issue event against the new canonical state" >&2
+            exit 1
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- "$TARGET_PATH"
+          if [ -n "$PREVIOUS_PATH" ] && [ "$PREVIOUS_PATH" != "$TARGET_PATH" ]; then
+            git add -u -- "$PREVIOUS_PATH"
+          fi
+          if git diff --cached --quiet; then
+            echo "No canonical Experience change to commit."
+          else
+            git commit -m "Accept Experience from issue #${ISSUE_NUMBER}"
+            git push origin HEAD:main
+          fi
+
+      - name: Reconcile public status
+        if: always()
+        uses: actions/github-script@d746ffe35508b1917358783b479e04febd2b8f71 # v9.0.0
+        env:
+          PREPARED: ${{ steps.prepare.outputs.ready }}
+          VALIDATION_OUTCOME: ${{ steps.validate.outcome }}
+          COMMIT_OUTCOME: ${{ steps.commit.outcome }}
+          TARGET_PATH: ${{ steps.prepare.outputs.path }}
+          ISSUE_NUMBER: ${{ steps.prepare.outputs.issue_number }}
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('node:fs');
+            const path = require('node:path');
+            const {
+              COMMENT_MARKER,
+              renderExperienceIntakeComment,
+            } = require(`${process.env.GITHUB_WORKSPACE}/.github/scripts/experience-intake.cjs`);
+            const issueNumber = Number.parseInt(process.env.ISSUE_NUMBER, 10);
+            if (!Number.isInteger(issueNumber)) {
+              core.setFailed('Experience Issue number was not resolved.');
+              return;
+            }
+            const resultPath = path.join(process.env.GITHUB_WORKSPACE, '.experience-agent-result.json');
+            const result = fs.existsSync(resultPath)
+              ? JSON.parse(fs.readFileSync(resultPath, 'utf8'))
+              : { findings: [{ code: 'EXPERIENCE_AGENT_FAILED', message: 'The Agent failed before producing a screening result.' }] };
+            const validationPath = path.join(process.env.GITHUB_WORKSPACE, 'experience-agent-validation.txt');
+            const validationOutput = fs.existsSync(validationPath)
+              ? fs.readFileSync(validationPath, 'utf8')
+              : '';
+            const accepted = (
+              process.env.PREPARED === 'true' &&
+              process.env.VALIDATION_OUTCOME === 'success' &&
+              process.env.COMMIT_OUTCOME === 'success'
+            );
+            const findings = [...(result.findings || [])];
+            if (process.env.PREPARED === 'true' && process.env.VALIDATION_OUTCOME !== 'success') {
+              findings.push({
+                code: 'EXPERIENCE_CANONICAL_VALIDATION_FAILED',
+                message: 'The canonical schema or repository policy gate rejected the record.',
+              });
+            } else if (
+              process.env.PREPARED === 'true' &&
+              process.env.VALIDATION_OUTCOME === 'success' &&
+              process.env.COMMIT_OUTCOME !== 'success'
+            ) {
+              findings.push({
+                code: 'EXPERIENCE_COMMIT_FAILED',
+                message: 'The canonical branch changed or the repository write failed; dispatch the workflow again.',
+              });
+            }
+            const recordUrl = accepted
+              ? `https://github.com/${context.repo.owner}/${context.repo.repo}/blob/main/${process.env.TARGET_PATH}`
+              : '';
+            const body = renderExperienceIntakeComment({
+              state: accepted ? 'accepted' : 'changes-requested',
+              findings,
+              recordUrl,
+              validationOutput,
+              issueNumber,
+            });
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issueNumber,
+              per_page: 100,
+            });
+            const existing = comments.find((comment) => (
+              comment?.user?.login === 'github-actions[bot]' &&
+              String(comment.body || '').includes(COMMENT_MARKER)
+            ));
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issueNumber,
+                body,
+              });
+            }
+
+            const labelDefinitions = [
+              ['experience', '0969DA', 'Structured descriptive Agent Experience'],
+              ['experience-screened', '1D76DB', 'Experience passed deterministic machine screening'],
+              ['experience-auto-approved', '0E8A16', 'Experience passed the complete automated review policy'],
+              ['experience-recorded', '5319E7', 'Accepted Experience persisted to the canonical branch'],
+              ['experience-incomplete', 'B60205', 'Experience needs corrected structure, evidence, privacy, or safety data'],
+            ];
+            for (const [name, color, description] of labelDefinitions) {
+              try {
+                await github.rest.issues.createLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  name,
+                  color,
+                  description,
+                });
+              } catch (error) {
+                if (error.status !== 422) throw error;
+              }
+            }
+            if (accepted) {
+              try {
+                await github.rest.issues.removeLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: issueNumber,
+                  name: 'experience-incomplete',
+                });
+              } catch (error) {
+                if (error.status !== 404) throw error;
+              }
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issueNumber,
+                labels: ['experience', 'experience-screened', 'experience-auto-approved', 'experience-recorded'],
+              });
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issueNumber,
+                state: 'closed',
+                state_reason: 'completed',
+              });
+            } else {
+              for (const name of ['experience-screened', 'experience-auto-approved', 'experience-recorded']) {
+                try {
+                  await github.rest.issues.removeLabel({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: issueNumber,
+                    name,
+                  });
+                } catch (error) {
+                  if (error.status !== 404) throw error;
+                }
+              }
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issueNumber,
+                labels: ['experience', 'experience-incomplete'],
+              });
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issueNumber,
+                state: 'open',
+              });
+            }
