@@ -189,6 +189,16 @@ class LaunchSurfaceTests(unittest.TestCase):
         self.assertIn("not engineering Skill authority", english)
         self.assertIn("only a reviewed immutable registry release is callable", english)
 
+    def test_readmes_expose_the_read_only_sidebar_doctor_and_dedicated_intake(self):
+        english = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
+        chinese = (REPO_ROOT / "README.zh-CN.md").read_text(encoding="utf-8")
+
+        for readme in (english, chinese):
+            self.assertIn("tools/codex-sidebar-doctor/README.md", readme)
+            self.assertIn("Invoke-CodexSidebarDoctor.ps1", readme)
+            self.assertIn("-SubmitPublicEvidence", readme)
+            self.assertIn("template=codex-sidebar-diagnostic.yml", readme)
+
     def test_first_distribution_wave_preserves_proof_and_channel_boundaries(self):
         wave = (
             REPO_ROOT
@@ -230,6 +240,7 @@ class LaunchSurfaceTests(unittest.TestCase):
         ]
 
         self.assertIn("COPY sdk/pyproject.toml ./sdk/pyproject.toml", dockerfile)
+        self.assertIn("COPY sdk/README.md ./sdk/README.md", dockerfile)
         self.assertIn("COPY sdk/noosphere ./sdk/noosphere", dockerfile)
         self.assertIn(
             "python -m pip install --disable-pip-version-check --no-cache-dir ./sdk",

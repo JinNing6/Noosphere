@@ -182,7 +182,9 @@ test("repository includes the public contribution Issue Form", () => {
 
 test("README separates no-install engineering evidence from consciousness near the top", () => {
   const readme = fs.readFileSync(path.join(repoRoot, "README.md"), "utf8");
-  const firstScreen = readme.slice(0, 6500);
+  const experienceSection = readme.indexOf("### Experience Records preserve the case");
+  assert.ok(experienceSection > 0);
+  const firstScreen = readme.slice(0, experienceSection);
 
   assert.match(firstScreen, /issues\/new\?template=skill-proposal\.yml/);
   assert.match(firstScreen, /issues\/new\?template=validate-skill\.yml/);

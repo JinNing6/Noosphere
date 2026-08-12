@@ -42,6 +42,14 @@ def test_release_versions_are_synchronized_and_newer_than_pypi_baseline():
     assert _version_tuple(project_version) > _version_tuple(PYPI_BASELINE_VERSION)
 
 
+def test_build_metadata_keeps_the_package_readme_inside_the_sdk_project():
+    readme = _project_metadata()["project"]["readme"]
+    readme_path = (SDK_ROOT / readme).resolve()
+
+    assert readme_path.is_relative_to(SDK_ROOT.resolve())
+    assert readme_path.is_file()
+
+
 def test_release_exposes_zero_configuration_read_only_query_command():
     scripts = _project_metadata()["project"]["scripts"]
 

@@ -15,6 +15,7 @@ WORKDIR /opt/noosphere
 
 COPY README.md LICENSE ./
 COPY sdk/pyproject.toml ./sdk/pyproject.toml
+COPY sdk/README.md ./sdk/README.md
 COPY sdk/noosphere ./sdk/noosphere
 
 RUN python -m pip install --disable-pip-version-check --no-cache-dir ./sdk \

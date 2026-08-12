@@ -49,13 +49,13 @@ jobs:
             echo "experience=false" >> "$GITHUB_OUTPUT"
           fi
 
-          if grep -Eq '^(\.github/scripts/|\.github/workflows/(backfill_embeddings|consciousness_promote|consciousness_withdraw|skill_evidence_pr_adapter|skill_outcome|skill_publish|skill_withdraw)\.yml|shared_skills/|plugins/(noosphere|claude-noosphere)/|SKILLS_PROTOCOL\.md|scripts/(validate_shared_skills|test_validate_shared_skills|migrate_consciousness_promotions|test_migrate_consciousness_promotions)\.py)' /tmp/changed_files; then
+          if grep -Eq '^(\.github/scripts/|\.github/ISSUE_TEMPLATE/codex-sidebar-diagnostic\.yml|\.github/workflows/(backfill_embeddings|codex_sidebar_diagnostic|consciousness_promote|consciousness_withdraw|skill_evidence_pr_adapter|skill_outcome|skill_publish|skill_withdraw)\.yml|community_evidence/codex-sidebar/|shared_skills/|tools/codex-sidebar-doctor/|plugins/(noosphere|claude-noosphere)/|SKILLS_PROTOCOL\.md|scripts/(validate_shared_skills|test_validate_shared_skills|migrate_consciousness_promotions|test_migrate_consciousness_promotions)\.py)' /tmp/changed_files; then
             echo "shared=true" >> "$GITHUB_OUTPUT"
           else
             echo "shared=false" >> "$GITHUB_OUTPUT"
           fi
 
-          if grep -Eq '^(sdk/|backend/|pyproject\.toml|ruff\.toml|scripts/.*\.py)' /tmp/changed_files; then
+          if grep -Eq '^(sdk/|backend/|pyproject\.toml|ruff\.toml|scripts/.*\.py|tools/codex-sidebar-doctor/)' /tmp/changed_files; then
             echo "python=true" >> "$GITHUB_OUTPUT"
           else
             echo "python=false" >> "$GITHUB_OUTPUT"
@@ -123,7 +123,7 @@ jobs:
       - name: SDK and repository tests
         run: |
           python -m pytest sdk/tests
-          python -m unittest scripts.test_validate_shared_skills scripts.test_validate_experience_records scripts.test_migrate_consciousness_promotions scripts.test_launch_surface scripts.test_check_validation_result
+          python -m unittest scripts.test_validate_shared_skills scripts.test_validate_experience_records scripts.test_migrate_consciousness_promotions scripts.test_launch_surface scripts.test_check_validation_result scripts.test_codex_sidebar_doctor
 
       - name: Syntax and undefined-name gate
         run: |

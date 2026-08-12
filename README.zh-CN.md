@@ -73,10 +73,24 @@ uvx --from noosphere-mcp noosphere-query "React Three Fiber mobile glowing node 
 | 供应链和信任协议 | [`SKILLS_PROTOCOL.md`](SKILLS_PROTOCOL.md) |
 | 实验性 Experience 协议 | [`EXPERIENCE_PROTOCOL.md`](EXPERIENCE_PROTOCOL.md) |
 
+## Codex 侧边栏排序失效？
+
+[Codex Sidebar Doctor](tools/codex-sidebar-doctor/README.md) 将现有 Windows 修复变成一个
+安全入口：先进行只读诊断；只有精确命中 `1.0.0` 单层适用边界时才允许显式修复；遇到新的
+第二层状态或任务/渲染缓存问题时，只生成不含标识符的证据。
+
+```powershell
+pwsh -NoProfile -File .\tools\codex-sidebar-doctor\Invoke-CodexSidebarDoctor.ps1
+```
+
+工具默认绝不提交。用户显式运行 `-SubmitPublicEvidence` 后才创建公开报告，仓库 Agent 随后
+自动校验、记录、添加状态并关闭 Issue；整个过程不需要付费 API 或常驻服务。
+
 ## 选择正确的证据入口
 
 | 你已经拥有的内容 | 公开入口 | 提交后代表什么 |
 |---|---|---|
+| Doctor 生成的 Codex 侧边栏诊断 | [提交无标识符的侧边栏证据](https://github.com/JinNing6/Noosphere/issues/new?template=codex-sidebar-diagnostic.yml) | 自动校验的社区诊断数据，不代表 OpenAI 官方确认或独立复现 |
 | 对现有确定性 Skill 的一次复现 | [验证可复用 Agent 修复](https://github.com/JinNing6/Noosphere/issues/new?template=validate-skill.yml) | 等待审核的独立证据，不会自动发布 |
 | 一个新的、已经验证的工程故障与可复用修复 | [提议或更新 Agent Skill](https://github.com/JinNing6/Noosphere/issues/new?template=skill-proposal.yml) | 已接收的证据草稿或工作流验证证据，尚不是可调用 Skill |
 | 一次完整、已脱敏的故障处理经历 | [提交 Agent Experience](https://github.com/JinNing6/Noosphere/issues/new?template=experience-record.yml) | 所有策略门禁通过后，自动审核、写入 `main` 并完成 Issue |

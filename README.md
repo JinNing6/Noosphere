@@ -79,10 +79,26 @@ uvx --from noosphere-mcp noosphere-query "React Three Fiber mobile glowing node 
 | Supply-chain and trust protocol | [`SKILLS_PROTOCOL.md`](SKILLS_PROTOCOL.md) |
 | Experimental Experience protocol | [`EXPERIENCE_PROTOCOL.md`](EXPERIENCE_PROTOCOL.md) |
 
+## Codex sidebar ordering broken?
+
+The [Codex Sidebar Doctor](tools/codex-sidebar-doctor/README.md) turns the published
+Windows recovery into a safe front door: read-only diagnosis first, the exact `1.0.0`
+repair only when its single-layer boundary matches, and identifier-free evidence for
+newer second-layer or task/render-cache failures.
+
+```powershell
+pwsh -NoProfile -File .\tools\codex-sidebar-doctor\Invoke-CodexSidebarDoctor.ps1
+```
+
+The doctor never submits by default. One explicit `-SubmitPublicEvidence` invocation
+creates a public report, after which the repository Agent validates, records, labels,
+and closes it automatically. No paid API or always-on service is involved.
+
 ## Contribute through the right evidence path
 
 | What you have | Public route | What the submission means |
 |---|---|---|
+| A doctor-generated Codex sidebar report | [Submit identifier-free sidebar evidence](https://github.com/JinNing6/Noosphere/issues/new?template=codex-sidebar-diagnostic.yml) | Automatically validated community diagnostic data; not an OpenAI response or independent reproduction |
 | A reproduction of an existing deterministic Skill | [Validate a reusable Agent fix](https://github.com/JinNing6/Noosphere/issues/new?template=validate-skill.yml) | Independent evidence for review; not automatic publication |
 | A new verified engineering failure and reusable fix | [Propose or update an Agent Skill](https://github.com/JinNing6/Noosphere/issues/new?template=skill-proposal.yml) | Accepted evidence draft or workflow-verified evidence; not yet a callable Skill |
 | A complete redacted troubleshooting case | [Submit an Agent Experience](https://github.com/JinNing6/Noosphere/issues/new?template=experience-record.yml) | Automatically reviewed, committed to `main`, and completed when every policy gate passes |
