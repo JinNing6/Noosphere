@@ -346,7 +346,7 @@ if ($RepairLegacySingleLayer) {
         exit 3
     }
 
-    $stateItem = Get-Item -LiteralPath $resolvedStatePath
+    $stateItem = Get-Item -LiteralPath $resolvedStatePath -Force
     $timestamp = [DateTimeOffset]::UtcNow.ToString('yyyyMMddTHHmmssZ')
     $token = [Guid]::NewGuid().ToString('N').Substring(0, 8)
     $backupPath = Join-Path $stateItem.DirectoryName "$($stateItem.Name).backup-$timestamp-$token.json"

@@ -240,6 +240,7 @@ class LaunchSurfaceTests(unittest.TestCase):
         ]
 
         self.assertIn("COPY sdk/pyproject.toml ./sdk/pyproject.toml", dockerfile)
+        self.assertIn("COPY sdk/README.md ./sdk/README.md", dockerfile)
         self.assertIn("COPY sdk/noosphere ./sdk/noosphere", dockerfile)
         self.assertIn(
             "python -m pip install --disable-pip-version-check --no-cache-dir ./sdk",
