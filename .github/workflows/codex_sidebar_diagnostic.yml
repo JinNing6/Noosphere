@@ -1,0 +1,325 @@
+name: Codex Sidebar Diagnostic Agent
+
+on:
+  issues:
+    types: [opened, edited, reopened]
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: Existing sidebar diagnostic Issue number to reconcile
+        required: true
+        type: number
+
+concurrency:
+  group: noosphere-main-writer
+  cancel-in-progress: false
+  queue: max
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  validate_and_accept:
+    name: Validate and accept redacted sidebar evidence
+    runs-on: ubuntu-latest
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      startsWith(github.event.issue.title, 'Codex sidebar diagnostic:') ||
+      contains(github.event.issue.body, '### Generated sidebar diagnostic JSON')
+
+    steps:
+      - name: Checkout trusted main revision
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Parse, bind, and validate untrusted diagnostic data
+        id: prepare
+        uses: actions/github-script@d746ffe35508b1917358783b479e04febd2b8f71 # v9.0.0
+        env:
+          REQUESTED_ISSUE_NUMBER: ${{ inputs.issue_number || '' }}
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('node:fs');
+            const path = require('node:path');
+            const {
+              extractDiagnosticIssue,
+              prepareDiagnosticIssue,
+            } = require(`${process.env.GITHUB_WORKSPACE}/.github/scripts/codex-sidebar-diagnostic.cjs`);
+
+            let issue = context.payload.issue;
+            if (context.eventName === 'workflow_dispatch') {
+              const issueNumber = Number.parseInt(process.env.REQUESTED_ISSUE_NUMBER, 10);
+              const response = await github.rest.issues.get({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issueNumber,
+              });
+              issue = response.data;
+            }
+
+            const extracted = extractDiagnosticIssue(issue.body || '');
+            let result;
+            if (!extracted.relevant) {
+              result = {
+                ready: false,
+                findings: [{
+                  code: 'DIAGNOSTIC_FORM_NOT_FOUND',
+                  message: 'The Issue does not contain the dedicated generated diagnostic field.',
+                }],
+                record: null,
+                path: '',
+              };
+            } else if (!extracted.report) {
+              result = {
+                ready: false,
+                findings: extracted.findings,
+                record: null,
+                path: '',
+              };
+            } else {
+              result = prepareDiagnosticIssue({
+                report: extracted.report,
+                issue,
+                repository: `${context.repo.owner}/${context.repo.repo}`,
+                acceptedAt: issue.updated_at || issue.created_at,
+              });
+            }
+
+            fs.writeFileSync(
+              path.join(process.env.GITHUB_WORKSPACE, '.sidebar-diagnostic-agent-result.json'),
+              `${JSON.stringify({ ...result, issue_number: issue.number }, null, 2)}\n`,
+              'utf8',
+            );
+            if (result.ready) {
+              const destination = path.resolve(process.env.GITHUB_WORKSPACE, result.path);
+              const recordsRoot = path.resolve(
+                process.env.GITHUB_WORKSPACE,
+                'community_evidence',
+                'codex-sidebar',
+              );
+              if (!destination.startsWith(`${recordsRoot}${path.sep}`)) {
+                throw new Error('Canonical diagnostic path escaped community_evidence/codex-sidebar/.');
+              }
+              fs.mkdirSync(path.dirname(destination), { recursive: true });
+              fs.writeFileSync(destination, `${JSON.stringify(result.record, null, 2)}\n`, 'utf8');
+            }
+            core.setOutput('ready', result.ready ? 'true' : 'false');
+            core.setOutput('path', result.path || '');
+            core.setOutput('issue_number', String(issue.number));
+
+      - name: Run deterministic intake tests
+        id: validate
+        if: steps.prepare.outputs.ready == 'true'
+        continue-on-error: true
+        shell: bash
+        env:
+          TARGET_PATH: ${{ steps.prepare.outputs.path }}
+        run: |
+          set -euo pipefail
+          node --test .github/scripts/codex-sidebar-diagnostic.test.cjs
+          node <<'NODE'
+          const fs = require('node:fs');
+          const {
+            validateDiagnostic,
+          } = require('./.github/scripts/codex-sidebar-diagnostic.cjs');
+          const accepted = JSON.parse(fs.readFileSync(process.env.TARGET_PATH, 'utf8'));
+          const { submission, ...report } = accepted;
+          const findings = validateDiagnostic(report);
+          if (findings.length) throw new Error(JSON.stringify(findings));
+          if (submission?.status !== 'accepted'
+              || submission?.review_mode !== 'automated-policy'
+              || submission?.reviewer !== 'github-sidebar-diagnostic-agent-v1'
+              || submission?.independent_reproduction !== false) {
+            throw new Error('Canonical submission receipt is invalid.');
+          }
+          NODE
+          git diff --check
+
+      - name: Commit automatically accepted diagnostic to main
+        id: commit
+        if: steps.prepare.outputs.ready == 'true' && steps.validate.outcome == 'success'
+        shell: bash
+        env:
+          TARGET_PATH: ${{ steps.prepare.outputs.path }}
+          ISSUE_NUMBER: ${{ steps.prepare.outputs.issue_number }}
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          if [ "$(git rev-parse HEAD)" != "$(git rev-parse origin/main)" ]; then
+            echo "main advanced after checkout; retry the Issue event against the new canonical state" >&2
+            exit 1
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- "$TARGET_PATH"
+          if git diff --cached --quiet; then
+            echo "No canonical diagnostic change to commit."
+          else
+            git commit -m "Accept Codex sidebar diagnostic from issue #${ISSUE_NUMBER}"
+            git push origin HEAD:main
+          fi
+
+      - name: Reconcile public status
+        if: always()
+        uses: actions/github-script@d746ffe35508b1917358783b479e04febd2b8f71 # v9.0.0
+        env:
+          PREPARED: ${{ steps.prepare.outputs.ready }}
+          VALIDATION_OUTCOME: ${{ steps.validate.outcome }}
+          COMMIT_OUTCOME: ${{ steps.commit.outcome }}
+          TARGET_PATH: ${{ steps.prepare.outputs.path }}
+          ISSUE_NUMBER: ${{ steps.prepare.outputs.issue_number }}
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('node:fs');
+            const path = require('node:path');
+            const marker = '<!-- noosphere-sidebar-diagnostic-agent -->';
+            const issueNumber = Number.parseInt(process.env.ISSUE_NUMBER, 10);
+            if (!Number.isInteger(issueNumber)) {
+              core.setFailed('Sidebar diagnostic Issue number was not resolved.');
+              return;
+            }
+            const resultPath = path.join(
+              process.env.GITHUB_WORKSPACE,
+              '.sidebar-diagnostic-agent-result.json',
+            );
+            const result = fs.existsSync(resultPath)
+              ? JSON.parse(fs.readFileSync(resultPath, 'utf8'))
+              : {
+                  findings: [{
+                    code: 'DIAGNOSTIC_AGENT_FAILED',
+                    message: 'The Agent failed before producing a validation result.',
+                  }],
+                };
+            const accepted = (
+              process.env.PREPARED === 'true'
+              && process.env.VALIDATION_OUTCOME === 'success'
+              && process.env.COMMIT_OUTCOME === 'success'
+            );
+            const findings = [...(result.findings || [])];
+            if (process.env.PREPARED === 'true' && process.env.VALIDATION_OUTCOME !== 'success') {
+              findings.push({
+                code: 'DIAGNOSTIC_CANONICAL_VALIDATION_FAILED',
+                message: 'The deterministic repository gate rejected the generated record.',
+              });
+            } else if (
+              process.env.PREPARED === 'true'
+              && process.env.VALIDATION_OUTCOME === 'success'
+              && process.env.COMMIT_OUTCOME !== 'success'
+            ) {
+              findings.push({
+                code: 'DIAGNOSTIC_COMMIT_FAILED',
+                message: 'The canonical branch changed or the repository write failed; dispatch the workflow again.',
+              });
+            }
+            const recordUrl = accepted
+              ? `https://github.com/${context.repo.owner}/${context.repo.repo}/blob/main/${process.env.TARGET_PATH}`
+              : '';
+            const body = accepted
+              ? [
+                  marker,
+                  '## Sidebar diagnostic accepted',
+                  '',
+                  `The identifier-free report passed the deterministic policy gate and is stored at ${recordUrl}.`,
+                  '',
+                  'This is structurally validated community evidence, not an OpenAI response, independent reproduction, complete Experience Record, or universal repair claim.',
+                ].join('\n')
+              : [
+                  marker,
+                  '## Sidebar diagnostic needs changes',
+                  '',
+                  ...findings.map((item) => `- \`${item.code}\`: ${item.message}`),
+                  '',
+                  'Edit this Issue with a fresh, unmodified doctor report; the Agent will retry automatically.',
+                ].join('\n');
+
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issueNumber,
+              per_page: 100,
+            });
+            const existing = comments.find((comment) => (
+              comment?.user?.login === 'github-actions[bot]'
+              && String(comment.body || '').includes(marker)
+            ));
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issueNumber,
+                body,
+              });
+            }
+
+            const labels = [
+              ['codex-sidebar-diagnostic', '0969DA', 'Generated identifier-free Codex sidebar evidence'],
+              ['codex-sidebar-diagnostic-accepted', '0E8A16', 'Diagnostic passed automated policy and was recorded'],
+              ['codex-sidebar-diagnostic-invalid', 'B60205', 'Diagnostic needs corrected structure or privacy data'],
+            ];
+            for (const [name, color, description] of labels) {
+              try {
+                await github.rest.issues.createLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  name,
+                  color,
+                  description,
+                });
+              } catch (error) {
+                if (error.status !== 422) throw error;
+              }
+            }
+            const removeLabel = async (name) => {
+              try {
+                await github.rest.issues.removeLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: issueNumber,
+                  name,
+                });
+              } catch (error) {
+                if (error.status !== 404) throw error;
+              }
+            };
+            if (accepted) {
+              await removeLabel('codex-sidebar-diagnostic-invalid');
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issueNumber,
+                labels: ['codex-sidebar-diagnostic', 'codex-sidebar-diagnostic-accepted'],
+              });
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issueNumber,
+                state: 'closed',
+                state_reason: 'completed',
+              });
+            } else {
+              await removeLabel('codex-sidebar-diagnostic-accepted');
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issueNumber,
+                labels: ['codex-sidebar-diagnostic', 'codex-sidebar-diagnostic-invalid'],
+              });
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issueNumber,
+                state: 'open',
+              });
+            }

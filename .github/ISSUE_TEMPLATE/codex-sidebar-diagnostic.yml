@@ -1,0 +1,35 @@
+name: Submit a Codex sidebar diagnostic
+description: Submit one doctor-generated, identifier-free ordering report for automatic acceptance.
+title: "Codex sidebar diagnostic: "
+labels: ["codex-sidebar-diagnostic"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Run the read-only [Codex Sidebar Doctor](https://github.com/JinNing6/Noosphere/tree/main/tools/codex-sidebar-doctor), then paste its complete JSON output below. The repository Agent validates the tool version, internal consistency, privacy boundary, and authenticated GitHub identity. A passing report is written under `community_evidence/codex-sidebar/` and this Issue is closed automatically.
+
+        Acceptance means **structurally validated community diagnostic evidence**. It is not an OpenAI response, an independent reproduction, a complete Experience Record, or proof that the published recovery applies universally.
+  - type: textarea
+    id: generated_diagnostic
+    attributes:
+      label: Generated sidebar diagnostic JSON
+      description: Paste the unedited JSON emitted with `-Json -CodexVersion <your version> -ObservedScope <project-groups|tasks-within-project|both|unsure>`.
+      render: json
+      placeholder: |
+        {
+          "schema_version": 1,
+          "record_kind": "codex-sidebar-diagnostic"
+        }
+    validations:
+      required: true
+  - type: checkboxes
+    id: declaration
+    attributes:
+      label: Public submission declaration
+      options:
+        - label: I personally observed stale Codex sidebar ordering in the scope recorded by this live-state report.
+          required: true
+        - label: I reviewed the generated report and it contains no project names, paths, task identifiers, or conversation content.
+          required: true
+        - label: I consent to automatic validation and public storage under my authenticated GitHub identity.
+          required: true
