@@ -282,7 +282,7 @@ Read the [extended product and universe guide](docs/README_full.md), the
 <!-- AUTO-UPDATE-START: contributor-rankings -->
 | 序列 | 宇宙缔造者 (Contributor) | 灵能总值 (Total Psi) | 意志形态与阶梯称号 (Cosmic Title) | 跃迁阈值 |
 |:---:|:---|:---:|:---|:---|
-| 🏆 **#1** | **[JinNing6](https://github.com/JinNing6)** | **820** (82 commits) | 🌌 **真理探索家 (Truth Seeker)** | `Psi ≥ 500` |
+| 🏆 **#1** | **[JinNing6](https://github.com/JinNing6)** | **830** (83 commits) | 🌌 **真理探索家 (Truth Seeker)** | `Psi ≥ 500` |
 
 > **📤 意识上传者排行 (Top Consciousness Uploaders)**
 >
@@ -290,7 +290,7 @@ Read the [extended product and universe guide](docs/README_full.md), the
 > 🥈 **[shural](https://github.com/shural)** — 3 次上传 [![badge](https://noosphere-badge.vercel.app/api/rank/shural)](https://jinning6.github.io/Noosphere/?profile=shural)
 
 > 🌐 **宇宙能量指标** — ⭐ Stars: **18** | 🍴 Forks: **2** | 👁️ Watchers: **1** | 🧠 意识载荷: **44** 个
-> 🤖 *上次自动更新：`2026-08-10 08:56 (UTC+8)`*
+> 🤖 *上次自动更新：`2026-08-17 08:38 (UTC+8)`*
 <!-- AUTO-UPDATE-END: contributor-rankings -->
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for code contributions and sign the
